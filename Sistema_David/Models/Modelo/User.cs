@@ -1,0 +1,28 @@
+﻿using Sistema_David.Models.DB;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace Sistema_David.Models.ViewModels
+{
+    public partial class User
+    {
+        public int Id { get; set; }
+        public string Usuario { get; set; }
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+        public string Dni { get; set; }
+        public string Telefono { get; set; }
+        public string Direccion { get; set; }
+        public Nullable<int> IdRol { get; set; }
+        public string Contrasena { get; set; }
+        public string Estado { get; set; }
+        public string Rol { get; set; }
+        public Nullable<int> CantVentas { get; set; }
+        public Nullable<int> IdEstado { get; set; }
+
+        public virtual EstadosUsuarios EstadosUsuarios { get; set; }
+        public virtual Roles Roles { get; set; }
+    }
+}

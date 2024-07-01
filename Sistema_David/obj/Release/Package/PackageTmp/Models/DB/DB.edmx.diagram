@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="7a4b1bc9137e412b8284df11c44927fa" Name="Diagram1" ZoomLevel="64">
+        <EntityTypeShape EntityType="Sistema_DavidModel.Categorias" Width="1.5" PointX="8.25" PointY="3.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Clientes" Width="1.5" PointX="5.25" PointY="6" IsExpanded="true" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.EstadosClientes" Width="1.5" PointX="3" PointY="2.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.EstadosUsuarios" Width="1.5" PointX="0.75" PointY="6.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Productos" Width="1.5" PointX="10.5" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.ProductosVenta" Width="1.5" PointX="12.75" PointY="6.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Roles" Width="1.5" PointX="0.75" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.StockUsuarios" Width="1.5" PointX="8.25" PointY="6.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Usuarios" Width="1.5" PointX="3" PointY="5.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas" Width="1.5" PointX="10.5" PointY="5.75" IsExpanded="true" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Productos_Categorias" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Clientes_EstadosClientes" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Clientes_Usuarios" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Clientes" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Usuarios_EstadosUsuarios1" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_ProductosVenta_Productos" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Stock_Productos" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Stock_Productos1" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_ProductosVenta_Ventas" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Usuarios_Roles" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Stock_Usuarios" ManuallyRouted="false" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Usuarios" ManuallyRouted="false" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.InformacionVentas" Width="1.5" PointX="12.75" PointY="10.25" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_InformacionVentas_Ventas" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Zonas" Width="1.5" PointX="5.375" PointY="0.75" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Clientes_Zonas" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Zonas_Zonas1" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Usuarios1" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>
