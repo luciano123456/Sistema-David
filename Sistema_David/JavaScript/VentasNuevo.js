@@ -12,15 +12,43 @@ $(document).ready(function () {
     $("#btnVentas").css("background", "#2E4053");
 
 
-    var fechaCobro = moment().add(7, 'days').format('yyyy-MM-DD');
-    var fechaLimite = moment().add(45, 'days').format('yyyy-MM-DD');
+    var fechaCobro = moment().add(7, 'days').format('YYYY-MM-DD');
+    var fechaLimite = moment().add(45, 'days').format('YYYY-MM-DD');
 
     document.getElementById("FechaCobro").value = fechaCobro;
     document.getElementById("FechaLimite").value = fechaLimite;
 
-
+     
 
 });
+
+
+async function buscarLimiteVenta(nombre) {
+    try {
+        var url = "/Limite/BuscarValorLimite";
+        let value = JSON.stringify({ Nombre: nombre });
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result != null && result.data.Valor != null) {
+            
+            return result.data.Valor;
+        }
+
+        return 0;
+    } catch (error) {
+        console.error("Ha ocurrido un error:", error);
+        throw error; // Lanzar el error para que pueda ser capturado externamente
+    }
+}
 
 async function configurarDataTable() {
     $('#grdProductosVenta').DataTable({
@@ -95,7 +123,7 @@ async function cargarCliente() {
 
             const userSession = JSON.parse(sessionStorage.getItem('usuario'));
 
-            if (JSON.parse(sessionStorage.getItem('usuario')).Id != result.data.IdVendedor && userSession.IdRol == 2) {
+            if (JSON.parse(sessionStorage.getItem('usuario')).Id != result.data.IdVendedor && userSession.IdRol != 1) {
                 alert("El cliente pertenece a otro vendedor")
             } else if (result.data.Estado == "Inhabilitado") {
                 $("#estadocliente").css("color", "red");
@@ -306,7 +334,9 @@ function añadirProducto() {
             IdProducto: $("#Productos").find("option:selected").val(),
             Producto: $("#Productos").find("option:selected").text(),
             Cantidad: Number($("#Cantidad").val()),
+            /*PrecioUnitario: Number($("#precioTotal").text()) / Number($("#Cantidad").val()),*/
             PrecioTotal: Number($("#precioTotal").text()),
+
         }
     ];
 
@@ -342,7 +372,9 @@ function añadirProducto() {
             }
 
             producto.Cantidad += persons[0].Cantidad
+            producto.PrecioUnitario += persons[0].PrecioUnitario
             producto.PrecioTotal += persons[0].PrecioTotal
+            
             alert("Producto agregado con exito.");
 
 
@@ -539,7 +571,7 @@ Productos.addEventListener("change", (e) => {
 });
 
 
-function registrarVenta() {
+async function registrarVenta() {
 
     let now = new Date().getTime();
 
@@ -549,7 +581,7 @@ function registrarVenta() {
          
         numeroTelefono = numeroTelefono.replace("Tel: ", "");
 
-        if (validarVenta()) {
+        if (await validarVenta()) {
 
             var table = $("#grdProductosVenta").DataTable()
             table.rows().eq(0).each(function (index) {
@@ -582,7 +614,7 @@ function registrarVenta() {
 
 }
 
-function validarVenta() {
+async function validarVenta() {
 
     if ($('#nombrecliente').text() == "") {
         alert("Debes elegir un cliente.");
@@ -593,6 +625,21 @@ function validarVenta() {
         return false;
     }
 
+    if ($('#estadocliente').text() == "Estado: Regular") {
+       
+ 
+        var result = await buscarLimiteVenta("ClientesRegulares_Venta");
+
+
+        var precioVenta = retornarEntero($('#precioventa').text());
+
+        if (precioVenta > result) {
+            alert("El limite maximo de venta para un cliente regular es de $" + result + " pesos.");
+            return false;
+        }
+       
+
+    }
     return true;
 }
 
@@ -860,15 +907,7 @@ function retornarEntero(number) {
     return valorEntero;
 }
 
-function formatNumber(number) {
-    if (typeof number !== 'number' || isNaN(number)) {
-        return "$0"; // Devuelve un valor predeterminado si 'number' no es válido
-    }
 
-    const parts = number.toFixed(0).toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return "$" + parts.join(",");
-}
 
 
 const valorCuota = document.querySelector("#ValorCuota");

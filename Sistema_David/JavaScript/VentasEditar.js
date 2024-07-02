@@ -22,7 +22,7 @@ async function InformacionVenta() {
 
    
         let value =  JSON.stringify({
-            Id: localStorage .getItem("idEditarVenta")
+            Id: localStorage.getItem("idEditarVenta")
         });
 
         let options = {
@@ -201,15 +201,7 @@ async function configurarDataTable() {
     });
 }
 
-function formatNumber(number) {
-    if (typeof number !== 'number' || isNaN(number)) {
-        return "$0"; // Devuelve un valor predeterminado si 'number' no es válido
-    }
 
-    const parts = number.toFixed(0).toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return "$" + parts.join(",");
-}
 
 function retornarEntero(number) {
    

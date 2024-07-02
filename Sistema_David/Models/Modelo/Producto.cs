@@ -12,6 +12,7 @@ namespace Sistema_David.Models.Modelo
         public string Codigo { get; set; }
         public string Nombre { get; set; }
         public string Imagen { get; set; }
+        public int Activo { get; set; }
 
         public string Categoria { get; set; }
         public Nullable<int> idCategoria { get; set; }

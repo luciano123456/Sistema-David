@@ -113,6 +113,14 @@ namespace Sistema_David.Controllers
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
+
+        public ActionResult GetClientes()
+        {
+            var result = ClientesModel.ListaClientes();
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
+
         public ActionResult ListarVendedores()
         {
             var result = UsuariosModel.ListaUsuarios();

@@ -40,7 +40,7 @@
                 <div>
                     <img src="~/Imagenes/User.png" class="userImg" alt="" />
                     <a id="nombre" title="" class="usuario">
-                        
+
                     </a>
 
                     <ul>
@@ -55,7 +55,7 @@
         </nav>
     </div>
 
-    
+
 
     <div class="menu-secciones">
 
@@ -85,17 +85,18 @@
 
         </div>
 
-        <div class="seccion" id="seccionCobranzas" hidden>
-            <button class="btn-seccion" id="btnCobranzas" onclick="document.location.href='@Url.Content("~/Cobranzas/Index/")'">
-                <img src="~/Imagenes/cobranzas.png" class="img-seccion" />
-                Cobranzas
-            </button>
-        </div>
 
         <div class="seccion" id="seccionStock" hidden>
             <button class="btn-seccion" id="btnStock" onclick="document.location.href='@Url.Content("~/Stock/Index/")'">
                 <img src="~/Imagenes/stock.png" class="img-seccion" />
                 Stock
+            </button>
+        </div>
+
+        <div class="seccion" id="seccionPedidos" hidden>
+            <button class="btn-seccion" id="btnPedidos" onclick="document.location.href='@Url.Content("~/Pedidos/Index/")'">
+                <img src="~/Imagenes/Pedidos.png" class="img-seccion" />
+                Pedidos
             </button>
         </div>
 
@@ -106,6 +107,13 @@
             </button>
         </div>
 
+        <div class="seccion" id="seccionCobranzas" hidden>
+            <button class="btn-seccion" id="btnCobranzas" onclick="document.location.href='@Url.Content("~/Cobranzas/Index/")'">
+                <img src="~/Imagenes/cobranzas.png" class="img-seccion" />
+                Cobranzas
+            </button>
+        </div>
+
         <div class="seccion" id="seccionClientes" hidden>
             <button class="btn-seccion" id="btnClientes" onclick="document.location.href='@Url.Content("~/Clientes/Index/")'">
                 <img src="~/Imagenes/Clientes.png" class="img-seccion" />
@@ -113,54 +121,55 @@
             </button>
         </div>
 
+
     </div>
 
 
-        <div class="modal fade" id="modalLogin" tabindex="-1" aria-labelledby="modalLoginLabel" aria-hidden="true">
-            <div class="modal-dialog estilowpp">
-                <div class="estilowpp modal-content ">
-                    <div class="modal-body">
-                        <label class="lblcerrarSession">Cerrar Session</label>
-                    </div>
+    <div class="modal fade" id="modalLogin" tabindex="-1" aria-labelledby="modalLoginLabel" aria-hidden="true">
+        <div class="modal-dialog estilowpp">
+            <div class="estilowpp modal-content ">
+                <div class="modal-body">
+                    <label class="lblcerrarSession">Cerrar Session</label>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Modal -->
-        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
 
-            <!-- <div class="modal-dialog" role="document"> Antiguo <DIV >-->
-            <div class="modal-dialog modal-dialog-centered">
-                <!-- Nuevo <DIV> con el selector modal-dialog-Center -->
+        <!-- <div class="modal-dialog" role="document"> Antiguo <DIV >-->
+        <div class="modal-dialog modal-dialog-centered">
+            <!-- Nuevo <DIV> con el selector modal-dialog-Center -->
 
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        ...
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Save changes</button>
-                    </div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
                 </div>
             </div>
         </div>
+    </div>
 
 
-        <div class="container body-content">
-            @RenderBody()
-        </div>
+    <div class="container body-content">
+        @RenderBody()
+    </div>
 
-        @Scripts.Render("~/bundles/jquery")
-        @*@Scripts.Render("~/bundles/bootstrap")*@
-        @Scripts.Render("~/Scripts/bootstrap.js")
-        @Scripts.Render("~/Content/Plugin/js")
-        @RenderSection("scripts", required: false)
+    @Scripts.Render("~/bundles/jquery")
+    @*@Scripts.Render("~/bundles/bootstrap")*@
+    @Scripts.Render("~/Scripts/bootstrap.js")
+    @Scripts.Render("~/Content/Plugin/js")
+    @RenderSection("scripts", required: false)
 </body>
 </html>
 <script src="~/JavaScript/Utils/Utils.js"></script>
@@ -209,7 +218,7 @@
     //} else {
     //    document.getElementById("seccionRendimiento").setAttribute("hidden", "hidden");
     //}
-   
+
     //if (window.location.href.indexOf('/Ventas/Index/') !== -1 || window.location.href.indexOf('/Cobranzas/Index/') !== -1) {
     //    document.getElementById("seccionCobranzas").removeAttribute("hidden");
     //} else {
@@ -225,6 +234,7 @@
         document.getElementById("seccionClientes").removeAttribute("hidden");
         document.getElementById("seccionCobranzas").removeAttribute("hidden");
         document.getElementById("seccionRendimiento").removeAttribute("hidden");
+        document.getElementById("seccionPedidos").removeAttribute("hidden");
     } else if (data.IdRol == 3) {
         document.getElementById("seccionCobranzas").removeAttribute("hidden");
         document.getElementById("seccionStock").removeAttribute("hidden");

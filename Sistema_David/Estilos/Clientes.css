@@ -142,6 +142,13 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
 }
 
 
+.estilolimite {
+    max-width: 500px !important;
+    min-width: 500px !important;
+    width: 30% !important;
+}
+
+
 
 .input-whatssap {
     display: flex;

@@ -37,6 +37,12 @@ namespace Sistema_David.Controllers
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
+        public ActionResult ListarActivos()
+        {
+            var result = ProductosModel.ListaProductosActivos();
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
         public ActionResult ListarCategorias()
         {
             var result = ProductosModel.ListaCategorias();
@@ -138,6 +144,26 @@ namespace Sistema_David.Controllers
 
         }
 
+
+        public ActionResult EditarActivo(int id, int activo)
+        {
+            try
+            {
+
+                var result = ProductosModel.EditarActivo(id, activo);
+
+                if (result)
+                    return Json(new { Status = true });
+
+                else
+                    return Json(new { Status = false });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false });
+            }
+
+        }
 
 
 

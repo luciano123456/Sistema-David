@@ -367,14 +367,30 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\ProductosController.cs" />
+    <Compile Include="Controllers\LimiteController.cs" />
+    <Compile Include="Controllers\StockPendienteController.cs" />
     <Compile Include="Controllers\StockController.cs" />
     <Compile Include="Controllers\RendimientoController.cs" />
     <Compile Include="Controllers\UsuariosController.cs" />
+    <Compile Include="Controllers\PedidosController.cs" />
     <Compile Include="Controllers\VentasController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\SessionHelper.cs" />
+    <Compile Include="Models\DB\EstadosPedidos.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Pedidos.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\ProductosPedidos.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Ventas.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LimitesModel.cs" />
     <Compile Include="Models\DB\Categorias.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
@@ -405,6 +421,9 @@
     <Compile Include="Models\DB\InformacionVentas.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\DB\Limites.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\DB\Productos.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
@@ -414,13 +433,13 @@
     <Compile Include="Models\DB\Roles.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\DB\StocksPendientes.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\DB\StockUsuarios.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DB\Usuarios.cs">
-      <DependentUpon>DB.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Models\DB\Ventas.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DB\Zonas.cs">
@@ -430,7 +449,10 @@
     <Compile Include="Models\Manager\VentasManager.cs" />
     <Compile Include="Models\Modelo\InformacionVenta.cs" />
     <Compile Include="Models\Modelo\ModeloApi.cs" />
+    <Compile Include="Models\Modelo\RendimientoCobrado.cs" />
     <Compile Include="Models\Modelo\RendimientoGeneral.cs" />
+    <Compile Include="Models\Modelo\Limite.cs" />
+    <Compile Include="Models\Modelo\StocksPendientes.cs" />
     <Compile Include="Models\Modelo\StockUsuario.cs" />
     <Compile Include="Models\Modelo\FileInput.cs" />
     <Compile Include="Models\Modelo\Categoria.cs" />
@@ -441,9 +463,11 @@
     <Compile Include="Models\Modelo\Rendimiento.cs" />
     <Compile Include="Models\Modelo\User.cs" />
     <Compile Include="Models\Modelo\Venta.cs" />
+    <Compile Include="Models\StockPendienteModel.cs" />
     <Compile Include="Models\StockModel.cs" />
     <Compile Include="Models\CobranzasModel.cs" />
     <Compile Include="Models\RendimientoModel.cs" />
+    <Compile Include="Models\PedidosModel.cs" />
     <Compile Include="Models\VentasModel.cs" />
     <Compile Include="Models\ProductosModel.cs" />
     <Compile Include="Models\UsuariosModel.cs" />
@@ -478,13 +502,18 @@
     <Content Include="Content\Datatable\js\jquery.dataTables.min.js" />
     <Content Include="Content\font-awesome.css" />
     <Content Include="Content\font-awesome.min.css" />
+    <Content Include="Estilos\StockPendiente.css" />
     <Content Include="Estilos\Stock.css" />
     <Content Include="Estilos\Clientes.css" />
     <Content Include="Estilos\Rendimiento.css" />
+    <Content Include="Estilos\Pedidos.css" />
+    <Content Include="Estilos\PedidosNuevo.css" />
     <Content Include="Estilos\VentasNuevo.css" />
     <Content Include="Estilos\Ventas.css" />
     <Content Include="fonts\fontawesome-webfont.svg" />
     <Content Include="Imagenes\configuraciones.png" />
+    <Content Include="Imagenes\excel.png" />
+    <Content Include="Imagenes\menu.png" />
     <Content Include="Imagenes\rendimiento-diario.png" />
     <Content Include="Imagenes\rendimiento-mensual.png" />
     <Content Include="Imagenes\rendimiento.png" />
@@ -492,6 +521,9 @@
     <Content Include="JavaScript\bundle.js" />
     <Content Include="JavaScript\Cobranzas.js" />
     <Content Include="JavaScript\InformacionVenta.js" />
+    <Content Include="JavaScript\PedidosEditar.js" />
+    <Content Include="JavaScript\PedidosNuevo.js" />
+    <Content Include="JavaScript\StockPendiente.js" />
     <Content Include="JavaScript\Stock.js" />
     <Content Include="JavaScript\ImportacionExcelClientes.js" />
     <Content Include="JavaScript\Clientes.js" />
@@ -519,6 +551,7 @@
     <Content Include="JavaScript\Rendimiento.js" />
     <Content Include="JavaScript\Usuarios.js" />
     <Content Include="JavaScript\Utils\Utils.js" />
+    <Content Include="JavaScript\Pedidos.js" />
     <Content Include="JavaScript\Ventas.js" />
     <Content Include="JavaScript\VentasEditar.js" />
     <Content Include="JavaScript\VentasNuevo.js" />
@@ -620,6 +653,10 @@
     <Content Include="Views\Ventas\Informacion.cshtml" />
     <Content Include="Views\Cobranzas\Index.cshtml" />
     <Content Include="Views\Rendimiento\Index.cshtml" />
+    <Content Include="Views\StockPendiente\Index.cshtml" />
+    <Content Include="Views\Pedidos\Editar.cshtml" />
+    <Content Include="Views\Pedidos\Index.cshtml" />
+    <Content Include="Views\Pedidos\Nuevo.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

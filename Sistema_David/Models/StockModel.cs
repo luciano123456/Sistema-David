@@ -80,7 +80,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static bool Agregar(StockUsuarios model)
+        public static bool Agregar(StocksPendientes model)
         {
 
             try
@@ -92,9 +92,39 @@ namespace Sistema_David.Models
 
                     if (model != null)
                     {
-                        result.IdProducto = model.IdProducto;
-                        result.IdUsuario = model.IdUsuario;
-                        result.Cantidad = model.Cantidad;
+                        result.IdProducto = (int)model.IdProducto;
+                        result.IdUsuario = (int)model.IdUsuario;
+                        result.Cantidad = (int)model.Cantidad;
+                        db.StockUsuarios.Add(result);
+                        db.SaveChanges();
+
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+
+        public static bool AgregarStockEliminarVenta(StockUsuarios model)
+        {
+
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                {
+
+                    StockUsuarios result = new StockUsuarios();
+
+                    if (model != null)
+                    {
+                        result.IdProducto = (int)model.IdProducto;
+                        result.IdUsuario = (int)model.IdUsuario;
+                        result.Cantidad = (int)model.Cantidad;
                         db.StockUsuarios.Add(result);
                         db.SaveChanges();
 
@@ -193,5 +223,7 @@ namespace Sistema_David.Models
                 return false;
             }
         }
+
+
     }
 }

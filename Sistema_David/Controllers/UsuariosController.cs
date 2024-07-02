@@ -157,6 +157,26 @@ namespace Sistema_David.Controllers
 
         }
 
+
+        [HttpPost]
+        public ActionResult setFechaExportacion()
+        {
+            try
+            {
+
+                var result = UsuariosModel.setFechaExportacion(SessionHelper.GetUsuarioSesion().Id);
+
+
+                return Json(new { Status = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = "Ha ocurrido un error" });
+            }
+
+        }
+
+
         [HttpPost]
         public ActionResult Modificar(User model)
         {

@@ -18,6 +18,7 @@ namespace Sistema_David.Models.DB
         public Clientes()
         {
             this.Ventas = new HashSet<Ventas>();
+            this.Pedidos = new HashSet<Pedidos>();
         }
     
         public int Id { get; set; }
@@ -33,8 +34,10 @@ namespace Sistema_David.Models.DB
     
         public virtual EstadosClientes EstadosClientes { get; set; }
         public virtual Usuarios Usuarios { get; set; }
+        public virtual Zonas Zonas { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas> Ventas { get; set; }
-        public virtual Zonas Zonas { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Pedidos> Pedidos { get; set; }
     }
 }

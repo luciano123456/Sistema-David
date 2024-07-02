@@ -3,7 +3,7 @@
 
 
 $(document).ready(function () {
-
+   
     moment.locale('es');
 
     userSession = JSON.parse(sessionStorage.getItem('usuario'));
@@ -15,11 +15,24 @@ $(document).ready(function () {
 
 
     configurarDataDiario()
+    
 
     $("#btnRendimiento").css("background", "#2E4053");
 
 });
 
+
+function fechaHoy() {
+
+    document.getElementById("FechaDesde").value = moment().format('YYYY-MM-DD');
+    document.getElementById("FechaHasta").value = moment().format('YYYY-MM-DD');
+}
+
+function fechaMensual() {
+
+    document.getElementById("FechaDesde").value = moment().startOf('month').format('YYYY-MM-DD');
+    document.getElementById("FechaHasta").value = moment().format('YYYY-MM-DD');
+}
 
 function configurarDataDiario() {
     var FechaDesde, FechaHasta;
@@ -87,9 +100,8 @@ function configurarDataMensual() {
     document.getElementById("FechaDesde").value = FechaDesde;
     document.getElementById("FechaHasta").value = FechaHasta;
 
-    configurarDataTableGeneral(FechaDesde, FechaHasta);
 
-
+    obtenerDatosRendimiento(FechaDesde, FechaHasta)
    
     $("#btnRendMensual").css("background", "#1B2631");
     $("#btnRendDiario").css("background", "#2E4053");
@@ -298,10 +310,14 @@ function seleccionarRendimiento(elemento, idVendedor) {
     const estadoCobranzas = iconoCobranzas.classList.contains("text-success") ? 1 : 0;
 
 
-    $('#grdRendimiento').DataTable().destroy();
-    $('#grdRendimientoGeneral').DataTable().destroy();
+
+    $('#grdRendimiento').DataTable().clear().draw();
+    //$('#grdRendimientoGeneral').DataTable().clear().draw();
+    //$('#grdRendimientoCobrado').DataTable().clear().draw();
+
     configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, document.getElementById("FechaDesde").value, document.getElementById("FechaHasta").value);
-    configurarDataTableGeneral(document.getElementById("FechaDesde").value, document.getElementById("FechaHasta").value);
+    obtenerDatosRendimiento(document.getElementById("FechaDesde").value, document.getElementById("FechaHasta").value);
+
     if(idVendedor == -99) idVendedor = -1
     cargarVentas(idVendedor);
 }
@@ -341,83 +357,139 @@ function aplicarFiltros() {
         localStorage.setItem("FechaDesdeRendimiento", document.getElementById("FechaDesde").value);
         localStorage.setItem("FechaHastaRendimiento", document.getElementById("FechaHasta").value);
 
-        $('#grdRendimiento').DataTable().destroy();
+        $('#grdRendimiento').DataTable().clear().draw();
         configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta);
         
     } else {
         configurarDataTable(-99, 1, 1, fechaDesde, fechaHasta);
     }
 
-    $('#grdRendimientoGeneral').DataTable().destroy();
-    configurarDataTableGeneral(fechaDesde, fechaHasta);
+    //$('#grdRendimientoGeneral').DataTable().clear().draw();
+    //$('#grdRendimientoCobrado').DataTable().clear().draw();
+    obtenerDatosRendimiento(fechaDesde, fechaHasta);
 }
 
 
 
 const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta) => {
-    const table = $('#grdRendimiento').DataTable({
-        "ajax": {
-            "url": `/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}`,
-            "type": "GET",
-            "dataType": "json"
-        },
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
-        },
+    const tableExists = $.fn.DataTable.isDataTable('#grdRendimiento');
 
-        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-        "pageLength": 10,
-        lengthChange: true,
-        "columns": [
-            {
-                "data": "Fecha",
-                "render": function (data) {
-                    return moment(data).format("DD/MM/YYYY");
+    if (!tableExists) {
+        // Si la tabla no existe, crearla
+        const table = $('#grdRendimiento').DataTable({
+            "ajax": {
+                "url": `/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}`,
+                "type": "GET",
+                "dataType": "json"
+            },
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+            },
+
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+            "pageLength": 10,
+            lengthChange: true,
+            "columns": [
+                {
+                    "data": "Fecha",
+                    "render": function (data) {
+                        return moment(data).format("DD/MM/YYYY");
+                    }
+                },
+                { "data": "Cliente" },
+                { "data": "CapitalInicial" },
+                { "data": "Venta" },
+                { "data": "Cobro" },
+                { "data": "Interes" },
+                { "data": "CapitalFinal" },
+                { "data": "Descripcion" },
+                {
+                    "data": "Id",
+                    "render": function (data, type, row) {
+                        let iconColorClass = row.whatssap === 1 ? 'text-success' : 'text-danger';
+                        return "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>";
+                    },
+                }
+
+
+            ],
+            "columnDefs": [
+                {
+                    targets: [0], type: "ddMmYyyy"
+                },
+                {
+                    "render": function (data, type, row) {
+                        return formatNumber(data); // Formatear número en la columna
+                    },
+                    "targets": [2, 3, 4, 5, 6] // Columnas Venta, Cobro, Capital Final
+                }
+            ],
+            "order": [[0, "ddMmYyyy-desc"]],
+            "fnRowCallback": function (nRow, data, row) {
+                if (data.Estado == "Bloqueado") {
+                    $('td', nRow).css('background-color', ' #890E07');
+                } else if (data.Estado == "Inactivo") {
+                    $('td', nRow).css('background-color', ' #DED803');
                 }
             },
-            { "data": "Cliente" },
-            { "data": "CapitalInicial" },
-            { "data": "Venta" },
-            { "data": "Cobro" },
-            { "data": "Interes" },
-            { "data": "CapitalFinal" },
-            { "data": "Descripcion" },
-            {
-                "data": "Id",
-                "render": function (data, type, row) {
-                    let iconColorClass = row.whatssap === 1 ? 'text-success' : 'text-danger';
-                    return "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>";
-                },
-            }
-        ],
-        "columnDefs": [
-            {
-                targets: [0], type: "ddMmYyyy"
-            },
-            {
-                "render": function (data, type, row) {
-                    return formatNumber(data); // Formatear número en la columna
-                },
-                "targets": [2, 3, 4, 5, 6] // Columnas Venta, Cobro, Capital Final
-            }
-        ],
-        "order": [[0, "ddMmYyyy-desc"]],
-        "fnRowCallback": function (nRow, data, row) {
-            if (data.Estado == "Bloqueado") {
-                $('td', nRow).css('background-color', ' #890E07');
-            } else if (data.Estado == "Inactivo") {
-                $('td', nRow).css('background-color', ' #DED803');
-            }
-        },
-        "initComplete": function (settings, json) {
-            // Calcular los totales de Venta y Cobro
-            let totVenta = 0;
-            let totCobro = 0;
-            let totInteres = 0;
+            "initComplete": function (settings, json) {
+                // Calcular los totales de Venta y Cobro
+                let totVenta = 0;
+                let totCobro = 0;
+                let totInteres = 0;
+                let totEfectivo = 0;
+                let totTransferencia = 0;
 
+                table.data().each(function (rowData) {
+                    if (rowData.Descripcion.includes("Cobranza")) {
+                        totCobro += rowData.Cobro;
+
+                        if (rowData.MetodoPago != null && rowData.MetodoPago == "EFECTIVO") {
+                            totEfectivo += rowData.Cobro;
+                        }
+                        if (rowData.MetodoPago != null && rowData.MetodoPago == "TRANSFERENCIA") {
+                            totTransferencia += rowData.Cobro;
+                        }
+                    }
+                    if (rowData.Descripcion.includes("Venta")) {
+                        totVenta += rowData.Venta;
+                    }
+                    if (rowData.Descripcion.includes("Interes")) {
+                        totInteres += rowData.Interes;
+                    }
+                });
+
+                // Mostrar los totales en donde desees (por ejemplo, en algún elemento del DOM)
+                document.getElementById("totventa").textContent = formatNumber(totVenta);
+                document.getElementById("totcobro").textContent = formatNumber(totCobro);
+                document.getElementById("totinteres").textContent = formatNumber(totInteres);
+                document.getElementById("totefectivo").textContent = formatNumber(totEfectivo);
+                document.getElementById("tottransferencia").textContent = formatNumber(totTransferencia);
+            }
+        });
+
+    } else {
+        // Si la tabla ya existe, simplemente actualizar los datos
+        const table = $('#grdRendimiento').DataTable();
+
+        totVenta = 0;
+        totCobro = 0;
+        totInteres = 0;
+        totEfectivo = 0;
+        totTransferencia = 0;
+
+        table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}`).load(function () {
+            // Recorrer los datos de la tabla después de que se hayan cargado
             table.data().each(function (rowData) {
                 if (rowData.Descripcion.includes("Cobranza")) {
                     totCobro += rowData.Cobro;
+
+                    if (rowData.MetodoPago != null && rowData.MetodoPago == "EFECTIVO") {
+                        totEfectivo += rowData.Cobro;
+                    }
+                    if (rowData.MetodoPago != null && rowData.MetodoPago == "TRANSFERENCIA") {
+                        totTransferencia += rowData.Cobro;
+                    }
                 }
                 if (rowData.Descripcion.includes("Venta")) {
                     totVenta += rowData.Venta;
@@ -426,15 +498,16 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                     totInteres += rowData.Interes;
                 }
             });
-
-            // Mostrar los totales en donde desees (por ejemplo, en algún elemento del DOM)
             document.getElementById("totventa").textContent = formatNumber(totVenta);
             document.getElementById("totcobro").textContent = formatNumber(totCobro);
             document.getElementById("totinteres").textContent = formatNumber(totInteres);
-        }
-    });
-};
+            document.getElementById("totefectivo").textContent = formatNumber(totEfectivo);
+            document.getElementById("tottransferencia").textContent = formatNumber(totTransferencia);
+        }); 
 
+    }
+}
+  
 jQuery.extend(jQuery.fn.dataTableExt.oSort, {
     "ddMmYyyy-pre": function (a) {
         var dateParts = a.split('/');
@@ -450,62 +523,108 @@ jQuery.extend(jQuery.fn.dataTableExt.oSort, {
 });
 
 
-const configurarDataTableGeneral = async (fechadesde, fechahasta) => {
-    moment.locale('es', {
-        months: "enero_febrero_marzo_abril_mayo_junio_julio_agosto_septiembre_octubre_noviembre_diciembre".split("_"),
-    });
+// Función para obtener los datos de la API
+const obtenerDatosRendimiento = async (fechadesde, fechahasta) => {
 
 
-    const table = $('#grdRendimientoGeneral').DataTable({
-        "ajax": {
-            "url": `/Rendimiento/MostrarRendimientoGeneral?fechadesde=${fechadesde}&fechahasta=${fechahasta}`,
-            "type": "GET",
-            "dataType": "json"
-        },
-        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
-        },
-        "columns": [
-            {
-                "data": "Fecha",
-                "render": function (data) {
-                    return moment(data, 'DD/MM/YYYY').format('D [de] MMMM'); // Formato "30 de octubre"
-                },
-                "type": "date", // Especificar el tipo de datos como "date" para ordenar correctamente
-            },
-            
-            { "data": "CapitalInicial" },
-            { "data": "Ventas" },
-            { "data": "Cobranza" },
-          
-            { "data": "CapitalFinal" },
-        ],
-        "columnDefs": [
-            {
-                "render": function (data, type, row) {
-                    return formatNumber(data); // Formatear número en la columna
-                },
-                "targets": [1, 2, 3, 4] // Columnas Capital Inicial, Cobranza, Ventas, Capital Final
-            },
-        ],
-        "order": [[0, "asc"]], // Ordenar por la primera columna (fecha) de forma ascendente
-        
-        
-    });
+    const url = `/Rendimiento/MostrarRendimientoGeneral?fechadesde=${fechadesde}&fechahasta=${fechahasta}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    
+
+    configurarDataTableCobrado('#grdRendimientoCobrado', FechaDesde, FechaHasta, data.Cobrado);
+    configurarDataTableGeneral('#grdRendimientoGeneral',FechaDesde, FechaHasta, data.Rendimiento);
+    
+
 }
 
 
 
-function formatNumber(number) {
-    if (typeof number !== 'number' || isNaN(number)) {
-        return "$0"; // Devuelve un valor predeterminado si 'number' no es válido
+// Función para configurar un DataTable con los datos recibidos
+const configurarDataTableGeneral = async (selectorTabla, fechadesde, fechahasta, result) => {
+    const datos = result;
+    const tableExists = $.fn.DataTable.isDataTable(selectorTabla);
+
+    if (!tableExists) {
+        // Si la tabla no existe, crearla y agregar los datos
+        const table = $(selectorTabla).DataTable({
+            "data": datos,
+            "columns": [
+                {
+                    "data": "Fecha",
+                    "render": function (data) {
+                        return moment(data, 'DD/MM/YYYY').format('D [de] MMMM');
+                    },
+                    "type": "date",
+                },
+                { "data": "CapitalInicial" },
+                { "data": "Ventas" },
+                { "data": "Cobranza" },
+                { "data": "CapitalFinal" },
+            ],
+            "columnDefs": [
+                {
+                    "render": function (data, type, row) {
+                        return formatNumber(data);
+                    },
+                    "targets": [1, 2, 3, 4]
+                },
+            ],
+            "order": [[0, "asc"]],
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+            }
+        });
+    } else {
+        // Si la tabla ya existe, agregar los nuevos datos
+
+        $('#grdRendimientoGeneral').DataTable().clear().draw();
+
+        const table = $(selectorTabla).DataTable();
+        table.rows.add(datos).draw();
     }
 
-    const parts = number.toFixed(0).toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return "$" + parts.join(",");
 }
+
+const configurarDataTableCobrado = async (selectorTabla, fechadesde, fechahasta, result) => {
+    const datos = result;
+    console.log(datos); // Agregar este console.log para verificar los datos recibidos
+    const tableExists = $.fn.DataTable.isDataTable(selectorTabla);
+
+    if (!tableExists) {
+        // Si la tabla no existe, crearla y agregar los datos
+        const table = $(selectorTabla).DataTable({
+            "data": datos,
+            "columns": [
+                { "data": "Vendedor" },
+                { "data": "TotalCobrado" },
+            ],
+            "columnDefs": [
+                {
+                    "render": function (data, type, row) {
+                        return formatNumber(data);
+                    },
+                    "targets": [1]
+                },
+            ],
+            "order": [[1, "asc"]],
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+            }
+        });
+    } else {
+        // Si la tabla ya existe, agregar los nuevos datos
+
+        $('#grdRendimientoCobrado').DataTable().clear().draw();
+
+        const table = $(selectorTabla).DataTable();
+        table.rows.add(datos).draw();
+    }
+}
+
 
 
 
@@ -626,14 +745,18 @@ async function mostrarRendimiento(rendimiento) {
 
     if (rendimiento == 'Mensual' && !$('#grdRendimientoGeneral').is(':visible')) {
 
-        $('#grdRendimientoGeneral').DataTable().destroy();
+       
         await configurarDataMensual();
 
         document.getElementById("divCliente").setAttribute("hidden", "hidden")
         document.getElementById("RendimientoDiario").setAttribute("hidden", "hidden")
         document.getElementById("divUsuarios").setAttribute("hidden", "hidden")
         
+        
         document.getElementById("RendimientoMensual").removeAttribute("hidden")
+        document.getElementById("RendimientoCobrado").removeAttribute("hidden")
+        document.getElementById("lblrxdia").removeAttribute("hidden", "hidden")
+        document.getElementById("lblrcobrador").removeAttribute("hidden", "hidden")
         $("#btnRendDiario").css("background", "#1B2631");
         $("#btnRendMensual").css("background", "#2E4053");
 
@@ -642,10 +765,14 @@ async function mostrarRendimiento(rendimiento) {
 
     if (rendimiento == 'Diario' && !$('#grdRendimiento').is(':visible')) {
 
-            $('#grdRendimiento').DataTable().destroy();
+            $('#grdRendimiento').DataTable().clear().draw();
             await configurarDataDiario();
 
             document.getElementById("RendimientoMensual").setAttribute("hidden", "hidden")
+            document.getElementById("RendimientoCobrado").setAttribute("hidden", "hidden")
+            document.getElementById("lblrxdia").setAttribute("hidden", "hidden")
+            document.getElementById("lblrcobrador").setAttribute("hidden", "hidden")
+
             document.getElementById("divCliente").removeAttribute("hidden")
 
             document.getElementById("RendimientoDiario").removeAttribute("hidden")

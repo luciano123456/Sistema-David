@@ -17,7 +17,30 @@
   
 }
 
+.lblRendimiento {
+    font-size: 20px;
+    color: red;
+    text-decoration: underline;
+    width: 100% !important;
 
+}
+
+.cursor-pointer{
+    cursor: pointer
+}
+
+.menu-seccionesRend {
+    display: grid; /* Muestra el menú de secciones como cuadrícula */
+    grid-template-columns: repeat(auto-fit, minmax(10px, 1fr));
+    gap: 10px;
+    padding: 0px !important;
+    margin: 0px !important;
+    text-align: center !important;
+    align-items: center !important;
+    align-content: center !important;
+    position: relative;
+    left: -5% !important;
+}
 
     .input-nuevomodif:active {
         border: none;

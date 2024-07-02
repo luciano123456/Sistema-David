@@ -1,4 +1,5 @@
-﻿using Sistema_David.Models;
+﻿using Sistema_David.Helpers;
+using Sistema_David.Models;
 using Sistema_David.Models.DB;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,15 @@ namespace Sistema_David.Controllers
         // GET: Stock
         public ActionResult Index()
         {
+
+            var stockPendiente = StockPendienteModel.ListarStockPendienteId(SessionHelper.GetUsuarioSesion().Id, "Pendiente");
+
+            if (stockPendiente.Count > 0 && SessionHelper.GetUsuarioSesion().IdRol != 1) // No afecta a administradores
+            {
+                // Si hay stock pendiente, redirige al índice de StockController
+                return RedirectToAction("Index", "StockPendiente");
+            }
+
             return View();
         }
 
@@ -40,16 +50,16 @@ namespace Sistema_David.Controllers
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
-        public ActionResult Agregar(StockUsuarios model)
+        public ActionResult Agregar(StocksPendientes model)
         {
             try
             {
 
-                var producto = StockModel.BuscarStockUser(model.IdUsuario, model.IdProducto);
+                var producto = StockModel.BuscarStockUser((int)model.IdUsuario, (int)model.IdProducto);
 
                 if (producto != null)
                 {
-                    SumarStock(model.IdUsuario, model.IdProducto, model.Cantidad);
+                    SumarStock((int)model.IdUsuario, (int)model.IdProducto, (int)model.Cantidad);
                     return Json(new { Status = 1 });
                 }
                 var result = StockModel.Agregar(model);

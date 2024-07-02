@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Sistema_David.Helpers;
 using Sistema_David.Models;
+using Sistema_David.Models.DB;
 using Sistema_David.Models.Modelo;
 using Sistema_David.Models.ViewModels;
 using System;
@@ -55,13 +56,23 @@ namespace Sistema_David.Controllers
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
+
+
+
         [HttpGet]
         public ActionResult MostrarRendimientoGeneral(DateTime fechadesde, DateTime fechahasta) 
         {
             {
-                var result = RendimientosModel.MostrarRendimientoGeneral(fechadesde, fechahasta);
-                return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+
+                var resultRendimiento = RendimientosModel.MostrarRendimientoGeneral(fechadesde, fechahasta);
+                var resultCobrado = RendimientosModel.MostrarCobrado(fechadesde, fechahasta);
+
+                var result = new Dictionary<string, object>();
+                result.Add("Rendimiento", resultRendimiento);
+                result.Add("Cobrado", resultCobrado);
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
+
         }
     }
 }

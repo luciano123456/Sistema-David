@@ -2,6 +2,7 @@
 const productos = [];
 let userSession;
 let idUserStock = 0;
+let productoNombres = {};
 
 $(document).ready(function () {
     userSession = JSON.parse(sessionStorage.getItem('usuario'));
@@ -34,15 +35,7 @@ $(document).ready(function () {
 
 });
 
-function formatNumber(number) {
-    if (typeof number !== 'number' || isNaN(number)) {
-        return "$0"; // Devuelve un valor predeterminado si 'number' no es válido
-    }
 
-    const parts = number.toFixed(0).toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return "$" + parts.join(",");
-}
 
 async function configurarDataTable() {
 
@@ -81,7 +74,7 @@ async function configurarDataTable() {
             },
             {
                 "targets": [3, 4], // Columnas de acciones
-                "visible": (userSession.IdRol !== 2) // Ocultar si el rol no es 2
+                "visible": (userSession.IdRol == 1) // Ocultar si el rol no es 1
             }
         ],
     };
@@ -119,7 +112,7 @@ const editarStock = async id => {
 
         if (result != null) {
 
-            await cargarProductos();
+            await cargarProductosAll();
 
             $("#nuevoProductoModal").modal("show");
             $("#btnRegistrarModificar").text("Editar");
@@ -136,6 +129,8 @@ const editarStock = async id => {
 
             $("#Productos").prop('disabled', true);
 
+            
+
             $("#precioTotal").text(formatNumber(result.data.Total));
 
         } else {
@@ -145,6 +140,7 @@ const editarStock = async id => {
         alert("Ha ocurrido un error en los datos");
     }
 }
+
 
 function abrirmodal() {
     $("#nuevoProductoModal").modal("show");
@@ -157,6 +153,54 @@ function abrirmodal() {
 }
 
 async function cargarProductos() {
+    try {
+        var url = "/Productos/ListarActivos";
+
+        let value = JSON.stringify({
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result != null) {
+
+            selectProductos = document.getElementById("Productos");
+
+            $('#Productos option').remove();
+            for (var i = 0; i < result.data.length; i++) {
+                option = document.createElement("option");
+                option.value = result.data[i].Id;
+                option.text = result.data[i].Nombre;
+                /*precioVenta[result.data[i].Id] = result.data[i].PrecioVenta;*/
+                precioVenta[i] = result.data[i].PrecioVenta;
+
+                productoNombres[result.data[i].Id] = result.data[i].Nombre;
+
+                selectProductos.appendChild(option);
+
+            }
+
+            selectProductosPrecio = document.getElementById("ProductosPrecio");
+
+            $("#precioTotal").text(formatNumber(precioVenta[0]));
+
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+
+async function cargarProductosAll() {
     try {
         var url = "/Productos/Listar";
 
@@ -183,7 +227,11 @@ async function cargarProductos() {
                 option = document.createElement("option");
                 option.value = result.data[i].Id;
                 option.text = result.data[i].Nombre;
+                /*precioVenta[result.data[i].Id] = result.data[i].PrecioVenta;*/
                 precioVenta[i] = result.data[i].PrecioVenta;
+
+                productoNombres[result.data[i].Id] = result.data[i].Nombre;
+
                 selectProductos.appendChild(option);
 
             }
@@ -192,14 +240,13 @@ async function cargarProductos() {
 
             $("#precioTotal").text(formatNumber(precioVenta[0]));
 
-
-
         }
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.')
         $('.datos-error').removeClass('d-none')
     }
 }
+
 
 
 const Productos = document.querySelector("#Productos");
@@ -220,6 +267,27 @@ cantidad.addEventListener("keyup", (e) => {
 
 });
 
+function obtenerIdListSeleccionado() {
+    // Obtén el valor seleccionado en el input
+    const selectedValue = Productos.value;
+
+    // Encuentra la opción correspondiente en el datalist
+    let selectedOption = null;
+    for (let i = 0; i < dataList.options.length; i++) {
+        if (dataList.options[i].value === selectedValue) {
+            selectedOption = dataList.options[i];
+            break;
+        }
+    }
+
+    // Si se encuentra una opción correspondiente en el datalist
+    if (selectedOption) {
+        // Puedes acceder al valor asociado con la opción seleccionada
+        const optionDataValue = selectedOption.getAttribute('data-value');
+
+        return optionDataValue
+    }
+}
 
 async function agregarStock() {
     if ($("#IdStock").text() > 0) {
@@ -268,9 +336,10 @@ async function modificarStockuser() {
 async function agregarStockUser() {
 
     try {
-        var url = "/Stock/Agregar";
+        var url = "/StockPendiente/Agregar";
 
         let value = JSON.stringify({
+            //IdProducto: obtenerIdListSeleccionado(),
             IdProducto: $("#Productos").find("option:selected").val(),
             Cantidad: Number($("#Cantidad").val()),
             IdUsuario: localStorage.getItem("idUserStock"),
@@ -289,7 +358,7 @@ async function agregarStockUser() {
         let result = await MakeAjax(options);
 
         if (result.Status == 1) {
-            alert('Stock agregado correctamente.');
+            alert('Se le ha agregado en sus stocks pendientes al usuario correctamente.');
             $('.datos-error').removeClass('d-none');
             document.location.href = "../../Stock/Index/";
 
@@ -407,3 +476,40 @@ async function cargarNombre() {
 
 
 
+
+const loadDatalist = (control, data, fieldValue, fieldText, showDescription = false) => {
+    // Limpia las opciones del control
+    while (control.options.length > 0) {
+        control.options[0].remove();
+    }
+
+    if (data && data.length > 0) {
+        data.forEach(element => {
+            // Crea una nueva opción
+            const option = document.createElement('option');
+
+            // Asigna el valor del atributo value
+            option.value = element[fieldText]; // `fieldText` define el texto visible en la opción
+
+            // Configura el atributo data-value con el valor de `fieldValue`
+            option.setAttribute('data-value', element[fieldValue]);
+
+            // Si `showDescription` es verdadero, muestra el texto visible como texto de la opción
+            if (showDescription) {
+                option.textContent = element[fieldText];
+            }
+
+            // Añade la opción al datalist
+            control.appendChild(option);
+        });
+    }
+
+    // Controla la disponibilidad del input asociado
+    const input = document.querySelector(`input[list="${control.id}"]`);
+    if (control.options.length > 0) {
+        input.removeAttribute('disabled');
+    } else {
+        input.setAttribute('disabled', true);
+        input.value = '';
+    }
+};

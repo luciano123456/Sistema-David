@@ -29,6 +29,15 @@ namespace Sistema_David.Controllers
         // GET: Ventas
         public ActionResult Index()
         {
+            var stockPendiente = StockPendienteModel.ListarStockPendienteId(SessionHelper.GetUsuarioSesion().Id, "Pendiente");
+
+            if (stockPendiente.Count > 0 && SessionHelper.GetUsuarioSesion().IdRol != 1) // No afecta a administradores
+            {
+                // Si hay stock pendiente, redirige al índice de StockController
+                return RedirectToAction("Index", "StockPendiente");
+            }
+
+
             return View();
         }
 
@@ -84,6 +93,16 @@ namespace Sistema_David.Controllers
             }
 
 
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult ListarTodas()
+        {
+            List<Venta> result;
+
+
+                result = VentasModel.ListaVentasTodas();
+        
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
@@ -187,7 +206,7 @@ namespace Sistema_David.Controllers
                         stock.Cantidad = producto.Cantidad;
                         stock.IdUsuario = venta.idVendedor;
                         stock.IdCategoria = 0;
-                        StockModel.Agregar(stock);
+                        StockModel.AgregarStockEliminarVenta(stock);
                     }
                 }
 

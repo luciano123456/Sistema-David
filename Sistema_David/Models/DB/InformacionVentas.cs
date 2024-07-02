@@ -19,12 +19,14 @@ namespace Sistema_David.Models.DB
         public Nullable<System.DateTime> Fecha { get; set; }
         public string Descripcion { get; set; }
         public Nullable<decimal> Entrega { get; set; }
+        public Nullable<decimal> ValorCuota { get; set; }
         public Nullable<decimal> Restante { get; set; }
         public Nullable<int> idVendedor { get; set; }
         public Nullable<int> whatssap { get; set; }
         public string Observacion { get; set; }
-        public Nullable<decimal> ValorCuota { get; set; }
         public Nullable<decimal> Interes { get; set; }
+        public string MetodoPago { get; set; }
+        public Nullable<int> idCobrador { get; set; }
     
         public virtual Ventas Ventas { get; set; }
     }

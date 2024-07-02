@@ -17,8 +17,8 @@ namespace Sistema_David.Models.DB
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Ventas()
         {
-            this.ProductosVenta = new HashSet<ProductosVenta>();
             this.InformacionVentas = new HashSet<InformacionVentas>();
+            this.ProductosVenta = new HashSet<ProductosVenta>();
         }
     
         public int Id { get; set; }
@@ -35,13 +35,16 @@ namespace Sistema_David.Models.DB
         public Nullable<decimal> ValorCuota { get; set; }
         public Nullable<decimal> Interes { get; set; }
         public Nullable<int> idCobrador { get; set; }
+        public Nullable<System.DateTime> P_FechaCobro { get; set; }
+        public Nullable<decimal> P_ValorCuota { get; set; }
+        public Nullable<int> Comprobante { get; set; }
+        public string MetodoPago { get; set; }
     
         public virtual Clientes Clientes { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<InformacionVentas> InformacionVentas { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ProductosVenta> ProductosVenta { get; set; }
         public virtual Usuarios Usuarios { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<InformacionVentas> InformacionVentas { get; set; }
-        public virtual Usuarios Usuarios1 { get; set; }
     }
 }

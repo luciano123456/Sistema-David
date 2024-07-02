@@ -29,6 +29,13 @@
     <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
     <Property Name="Nombre" Type="varchar" MaxLength="50" />
   </EntityType>
+  <EntityType Name="EstadosPedidos">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Nombre" Type="varchar" MaxLength="100" />
+  </EntityType>
   <EntityType Name="EstadosUsuarios">
     <Key>
       <PropertyRef Name="Id" />
@@ -51,6 +58,30 @@
     <Property Name="whatssap" Type="int" />
     <Property Name="Observacion" Type="varchar(max)" />
     <Property Name="Interes" Type="decimal" Precision="20" Scale="2" />
+    <Property Name="MetodoPago" Type="varchar" MaxLength="100" />
+    <Property Name="idCobrador" Type="int" />
+  </EntityType>
+  <EntityType Name="Limites">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Nombre" Type="varchar" MaxLength="255" />
+    <Property Name="Valor" Type="int" />
+  </EntityType>
+  <EntityType Name="Pedidos">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Fecha" Type="int" Nullable="false" />
+    <Property Name="IdVendedor" Type="int" Nullable="false" />
+    <Property Name="IdCliente" Type="int" Nullable="false" />
+    <Property Name="IdEstado" Type="int" Nullable="false" />
+    <Property Name="NombreCliente" Type="varchar" MaxLength="100" />
+    <Property Name="Dni" Type="varchar" MaxLength="255" />
+    <Property Name="Direccion" Type="varchar" MaxLength="255" />
+    <Property Name="Telefono" Type="varchar" MaxLength="500" />
   </EntityType>
   <EntityType Name="Productos">
     <Key>
@@ -65,6 +96,18 @@
     <Property Name="PrecioCompra" Type="decimal" Precision="18" Scale="2" />
     <Property Name="PrecioVenta" Type="decimal" Precision="18" Scale="2" />
     <Property Name="PorcVenta" Type="int" />
+    <Property Name="Activo" Type="int" />
+  </EntityType>
+  <EntityType Name="ProductosPedidos">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="IdProducto" Type="int" Nullable="false" />
+    <Property Name="IdPedido" Type="int" Nullable="false" />
+    <Property Name="Cantidad" Type="int" Nullable="false" />
+    <Property Name="PrecioUnitario" Type="decimal" Precision="20" Scale="2" Nullable="false" />
+    <Property Name="Talle" Type="varchar" MaxLength="50" />
   </EntityType>
   <EntityType Name="ProductosVenta">
     <Key>
@@ -74,6 +117,7 @@
     <Property Name="IdProducto" Type="int" Nullable="false" />
     <Property Name="IdVenta" Type="int" Nullable="false" />
     <Property Name="Cantidad" Type="int" Nullable="false" />
+    <Property Name="PrecioUnitario" Type="decimal" Precision="20" Scale="2" />
   </EntityType>
   <EntityType Name="Roles">
     <Key>
@@ -81,6 +125,18 @@
     </Key>
     <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
     <Property Name="Nombre" Type="varchar" MaxLength="75" />
+  </EntityType>
+  <EntityType Name="StocksPendientes">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="IdUsuario" Type="int" />
+    <Property Name="IdUsuarioAsignado" Type="int" />
+    <Property Name="Fecha" Type="datetime" />
+    <Property Name="IdProducto" Type="int" />
+    <Property Name="Cantidad" Type="int" />
+    <Property Name="Estado" Type="varchar" MaxLength="255" />
   </EntityType>
   <EntityType Name="StockUsuarios">
     <Key>
@@ -107,6 +163,8 @@
     <Property Name="Contrasena" Type="varchar" MaxLength="255" Nullable="false" />
     <Property Name="CantVentas" Type="int" />
     <Property Name="IdEstado" Type="int" />
+    <Property Name="UltimaExportacion" Type="datetime" />
+    <Property Name="UrlExportacion" Type="varchar(max)" />
   </EntityType>
   <EntityType Name="Ventas">
     <Key>
@@ -126,6 +184,9 @@
     <Property Name="ValorCuota" Type="decimal" Precision="18" Scale="2" />
     <Property Name="Interes" Type="decimal" Precision="18" Scale="2" />
     <Property Name="idCobrador" Type="int" />
+    <Property Name="P_FechaCobro" Type="datetime" />
+    <Property Name="P_ValorCuota" Type="decimal" Precision="20" Scale="2" />
+    <Property Name="Comprobante" Type="int" />
   </EntityType>
   <EntityType Name="Zonas">
     <Key>
@@ -158,6 +219,42 @@
       </Dependent>
     </ReferentialConstraint>
   </Association>
+  <Association Name="FK_Pedidos_Clientes">
+    <End Role="Clientes" Type="Self.Clientes" Multiplicity="1" />
+    <End Role="Pedidos" Type="Self.Pedidos" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Clientes">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="Pedidos">
+        <PropertyRef Name="IdCliente" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Pedidos_EstadosPedidos">
+    <End Role="EstadosPedidos" Type="Self.EstadosPedidos" Multiplicity="1" />
+    <End Role="Pedidos" Type="Self.Pedidos" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="EstadosPedidos">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="Pedidos">
+        <PropertyRef Name="IdCliente" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Pedidos_Usuarios">
+    <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="1" />
+    <End Role="Pedidos" Type="Self.Pedidos" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Usuarios">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="Pedidos">
+        <PropertyRef Name="IdVendedor" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
   <Association Name="FK_Productos_Categorias">
     <End Role="Categorias" Type="Self.Categorias" Multiplicity="0..1" />
     <End Role="Productos" Type="Self.Productos" Multiplicity="*" />
@@ -167,6 +264,30 @@
       </Principal>
       <Dependent Role="Productos">
         <PropertyRef Name="idCategoria" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_ProductosPedidos_Pedidos">
+    <End Role="Pedidos" Type="Self.Pedidos" Multiplicity="1" />
+    <End Role="ProductosPedidos" Type="Self.ProductosPedidos" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Pedidos">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="ProductosPedidos">
+        <PropertyRef Name="IdPedido" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_ProductosPedidos_Productos">
+    <End Role="Productos" Type="Self.Productos" Multiplicity="1" />
+    <End Role="ProductosPedidos" Type="Self.ProductosPedidos" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Productos">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="ProductosPedidos">
+        <PropertyRef Name="IdPedido" />
       </Dependent>
     </ReferentialConstraint>
   </Association>
@@ -227,6 +348,42 @@
       </Principal>
       <Dependent Role="StockUsuarios">
         <PropertyRef Name="IdUsuario" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_StocksPendientes_Productos">
+    <End Role="Productos" Type="Self.Productos" Multiplicity="0..1" />
+    <End Role="StocksPendientes" Type="Self.StocksPendientes" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Productos">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="StocksPendientes">
+        <PropertyRef Name="IdProducto" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_StocksPendientes_Usuarios">
+    <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="0..1" />
+    <End Role="StocksPendientes" Type="Self.StocksPendientes" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Usuarios">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="StocksPendientes">
+        <PropertyRef Name="IdUsuario" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_StocksPendientes_Usuarios_Asignados">
+    <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="0..1" />
+    <End Role="StocksPendientes" Type="Self.StocksPendientes" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Usuarios">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="StocksPendientes">
+        <PropertyRef Name="IdUsuarioAsignado" />
       </Dependent>
     </ReferentialConstraint>
   </Association>
@@ -294,11 +451,16 @@
     <EntitySet Name="Categorias" EntityType="Self.Categorias" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="Clientes" EntityType="Self.Clientes" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="EstadosClientes" EntityType="Self.EstadosClientes" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="EstadosPedidos" EntityType="Self.EstadosPedidos" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="EstadosUsuarios" EntityType="Self.EstadosUsuarios" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="InformacionVentas" EntityType="Self.InformacionVentas" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Limites" EntityType="Self.Limites" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Pedidos" EntityType="Self.Pedidos" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="Productos" EntityType="Self.Productos" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="ProductosPedidos" EntityType="Self.ProductosPedidos" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="ProductosVenta" EntityType="Self.ProductosVenta" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="Roles" EntityType="Self.Roles" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="StocksPendientes" EntityType="Self.StocksPendientes" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="StockUsuarios" EntityType="Self.StockUsuarios" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="Usuarios" EntityType="Self.Usuarios" Schema="dbo" store:Type="Tables" />
     <EntitySet Name="Ventas" EntityType="Self.Ventas" Schema="dbo" store:Type="Tables" />
@@ -311,9 +473,29 @@
       <End Role="Ventas" EntitySet="Ventas" />
       <End Role="InformacionVentas" EntitySet="InformacionVentas" />
     </AssociationSet>
+    <AssociationSet Name="FK_Pedidos_Clientes" Association="Self.FK_Pedidos_Clientes">
+      <End Role="Clientes" EntitySet="Clientes" />
+      <End Role="Pedidos" EntitySet="Pedidos" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Pedidos_EstadosPedidos" Association="Self.FK_Pedidos_EstadosPedidos">
+      <End Role="EstadosPedidos" EntitySet="EstadosPedidos" />
+      <End Role="Pedidos" EntitySet="Pedidos" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Pedidos_Usuarios" Association="Self.FK_Pedidos_Usuarios">
+      <End Role="Usuarios" EntitySet="Usuarios" />
+      <End Role="Pedidos" EntitySet="Pedidos" />
+    </AssociationSet>
     <AssociationSet Name="FK_Productos_Categorias" Association="Self.FK_Productos_Categorias">
       <End Role="Categorias" EntitySet="Categorias" />
       <End Role="Productos" EntitySet="Productos" />
+    </AssociationSet>
+    <AssociationSet Name="FK_ProductosPedidos_Pedidos" Association="Self.FK_ProductosPedidos_Pedidos">
+      <End Role="Pedidos" EntitySet="Pedidos" />
+      <End Role="ProductosPedidos" EntitySet="ProductosPedidos" />
+    </AssociationSet>
+    <AssociationSet Name="FK_ProductosPedidos_Productos" Association="Self.FK_ProductosPedidos_Productos">
+      <End Role="Productos" EntitySet="Productos" />
+      <End Role="ProductosPedidos" EntitySet="ProductosPedidos" />
     </AssociationSet>
     <AssociationSet Name="FK_ProductosVenta_Productos" Association="Self.FK_ProductosVenta_Productos">
       <End Role="Productos" EntitySet="Productos" />
@@ -334,6 +516,18 @@
     <AssociationSet Name="FK_Stock_Usuarios" Association="Self.FK_Stock_Usuarios">
       <End Role="Usuarios" EntitySet="Usuarios" />
       <End Role="StockUsuarios" EntitySet="StockUsuarios" />
+    </AssociationSet>
+    <AssociationSet Name="FK_StocksPendientes_Productos" Association="Self.FK_StocksPendientes_Productos">
+      <End Role="Productos" EntitySet="Productos" />
+      <End Role="StocksPendientes" EntitySet="StocksPendientes" />
+    </AssociationSet>
+    <AssociationSet Name="FK_StocksPendientes_Usuarios" Association="Self.FK_StocksPendientes_Usuarios">
+      <End Role="Usuarios" EntitySet="Usuarios" />
+      <End Role="StocksPendientes" EntitySet="StocksPendientes" />
+    </AssociationSet>
+    <AssociationSet Name="FK_StocksPendientes_Usuarios_Asignados" Association="Self.FK_StocksPendientes_Usuarios_Asignados">
+      <End Role="Usuarios" EntitySet="Usuarios" />
+      <End Role="StocksPendientes" EntitySet="StocksPendientes" />
     </AssociationSet>
     <AssociationSet Name="FK_Usuarios_EstadosUsuarios1" Association="Self.FK_Usuarios_EstadosUsuarios1">
       <End Role="EstadosUsuarios" EntitySet="EstadosUsuarios" />

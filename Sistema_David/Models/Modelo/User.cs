@@ -19,8 +19,11 @@ namespace Sistema_David.Models.ViewModels
         public string Contrasena { get; set; }
         public string Estado { get; set; }
         public string Rol { get; set; }
+        public DateTime? UltimaExportacion { get; set; }
+        public string UrlExportacion { get; set; }
         public Nullable<int> CantVentas { get; set; }
         public Nullable<int> IdEstado { get; set; }
+        public Nullable<int> TotalCobranzas { get; set; }
 
         public virtual EstadosUsuarios EstadosUsuarios { get; set; }
         public virtual Roles Roles { get; set; }

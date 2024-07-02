@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using Sistema_David.Helpers;
 using Sistema_David.Models.DB;
 using Sistema_David.Models.Manager;
 using System;
@@ -193,9 +194,12 @@ namespace Sistema_David.Models.Modelo
 
                         db.Entry(venta).State = System.Data.Entity.EntityState.Modified;
 
-                        db.SaveChanges();
+                        
 
                     }
+
+                    db.SaveChanges();
+
                     return true;
                 }
             }
@@ -260,6 +264,7 @@ namespace Sistema_David.Models.Modelo
                         venta.Interes += model.Interes;
                         venta.Restante += model.Interes;
                         venta.idCobrador = 0;
+                        
 
                         db.Entry(venta).State = System.Data.Entity.EntityState.Modified;
 
@@ -282,6 +287,8 @@ namespace Sistema_David.Models.Modelo
                         infoventa.Restante = venta.Restante;
                         infoventa.Observacion = model.Observacion;
                         infoventa.ValorCuota = model.ValorCuota;
+                        infoventa.MetodoPago = model.MetodoPago.ToUpper();
+                        infoventa.idCobrador = SessionHelper.GetUsuarioSesion().Id;
 
                         VentasModel.AgregarInformacionVenta(infoventa);
 

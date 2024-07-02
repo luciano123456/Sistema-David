@@ -27,7 +27,30 @@
 }
 
 
+.select2-results__option {
+    color: red;
+}
 
+.select2-container {
+    z-index: 9999999999;
+}
+
+    /* Establece el color de los textos de Select2 en negro */
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        color: black;
+    }
+
+    /* Elimina el borde del contenedor de selección */
+    .select2-container .select2-selection--single {
+        border: none; /* Elimina el borde del contenedor */
+        box-shadow: none; /* Elimina el sombreado del contenedor */
+    }
+
+    /* Opcional: si también quieres eliminar los bordes del dropdown */
+    .select2-container .select2-dropdown {
+        border: none; /* Elimina el borde del dropdown */
+        box-shadow: none; /* Elimina el sombreado del dropdown */
+    }
 
 .input-nuevo {
     border: none;

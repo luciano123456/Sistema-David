@@ -29,6 +29,7 @@ async function configurarDataTable() {
         "columns": [
             { "data": "Fecha" },
             { "data": "Descripcion" },
+            { "data": "Cobrador" },
             { "data": "Entrega" },
             { "data": "ValorCuota" },
             { "data": "Restante" },
@@ -46,26 +47,44 @@ async function configurarDataTable() {
             },
             {
                 "data": "Id",
-                "render": function (data) {
-                    var iconColor = userSession.IdRol == 2 ? "red" : "white"; // Color del icono basado en el rol
-                    var disabled = userSession.IdRol == 2 ? "disabled" : ""; // Desactivar el botón basado en el rol
-                    return "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarInformacion(" + data + ")' title='Eliminar' style='color: " + iconColor + ";' " + disabled + "><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>";
-                },
-                "orderable": true,
-                "searchable": true,
+                "render": function (data, type, row) {
+                    // Verifica si la descripción contiene la palabra "Venta"
+                    if (row.Descripcion && row.Descripcion.includes("Venta")) {
+                        // No muestra el botón si la descripción contiene la palabra "Venta"
+                        return '';
+                    } else {
+                        // Define el color del ícono y el estado del botón basado en el rol del usuario
+                        var iconColor = userSession.IdRol == 2 ? "red" : "white"; // Color del icono basado en el rol
+                        var disabled = userSession.IdRol == 2 ? "disabled" : ""; // Desactivar el botón basado en el rol
+
+                        // Devuelve el HTML del botón de eliminar si la descripción no contiene "Venta"
+                        return "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarInformacion(" + data + ")' title='Eliminar' style='color: " + iconColor + ";' " + disabled + "><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>";
+                    }
+                }
             },
         ],
         "columnDefs": [
+
             {
                 targets: [0],
                 render: function (data) {
                     return moment(data).format('DD/MM/YYYY');
                 }
-            }
+            },
+            
+
+            {
+                targets: [3,4,5],
+                render: function (data) {
+                    return formatNumber(data);
+                }
+            },
         ],
     });
 
-    if (userSession.IdRol == 2) { //vendedor
+
+
+    if (userSession.IdRol != 1) { //vendedor
         gridInfoVenta.column(-1).visible(false); // Ocultar la última columna si el usuario tiene el rol vendedor
     }
   
@@ -126,7 +145,7 @@ async function agregarInformacion() {
 
 const eliminarInformacion = async id => {
 
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
+    if (userSession.IdRol != 1) { //ROL VENDEDOR
         alert("No tienes permisos para realizar esta accion.")
         return false;
     }
@@ -153,7 +172,7 @@ const eliminarInformacion = async id => {
             if (result.data) {
                 alert('Informacion eliminada correctamente.');
                 $('.datos-error').removeClass('d-none');
-                document.location.href = "../Informacion/";
+                gridInfoVenta.ajax.reload();
             } else {
                 //$('.datos-error').text('Ha ocurrido un error en los datos.')
                 //$('.datos-error').removeClass('d-none')

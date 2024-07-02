@@ -159,15 +159,6 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
 
 
 
-function formatNumber(number) {
-    if (typeof number !== 'number' || isNaN(number)) {
-        return "$0"; // Devuelve un valor predeterminado si 'number' no es válido
-    }
-
-    const parts = number.toFixed(0).toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return "$" + parts.join(",");
-}
 
 const eliminarCliente = async id => {
 
@@ -202,6 +193,101 @@ const eliminarCliente = async id => {
         $('.datos-error').text('Ha ocurrido un error.')
         $('.datos-error').removeClass('d-none')
     }
+}
+
+
+const buscarLimite = async nombre => {
+
+    try {
+     
+            var url = "/Limite/BuscarValorLimite";
+
+            let value = JSON.stringify({
+                Nombre: nombre
+            });
+
+            let options = {
+                type: "POST",
+                url: url,
+                async: true,
+                data: value,
+                contentType: "application/json",
+                dataType: "json"
+            };
+
+        let result = await MakeAjax(options);
+
+        var valorFormateado = (result.data.Valor).toLocaleString('es-CL', {
+            style: 'currency',
+            currency: 'CLP'
+        });
+
+        if (result != null) {
+            document.getElementById("valorLimite").value = valorFormateado;
+        }
+
+        
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+function formatoMoneda(event) {
+    // Obtener el valor ingresado por el usuario
+    var valorIngresado = event.target.value;
+
+    // Quitar todos los caracteres que no sean dígitos
+    var valorNumerico = parseFloat(valorIngresado.replace(/[^\d]/g, ''));
+
+    // Formatear el valor con separadores de miles y el símbolo de moneda
+    var valorFormateado = valorNumerico.toLocaleString('es-CL', {
+        style: 'currency',
+        currency: 'CLP'
+    });
+
+    // Actualizar el valor del campo de entrada con el valor formateado
+    event.target.value = valorFormateado;
+}
+
+async function modificarLimiteVenta () {
+
+    try {
+
+        var url = "/Limite/Editar";
+
+        let value = JSON.stringify({
+            Nombre: "ClientesRegulares_Venta",
+            Valor: parseFloat(document.getElementById("valorLimite").value.replace(/[^\d]/g, ''))
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+
+        if (result != null) {
+            alert("Limite modificado correctamente");
+        }
+
+
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+
+function modalLimite() {
+    buscarLimite("ClientesRegulares_Venta")
+    $("#modalLimite").modal('show');
 }
 
 const modalWhatssap = async id => {
@@ -449,7 +535,7 @@ async function modificarCliente() {
 }
 
 function abrirmodalimportacionmasiva() {
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
+    if (userSession.IdRol != 1) { //ROL VENDEDOR
         alert("No tienes permisos para realizar esta accion.")
         return false;
     }
@@ -540,7 +626,7 @@ async function cargarUsuariosyEstados() {
 
 async function enviarImportacionMasiva() {
     debugger
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
+    if (userSession.IdRol != 1) { //ROL VENDEDOR
         alert("No tienes permisos para realizar esta accion.")
         return false;
     }
@@ -640,7 +726,7 @@ async function exportarExcel() {
 
 
 function exportarDataTableAExcel(dataTable, fileName) {
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
+    if (userSession.IdRol != 1) { //ROL VENDEDOR
         alert("No tienes permisos para realizar esta accion.")
         return false;
     }
