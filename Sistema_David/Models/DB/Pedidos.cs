@@ -21,7 +21,7 @@ namespace Sistema_David.Models.DB
         }
     
         public int Id { get; set; }
-        public int Fecha { get; set; }
+        public System.DateTime Fecha { get; set; }
         public int IdVendedor { get; set; }
         public int IdCliente { get; set; }
         public int IdEstado { get; set; }
@@ -29,6 +29,11 @@ namespace Sistema_David.Models.DB
         public string Dni { get; set; }
         public string Direccion { get; set; }
         public string Telefono { get; set; }
+        public string Observaciones { get; set; }
+        public Nullable<decimal> Entrega { get; set; }
+        public Nullable<decimal> Total { get; set; }
+        public Nullable<decimal> Restante { get; set; }
+        public Nullable<System.DateTime> Fecha_Entrega { get; set; }
     
         public virtual Clientes Clientes { get; set; }
         public virtual EstadosPedidos EstadosPedidos { get; set; }

@@ -145,7 +145,15 @@ namespace Sistema_David.Models
                         db.Entry(result).State = System.Data.Entity.EntityState.Modified;
                         db.SaveChanges();
 
-                        StockModel.Agregar(result);
+                        var producto = StockModel.BuscarStockUser((int)result.IdUsuario, (int)result.IdProducto);
+
+                        if (producto != null)
+                        {
+                            StockModel.SumarStock((int)result.IdUsuario, (int)result.IdProducto, (int)result.Cantidad);
+                            return true;
+                        }
+
+                    StockModel.Agregar(result);
 
                     return true;
                 }
@@ -172,6 +180,14 @@ namespace Sistema_David.Models
                         if (stockPendiente != null)
                         {
                             stockPendiente.Estado = estado;
+
+                            var producto = StockModel.BuscarStockUser((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto);
+
+                            if (producto != null)
+                            {
+                                StockModel.SumarStock((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto, (int)stockPendiente.Cantidad);
+                                return true;
+                            }
                             StockModel.Agregar(stockPendiente);
                         }
                         else

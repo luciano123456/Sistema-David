@@ -40,7 +40,7 @@ namespace Sistema_David.Models.DB
         public virtual DbSet<InformacionVentas> InformacionVentas { get; set; }
         public virtual DbSet<EstadosPedidos> EstadosPedidos { get; set; }
         public virtual DbSet<Ventas> Ventas { get; set; }
-        public virtual DbSet<Pedidos> Pedidos { get; set; }
         public virtual DbSet<ProductosPedidos> ProductosPedidos { get; set; }
+        public virtual DbSet<Pedidos> Pedidos { get; set; }
     }
 }

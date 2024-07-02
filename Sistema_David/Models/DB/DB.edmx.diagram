@@ -38,13 +38,13 @@
         <AssociationConnector Association="Sistema_DavidModel.FK_InformacionVentas_Ventas" />
         <AssociationConnector Association="Sistema_DavidModel.FK_ProductosVenta_Ventas" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Usuarios" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Pedidos" Width="1.5" PointX="7.5" PointY="10.375" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.ProductosPedidos" Width="1.5" PointX="15.75" PointY="1.125" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.ProductosPedidos" Width="1.5" PointX="17.75" PointY="8" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_ProductosPedidos_Productos" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Pedidos" Width="1.5" PointX="7.5" PointY="9.875" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Pedidos_Clientes" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Pedidos_EstadosPedidos" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Pedidos_Usuarios" />
         <AssociationConnector Association="Sistema_DavidModel.FK_ProductosPedidos_Pedidos" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_ProductosPedidos_Productos" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

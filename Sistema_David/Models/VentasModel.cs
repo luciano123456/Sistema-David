@@ -1,9 +1,11 @@
 ﻿using DocumentFormat.OpenXml.ExtendedProperties;
+using Microsoft.Ajax.Utilities;
 using Sistema_David.Helpers;
 using Sistema_David.Models.DB;
 using Sistema_David.Models.Manager;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Linq;
 
@@ -17,257 +19,263 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.Ventas
-                                 .SqlQuery("select v.Id, v.Orden, v.Importante, v.idCliente, v.Fecha, v.Entrega, v.Restante, v.FechaCobro, v.FechaLimite, v.idVendedor, v.Observacion, v.idCobrador, v.Interes, v.ValorCuota, v.P_FechaCobro, v.P_ValorCuota, v.Comprobante, c.Nombre as Cliente, c.Dni as DniCliente,  c.Direccion, c.Fecha as FechaCliente, u.Nombre as Vendedor from Ventas v inner join Clientes c on c.Id = v.idCliente inner join Usuarios u on u.Id = v.idVendedor")
+                var result = (from v in db.Ventas
+                              join c in db.Clientes on v.idCliente equals c.Id
+                              join u in db.Usuarios on v.idVendedor equals u.Id
+                              where v.idVendedor == idUsuario
                               select new Venta
                               {
-                                  Id = d.Id,
-                                  idCliente = d.idCliente,
-                                  Fecha = d.Fecha,
-                                  Entrega = d.Entrega,
-                                  Restante = d.Restante,
-                                  FechaCobro = d.FechaCobro,
-                                  FechaLimite = d.FechaLimite,
-                                  idVendedor = d.idVendedor,
-                                  Observacion = d.Observacion,
-                                  Cliente = d.Clientes.Nombre + " " + d.Clientes.Apellido,
-                                  Direccion = d.Clientes.Direccion,
-                                  Vendedor = d.Usuarios.Nombre,
-                                  DniCliente = d.Clientes.Dni,
-                                  ValorCuota = (decimal)d.ValorCuota,
-                                  Interes = (decimal)d.Interes,
-                                  idCobrador = (int)d.idCobrador,
-                                  FechaCliente = (DateTime)d.Clientes.Fecha,
-                                  P_ValorCuota = (decimal)d.P_ValorCuota,
-                                  P_FechaCobro = (DateTime)d.P_FechaCobro,
-                                  Comprobante = (int)d.Comprobante
-                              }).Where(x => (x.idVendedor == idUsuario) ).ToList();
-
-                return result;
-            }
-        }
-
-        public static List<Venta> ListaVentas(int idVendedor)
-        {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
-            {
-
-                var result = (from d in db.Ventas
-                                 .SqlQuery("select v.Id, v.Orden, v.Importante, v.idCliente, v.Fecha, v.Entrega, v.Restante, v.FechaCobro, v.FechaLimite, v.idVendedor, v.Observacion, v.idCobrador, v.Interes, v.ValorCuota, v.P_FechaCobro, v.P_ValorCuota, v.Comprobante, c.Nombre as Cliente, c.Dni as DniCliente,  c.Direccion, c.Fecha as FechaCliente, ec.Nombre as EstadoCliente,  u.Nombre as Vendedor from Ventas v  inner join Clientes c on c.Id = v.idCliente inner join Usuarios u on u.Id = v.idVendedor inner join EstadosClientes ec on ec.Id = c.IdEstado")
-                              select new Venta
-                              {
-                                  Id = d.Id,
-                                  idCliente = d.idCliente,
-                                  Fecha = d.Fecha,
-                                  Entrega = d.Entrega,
-                                  Restante = d.Restante,
-                                  FechaCobro = d.FechaCobro,
-                                  FechaLimite = d.FechaLimite,
-                                  idVendedor = d.idVendedor,
-                                  Observacion = d.Observacion,
-                                  Cliente = d.Clientes.Nombre + " " + d.Clientes.Apellido,
-                                  Direccion = d.Clientes.Direccion,
-                                  Vendedor = d.Usuarios.Nombre,
-                                  DniCliente = d.Clientes.Dni,
-                                  ValorCuota = (decimal)d.ValorCuota,
-                                  EstadoCliente = d.Clientes.EstadosClientes.Nombre,
-                                  Interes = (decimal)d.Interes,
-                                  idCobrador = (int)d.idCobrador,
-                                  FechaCliente = (DateTime)d.Clientes.Fecha,
-                                  P_ValorCuota = (decimal)d.P_ValorCuota,
-                                  P_FechaCobro = (DateTime)d.P_FechaCobro,
-                                  Comprobante = (int)d.Comprobante
-                              }).Where(x => (x.idVendedor == idVendedor || idVendedor == -1)).ToList();
-
-                return result;
-            }
-        }
-
-        public static List<Venta> ListaVentas(int idVendedor, DateTime FechaDesde, DateTime FechaHasta, DateTime FechaLimiteDesde, DateTime FechaLimiteHasta, int Finalizadas)
-        {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
-            {
-
-                var result = (from d in db.Ventas
-                                 .SqlQuery("select v.Id, v.Orden, v.Importante, v.idCliente, v.Fecha, v.Entrega, v.Restante, v.FechaCobro, v.FechaLimite, v.idVendedor, v.Observacion, v.idCobrador, v.Interes, v.ValorCuota, v.P_FechaCobro, v.P_ValorCuota, v.Comprobante, c.Nombre as Cliente, c.Dni as DniCliente,  c.Direccion, c.Fecha as FechaCliente, u.Nombre as Vendedor from Ventas v inner join Clientes c on c.Id = v.idCliente inner join Usuarios u on u.Id = v.idVendedor")
-                              select new Venta
-                              {
-                                  Id = d.Id,
-                                  idCliente = d.idCliente,
-                                  Fecha = d.Fecha,
-                                  Entrega = d.Entrega,
-                                  Restante = d.Restante,
-                                  FechaCobro = d.FechaCobro,
-                                  FechaLimite = d.FechaLimite,
-                                  idVendedor = d.idVendedor,
-                                  Observacion = d.Observacion,
-                                  Cliente = d.Clientes.Nombre + " " + d.Clientes.Apellido,
-                                  Direccion = d.Clientes.Direccion,
-                                  Vendedor = d.Usuarios.Nombre,
-                                  DniCliente = d.Clientes.Dni,
-                                  ValorCuota = (decimal)d.ValorCuota,
-                                  Interes = (decimal)d.Interes,
-                                  idCobrador = (int)d.idCobrador,
-                                  FechaCliente = (DateTime)d.Clientes.Fecha,
-                                  P_ValorCuota = (decimal)d.P_ValorCuota,
-                                  P_FechaCobro = (DateTime)d.P_FechaCobro,
-                                  Comprobante = (int)d.Comprobante
-
-                              }).Where(x => (x.idVendedor == idVendedor || idVendedor == -1) && (x.Fecha >= FechaDesde && x.Fecha <= FechaHasta) && (x.FechaLimite >= FechaLimiteDesde && x.FechaLimite <= FechaLimiteHasta) && (Finalizadas == 1 && x.Restante == 0 || Finalizadas == 0 && x.Restante > 0)).ToList();
-
-                return result;
-            }
-        }
-
-        public static List<Venta> ListaVentasTodas()
-        {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
-            {
-
-                var result = (from d in db.Ventas
-                                 .SqlQuery("select v.Id, v.Orden, v.Importante, v.idCliente, v.Fecha, v.Entrega, v.Restante, v.FechaCobro, v.FechaLimite, v.idVendedor, v.Observacion, v.idCobrador, v.Interes, v.ValorCuota, v.P_FechaCobro, v.P_ValorCuota, v.Comprobante, c.Nombre as Cliente, c.Dni as DniCliente,  c.Direccion, c.Fecha as FechaCliente, u.Nombre as Vendedor from Ventas v inner join Clientes c on c.Id = v.idCliente inner join Usuarios u on u.Id = v.idVendedor")
-                              select new Venta
-                              {
-                                  Id = d.Id,
-                                  idCliente = d.idCliente,
-                                  Fecha = d.Fecha,
-                                  Entrega = d.Entrega,
-                                  Restante = d.Restante,
-                                  FechaCobro = d.FechaCobro,
-                                  FechaLimite = d.FechaLimite,
-                                  idVendedor = d.idVendedor,
-                                  Observacion = d.Observacion,
-                                  Cliente = d.Clientes.Nombre + " " + d.Clientes.Apellido,
-                                  Direccion = d.Clientes.Direccion,
-                                  Vendedor = d.Usuarios.Nombre,
-                                  DniCliente = d.Clientes.Dni,
-                                  ValorCuota = (decimal)d.ValorCuota,
-                                  Interes = (decimal)d.Interes,
-                                  idCobrador = (int)d.idCobrador,
-                                  FechaCliente = (DateTime)d.Clientes.Fecha,
-                                  P_ValorCuota = (decimal)d.P_ValorCuota,
-                                  P_FechaCobro = (DateTime)d.P_FechaCobro,
-                                  Comprobante = (int)d.Comprobante
+                                  Id = v.Id,
+                                  idCliente = v.idCliente,
+                                  Fecha = v.Fecha,
+                                  Entrega = v.Entrega,
+                                  Restante = v.Restante,
+                                  FechaCobro = v.FechaCobro,
+                                  FechaLimite = v.FechaLimite,
+                                  idVendedor = v.idVendedor,
+                                  Observacion = v.Observacion,
+                                  Cliente = c.Nombre + " " + c.Apellido,
+                                  Direccion = c.Direccion,
+                                  Vendedor = u.Nombre,
+                                  DniCliente = c.Dni,
+                                  ValorCuota = v.ValorCuota.HasValue ? v.ValorCuota.Value : 0,
+                                  Interes = v.Interes.HasValue ? v.Interes.Value : 0,
+                                  idCobrador = v.idCobrador.HasValue ? v.idCobrador.Value : 0,
+                                  FechaCliente = c.Fecha.HasValue ? c.Fecha.Value : DateTime.MinValue,
+                                  P_ValorCuota = v.P_ValorCuota.HasValue ? v.P_ValorCuota.Value : 0,
+                                  P_FechaCobro = v.P_FechaCobro.HasValue ? v.P_FechaCobro.Value : DateTime.MinValue,
+                                  Comprobante = v.Comprobante.HasValue ? v.Comprobante.Value : 0
                               }).ToList();
 
                 return result;
             }
         }
 
-        public static List<Venta> ListaVentasCliente(int idCliente)
+
+        public static List<Venta> ListaVentas(int idVendedor)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.Ventas
-                                 .SqlQuery("select v.Id, v.Orden, v.Importante, v.idCliente, v.Fecha, v.Entrega, v.Restante, v.FechaCobro, v.FechaLimite, v.idVendedor, v.Observacion, v.idCobrador, v.Interes, v.ValorCuota, v.P_FechaCobro, v.P_ValorCuota, v.Comprobante, c.Nombre as Cliente, c.Fecha as FechaCliente, c.Dni as DniCliente, c.Direccion, u.Nombre as Vendedor from Ventas v inner join Clientes c on c.Id = v.idCliente inner join Usuarios u on u.Id = v.idVendedor")
+                var result = (from v in db.Ventas
+                              join c in db.Clientes on v.idCliente equals c.Id
+                              join u in db.Usuarios on v.idVendedor equals u.Id
+                              join ec in db.EstadosClientes on c.IdEstado equals ec.Id
+                              where v.idVendedor == idVendedor || idVendedor == -1
                               select new Venta
                               {
-                                  Id = d.Id,
-                                  idCliente = d.idCliente,
-                                  Fecha = d.Fecha,
-                                  Entrega = d.Entrega,
-                                  Restante = d.Restante,
-                                  FechaCobro = d.FechaCobro,
-                                  FechaLimite = d.FechaLimite,
-                                  idVendedor = d.idVendedor,
-                                  Observacion = d.Observacion,
-                                  Cliente = d.Clientes.Nombre,
-                                  Direccion = d.Clientes.Direccion,
-                                  DniCliente = d.Clientes.Dni,
-                                  Vendedor = d.Usuarios.Nombre,
-                                   Interes = (decimal)d.Interes,
-                                  idCobrador = (int)d.idCobrador,
-                                  FechaCliente = (DateTime)d.Clientes.Fecha,
-                                  P_ValorCuota = (decimal)d.P_ValorCuota,
-                                  P_FechaCobro = (DateTime)d.P_FechaCobro,
-                                  Comprobante = (int)d.Comprobante
-
-                              }).Where(x => x.idCliente == idCliente).ToList();
+                                  Id = v.Id,
+                                  idCliente = v.idCliente,
+                                  Fecha = v.Fecha,
+                                  Entrega = v.Entrega,
+                                  Restante = v.Restante,
+                                  FechaCobro = v.FechaCobro,
+                                  FechaLimite = v.FechaLimite,
+                                  idVendedor = v.idVendedor,
+                                  Observacion = v.Observacion,
+                                  Cliente = c.Nombre + " " + c.Apellido,
+                                  Direccion = c.Direccion,
+                                  Vendedor = u.Nombre,
+                                  DniCliente = c.Dni,
+                                  ValorCuota = v.ValorCuota.HasValue ? v.ValorCuota.Value : 0,
+                                  EstadoCliente = ec.Nombre,
+                                  Interes = v.Interes.HasValue ? v.Interes.Value : 0,
+                                  idCobrador = v.idCobrador.HasValue ? v.idCobrador.Value : 0,
+                                  FechaCliente = c.Fecha.HasValue ? c.Fecha.Value : DateTime.MinValue,
+                                  P_ValorCuota = v.P_ValorCuota.HasValue ? v.P_ValorCuota.Value : 0,
+                                  P_FechaCobro = v.P_FechaCobro.HasValue ? v.P_FechaCobro.Value : DateTime.MinValue,
+                                  Comprobante = v.Comprobante.HasValue ? v.Comprobante.Value : 0
+                              }).ToList();
 
                 return result;
             }
         }
+
+
+        public static List<Venta> ListaVentas(int idVendedor, DateTime FechaDesde, DateTime FechaHasta, DateTime FechaLimiteDesde, DateTime FechaLimiteHasta, int Finalizadas)
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                var query = from v in db.Ventas
+                            join c in db.Clientes on v.idCliente equals c.Id
+                            join u in db.Usuarios on v.idVendedor equals u.Id
+                            where (v.idVendedor == idVendedor || idVendedor == -1)
+                               && (v.Fecha >= FechaDesde && v.Fecha <= FechaHasta)
+                               && (v.FechaLimite >= FechaLimiteDesde && v.FechaLimite <= FechaLimiteHasta)
+                               && ((Finalizadas == 1 && v.Restante == 0) || (Finalizadas == 0 && v.Restante > 0))
+                            select new Venta
+                            {
+                                Id = v.Id,
+                                idCliente = v.idCliente,
+                                Fecha = v.Fecha,
+                                Entrega = v.Entrega,
+                                Restante = v.Restante,
+                                FechaCobro = v.FechaCobro,
+                                FechaLimite = v.FechaLimite,
+                                idVendedor = v.idVendedor,
+                                Observacion = v.Observacion,
+                                Cliente = c.Nombre + " " + c.Apellido,
+                                Direccion = c.Direccion,
+                                Vendedor = u.Nombre,
+                                DniCliente = c.Dni,
+                                ValorCuota = v.ValorCuota.HasValue ? v.ValorCuota.Value : 0,
+                                Interes = v.Interes.HasValue ? v.Interes.Value : 0,
+                                idCobrador = v.idCobrador.HasValue ? v.idCobrador.Value : 0,
+                                FechaCliente = c.Fecha.HasValue ? c.Fecha.Value : DateTime.MinValue,
+                                P_ValorCuota = v.P_ValorCuota.HasValue ? v.P_ValorCuota.Value : 0,
+                                P_FechaCobro = v.P_FechaCobro.HasValue ? v.P_FechaCobro.Value : DateTime.MinValue,
+                                Comprobante = v.Comprobante.HasValue ? v.Comprobante.Value : 0
+                            };
+
+                return query.ToList();
+            }
+        }
+
+
+        public static List<Venta> ListaVentasTodas()
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                var result = (from v in db.Ventas
+                              join c in db.Clientes on v.idCliente equals c.Id
+                              join u in db.Usuarios on v.idVendedor equals u.Id
+                              select new Venta
+                              {
+                                  Id = v.Id,
+                                  idCliente = v.idCliente,
+                                  Fecha = v.Fecha,
+                                  Entrega = v.Entrega,
+                                  Restante = v.Restante,
+                                  FechaCobro = v.FechaCobro,
+                                  FechaLimite = v.FechaLimite,
+                                  idVendedor = v.idVendedor,
+                                  Observacion = v.Observacion,
+                                  Cliente = c.Nombre + " " + c.Apellido,
+                                  Direccion = c.Direccion,
+                                  Vendedor = u.Nombre,
+                                  DniCliente = c.Dni,
+                                  ValorCuota = v.ValorCuota.HasValue ? v.ValorCuota.Value : 0,
+                                  Interes = v.Interes.HasValue ? v.Interes.Value : 0,
+                                  idCobrador = v.idCobrador.HasValue ? v.idCobrador.Value : 0,
+                                  FechaCliente = c.Fecha.HasValue ? c.Fecha.Value : DateTime.MinValue,
+                                  P_ValorCuota = v.P_ValorCuota.HasValue ? v.P_ValorCuota.Value : 0,
+                                  P_FechaCobro = v.P_FechaCobro.HasValue ? v.P_FechaCobro.Value : DateTime.MinValue,
+                                  Comprobante = v.Comprobante.HasValue ? v.Comprobante.Value : 0
+                              }).ToList();
+
+                return result;
+            }
+        }
+
+
+        public static List<Venta> ListaVentasCliente(int idCliente)
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                var result = (from v in db.Ventas
+                              join c in db.Clientes on v.idCliente equals c.Id
+                              join u in db.Usuarios on v.idVendedor equals u.Id
+                              where v.idCliente == idCliente
+                              select new Venta
+                              {
+                                  Id = v.Id,
+                                  idCliente = v.idCliente,
+                                  Fecha = v.Fecha,
+                                  Entrega = v.Entrega,
+                                  Restante = v.Restante,
+                                  FechaCobro = v.FechaCobro,
+                                  FechaLimite = v.FechaLimite,
+                                  idVendedor = v.idVendedor,
+                                  Observacion = v.Observacion,
+                                  Cliente = c.Nombre,
+                                  Direccion = c.Direccion,
+                                  DniCliente = c.Dni,
+                                  Vendedor = u.Nombre,
+                                  Interes = v.Interes.HasValue ? v.Interes.Value : 0,
+                                  idCobrador = v.idCobrador.HasValue ? v.idCobrador.Value : 0,
+                                  FechaCliente = c.Fecha.HasValue ? c.Fecha.Value : DateTime.MinValue,
+                                  P_ValorCuota = v.P_ValorCuota.HasValue ? v.P_ValorCuota.Value : 0,
+                                  P_FechaCobro = v.P_FechaCobro.HasValue ? v.P_FechaCobro.Value : DateTime.MinValue,
+                                  Comprobante = v.Comprobante.HasValue ? v.Comprobante.Value : 0
+                              }).ToList();
+
+                return result;
+            }
+        }
+
 
 
         public static Venta BuscarVenta(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.Ventas
-                                 .SqlQuery("select v.Id, v.Orden, v.Importante, v.idCliente, v.Fecha, v.Entrega, v.Restante, v.FechaCobro, v.FechaLimite, v.idVendedor, v.Observacion, v.idCobrador, v.Interes, v.ValorCuota, v.P_FechaCobro, v.P_ValorCuota, v.Comprobante, c.Nombre as Cliente, c.Dni as DniCliente, c.Fecha as FechaCliente, c.Direccion, u.Nombre as Vendedor from Ventas v inner join Clientes c on c.Id = v.idCliente inner join Usuarios u on u.Id = v.idVendedor")
+                var result = (from v in db.Ventas
+                              join c in db.Clientes on v.idCliente equals c.Id
+                              join u in db.Usuarios on v.idVendedor equals u.Id
+                              where v.Id == id
                               select new Venta
                               {
-                                  Id = d.Id,
-                                  idCliente = d.idCliente,
-                                  Fecha = d.Fecha,
-                                  Entrega = d.Entrega,
-                                  Restante = d.Restante,
-                                  FechaCobro = d.FechaCobro,
-                                  FechaLimite = d.FechaLimite,
-                                  idVendedor = d.idVendedor,
-                                  Observacion = d.Observacion,
-                                  Cliente = d.Clientes.Nombre,
-                                  Direccion = d.Clientes.Direccion,
-                                  DniCliente = d.Clientes.Dni,
-                                  Vendedor = d.Usuarios.Nombre,
-                                  ValorCuota = (decimal)d.ValorCuota,
-                                  Interes = (decimal)d.Interes,
-                                  idCobrador = (int)d.idCobrador,
-                                  FechaCliente = (DateTime)d.Clientes.Fecha,
-                                  P_ValorCuota = (decimal)d.P_ValorCuota,
-                                  P_FechaCobro = (DateTime)d.P_FechaCobro,
-                                  Comprobante = (int)d.Comprobante
-
-
-                              }).Where(x => x.Id == id).FirstOrDefault();
+                                  Id = v.Id,
+                                  idCliente = v.idCliente,
+                                  Fecha = v.Fecha,
+                                  Entrega = v.Entrega,
+                                  Restante = v.Restante,
+                                  FechaCobro = v.FechaCobro,
+                                  FechaLimite = v.FechaLimite,
+                                  idVendedor = v.idVendedor,
+                                  Observacion = v.Observacion,
+                                  Cliente = c.Nombre,
+                                  Direccion = c.Direccion,
+                                  DniCliente = c.Dni,
+                                  Vendedor = u.Nombre,
+                                  ValorCuota = v.ValorCuota.HasValue ? v.ValorCuota.Value : 0,
+                                  Interes = v.Interes.HasValue ? v.Interes.Value : 0,
+                                  idCobrador = v.idCobrador.HasValue ? v.idCobrador.Value : 0,
+                                  FechaCliente = c.Fecha.HasValue ? c.Fecha.Value : DateTime.MinValue,
+                                  P_ValorCuota = v.P_ValorCuota.HasValue ? v.P_ValorCuota.Value : 0,
+                                  P_FechaCobro = v.P_FechaCobro.HasValue ? v.P_FechaCobro.Value : DateTime.MinValue,
+                                  Comprobante = v.Comprobante.HasValue ? v.Comprobante.Value : 0
+                              }).FirstOrDefault();
 
                 return result;
             }
         }
+
 
         public static Venta Editar(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                string query = @"
-            SELECT 
-                v.Id,
-                v.Orden,
-                v.Importante,
-                v.idCliente,
-                v.ValorCuota,
-                v.Fecha,
-                v.Entrega,
-                v.Restante,
-                v.FechaCobro,
-                v.FechaLimite,
-                v.idVendedor,
-                v.Observacion,
-                v.idCobrador,
-                v.Interes,
-                v.ValorCuota,
-                c.Nombre as Cliente,
-                c.Dni as DniCliente,
-                c.Fecha as FechaCliente,
-                c.Direccion,
-                u.Nombre as Vendedor
-            FROM 
-                Ventas v
-                INNER JOIN Clientes c ON c.Id = v.idCliente
-                INNER JOIN Usuarios u ON u.Id = v.idVendedor
-            WHERE 
-                v.Id = @id";
-
-                var idParam = new SqlParameter("@id", id);
-
-                var result = db.Database.SqlQuery<Venta>(query, idParam).FirstOrDefault();
+                var result = (from v in db.Ventas
+                              join c in db.Clientes on v.idCliente equals c.Id
+                              join u in db.Usuarios on v.idVendedor equals u.Id
+                              where v.Id == id
+                              select new Venta
+                              {
+                                  Id = v.Id,
+                                  Orden = (int)v.Orden,
+                                  Importante = (int)v.Importante,
+                                  idCliente = v.idCliente,
+                                  ValorCuota = v.ValorCuota.HasValue ? v.ValorCuota.Value : 0,
+                                  Fecha = v.Fecha,
+                                  Entrega = v.Entrega,
+                                  Restante = v.Restante,
+                                  FechaCobro = v.FechaCobro,
+                                  FechaLimite = v.FechaLimite,
+                                  idVendedor = v.idVendedor,
+                                  Observacion = v.Observacion,
+                                  idCobrador = v.idCobrador.HasValue ? v.idCobrador.Value : 0,
+                                  Interes = v.Interes.HasValue ? v.Interes.Value : 0,
+                                  Cliente = c.Nombre,
+                                  DniCliente = c.Dni,
+                                  FechaCliente = c.Fecha.HasValue ? c.Fecha.Value : DateTime.MinValue,
+                                  Direccion = c.Direccion,
+                                  Vendedor = u.Nombre
+                              }).FirstOrDefault();
 
                 return result;
             }
         }
+
 
 
         public static List<ProductosVenta> ListaProductosVenta(int id)
@@ -277,80 +285,90 @@ namespace Sistema_David.Models.Modelo
 
                 var productosventa = (from d in db.ProductosVenta
                          .SqlQuery("select pv.Id, pv.idproducto, pv.idventa, pv.Cantidad, pv.PrecioUnitario, p.Nombre as Producto, p.PrecioVenta from ProductosVenta pv inner join Productos p on pv.IdProducto = p.Id")
-                                  select new ProductosVenta
-                                  {
-                                      Id = d.Id,
-                                      IdProducto = d.IdProducto,
-                                      IdVenta = d.IdVenta,
-                                      Producto = d.Productos.Nombre,
-                                      Cantidad = (int)d.Cantidad,
-                                      PrecioUnitario = (decimal)d.PrecioUnitario,
-                                      PrecioTotal = d.PrecioUnitario == 0 ? (decimal)(d.Productos.PrecioVenta * d.Cantidad) : (decimal)(d.PrecioUnitario * d.Cantidad)
-                                  }).Where(x => x.IdVenta == id).ToList();
+                                      select new ProductosVenta
+                                      {
+                                          Id = d.Id,
+                                          IdProducto = d.IdProducto,
+                                          IdVenta = d.IdVenta,
+                                          Producto = d.Productos.Nombre,
+                                          Cantidad = (int)d.Cantidad,
+                                          PrecioUnitario = (decimal)d.PrecioUnitario,
+                                          PrecioTotal = d.PrecioUnitario == 0 ? (decimal)(d.Productos.PrecioVenta * d.Cantidad) : (decimal)(d.PrecioUnitario * d.Cantidad)
+                                      }).Where(x => x.IdVenta == id).ToList();
 
-            return productosventa;
+                return productosventa;
+            }
         }
-        }
+
+
 
         public static Venta BuscarUltimaVenta(int idvendedor)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            try
             {
+                using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+                {
+                    var venta = (from d in db.Ventas
+                                 .SqlQuery("select v.Id, v.Orden, v.Importante, v.idCliente, v.Fecha, v.Entrega, v.Restante, v.FechaCobro, v.FechaLimite, v.idVendedor, v.Observacion, v.idCobrador, v.Interes, v.ValorCuota, v.P_FechaCobro, v.P_ValorCuota, v.Comprobante, c.Nombre as Cliente, c.Dni as DniCliente, c.Fecha as FechaCliente, c.Direccion, u.Nombre as Vendedor from Ventas v inner join Clientes c on c.Id = v.idCliente inner join Usuarios u on u.Id = v.idVendedor")
+                                 select new Venta
+                                 {
+                                     Id = d.Id,
+                                     idCliente = d.idCliente,
+                                     Fecha = d.Fecha,
+                                     Entrega = d.Entrega,
+                                     Restante = d.Restante,
+                                     FechaCobro = d.FechaCobro,
+                                     FechaLimite = d.FechaLimite,
+                                     idVendedor = d.idVendedor,
+                                     Observacion = d.Observacion,
+                                     Cliente = d.Clientes.Nombre,
+                                     Direccion = d.Clientes.Direccion,
+                                     DniCliente = d.Clientes.Dni,
+                                     Vendedor = d.Usuarios.Nombre,
+                                     Interes = (decimal)d.Interes,
+                                     idCobrador = (int)d.idCobrador,
+                                     FechaCliente = (DateTime)d.Clientes.Fecha,
+                                     P_ValorCuota = (decimal)d.P_ValorCuota,
+                                     P_FechaCobro = (DateTime)d.P_FechaCobro,
+                                     Comprobante = (int)d.Comprobante
+                                 }).Where(x => x.idVendedor == idvendedor).LastOrDefault();
 
-                var venta = (from d in db.Ventas
-                        .SqlQuery("select v.Id, v.Orden, v.Importante, v.idCliente, v.Fecha, v.Entrega, v.Restante, v.FechaCobro, v.FechaLimite, v.idVendedor, v.Observacion, v.idCobrador, v.Interes, v.ValorCuota, v.P_FechaCobro, v.P_ValorCuota, v.Comprobante, c.Nombre as Cliente,  c.Dni as DniCliente, c.Fecha as FechaCliente, c.Direccion, u.Nombre as Vendedor from Ventas v inner join Clientes c on c.Id = v.idCliente inner join Usuarios u on u.Id = v.idVendedor")
-                             select new Venta
-                             {
-                                 Id = d.Id,
-                                 idCliente = d.idCliente,
-                                 Fecha = d.Fecha,
-                                 Entrega = d.Entrega,
-                                 Restante = d.Restante,
-                                 FechaCobro = d.FechaCobro,
-                                 FechaLimite = d.FechaLimite,
-                                 idVendedor = d.idVendedor,
-                                 Observacion = d.Observacion,
-                                 Cliente = d.Clientes.Nombre,
-                                 Direccion = d.Clientes.Direccion,
-                                 DniCliente = d.Clientes.Dni,
-                                 Vendedor = d.Usuarios.Nombre,
-                                 Interes = (decimal)d.Interes,
-                                 idCobrador = (int)d.idCobrador,
-                                 FechaCliente = (DateTime) d.Clientes.Fecha,
-                                 P_ValorCuota = (decimal)d.P_ValorCuota,
-                                 P_FechaCobro = (DateTime)d.P_FechaCobro,
-                                 Comprobante = (int)d.Comprobante
-                             }).Where(x => x.idVendedor == idvendedor).LastOrDefault();
-
-                return venta;
+                    return venta;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en BuscarUltimaVenta: {ex.Message}");
+                return null;
             }
         }
+
+
 
 
         public static InformacionVenta BuscarInformacionVenta(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
-                var informacionVenta = (from d in db.InformacionVentas
-                        .SqlQuery("select iv.Id, iv.IdVenta, iv.Fecha, iv.Descripcion, iv.Entrega,  iv.ValorCuota, iv.Restante, iv.idVendedor, iv.whatssap, iv.observacion, iv.Interes, iv.MetodoPago, iv.idCobrador from InformacionVentas iv")
-                                        select new InformacionVenta
-                                        {
-                                            Id = d.Id,
-                                            IdVenta = d.IdVenta,
-                                            Fecha = d.Fecha,
-                                            Entrega = (decimal)d.Entrega,
-                                            Restante = (decimal)d.Restante,
-                                            Interes = (decimal)d.Interes,
-                                            Descripcion = d.Descripcion,
-                                            idVendedor = (int)d.idVendedor,
-                                            whatssap = (int)d.whatssap,
-                                            ValorCuota = (decimal)d.ValorCuota,
-                                            Observacion = d.Observacion,
-                                            MetodoPago = d.MetodoPago,
-                                            idCobrador = (int)d.idCobrador,
-
-                                        }).Where(x => x.Id == id).FirstOrDefault();
+                var informacionVenta = db.InformacionVentas
+                    .Where(iv => iv.Id == id)
+                    .Select(iv => new InformacionVenta
+                    {
+                        Id = iv.Id,
+                        IdVenta = iv.IdVenta,
+                        Fecha = iv.Fecha,
+                        Entrega = (decimal)iv.Entrega,
+                        Restante = (decimal)iv.Restante,
+                        idVendedor = (int)iv.idVendedor,
+                        Interes = (decimal)iv.Interes,
+                        Descripcion = iv.Descripcion,
+                        whatssap = (int)iv.whatssap,
+                        ValorCuota = (decimal)iv.ValorCuota,
+                        Observacion = iv.Observacion,
+                        MetodoPago = iv.MetodoPago,
+                        idCobrador = (int)iv.idCobrador,
+                    })
+                    .FirstOrDefault();
 
                 return informacionVenta;
             }
@@ -361,320 +379,330 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var informacionVenta = (from iv in db.InformacionVentas
-                                        join u in db.Usuarios on iv.idCobrador equals u.Id into uJoin
-                                        from u in uJoin.DefaultIfEmpty()
-                                        where iv.IdVenta == idVenta
-                                        select new InformacionVenta
-                                        {
-                                            Id = iv.Id,
-                                            IdVenta = iv.IdVenta,
-                                            Fecha = iv.Fecha,
-                                            Entrega = (decimal)iv.Entrega,
-                                            Restante = (decimal)iv.Restante,
-                                            idVendedor = (int)iv.idVendedor,
-                                            Interes = (decimal)iv.Interes,
-                                            whatssap = (int)iv.whatssap,
-                                            Descripcion = iv.Descripcion,
-                                            ValorCuota = (decimal)iv.ValorCuota,
-                                            Observacion = iv.Observacion,
-                                            MetodoPago = iv.MetodoPago,
-                                            idCobrador = (int)iv.idCobrador,
-                                            Cobrador = iv.idCobrador == 0 ? "N/A" : (u != null ? u.Nombre : "N/A")
-                                        }).ToList();
+                var informacionVenta = db.InformacionVentas
+                    .Where(iv => iv.IdVenta == idVenta)
+                    .Select(iv => new InformacionVenta
+                    {
+                        Id = iv.Id,
+                        IdVenta = iv.IdVenta,
+                        Fecha = iv.Fecha,
+                        Entrega = (decimal)iv.Entrega,
+                        Restante = (decimal)iv.Restante,
+                        idVendedor = (int)iv.idVendedor,
+                        Interes = (decimal)iv.Interes,
+                        Descripcion = iv.Descripcion,
+                        whatssap = (int)iv.whatssap,
+                        ValorCuota = (decimal)iv.ValorCuota,
+                        Observacion = iv.Observacion,
+                        MetodoPago = iv.MetodoPago,
+                        idCobrador = (int)iv.idCobrador,
+                        Cobrador = iv.idCobrador == 0 ? "N/A" : db.Usuarios.FirstOrDefault(u => u.Id == iv.idCobrador).Nombre ?? "N/A"
+                    })
+                    .ToList();
 
                 return informacionVenta;
             }
         }
+
 
 
         public static InformacionVenta UltimaInformacionVenta(int idVenta)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
-                var informacionVenta = (from d in db.InformacionVentas
-                        .SqlQuery("select iv.Id, iv.IdVenta, iv.Fecha, iv.Descripcion, iv.Entrega,  iv.ValorCuota, iv.idVendedor, iv.Restante, iv.whatssap, iv.observacion, iv.interes, iv.MetodoPago, iv.IdCobrador from InformacionVentas iv")
-                                        select new InformacionVenta
-                                        {
-                                            Id = d.Id,
-                                            IdVenta = d.IdVenta,
-                                            Fecha = d.Fecha,
-                                            Entrega = (decimal)d.Entrega,
-                                            Restante = (decimal)d.Restante,
-                                            Interes = (decimal)d.Interes,
-                                            idVendedor = (int)d.idVendedor,
-                                            whatssap = (int)d.whatssap,
-                                            Descripcion = d.Descripcion,
-                                            ValorCuota = (decimal)d.ValorCuota,
-                                            Observacion = d.Observacion,
-                                            MetodoPago = d.MetodoPago,
-                                            idCobrador = (int)d.idCobrador,
-                                        }).Where(x => x.IdVenta == idVenta).LastOrDefault();
+                var informacionVenta = db.InformacionVentas
+                    .Where(iv => iv.IdVenta == idVenta)
+                    .OrderByDescending(iv => iv.Id)
+                    .Select(iv => new InformacionVenta
+                    {
+                        Id = iv.Id,
+                        IdVenta = iv.IdVenta,
+                        Fecha = iv.Fecha,
+                        Entrega = (decimal)iv.Entrega,
+                        Restante = (decimal)iv.Restante,
+                        Interes = (decimal)iv.Interes,
+                        idVendedor = (int)iv.idVendedor,
+                        whatssap = (int)iv.whatssap,
+                        Descripcion = iv.Descripcion,
+                        ValorCuota = (decimal)iv.ValorCuota,
+                        Observacion = iv.Observacion,
+                        MetodoPago = iv.MetodoPago,
+                        idCobrador = (int)iv.idCobrador,
+                        Cobrador = iv.idCobrador == 0 ? "N/A" : db.Usuarios.FirstOrDefault(u => u.Id == iv.idCobrador).Nombre ?? "N/A"
+                    })
+                    .FirstOrDefault();
 
                 return informacionVenta;
             }
         }
 
+
         public static int Nuevo(Ventas model)
         {
+            Cliente cliente = null; // Variable para almacenar el cliente
 
             try
             {
+                // Obtener datos del cliente antes de iniciar la transacción principal
+                cliente = ClientesModel.BuscarCliente(model.idCliente);
+
                 using (var db = new Sistema_DavidEntities())
                 {
-
-                    Ventas venta = new Ventas();
-                    InformacionVentas infoventa = new InformacionVentas();
-
-                    if (model != null)
+                    using (var transaction = db.Database.BeginTransaction())
                     {
+                        try
+                        {
+                            // Verificar si el modelo recibido es nulo
+                            if (model == null)
+                                return 2; // Código para modelo nulo
 
-                        bool HayStock = VentasManager.VerificarStock(model.ProductosVenta, model.idVendedor);
+                            // Verificar si hay suficiente stock
+                            bool hayStock = VentasManager.VerificarStock(model.ProductosVenta, model.idVendedor);
+                            if (!hayStock)
+                                return 1; // Código para falta de stock
 
-                        if (!HayStock)
-                            return 1;
+                            // Crear y agregar nueva venta
+                            Ventas venta = new Ventas
+                            {
+                                Entrega = model.Entrega,
+                                Fecha = model.Fecha,
+                                FechaCobro = model.FechaCobro,
+                                FechaLimite = model.FechaLimite,
+                                Observacion = model.Observacion,
+                                idCliente = model.idCliente,
+                                idVendedor = model.idVendedor,
+                                Restante = model.Restante,
+                                ValorCuota = model.ValorCuota,
+                                Importante = 0,
+                                Orden = 9999,
+                                Interes = 0,
+                                idCobrador = 0,
+                                P_FechaCobro = model.FechaCobro,
+                                P_ValorCuota = model.ValorCuota,
+                                Comprobante = 0
+                            };
+                            db.Ventas.Add(venta);
+                            db.SaveChanges();
 
-                        venta.Entrega = model.Entrega;
-                        venta.Fecha = model.Fecha;
-                        venta.FechaCobro = model.FechaCobro;
-                        venta.FechaLimite = model.FechaLimite;
-                        venta.Observacion = model.Observacion;
-                        venta.idCliente = model.idCliente;
-                        venta.idVendedor = model.idVendedor;
-                        venta.Restante = model.Restante;
-                        venta.ValorCuota = model.ValorCuota;
-                        venta.Importante = 0;
-                        venta.Orden = 9999;
-                        venta.Interes = 0;
-                        venta.idCobrador = 0;
-                        venta.P_FechaCobro = model.FechaCobro;
-                        venta.P_ValorCuota = model.ValorCuota;
-                        venta.Comprobante = 0;
-                        db.Ventas.Add(venta);
-                        db.SaveChanges();
+                            // Agregar productos de la venta
+                            var addProductosResult = AgregarProductosVenta(venta, model.ProductosVenta, model.idVendedor, db);
+                            if (!addProductosResult)
+                                throw new Exception("Error al agregar productos");
 
-                        AgregarProductosVenta(model.ProductosVenta, model.idVendedor);
-                        RestarStock(model.ProductosVenta, model.idVendedor);
+                            // Restar stock de los productos vendidos
+                            var restarStockResult = RestarStock(model.ProductosVenta, model.idVendedor, db);
 
-                        //infoventa.IdVenta = BuscarUltimaVenta(venta.idVendedor).Id;
-                        infoventa.IdVenta = venta.Id;
-                        infoventa.Descripcion = "Venta a " + ClientesModel.BuscarCliente(venta.idCliente).Nombre + " por " + (venta.Restante + venta.Entrega) + " pesos.";
-                        infoventa.Entrega = model.Entrega;
-                        infoventa.Restante = model.Restante;
-                        infoventa.ValorCuota = model.ValorCuota;
-                        infoventa.Interes = 0;
-                        AgregarInformacionVenta(infoventa);
+                            if (!restarStockResult)
+                                throw new Exception("Error al restar stock");
 
-                        return 0;
+                            // Crear y agregar información de la venta
+                            InformacionVentas infoVenta = new InformacionVentas
+                            {
+                                IdVenta = venta.Id,
+                                Descripcion = $"Venta a {cliente?.Nombre} por {venta.Restante + venta.Entrega} pesos.",
+                                Entrega = model.Entrega,
+                                Restante = model.Restante,
+                                ValorCuota = model.ValorCuota,
+                                Interes = 0
+                            };
+                            var addInfoVentaResult = AgregarInformacionVenta(infoVenta);
+                            if (!addInfoVentaResult)
+                                throw new Exception("Error al agregar información de venta");
+
+                            // Commit de la transacción principal
+                            transaction.Commit();
+
+                            return 0; // Éxito
+                        }
+                        catch (Exception ex)
+                        {
+                            // Rollback de la transacción en caso de error
+                            transaction.Rollback();
+
+                            // Manejar la excepción
+                            Console.WriteLine($"Error en Nuevo(): {ex.Message}");
+                            return 2; // Código para excepción
+                        }
                     }
                 }
-
-                return 2;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return 2;
+                // Manejar la excepción de búsqueda de cliente fuera de la transacción
+                Console.WriteLine($"Error al buscar cliente: {ex.Message}");
+                return 3; // Código para error de búsqueda de cliente
             }
         }
 
 
-        public static int AgregarInformacionVenta(InformacionVentas model)
-        {
 
+
+
+
+
+        public static bool AgregarInformacionVenta(InformacionVentas model)
+        {
             try
             {
                 using (var db = new Sistema_DavidEntities())
                 {
+                    if (model == null)
+                        return false; // Código para modelo nulo
 
-                    InformacionVentas infoventa = new InformacionVentas();
+                    model.Fecha = DateTime.Now;
+                    model.idVendedor = SessionHelper.GetUsuarioSesion().Id; // ¿De dónde viene SessionHelper?
 
-                    if (model != null)
-                    {
+                    db.InformacionVentas.Add(model);
+                    db.SaveChanges();
 
-                        infoventa.IdVenta = model.IdVenta;
-                        infoventa.Descripcion = model.Descripcion;
-                        infoventa.Fecha = DateTime.Now;
-                        infoventa.Entrega = model.Entrega;
-                        infoventa.Restante = model.Restante;
-                        infoventa.Observacion = model.Observacion;
-                        infoventa.ValorCuota = model.ValorCuota;
-                        infoventa.Interes = model.Interes;
-                        infoventa.MetodoPago = model.MetodoPago;
-                        infoventa.idCobrador = model.idCobrador;
-                        infoventa.idVendedor = SessionHelper.GetUsuarioSesion().Id; 
-                        infoventa.idCobrador = 0; 
-                        infoventa.whatssap = 0; 
-
-                        db.InformacionVentas.Add(infoventa);
-                        db.SaveChanges();
-
-
-                        return 1;
-                    }
+                    return true; // Éxito
                 }
-
-                return 0;
-
             }
             catch (Exception e)
             {
-                return 0;
+                // Manejar la excepción
+                return false; // Código para excepción
             }
         }
 
         public static bool EliminarInformacionVenta(int id)
         {
-
             try
             {
                 using (var db = new Sistema_DavidEntities())
                 {
-
                     var model = db.InformacionVentas.Find(id);
 
+                    if (model == null)
+                        return false; // No se encontró la información de venta
 
-                    if (model != null)
+                    var venta = db.Ventas.Find(model.IdVenta);
+                    if (venta != null)
                     {
-
-                        var venta = db.Ventas.Find(model.IdVenta);
-                        if (venta != null)
-                        {
-                            venta.Interes -= model.Interes;
-                            venta.Restante += model.Entrega - model.Interes;
-                        }
-
+                        venta.Interes -= model.Interes;
+                        venta.Restante += model.Entrega - model.Interes;
                         db.Entry(venta).State = System.Data.Entity.EntityState.Modified;
-                        db.InformacionVentas.Remove(model);
-
-                        db.SaveChanges();
-
-                        return true;
                     }
-                }
 
-                return false;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
-        }
-
-        public static bool EliminarTodaInformacionVenta(int id)
-        {
-            try
-            {
-                using (var db = new Sistema_DavidEntities())
-                {
-                    // Buscar todas las filas que coincidan con el ID
-                    var filasAEliminar = db.InformacionVentas.Where(iv => iv.IdVenta == id).ToList();
-
-                    // Eliminar las filas encontradas
-                    db.InformacionVentas.RemoveRange(filasAEliminar);
+                    db.InformacionVentas.Remove(model);
                     db.SaveChanges();
 
-                    return true;
+                    return true; // Éxito
                 }
             }
             catch (Exception e)
             {
-                // Manejar excepciones si es necesario
-                return false;
+                // Manejar la excepción
+                return false; // Error al eliminar
             }
         }
 
-        public static bool RestarStock(ICollection<ProductosVenta> model, int idVendedor)
+        public static bool EliminarTodaInformacionVenta(int idVenta)
         {
-
             try
             {
                 using (var db = new Sistema_DavidEntities())
                 {
-
-                    if (model != null)
+                    var filasAEliminar = db.InformacionVentas.Where(iv => iv.IdVenta == idVenta).ToList();
+                    if (filasAEliminar.Any())
                     {
-                        Venta ultimaVenta = BuscarUltimaVenta(idVendedor);
-
-                        foreach (ProductosVenta producto in model)
-                        {
-
-                            StockUsuarios modelStock = StockModel.BuscarStockUser(idVendedor, producto.IdProducto);
-
-                            if (modelStock.Cantidad == producto.Cantidad)
-                            {
-                               
-                                var stock = db.StockUsuarios.Find(modelStock.Id);
-
-                                if (stock != null)
-                                {
-                                    db.StockUsuarios.Remove(stock);
-                                    db.SaveChanges();
-                                }
-                            }
-                            else
-                            {
-                                modelStock.Cantidad -= producto.Cantidad;
-                                db.Entry(modelStock).State = System.Data.Entity.EntityState.Modified;
-                                db.SaveChanges();
-                            }
-
-                        }
-
-                        return true;
-
+                        db.InformacionVentas.RemoveRange(filasAEliminar);
+                        db.SaveChanges();
                     }
 
-                    return false;
+                    return true; // Éxito (incluso si no se encontraron filas)
                 }
             }
-
-
             catch (Exception e)
             {
-                return false;
+                // Manejar la excepción
+                return false; // Error al eliminar
             }
         }
 
-        public static bool AgregarProductosVenta(ICollection<ProductosVenta> model, int idVendedor)
+        public static bool AgregarProductosVenta(Ventas venta, ICollection<ProductosVenta> model, int idVendedor, Sistema_DavidEntities db)
         {
-
             try
             {
-                using (var db = new Sistema_DavidEntities())
+                if (model == null || model.Count == 0)
+                    throw new ArgumentNullException("model", "El modelo de productos es nulo o vacío.");
+
+                if (venta == null)
+                    throw new ArgumentException("La venta no puede ser nula.", nameof(venta));
+
+                foreach (ProductosVenta producto in model)
                 {
+                    producto.IdVenta = venta.Id;
 
-                    if (model != null)
+                    Producto productoModel = ProductosModel.BuscarProducto(producto.IdProducto);
+
+                    if (productoModel != null)
                     {
-
-
-
-                        Venta ultimaVenta = BuscarUltimaVenta(idVendedor);
-
-                        foreach (ProductosVenta producto in model)
-                        {
-
-                            producto.IdVenta = ultimaVenta.Id;
-
-                            Producto productomodel = ProductosModel.BuscarProducto(producto.IdProducto);
-
-                            producto.PrecioUnitario = productomodel.PrecioVenta / producto.Cantidad;
-
-                            db.ProductosVenta.Add(producto);
-                            db.SaveChanges();
-
-                        }
+                        producto.PrecioUnitario = productoModel.PrecioVenta / producto.Cantidad;
+                        db.ProductosVenta.Add(producto);
                     }
-                    return true;
+                    else
+                    {
+                        // Lanzar excepción si no se encuentra el producto
+                        throw new Exception($"No se encontró el producto con ID {producto.IdProducto}.");
+                    }
                 }
 
-                return false;
+                db.SaveChanges();
+                return true; // Éxito
             }
             catch (Exception e)
             {
+                Console.WriteLine($"Error en AgregarProductosVenta(): {e.Message}");
+                return false; // Indica que hubo un problema
+            }
+        }
+
+        public static bool RestarStock(ICollection<ProductosVenta> model, int idVendedor, Sistema_DavidEntities db)
+        {
+            try
+            {
+                if (model == null || !model.Any())
+                    throw new ArgumentNullException("model", "El modelo de productos es nulo o vacío.");
+
+                foreach (ProductosVenta producto in model)
+                {
+                    StockUsuarios stockUsuario = StockModel.BuscarStockUser(idVendedor, producto.IdProducto);
+
+                    if (stockUsuario != null)
+                    {
+                        if (stockUsuario.Cantidad == producto.Cantidad)
+                        {
+                            db.StockUsuarios.Attach(stockUsuario); // Adjuntar la entidad si no está rastreada
+                            db.StockUsuarios.Remove(stockUsuario);
+                        }
+                        else if (stockUsuario.Cantidad > producto.Cantidad)
+                        {
+                            stockUsuario.Cantidad -= producto.Cantidad;
+                            db.Entry(stockUsuario).State = EntityState.Modified;
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("La cantidad del stock es menor que la cantidad del producto a restar.");
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("No se encontró el stock para el producto.");
+                    }
+                }
+
+                db.SaveChanges();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error en RestarStock(): {e.Message}");
                 return false;
             }
         }
+
+
 
         public static bool Eliminar(int id)
         {
@@ -713,18 +741,7 @@ namespace Sistema_David.Models.Modelo
                 using (var db = new Sistema_DavidEntities())
                 {
 
-                    var productosventa = (from d in db.ProductosVenta
-                         .SqlQuery("select * from ProductosVenta")
-                                          select new ProductosVenta
-                                          {
-                                              Id = d.Id,
-                                              IdProducto = d.IdProducto,
-                                              IdVenta = d.IdVenta,
-                                              Producto = d.Productos.Nombre,
-                                              Cantidad = (int)d.Cantidad,
-                                              PrecioTotal = (decimal)d.Productos.PrecioVenta * d.Cantidad
-                                          }).Where(x => x.IdVenta == id).ToList();
-
+                    var productosventa = db.ProductosVenta.Where(x => x.IdVenta == id).ToList();
                     foreach (ProductosVenta producto in productosventa)
                     {
                         var model = db.ProductosVenta.Find(producto.Id);
