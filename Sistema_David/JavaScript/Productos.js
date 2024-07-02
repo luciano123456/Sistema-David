@@ -17,6 +17,8 @@ async function configurarDataTable() {
             "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         },
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        "order": [[9, 'desc']],
+        
         "columns": [
             {
                 "data": "Imagen", "render": function (data) {
@@ -29,7 +31,12 @@ async function configurarDataTable() {
                     }
                 }
             },
+
+
+
+
             { "data": "Codigo" },
+            
             { "data": "Nombre" },
 
             { "data": "Categoria" },
@@ -39,19 +46,27 @@ async function configurarDataTable() {
             { "data": "Total" },
             { "data": "PrecioVenta" },
             { "data": "PorcVenta" },
+
+            { "data": "Activo", "visible": false },
+
             {
-                "data": "Id", "render": function (data) {
-                    return "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarProducto(" + data + ")'title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
-                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarProducto(" + data + ")'title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>"
+                "data": "Id",
+                "render": function (data, type, full) {
+                    var activo = full.Activo === 1;
+                    var color = activo ? "success" : "danger";
+                    var titulo = activo ? "Desactivar" : "Activar";
+
+                    // Invertir el estado del producto para enviarlo a la función cambiarEstadoProducto
+                    var estadoInverso = full.Activo ? 0 : 1;
+
+                    return "<button class='btn btn-sm btn-" + color + " btnacciones' type='button' onclick='cambiarEstadoProducto(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white' aria-hidden='true'></i></button>" +
+                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarProducto(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>";
                 },
-
-
                 "orderable": true,
-                "searchable": true,
-
-
-
+                "searchable": true
             }
+
+
         ],
 
         "columnDefs": [
@@ -68,10 +83,45 @@ async function configurarDataTable() {
 const fileInput = document.getElementById("Imagen");
 
 
+const cambiarEstadoProducto = async (id, estado) => {
+
+    try {
+            var url = "/Productos/EditarActivo";
+
+            let value = JSON.stringify({
+                id: id,
+                activo: estado
+            });
+
+            let options = {
+                type: "POST",
+                url: url,
+                async: true,
+                data: value,
+                contentType: "application/json",
+                dataType: "json"
+            };
+
+            let result = await MakeAjax(options);
+
+            if (result.Status) {
+                $('.datos-error').removeClass('d-none');
+                const table = $('#grdProductos').DataTable();
+                table.ajax.reload();
+            } else {
+                $('.datos-error').text('Ha ocurrido un error en los datos.')
+                $('.datos-error').removeClass('d-none')
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
 const eliminarProducto = async id => {
 
     try {
-        if (confirm("¿Está seguro que desea eliminar este registro?")) {
+        if (confirm("¿Seguro desea eliminar de este producto?")) {
             var url = "/Productos/Eliminar";
 
             let value = JSON.stringify({
@@ -104,15 +154,8 @@ const eliminarProducto = async id => {
     }
 }
 
-function formatNumber(number) {
-    if (typeof number !== 'number' || isNaN(number)) {
-        return "$0"; // Devuelve un valor predeterminado si 'number' no es válido
-    }
 
-    const parts = number.toFixed(0).toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return "$" + parts.join(",");
-}
+
 
 const editarProducto = async id => {
 
@@ -178,7 +221,7 @@ const editarProducto = async id => {
 
 
 async function AccionBtn() {
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
+    if (userSession.IdRol != 1) { //ROL VENDEDOR
         alert("No tienes permisos para realizar esta accion.")
         return false;
     }
@@ -367,7 +410,7 @@ async function cargarCategorias() {
 }
 
 function abrirmodalimportacionmasiva() {
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
+    if (userSession.IdRol != 1) { //ROL VENDEDOR
         alert("No tienes permisos para realizar esta accion.")
         return false;
     }
@@ -375,7 +418,7 @@ function abrirmodalimportacionmasiva() {
 }
 
 async function enviarImportacionMasiva() {
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
+    if (userSession.IdRol != 1) { //ROL VENDEDOR
         alert("No tienes permisos para realizar esta accion.")
         return false;
     }

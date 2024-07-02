@@ -25,6 +25,22 @@
     color: black !important;
 }
 
+.input-nuevomodif-concheck {
+    display: flex;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    position: relative;
+    width: 70%;
+    left: 17%;
+    color: black;
+    text-align: center;
+    font-size: 1.3vw;
+    max-width: 500px !important;
+    color: black !important;
+}
+
+
     .input-nuevomodif:active {
         border: none;
         border-bottom: solid blue;
@@ -43,6 +59,25 @@
         outline: none !important;
         border-bottom: solid red;
     }
+
+.input-nuevomodif-concheck:active {
+    border: none;
+    border-bottom: solid blue;
+}
+
+.input-nuevomodif-concheck::placeholder {
+    color: black;
+    opacity: 1 !important;
+}
+
+.input-nuevomodif-concheck:hover {
+    outline: none !important;
+}
+
+.input-nuevomodif-concheck:focus {
+    outline: none !important;
+    border-bottom: solid red;
+}
 
 .btnAccion {
     width: 2vw;

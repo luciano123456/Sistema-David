@@ -34,6 +34,13 @@
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Nombre" Type="varchar" MaxLength="50" />
         </EntityType>
+        <EntityType Name="EstadosPedidos">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Nombre" Type="varchar" MaxLength="100" />
+        </EntityType>
         <EntityType Name="EstadosUsuarios">
           <Key>
             <PropertyRef Name="Id" />
@@ -56,6 +63,30 @@
           <Property Name="whatssap" Type="int" />
           <Property Name="Observacion" Type="varchar(max)" />
           <Property Name="Interes" Type="decimal" Precision="20" Scale="2" />
+          <Property Name="MetodoPago" Type="varchar" MaxLength="100" />
+          <Property Name="idCobrador" Type="int" />
+        </EntityType>
+        <EntityType Name="Limites">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Nombre" Type="varchar" MaxLength="255" />
+          <Property Name="Valor" Type="int" />
+        </EntityType>
+        <EntityType Name="Pedidos">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Fecha" Type="int" Nullable="false" />
+          <Property Name="IdVendedor" Type="int" Nullable="false" />
+          <Property Name="IdCliente" Type="int" Nullable="false" />
+          <Property Name="IdEstado" Type="int" Nullable="false" />
+          <Property Name="NombreCliente" Type="varchar" MaxLength="100" />
+          <Property Name="Dni" Type="varchar" MaxLength="255" />
+          <Property Name="Direccion" Type="varchar" MaxLength="255" />
+          <Property Name="Telefono" Type="varchar" MaxLength="500" />
         </EntityType>
         <EntityType Name="Productos">
           <Key>
@@ -70,6 +101,18 @@
           <Property Name="PrecioCompra" Type="decimal" Precision="18" Scale="2" />
           <Property Name="PrecioVenta" Type="decimal" Precision="18" Scale="2" />
           <Property Name="PorcVenta" Type="int" />
+          <Property Name="Activo" Type="int" />
+        </EntityType>
+        <EntityType Name="ProductosPedidos">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="IdProducto" Type="int" Nullable="false" />
+          <Property Name="IdPedido" Type="int" Nullable="false" />
+          <Property Name="Cantidad" Type="int" Nullable="false" />
+          <Property Name="PrecioUnitario" Type="decimal" Precision="20" Scale="2" Nullable="false" />
+          <Property Name="Talle" Type="varchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="ProductosVenta">
           <Key>
@@ -79,6 +122,7 @@
           <Property Name="IdProducto" Type="int" Nullable="false" />
           <Property Name="IdVenta" Type="int" Nullable="false" />
           <Property Name="Cantidad" Type="int" Nullable="false" />
+          <Property Name="PrecioUnitario" Type="decimal" Precision="20" Scale="2" />
         </EntityType>
         <EntityType Name="Roles">
           <Key>
@@ -86,6 +130,18 @@
           </Key>
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Nombre" Type="varchar" MaxLength="75" />
+        </EntityType>
+        <EntityType Name="StocksPendientes">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="IdUsuario" Type="int" />
+          <Property Name="IdUsuarioAsignado" Type="int" />
+          <Property Name="Fecha" Type="datetime" />
+          <Property Name="IdProducto" Type="int" />
+          <Property Name="Cantidad" Type="int" />
+          <Property Name="Estado" Type="varchar" MaxLength="255" />
         </EntityType>
         <EntityType Name="StockUsuarios">
           <Key>
@@ -112,6 +168,8 @@
           <Property Name="Contrasena" Type="varchar" MaxLength="255" Nullable="false" />
           <Property Name="CantVentas" Type="int" />
           <Property Name="IdEstado" Type="int" />
+          <Property Name="UltimaExportacion" Type="datetime" />
+          <Property Name="UrlExportacion" Type="varchar(max)" />
         </EntityType>
         <EntityType Name="Ventas">
           <Key>
@@ -131,6 +189,9 @@
           <Property Name="ValorCuota" Type="decimal" Precision="18" Scale="2" />
           <Property Name="Interes" Type="decimal" Precision="18" Scale="2" />
           <Property Name="idCobrador" Type="int" />
+          <Property Name="P_FechaCobro" Type="datetime" />
+          <Property Name="P_ValorCuota" Type="decimal" Precision="20" Scale="2" />
+          <Property Name="Comprobante" Type="int" />
         </EntityType>
         <EntityType Name="Zonas">
           <Key>
@@ -163,6 +224,42 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Pedidos_Clientes">
+          <End Role="Clientes" Type="Self.Clientes" Multiplicity="1" />
+          <End Role="Pedidos" Type="Self.Pedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Clientes">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Pedidos">
+              <PropertyRef Name="IdCliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Pedidos_EstadosPedidos">
+          <End Role="EstadosPedidos" Type="Self.EstadosPedidos" Multiplicity="1" />
+          <End Role="Pedidos" Type="Self.Pedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="EstadosPedidos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Pedidos">
+              <PropertyRef Name="IdCliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Pedidos_Usuarios">
+          <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="1" />
+          <End Role="Pedidos" Type="Self.Pedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuarios">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Pedidos">
+              <PropertyRef Name="IdVendedor" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_Productos_Categorias">
           <End Role="Categorias" Type="Self.Categorias" Multiplicity="0..1" />
           <End Role="Productos" Type="Self.Productos" Multiplicity="*" />
@@ -172,6 +269,30 @@
             </Principal>
             <Dependent Role="Productos">
               <PropertyRef Name="idCategoria" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProductosPedidos_Pedidos">
+          <End Role="Pedidos" Type="Self.Pedidos" Multiplicity="1" />
+          <End Role="ProductosPedidos" Type="Self.ProductosPedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Pedidos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProductosPedidos">
+              <PropertyRef Name="IdPedido" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProductosPedidos_Productos">
+          <End Role="Productos" Type="Self.Productos" Multiplicity="1" />
+          <End Role="ProductosPedidos" Type="Self.ProductosPedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Productos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProductosPedidos">
+              <PropertyRef Name="IdPedido" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -232,6 +353,42 @@
             </Principal>
             <Dependent Role="StockUsuarios">
               <PropertyRef Name="IdUsuario" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StocksPendientes_Productos">
+          <End Role="Productos" Type="Self.Productos" Multiplicity="0..1" />
+          <End Role="StocksPendientes" Type="Self.StocksPendientes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Productos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StocksPendientes">
+              <PropertyRef Name="IdProducto" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StocksPendientes_Usuarios">
+          <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="0..1" />
+          <End Role="StocksPendientes" Type="Self.StocksPendientes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuarios">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StocksPendientes">
+              <PropertyRef Name="IdUsuario" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StocksPendientes_Usuarios_Asignados">
+          <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="0..1" />
+          <End Role="StocksPendientes" Type="Self.StocksPendientes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuarios">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StocksPendientes">
+              <PropertyRef Name="IdUsuarioAsignado" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -299,11 +456,16 @@
           <EntitySet Name="Categorias" EntityType="Self.Categorias" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Clientes" EntityType="Self.Clientes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EstadosClientes" EntityType="Self.EstadosClientes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="EstadosPedidos" EntityType="Self.EstadosPedidos" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EstadosUsuarios" EntityType="Self.EstadosUsuarios" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="InformacionVentas" EntityType="Self.InformacionVentas" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Limites" EntityType="Self.Limites" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Pedidos" EntityType="Self.Pedidos" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Productos" EntityType="Self.Productos" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ProductosPedidos" EntityType="Self.ProductosPedidos" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ProductosVenta" EntityType="Self.ProductosVenta" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Roles" EntityType="Self.Roles" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="StocksPendientes" EntityType="Self.StocksPendientes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="StockUsuarios" EntityType="Self.StockUsuarios" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Usuarios" EntityType="Self.Usuarios" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Ventas" EntityType="Self.Ventas" Schema="dbo" store:Type="Tables" />
@@ -316,9 +478,29 @@
             <End Role="Ventas" EntitySet="Ventas" />
             <End Role="InformacionVentas" EntitySet="InformacionVentas" />
           </AssociationSet>
+          <AssociationSet Name="FK_Pedidos_Clientes" Association="Self.FK_Pedidos_Clientes">
+            <End Role="Clientes" EntitySet="Clientes" />
+            <End Role="Pedidos" EntitySet="Pedidos" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Pedidos_EstadosPedidos" Association="Self.FK_Pedidos_EstadosPedidos">
+            <End Role="EstadosPedidos" EntitySet="EstadosPedidos" />
+            <End Role="Pedidos" EntitySet="Pedidos" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Pedidos_Usuarios" Association="Self.FK_Pedidos_Usuarios">
+            <End Role="Usuarios" EntitySet="Usuarios" />
+            <End Role="Pedidos" EntitySet="Pedidos" />
+          </AssociationSet>
           <AssociationSet Name="FK_Productos_Categorias" Association="Self.FK_Productos_Categorias">
             <End Role="Categorias" EntitySet="Categorias" />
             <End Role="Productos" EntitySet="Productos" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProductosPedidos_Pedidos" Association="Self.FK_ProductosPedidos_Pedidos">
+            <End Role="Pedidos" EntitySet="Pedidos" />
+            <End Role="ProductosPedidos" EntitySet="ProductosPedidos" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProductosPedidos_Productos" Association="Self.FK_ProductosPedidos_Productos">
+            <End Role="Productos" EntitySet="Productos" />
+            <End Role="ProductosPedidos" EntitySet="ProductosPedidos" />
           </AssociationSet>
           <AssociationSet Name="FK_ProductosVenta_Productos" Association="Self.FK_ProductosVenta_Productos">
             <End Role="Productos" EntitySet="Productos" />
@@ -339,6 +521,18 @@
           <AssociationSet Name="FK_Stock_Usuarios" Association="Self.FK_Stock_Usuarios">
             <End Role="Usuarios" EntitySet="Usuarios" />
             <End Role="StockUsuarios" EntitySet="StockUsuarios" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StocksPendientes_Productos" Association="Self.FK_StocksPendientes_Productos">
+            <End Role="Productos" EntitySet="Productos" />
+            <End Role="StocksPendientes" EntitySet="StocksPendientes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StocksPendientes_Usuarios" Association="Self.FK_StocksPendientes_Usuarios">
+            <End Role="Usuarios" EntitySet="Usuarios" />
+            <End Role="StocksPendientes" EntitySet="StocksPendientes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StocksPendientes_Usuarios_Asignados" Association="Self.FK_StocksPendientes_Usuarios_Asignados">
+            <End Role="Usuarios" EntitySet="Usuarios" />
+            <End Role="StocksPendientes" EntitySet="StocksPendientes" />
           </AssociationSet>
           <AssociationSet Name="FK_Usuarios_EstadosUsuarios1" Association="Self.FK_Usuarios_EstadosUsuarios1">
             <End Role="EstadosUsuarios" EntitySet="EstadosUsuarios" />
@@ -387,10 +581,11 @@
           <Property Name="IdEstado" Type="Int32" />
           <NavigationProperty Name="EstadosClientes" Relationship="Self.FK_Clientes_EstadosClientes" FromRole="Clientes" ToRole="EstadosClientes" />
           <NavigationProperty Name="Usuarios" Relationship="Self.FK_Clientes_Usuarios" FromRole="Clientes" ToRole="Usuarios" />
-          <NavigationProperty Name="Ventas" Relationship="Self.FK_Ventas_Clientes" FromRole="Clientes" ToRole="Ventas" />
           <Property Name="IdZona" Type="Int32" />
           <NavigationProperty Name="Zonas" Relationship="Sistema_DavidModel.FK_Clientes_Zonas" FromRole="Clientes" ToRole="Zonas" />
           <Property Name="Fecha" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_Ventas_Clientes" FromRole="Clientes" ToRole="Ventas" />
+          <NavigationProperty Name="Pedidos" Relationship="Sistema_DavidModel.FK_Pedidos_Clientes" FromRole="Clientes" ToRole="Pedidos" />
         </EntityType>
         <EntityType Name="EstadosClientes">
           <Key>
@@ -422,20 +617,12 @@
           <Property Name="PrecioVenta" Type="Decimal" Precision="18" Scale="2" />
           <Property Name="PorcVenta" Type="Int32" />
           <NavigationProperty Name="Categorias" Relationship="Self.FK_Productos_Categorias" FromRole="Productos" ToRole="Categorias" />
-          <NavigationProperty Name="ProductosVenta" Relationship="Self.FK_ProductosVenta_Productos" FromRole="Productos" ToRole="ProductosVenta" />
-          <NavigationProperty Name="StockUsuarios" Relationship="Self.FK_Stock_Productos" FromRole="Productos" ToRole="StockUsuarios" />
-          <NavigationProperty Name="StockUsuarios1" Relationship="Self.FK_Stock_Productos1" FromRole="Productos" ToRole="StockUsuarios" />
-        </EntityType>
-        <EntityType Name="ProductosVenta">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="IdProducto" Type="Int32" Nullable="false" />
-          <Property Name="IdVenta" Type="Int32" Nullable="false" />
-          <Property Name="Cantidad" Type="Int32" Nullable="false" />
-          <NavigationProperty Name="Productos" Relationship="Self.FK_ProductosVenta_Productos" FromRole="ProductosVenta" ToRole="Productos" />
-          <NavigationProperty Name="Ventas" Relationship="Self.FK_ProductosVenta_Ventas" FromRole="ProductosVenta" ToRole="Ventas" />
+          <NavigationProperty Name="StocksPendientes" Relationship="Sistema_DavidModel.FK_StocksPendientes_Productos" FromRole="Productos" ToRole="StocksPendientes" />
+          <Property Name="Activo" Type="Int32" />
+          <NavigationProperty Name="StockUsuarios" Relationship="Sistema_DavidModel.FK_Stock_Productos" FromRole="Productos" ToRole="StockUsuarios" />
+          <NavigationProperty Name="StockUsuarios1" Relationship="Sistema_DavidModel.FK_Stock_Productos1" FromRole="Productos" ToRole="StockUsuarios" />
+          <NavigationProperty Name="ProductosVenta" Relationship="Sistema_DavidModel.FK_ProductosVenta_Productos" FromRole="Productos" ToRole="ProductosVenta" />
+          <NavigationProperty Name="ProductosPedidos" Relationship="Sistema_DavidModel.FK_ProductosPedidos_Productos" FromRole="Productos" ToRole="ProductosPedidos" />
         </EntityType>
         <EntityType Name="Roles">
           <Key>
@@ -444,19 +631,6 @@
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="Nombre" Type="String" MaxLength="75" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="Usuarios" Relationship="Self.FK_Usuarios_Roles" FromRole="Roles" ToRole="Usuarios" />
-        </EntityType>
-        <EntityType Name="StockUsuarios">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="IdProducto" Type="Int32" Nullable="false" />
-          <Property Name="Cantidad" Type="Int32" Nullable="false" />
-          <Property Name="IdCategoria" Type="Int32" Nullable="false" />
-          <Property Name="IdUsuario" Type="Int32" Nullable="false" />
-          <NavigationProperty Name="Productos" Relationship="Self.FK_Stock_Productos" FromRole="StockUsuarios" ToRole="Productos" />
-          <NavigationProperty Name="Productos1" Relationship="Self.FK_Stock_Productos1" FromRole="StockUsuarios" ToRole="Productos" />
-          <NavigationProperty Name="Usuarios" Relationship="Self.FK_Stock_Usuarios" FromRole="StockUsuarios" ToRole="Usuarios" />
         </EntityType>
         <EntityType Name="Usuarios">
           <Key>
@@ -476,33 +650,13 @@
           <NavigationProperty Name="Clientes" Relationship="Self.FK_Clientes_Usuarios" FromRole="Usuarios" ToRole="Clientes" />
           <NavigationProperty Name="EstadosUsuarios" Relationship="Self.FK_Usuarios_EstadosUsuarios1" FromRole="Usuarios" ToRole="EstadosUsuarios" />
           <NavigationProperty Name="Roles" Relationship="Self.FK_Usuarios_Roles" FromRole="Usuarios" ToRole="Roles" />
-          <NavigationProperty Name="StockUsuarios" Relationship="Self.FK_Stock_Usuarios" FromRole="Usuarios" ToRole="StockUsuarios" />
-          <NavigationProperty Name="Ventas" Relationship="Self.FK_Ventas_Usuarios" FromRole="Usuarios" ToRole="Ventas" />
-          <NavigationProperty Name="Ventas1" Relationship="Sistema_DavidModel.FK_Ventas_Usuarios1" FromRole="Usuarios" ToRole="Ventas" />
-        </EntityType>
-        <EntityType Name="Ventas">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="idCliente" Type="Int32" Nullable="false" />
-          <Property Name="Fecha" Type="DateTime" Precision="3" />
-          <Property Name="Entrega" Type="Decimal" Precision="18" Scale="2" />
-          <Property Name="Restante" Type="Decimal" Precision="18" Scale="2" />
-          <Property Name="FechaCobro" Type="DateTime" Precision="3" />
-          <Property Name="FechaLimite" Type="DateTime" Precision="3" />
-          <Property Name="idVendedor" Type="Int32" Nullable="false" />
-          <Property Name="Observacion" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
-          <NavigationProperty Name="Clientes" Relationship="Self.FK_Ventas_Clientes" FromRole="Ventas" ToRole="Clientes" />
-          <NavigationProperty Name="ProductosVenta" Relationship="Self.FK_ProductosVenta_Ventas" FromRole="Ventas" ToRole="ProductosVenta" />
-          <NavigationProperty Name="Usuarios" Relationship="Self.FK_Ventas_Usuarios" FromRole="Ventas" ToRole="Usuarios" />
-          <NavigationProperty Name="InformacionVentas" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas" FromRole="Ventas" ToRole="InformacionVentas" />
-          <Property Name="Importante" Type="Int32" />
-          <Property Name="Orden" Type="Int32" />
-          <Property Name="ValorCuota" Type="Decimal" Precision="18" Scale="2" />
-          <Property Name="Interes" Type="Decimal" Precision="18" Scale="2" />
-          <Property Name="idCobrador" Type="Int32" />
-          <NavigationProperty Name="Usuarios1" Relationship="Sistema_DavidModel.FK_Ventas_Usuarios1" FromRole="Ventas" ToRole="Usuarios" />
+          <Property Name="UltimaExportacion" Type="DateTime" Precision="3" />
+          <Property Name="UrlExportacion" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="StocksPendientes" Relationship="Sistema_DavidModel.FK_StocksPendientes_Usuarios" FromRole="Usuarios" ToRole="StocksPendientes" />
+          <NavigationProperty Name="StocksPendientes1" Relationship="Sistema_DavidModel.FK_StocksPendientes_Usuarios_Asignados" FromRole="Usuarios" ToRole="StocksPendientes" />
+          <NavigationProperty Name="StockUsuarios" Relationship="Sistema_DavidModel.FK_Stock_Usuarios" FromRole="Usuarios" ToRole="StockUsuarios" />
+          <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_Ventas_Usuarios" FromRole="Usuarios" ToRole="Ventas" />
+          <NavigationProperty Name="Pedidos" Relationship="Sistema_DavidModel.FK_Pedidos_Usuarios" FromRole="Usuarios" ToRole="Pedidos" />
         </EntityType>
         <Association Name="FK_Productos_Categorias">
           <End Role="Categorias" Type="Self.Categorias" Multiplicity="0..1" />
@@ -540,18 +694,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Ventas_Clientes">
-          <End Role="Clientes" Type="Self.Clientes" Multiplicity="1" />
-          <End Role="Ventas" Type="Self.Ventas" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Clientes">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Ventas">
-              <PropertyRef Name="idCliente" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_Usuarios_EstadosUsuarios1">
           <End Role="EstadosUsuarios" Type="Self.EstadosUsuarios" Multiplicity="0..1" />
           <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="*" />
@@ -561,54 +703,6 @@
             </Principal>
             <Dependent Role="Usuarios">
               <PropertyRef Name="IdEstado" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_ProductosVenta_Productos">
-          <End Role="Productos" Type="Self.Productos" Multiplicity="1" />
-          <End Role="ProductosVenta" Type="Self.ProductosVenta" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Productos">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="ProductosVenta">
-              <PropertyRef Name="IdProducto" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Stock_Productos">
-          <End Role="Productos" Type="Self.Productos" Multiplicity="1" />
-          <End Role="StockUsuarios" Type="Self.StockUsuarios" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Productos">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="StockUsuarios">
-              <PropertyRef Name="IdProducto" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Stock_Productos1">
-          <End Role="Productos" Type="Self.Productos" Multiplicity="1" />
-          <End Role="StockUsuarios" Type="Self.StockUsuarios" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Productos">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="StockUsuarios">
-              <PropertyRef Name="IdProducto" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_ProductosVenta_Ventas">
-          <End Role="Ventas" Type="Self.Ventas" Multiplicity="1" />
-          <End Role="ProductosVenta" Type="Self.ProductosVenta" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Ventas">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="ProductosVenta">
-              <PropertyRef Name="IdVenta" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -624,41 +718,14 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Stock_Usuarios">
-          <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="1" />
-          <End Role="StockUsuarios" Type="Self.StockUsuarios" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Usuarios">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="StockUsuarios">
-              <PropertyRef Name="IdUsuario" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Ventas_Usuarios">
-          <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="1" />
-          <End Role="Ventas" Type="Self.Ventas" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Usuarios">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Ventas">
-              <PropertyRef Name="idVendedor" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <EntityContainer Name="Sistema_DavidEntities" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="Categorias" EntityType="Self.Categorias" />
           <EntitySet Name="Clientes" EntityType="Self.Clientes" />
           <EntitySet Name="EstadosClientes" EntityType="Self.EstadosClientes" />
           <EntitySet Name="EstadosUsuarios" EntityType="Self.EstadosUsuarios" />
           <EntitySet Name="Productos" EntityType="Self.Productos" />
-          <EntitySet Name="ProductosVenta" EntityType="Self.ProductosVenta" />
           <EntitySet Name="Roles" EntityType="Self.Roles" />
-          <EntitySet Name="StockUsuarios" EntityType="Self.StockUsuarios" />
           <EntitySet Name="Usuarios" EntityType="Self.Usuarios" />
-          <EntitySet Name="Ventas" EntityType="Self.Ventas" />
           <AssociationSet Name="FK_Productos_Categorias" Association="Self.FK_Productos_Categorias">
             <End Role="Categorias" EntitySet="Categorias" />
             <End Role="Productos" EntitySet="Productos" />
@@ -671,46 +738,13 @@
             <End Role="Usuarios" EntitySet="Usuarios" />
             <End Role="Clientes" EntitySet="Clientes" />
           </AssociationSet>
-          <AssociationSet Name="FK_Ventas_Clientes" Association="Self.FK_Ventas_Clientes">
-            <End Role="Clientes" EntitySet="Clientes" />
-            <End Role="Ventas" EntitySet="Ventas" />
-          </AssociationSet>
           <AssociationSet Name="FK_Usuarios_EstadosUsuarios1" Association="Self.FK_Usuarios_EstadosUsuarios1">
             <End Role="EstadosUsuarios" EntitySet="EstadosUsuarios" />
             <End Role="Usuarios" EntitySet="Usuarios" />
           </AssociationSet>
-          <AssociationSet Name="FK_ProductosVenta_Productos" Association="Self.FK_ProductosVenta_Productos">
-            <End Role="Productos" EntitySet="Productos" />
-            <End Role="ProductosVenta" EntitySet="ProductosVenta" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Stock_Productos" Association="Self.FK_Stock_Productos">
-            <End Role="Productos" EntitySet="Productos" />
-            <End Role="StockUsuarios" EntitySet="StockUsuarios" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Stock_Productos1" Association="Self.FK_Stock_Productos1">
-            <End Role="Productos" EntitySet="Productos" />
-            <End Role="StockUsuarios" EntitySet="StockUsuarios" />
-          </AssociationSet>
-          <AssociationSet Name="FK_ProductosVenta_Ventas" Association="Self.FK_ProductosVenta_Ventas">
-            <End Role="Ventas" EntitySet="Ventas" />
-            <End Role="ProductosVenta" EntitySet="ProductosVenta" />
-          </AssociationSet>
           <AssociationSet Name="FK_Usuarios_Roles" Association="Self.FK_Usuarios_Roles">
             <End Role="Roles" EntitySet="Roles" />
             <End Role="Usuarios" EntitySet="Usuarios" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Stock_Usuarios" Association="Self.FK_Stock_Usuarios">
-            <End Role="Usuarios" EntitySet="Usuarios" />
-            <End Role="StockUsuarios" EntitySet="StockUsuarios" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Ventas_Usuarios" Association="Self.FK_Ventas_Usuarios">
-            <End Role="Usuarios" EntitySet="Usuarios" />
-            <End Role="Ventas" EntitySet="Ventas" />
-          </AssociationSet>
-          <EntitySet Name="InformacionVentas" EntityType="Sistema_DavidModel.InformacionVentas" />
-          <AssociationSet Name="FK_InformacionVentas_Ventas" Association="Sistema_DavidModel.FK_InformacionVentas_Ventas">
-            <End Role="Ventas" EntitySet="Ventas" />
-            <End Role="InformacionVentas" EntitySet="InformacionVentas" />
           </AssociationSet>
           <EntitySet Name="Zonas" EntityType="Sistema_DavidModel.Zonas" />
           <AssociationSet Name="FK_Clientes_Zonas" Association="Sistema_DavidModel.FK_Clientes_Zonas">
@@ -721,40 +755,80 @@
             <End Role="Zonas" EntitySet="Zonas" />
             <End Role="Zonas1" EntitySet="Zonas" />
           </AssociationSet>
-          <AssociationSet Name="FK_Ventas_Usuarios1" Association="Sistema_DavidModel.FK_Ventas_Usuarios1">
+          <EntitySet Name="StocksPendientes" EntityType="Sistema_DavidModel.StocksPendientes" />
+          <AssociationSet Name="FK_StocksPendientes_Productos" Association="Sistema_DavidModel.FK_StocksPendientes_Productos">
+            <End Role="Productos" EntitySet="Productos" />
+            <End Role="StocksPendientes" EntitySet="StocksPendientes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StocksPendientes_Usuarios" Association="Sistema_DavidModel.FK_StocksPendientes_Usuarios">
+            <End Role="Usuarios" EntitySet="Usuarios" />
+            <End Role="StocksPendientes" EntitySet="StocksPendientes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StocksPendientes_Usuarios_Asignados" Association="Sistema_DavidModel.FK_StocksPendientes_Usuarios_Asignados">
+            <End Role="Usuarios" EntitySet="Usuarios" />
+            <End Role="StocksPendientes" EntitySet="StocksPendientes" />
+          </AssociationSet>
+          <EntitySet Name="Limites" EntityType="Sistema_DavidModel.Limites" />
+          <EntitySet Name="StockUsuarios" EntityType="Sistema_DavidModel.StockUsuarios" />
+          <AssociationSet Name="FK_Stock_Productos" Association="Sistema_DavidModel.FK_Stock_Productos">
+            <End Role="Productos" EntitySet="Productos" />
+            <End Role="StockUsuarios" EntitySet="StockUsuarios" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Stock_Productos1" Association="Sistema_DavidModel.FK_Stock_Productos1">
+            <End Role="Productos" EntitySet="Productos" />
+            <End Role="StockUsuarios" EntitySet="StockUsuarios" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Stock_Usuarios" Association="Sistema_DavidModel.FK_Stock_Usuarios">
+            <End Role="Usuarios" EntitySet="Usuarios" />
+            <End Role="StockUsuarios" EntitySet="StockUsuarios" />
+          </AssociationSet>
+          <EntitySet Name="ProductosVenta" EntityType="Sistema_DavidModel.ProductosVenta" />
+          <AssociationSet Name="FK_ProductosVenta_Productos" Association="Sistema_DavidModel.FK_ProductosVenta_Productos">
+            <End Role="Productos" EntitySet="Productos" />
+            <End Role="ProductosVenta" EntitySet="ProductosVenta" />
+          </AssociationSet>
+          <EntitySet Name="InformacionVentas" EntityType="Sistema_DavidModel.InformacionVentas" />
+          <EntitySet Name="EstadosPedidos" EntityType="Sistema_DavidModel.EstadosPedidos" />
+          <EntitySet Name="Ventas" EntityType="Sistema_DavidModel.Ventas" />
+          <AssociationSet Name="FK_Ventas_Clientes" Association="Sistema_DavidModel.FK_Ventas_Clientes">
+            <End Role="Clientes" EntitySet="Clientes" />
+            <End Role="Ventas" EntitySet="Ventas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InformacionVentas_Ventas" Association="Sistema_DavidModel.FK_InformacionVentas_Ventas">
+            <End Role="Ventas" EntitySet="Ventas" />
+            <End Role="InformacionVentas" EntitySet="InformacionVentas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProductosVenta_Ventas" Association="Sistema_DavidModel.FK_ProductosVenta_Ventas">
+            <End Role="Ventas" EntitySet="Ventas" />
+            <End Role="ProductosVenta" EntitySet="ProductosVenta" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ventas_Usuarios" Association="Sistema_DavidModel.FK_Ventas_Usuarios">
             <End Role="Usuarios" EntitySet="Usuarios" />
             <End Role="Ventas" EntitySet="Ventas" />
           </AssociationSet>
-        </EntityContainer>
-        <EntityType Name="InformacionVentas">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="IdVenta" Type="Int32" Nullable="false" />
-          <Property Name="Fecha" Type="DateTime" Precision="3" />
-          <Property Name="Descripcion" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Entrega" Type="Decimal" Precision="20" Scale="2" />
-          <Property Name="Restante" Type="Decimal" Precision="20" Scale="2" />
-          <Property Name="idVendedor" Type="Int32" />
-          <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas" FromRole="InformacionVentas" ToRole="Ventas" />
-          <Property Name="whatssap" Type="Int32" />
-          <Property Name="Observacion" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="ValorCuota" Type="Decimal" Precision="20" Scale="2" />
-          <Property Name="Interes" Type="Decimal" Precision="20" Scale="2" />
-        </EntityType>
-        <Association Name="FK_InformacionVentas_Ventas">
-          <End Type="Sistema_DavidModel.Ventas" Role="Ventas" Multiplicity="1" />
-          <End Type="Sistema_DavidModel.InformacionVentas" Role="InformacionVentas" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Ventas">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="InformacionVentas">
-              <PropertyRef Name="IdVenta" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
+          <EntitySet Name="Pedidos" EntityType="Sistema_DavidModel.Pedidos" />
+          <EntitySet Name="ProductosPedidos" EntityType="Sistema_DavidModel.ProductosPedidos" />
+          <AssociationSet Name="FK_Pedidos_Clientes" Association="Sistema_DavidModel.FK_Pedidos_Clientes">
+            <End Role="Clientes" EntitySet="Clientes" />
+            <End Role="Pedidos" EntitySet="Pedidos" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Pedidos_EstadosPedidos" Association="Sistema_DavidModel.FK_Pedidos_EstadosPedidos">
+            <End Role="EstadosPedidos" EntitySet="EstadosPedidos" />
+            <End Role="Pedidos" EntitySet="Pedidos" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Pedidos_Usuarios" Association="Sistema_DavidModel.FK_Pedidos_Usuarios">
+            <End Role="Usuarios" EntitySet="Usuarios" />
+            <End Role="Pedidos" EntitySet="Pedidos" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProductosPedidos_Pedidos" Association="Sistema_DavidModel.FK_ProductosPedidos_Pedidos">
+            <End Role="Pedidos" EntitySet="Pedidos" />
+            <End Role="ProductosPedidos" EntitySet="ProductosPedidos" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProductosPedidos_Productos" Association="Sistema_DavidModel.FK_ProductosPedidos_Productos">
+            <End Role="Productos" EntitySet="Productos" />
+            <End Role="ProductosPedidos" EntitySet="ProductosPedidos" />
+          </AssociationSet>
+          </EntityContainer>
         <EntityType Name="Zonas">
           <Key>
             <PropertyRef Name="Id" />
@@ -789,19 +863,331 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Ventas_Usuarios1">
+        <EntityType Name="StocksPendientes">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="IdUsuario" Type="Int32" />
+          <Property Name="IdUsuarioAsignado" Type="Int32" />
+          <Property Name="Fecha" Type="DateTime" Precision="3" />
+          <Property Name="IdProducto" Type="Int32" />
+          <Property Name="Cantidad" Type="Int32" />
+          <Property Name="Estado" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Productos" Relationship="Sistema_DavidModel.FK_StocksPendientes_Productos" FromRole="StocksPendientes" ToRole="Productos" />
+          <NavigationProperty Name="Usuarios" Relationship="Sistema_DavidModel.FK_StocksPendientes_Usuarios" FromRole="StocksPendientes" ToRole="Usuarios" />
+          <NavigationProperty Name="Usuarios1" Relationship="Sistema_DavidModel.FK_StocksPendientes_Usuarios_Asignados" FromRole="StocksPendientes" ToRole="Usuarios" />
+        </EntityType>
+        <Association Name="FK_StocksPendientes_Productos">
+          <End Type="Sistema_DavidModel.Productos" Role="Productos" Multiplicity="0..1" />
+          <End Type="Sistema_DavidModel.StocksPendientes" Role="StocksPendientes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Productos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StocksPendientes">
+              <PropertyRef Name="IdProducto" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StocksPendientes_Usuarios">
           <End Type="Sistema_DavidModel.Usuarios" Role="Usuarios" Multiplicity="0..1" />
+          <End Type="Sistema_DavidModel.StocksPendientes" Role="StocksPendientes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuarios">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StocksPendientes">
+              <PropertyRef Name="IdUsuario" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StocksPendientes_Usuarios_Asignados">
+          <End Type="Sistema_DavidModel.Usuarios" Role="Usuarios" Multiplicity="0..1" />
+          <End Type="Sistema_DavidModel.StocksPendientes" Role="StocksPendientes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuarios">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StocksPendientes">
+              <PropertyRef Name="IdUsuarioAsignado" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Limites">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Nombre" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="Valor" Type="Int32" />
+        </EntityType>
+        <EntityType Name="StockUsuarios">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="IdProducto" Type="Int32" Nullable="false" />
+          <Property Name="Cantidad" Type="Int32" Nullable="false" />
+          <Property Name="IdCategoria" Type="Int32" Nullable="false" />
+          <Property Name="IdUsuario" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Productos" Relationship="Sistema_DavidModel.FK_Stock_Productos" FromRole="StockUsuarios" ToRole="Productos" />
+          <NavigationProperty Name="Productos1" Relationship="Sistema_DavidModel.FK_Stock_Productos1" FromRole="StockUsuarios" ToRole="Productos" />
+          <NavigationProperty Name="Usuarios" Relationship="Sistema_DavidModel.FK_Stock_Usuarios" FromRole="StockUsuarios" ToRole="Usuarios" />
+        </EntityType>
+        <Association Name="FK_Stock_Productos">
+          <End Type="Sistema_DavidModel.Productos" Role="Productos" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.StockUsuarios" Role="StockUsuarios" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Productos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockUsuarios">
+              <PropertyRef Name="IdProducto" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Stock_Productos1">
+          <End Type="Sistema_DavidModel.Productos" Role="Productos" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.StockUsuarios" Role="StockUsuarios" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Productos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockUsuarios">
+              <PropertyRef Name="IdProducto" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Stock_Usuarios">
+          <End Type="Sistema_DavidModel.Usuarios" Role="Usuarios" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.StockUsuarios" Role="StockUsuarios" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuarios">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockUsuarios">
+              <PropertyRef Name="IdUsuario" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="ProductosVenta">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="IdProducto" Type="Int32" Nullable="false" />
+          <Property Name="IdVenta" Type="Int32" Nullable="false" />
+          <Property Name="Cantidad" Type="Int32" Nullable="false" />
+          <Property Name="PrecioUnitario" Type="Decimal" Precision="20" Scale="2" />
+          <NavigationProperty Name="Productos" Relationship="Sistema_DavidModel.FK_ProductosVenta_Productos" FromRole="ProductosVenta" ToRole="Productos" />
+          <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_ProductosVenta_Ventas" FromRole="ProductosVenta" ToRole="Ventas" />
+        </EntityType>
+        <Association Name="FK_ProductosVenta_Productos">
+          <End Type="Sistema_DavidModel.Productos" Role="Productos" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.ProductosVenta" Role="ProductosVenta" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Productos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProductosVenta">
+              <PropertyRef Name="IdProducto" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="InformacionVentas">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="IdVenta" Type="Int32" Nullable="false" />
+          <Property Name="Fecha" Type="DateTime" Precision="3" />
+          <Property Name="Descripcion" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="Entrega" Type="Decimal" Precision="20" Scale="2" />
+          <Property Name="ValorCuota" Type="Decimal" Precision="20" Scale="2" />
+          <Property Name="Restante" Type="Decimal" Precision="20" Scale="2" />
+          <Property Name="idVendedor" Type="Int32" />
+          <Property Name="whatssap" Type="Int32" />
+          <Property Name="Observacion" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="Interes" Type="Decimal" Precision="20" Scale="2" />
+          <Property Name="MetodoPago" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="idCobrador" Type="Int32" />
+          <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas" FromRole="InformacionVentas" ToRole="Ventas" />
+        </EntityType>
+        <EntityType Name="EstadosPedidos">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Nombre" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Pedidos" Relationship="Sistema_DavidModel.FK_Pedidos_EstadosPedidos" FromRole="EstadosPedidos" ToRole="Pedidos" />
+        </EntityType>
+        <EntityType Name="Ventas">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="idCliente" Type="Int32" Nullable="false" />
+          <Property Name="Fecha" Type="DateTime" Precision="3" />
+          <Property Name="Entrega" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="Restante" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="FechaCobro" Type="DateTime" Precision="3" />
+          <Property Name="FechaLimite" Type="DateTime" Precision="3" />
+          <Property Name="idVendedor" Type="Int32" Nullable="false" />
+          <Property Name="Observacion" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="Importante" Type="Int32" />
+          <Property Name="Orden" Type="Int32" />
+          <Property Name="ValorCuota" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="Interes" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="idCobrador" Type="Int32" />
+          <Property Name="P_FechaCobro" Type="DateTime" Precision="3" />
+          <Property Name="P_ValorCuota" Type="Decimal" Precision="20" Scale="2" />
+          <Property Name="Comprobante" Type="Int32" />
+          <NavigationProperty Name="Clientes" Relationship="Sistema_DavidModel.FK_Ventas_Clientes" FromRole="Ventas" ToRole="Clientes" />
+          <NavigationProperty Name="InformacionVentas" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas" FromRole="Ventas" ToRole="InformacionVentas" />
+          <NavigationProperty Name="ProductosVenta" Relationship="Sistema_DavidModel.FK_ProductosVenta_Ventas" FromRole="Ventas" ToRole="ProductosVenta" />
+          <NavigationProperty Name="Usuarios" Relationship="Sistema_DavidModel.FK_Ventas_Usuarios" FromRole="Ventas" ToRole="Usuarios" />
+        </EntityType>
+        <Association Name="FK_Ventas_Clientes">
+          <End Type="Sistema_DavidModel.Clientes" Role="Clientes" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.Ventas" Role="Ventas" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Clientes">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Ventas">
+              <PropertyRef Name="idCliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InformacionVentas_Ventas">
+          <End Type="Sistema_DavidModel.Ventas" Role="Ventas" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.InformacionVentas" Role="InformacionVentas" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ventas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="InformacionVentas">
+              <PropertyRef Name="IdVenta" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProductosVenta_Ventas">
+          <End Type="Sistema_DavidModel.Ventas" Role="Ventas" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.ProductosVenta" Role="ProductosVenta" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ventas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProductosVenta">
+              <PropertyRef Name="IdVenta" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ventas_Usuarios">
+          <End Type="Sistema_DavidModel.Usuarios" Role="Usuarios" Multiplicity="1" />
           <End Type="Sistema_DavidModel.Ventas" Role="Ventas" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Usuarios">
               <PropertyRef Name="Id" />
             </Principal>
             <Dependent Role="Ventas">
-              <PropertyRef Name="idCobrador" />
+              <PropertyRef Name="idVendedor" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-      </Schema>
+        <EntityType Name="Pedidos">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Fecha" Type="Int32" Nullable="false" />
+          <Property Name="IdVendedor" Type="Int32" Nullable="false" />
+          <Property Name="IdCliente" Type="Int32" Nullable="false" />
+          <Property Name="IdEstado" Type="Int32" Nullable="false" />
+          <Property Name="NombreCliente" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="Dni" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="Direccion" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="Telefono" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Clientes" Relationship="Sistema_DavidModel.FK_Pedidos_Clientes" FromRole="Pedidos" ToRole="Clientes" />
+          <NavigationProperty Name="EstadosPedidos" Relationship="Sistema_DavidModel.FK_Pedidos_EstadosPedidos" FromRole="Pedidos" ToRole="EstadosPedidos" />
+          <NavigationProperty Name="Usuarios" Relationship="Sistema_DavidModel.FK_Pedidos_Usuarios" FromRole="Pedidos" ToRole="Usuarios" />
+          <NavigationProperty Name="ProductosPedidos" Relationship="Sistema_DavidModel.FK_ProductosPedidos_Pedidos" FromRole="Pedidos" ToRole="ProductosPedidos" />
+        </EntityType>
+        <EntityType Name="ProductosPedidos">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="IdProducto" Type="Int32" Nullable="false" />
+          <Property Name="IdPedido" Type="Int32" Nullable="false" />
+          <Property Name="Cantidad" Type="Int32" Nullable="false" />
+          <Property Name="PrecioUnitario" Type="Decimal" Nullable="false" Precision="20" Scale="2" />
+          <Property Name="Talle" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Pedidos" Relationship="Sistema_DavidModel.FK_ProductosPedidos_Pedidos" FromRole="ProductosPedidos" ToRole="Pedidos" />
+          <NavigationProperty Name="Productos" Relationship="Sistema_DavidModel.FK_ProductosPedidos_Productos" FromRole="ProductosPedidos" ToRole="Productos" />
+        </EntityType>
+        <Association Name="FK_Pedidos_Clientes">
+          <End Type="Sistema_DavidModel.Clientes" Role="Clientes" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.Pedidos" Role="Pedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Clientes">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Pedidos">
+              <PropertyRef Name="IdCliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Pedidos_EstadosPedidos">
+          <End Type="Sistema_DavidModel.EstadosPedidos" Role="EstadosPedidos" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.Pedidos" Role="Pedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="EstadosPedidos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Pedidos">
+              <PropertyRef Name="IdCliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Pedidos_Usuarios">
+          <End Type="Sistema_DavidModel.Usuarios" Role="Usuarios" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.Pedidos" Role="Pedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuarios">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Pedidos">
+              <PropertyRef Name="IdVendedor" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProductosPedidos_Pedidos">
+          <End Type="Sistema_DavidModel.Pedidos" Role="Pedidos" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.ProductosPedidos" Role="ProductosPedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Pedidos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProductosPedidos">
+              <PropertyRef Name="IdPedido" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProductosPedidos_Productos">
+          <End Type="Sistema_DavidModel.Productos" Role="Productos" Multiplicity="1" />
+          <End Type="Sistema_DavidModel.ProductosPedidos" Role="ProductosPedidos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Productos">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProductosPedidos">
+              <PropertyRef Name="IdPedido" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
     <edmx:Mappings>
@@ -850,6 +1236,7 @@
           <EntitySetMapping Name="Productos">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Productos">
               <MappingFragment StoreEntitySet="Productos">
+                <ScalarProperty Name="Activo" ColumnName="Activo" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Codigo" ColumnName="Codigo" />
                 <ScalarProperty Name="Nombre" ColumnName="Nombre" />
@@ -862,16 +1249,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="ProductosVenta">
-            <EntityTypeMapping TypeName="Sistema_DavidModel.ProductosVenta">
-              <MappingFragment StoreEntitySet="ProductosVenta">
-                <ScalarProperty Name="Id" ColumnName="Id" />
-                <ScalarProperty Name="IdProducto" ColumnName="IdProducto" />
-                <ScalarProperty Name="IdVenta" ColumnName="IdVenta" />
-                <ScalarProperty Name="Cantidad" ColumnName="Cantidad" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="Roles">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Roles">
               <MappingFragment StoreEntitySet="Roles">
@@ -880,20 +1257,11 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="StockUsuarios">
-            <EntityTypeMapping TypeName="Sistema_DavidModel.StockUsuarios">
-              <MappingFragment StoreEntitySet="StockUsuarios">
-                <ScalarProperty Name="Id" ColumnName="Id" />
-                <ScalarProperty Name="IdProducto" ColumnName="IdProducto" />
-                <ScalarProperty Name="Cantidad" ColumnName="Cantidad" />
-                <ScalarProperty Name="IdCategoria" ColumnName="IdCategoria" />
-                <ScalarProperty Name="IdUsuario" ColumnName="IdUsuario" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="Usuarios">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Usuarios">
               <MappingFragment StoreEntitySet="Usuarios">
+                <ScalarProperty Name="UrlExportacion" ColumnName="UrlExportacion" />
+                <ScalarProperty Name="UltimaExportacion" ColumnName="UltimaExportacion" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Usuario" ColumnName="Usuario" />
                 <ScalarProperty Name="Nombre" ColumnName="Nombre" />
@@ -908,35 +1276,69 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Ventas">
-            <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas">
-              <MappingFragment StoreEntitySet="Ventas">
-                <ScalarProperty Name="idCobrador" ColumnName="idCobrador" />
-                <ScalarProperty Name="Interes" ColumnName="Interes" />
-                <ScalarProperty Name="ValorCuota" ColumnName="ValorCuota" />
-                <ScalarProperty Name="Orden" ColumnName="Orden" />
-                <ScalarProperty Name="Importante" ColumnName="Importante" />
+          <EntitySetMapping Name="Zonas">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.Zonas">
+              <MappingFragment StoreEntitySet="Zonas">
+                <ScalarProperty Name="Nombre" ColumnName="Nombre" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
-                <ScalarProperty Name="idCliente" ColumnName="idCliente" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="StocksPendientes">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.StocksPendientes">
+              <MappingFragment StoreEntitySet="StocksPendientes">
+                <ScalarProperty Name="Estado" ColumnName="Estado" />
+                <ScalarProperty Name="Cantidad" ColumnName="Cantidad" />
+                <ScalarProperty Name="IdProducto" ColumnName="IdProducto" />
                 <ScalarProperty Name="Fecha" ColumnName="Fecha" />
-                <ScalarProperty Name="Entrega" ColumnName="Entrega" />
-                <ScalarProperty Name="Restante" ColumnName="Restante" />
-                <ScalarProperty Name="FechaCobro" ColumnName="FechaCobro" />
-                <ScalarProperty Name="FechaLimite" ColumnName="FechaLimite" />
-                <ScalarProperty Name="idVendedor" ColumnName="idVendedor" />
-                <ScalarProperty Name="Observacion" ColumnName="Observacion" />
+                <ScalarProperty Name="IdUsuarioAsignado" ColumnName="IdUsuarioAsignado" />
+                <ScalarProperty Name="IdUsuario" ColumnName="IdUsuario" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Limites">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.Limites">
+              <MappingFragment StoreEntitySet="Limites">
+                <ScalarProperty Name="Valor" ColumnName="Valor" />
+                <ScalarProperty Name="Nombre" ColumnName="Nombre" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="StockUsuarios">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.StockUsuarios">
+              <MappingFragment StoreEntitySet="StockUsuarios">
+                <ScalarProperty Name="IdUsuario" ColumnName="IdUsuario" />
+                <ScalarProperty Name="IdCategoria" ColumnName="IdCategoria" />
+                <ScalarProperty Name="Cantidad" ColumnName="Cantidad" />
+                <ScalarProperty Name="IdProducto" ColumnName="IdProducto" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ProductosVenta">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.ProductosVenta">
+              <MappingFragment StoreEntitySet="ProductosVenta">
+                <ScalarProperty Name="PrecioUnitario" ColumnName="PrecioUnitario" />
+                <ScalarProperty Name="Cantidad" ColumnName="Cantidad" />
+                <ScalarProperty Name="IdVenta" ColumnName="IdVenta" />
+                <ScalarProperty Name="IdProducto" ColumnName="IdProducto" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="InformacionVentas">
             <EntityTypeMapping TypeName="Sistema_DavidModel.InformacionVentas">
               <MappingFragment StoreEntitySet="InformacionVentas">
+                <ScalarProperty Name="idCobrador" ColumnName="idCobrador" />
+                <ScalarProperty Name="MetodoPago" ColumnName="MetodoPago" />
                 <ScalarProperty Name="Interes" ColumnName="Interes" />
-                <ScalarProperty Name="ValorCuota" ColumnName="ValorCuota" />
                 <ScalarProperty Name="Observacion" ColumnName="Observacion" />
                 <ScalarProperty Name="whatssap" ColumnName="whatssap" />
                 <ScalarProperty Name="idVendedor" ColumnName="idVendedor" />
                 <ScalarProperty Name="Restante" ColumnName="Restante" />
+                <ScalarProperty Name="ValorCuota" ColumnName="ValorCuota" />
                 <ScalarProperty Name="Entrega" ColumnName="Entrega" />
                 <ScalarProperty Name="Descripcion" ColumnName="Descripcion" />
                 <ScalarProperty Name="Fecha" ColumnName="Fecha" />
@@ -945,10 +1347,60 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Zonas">
-            <EntityTypeMapping TypeName="Sistema_DavidModel.Zonas">
-              <MappingFragment StoreEntitySet="Zonas">
+          <EntitySetMapping Name="EstadosPedidos">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.EstadosPedidos">
+              <MappingFragment StoreEntitySet="EstadosPedidos">
                 <ScalarProperty Name="Nombre" ColumnName="Nombre" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Ventas">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas">
+              <MappingFragment StoreEntitySet="Ventas">
+                <ScalarProperty Name="Comprobante" ColumnName="Comprobante" />
+                <ScalarProperty Name="P_ValorCuota" ColumnName="P_ValorCuota" />
+                <ScalarProperty Name="P_FechaCobro" ColumnName="P_FechaCobro" />
+                <ScalarProperty Name="idCobrador" ColumnName="idCobrador" />
+                <ScalarProperty Name="Interes" ColumnName="Interes" />
+                <ScalarProperty Name="ValorCuota" ColumnName="ValorCuota" />
+                <ScalarProperty Name="Orden" ColumnName="Orden" />
+                <ScalarProperty Name="Importante" ColumnName="Importante" />
+                <ScalarProperty Name="Observacion" ColumnName="Observacion" />
+                <ScalarProperty Name="idVendedor" ColumnName="idVendedor" />
+                <ScalarProperty Name="FechaLimite" ColumnName="FechaLimite" />
+                <ScalarProperty Name="FechaCobro" ColumnName="FechaCobro" />
+                <ScalarProperty Name="Restante" ColumnName="Restante" />
+                <ScalarProperty Name="Entrega" ColumnName="Entrega" />
+                <ScalarProperty Name="Fecha" ColumnName="Fecha" />
+                <ScalarProperty Name="idCliente" ColumnName="idCliente" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Pedidos">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.Pedidos">
+              <MappingFragment StoreEntitySet="Pedidos">
+                <ScalarProperty Name="Telefono" ColumnName="Telefono" />
+                <ScalarProperty Name="Direccion" ColumnName="Direccion" />
+                <ScalarProperty Name="Dni" ColumnName="Dni" />
+                <ScalarProperty Name="NombreCliente" ColumnName="NombreCliente" />
+                <ScalarProperty Name="IdEstado" ColumnName="IdEstado" />
+                <ScalarProperty Name="IdCliente" ColumnName="IdCliente" />
+                <ScalarProperty Name="IdVendedor" ColumnName="IdVendedor" />
+                <ScalarProperty Name="Fecha" ColumnName="Fecha" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ProductosPedidos">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.ProductosPedidos">
+              <MappingFragment StoreEntitySet="ProductosPedidos">
+                <ScalarProperty Name="Talle" ColumnName="Talle" />
+                <ScalarProperty Name="PrecioUnitario" ColumnName="PrecioUnitario" />
+                <ScalarProperty Name="Cantidad" ColumnName="Cantidad" />
+                <ScalarProperty Name="IdPedido" ColumnName="IdPedido" />
+                <ScalarProperty Name="IdProducto" ColumnName="IdProducto" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>

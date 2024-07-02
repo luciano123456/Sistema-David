@@ -9,6 +9,7 @@ namespace Sistema_David.Models.Modelo
         public int IdVenta { get; set; }
         public Nullable<System.DateTime> Fecha { get; set; }
         public string Descripcion { get; set; }
+        public string Cobrador { get; set; }
 
         public decimal Entrega { get; set; }
         public decimal Restante { get; set; }
@@ -17,6 +18,8 @@ namespace Sistema_David.Models.Modelo
         public int idVendedor { get; set; }
         public int whatssap { get; set; }
         public string Observacion { get; set; }
+        public string MetodoPago { get; set; }
+        public int idCobrador { get; set; }
 
         public virtual Ventas Ventas { get; set; }
     }

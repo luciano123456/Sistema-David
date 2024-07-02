@@ -14,7 +14,8 @@ namespace Sistema_David.Models.Modelo
 {
     public class ClientesModel
     {
-        public static List<Cliente> ListaClientes(int idVendedor, string Nombre, string Apellido, string Dni, int idZona)
+
+        public static List<Cliente> ListaClientes()
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -24,6 +25,26 @@ namespace Sistema_David.Models.Modelo
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
 					  INNER JOIN Zonas z on c.IdZona = z.Id
                       INNER JOIN (
+                        SELECT idCliente, COALESCE(SUM(Restante), 0) AS Saldo 
+                        FROM Ventas GROUP BY idCliente
+                      ) s ON s.idCliente = c.Id";
+
+                var result = db.Database.SqlQuery<Cliente>(query).ToList();
+
+                return result;
+            }
+        }
+
+        public static List<Cliente> ListaClientes(int idVendedor, string Nombre, string Apellido, string Dni, int idZona)
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                      FROM Clientes c 
+                      INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
+                      INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
+					  INNER JOIN Zonas z on c.IdZona = z.Id
+                      LEFT JOIN (
                         SELECT idCliente, COALESCE(SUM(Restante), 0) AS Saldo 
                         FROM Ventas GROUP BY idCliente
                       ) s ON s.idCliente = c.Id";

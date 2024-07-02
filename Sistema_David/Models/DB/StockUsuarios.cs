@@ -24,8 +24,8 @@ namespace Sistema_David.Models.DB
         public virtual Productos Productos1 { get; set; }
         public virtual Usuarios Usuarios { get; set; }
         public decimal Total { get; internal set; }
-        public string Usuario { get; internal set; }
         public string Producto { get; internal set; }
+        public string Usuario { get; internal set; }
         public decimal PrecioVenta { get; internal set; }
     }
 }

@@ -8,9 +8,10 @@
 <body>
 
 
+
+
     @if (@ViewData["ErrorPermisos"] == null)
     {
-
 
 
 
@@ -22,6 +23,9 @@
 
             <label class="m-lg-2 lblcliente">Fecha Hasta:</label>
             <input type="date" placeholder="" value="" id="FechaHasta" class="input-nuevo" />
+            <a class="ms-1" title="Hoy" onclick="fechaHoy()"><i class="fa fa-calendar cursor-pointer" style="color: wheat" aria-hidden="true"></i></a>
+            <a class="ms-1" title="Mensual" onclick="fechaMensual()"><i class="fa fa-calendar cursor-pointer" style="color: green" aria-hidden="true"></i></a>
+
 
 
             <div class="vw-75 d-flex float-lg-end mt-2">
@@ -54,6 +58,7 @@
 
         <div class="row mt-4 table-bordered table-borderless datatablepersonalizado">
 
+            <label id="lblrxdia" class="lblRendimiento" hidden>Rendimiento mensual por dia</label>
 
             <div id="RendimientoMensual" hidden>
                 <table id="grdRendimientoGeneral" class="table table-striped mt-5 w-100">
@@ -71,6 +76,21 @@
 
 
 
+
+
+            </div>
+
+            <label id="lblrcobrador" class="lblRendimiento mt-5" hidden>Cobros de vendedores</label>
+
+            <div id="RendimientoCobrado" hidden>
+                <table id="grdRendimientoCobrado" class="table table-striped mt-5 w-100">
+                    <thead>
+                        <tr>
+                            <th>Vendedor</th>
+                            <th>Total Cobrado</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
 
 
@@ -135,6 +155,16 @@
                                     <label class="text-danger" id="totDeuda">0</label>
                                 </div>
 
+                                <div class="divProducto">
+                                    <label class="lblentrega" id="">Total Efectivo: </label>
+                                    <label class="" id="totefectivo">0</label>
+                                </div>
+
+                                <div class="divProducto">
+                                    <label class="lblentrega" id="">Total Transferencia: </label>
+                                    <label class="" id="tottransferencia">0</label>
+                                </div>
+
 
                             </div>
 
@@ -179,11 +209,11 @@
             </div>
 
         </div>
-    }
-    else
-    {
-        <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
-    }
+            }
+            else
+            {
+            <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
+            }
 </body>
 
 
@@ -238,6 +268,7 @@
 
 
 
+
 <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
 <script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
 <script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
@@ -249,3 +280,6 @@
 @section scripts{
     <script src="~/JavaScript/Rendimiento.js"></script>
 }
+
+
+

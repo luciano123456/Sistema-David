@@ -17,9 +17,11 @@ namespace Sistema_David.Models.DB
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Productos()
         {
-            this.ProductosVenta = new HashSet<ProductosVenta>();
+            this.StocksPendientes = new HashSet<StocksPendientes>();
             this.StockUsuarios = new HashSet<StockUsuarios>();
             this.StockUsuarios1 = new HashSet<StockUsuarios>();
+            this.ProductosVenta = new HashSet<ProductosVenta>();
+            this.ProductosPedidos = new HashSet<ProductosPedidos>();
         }
     
         public int Id { get; set; }
@@ -31,13 +33,18 @@ namespace Sistema_David.Models.DB
         public Nullable<decimal> PrecioCompra { get; set; }
         public Nullable<decimal> PrecioVenta { get; set; }
         public Nullable<int> PorcVenta { get; set; }
+        public Nullable<int> Activo { get; set; }
     
         public virtual Categorias Categorias { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<ProductosVenta> ProductosVenta { get; set; }
+        public virtual ICollection<StocksPendientes> StocksPendientes { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StockUsuarios> StockUsuarios { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StockUsuarios> StockUsuarios1 { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ProductosVenta> ProductosVenta { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ProductosPedidos> ProductosPedidos { get; set; }
     }
 }

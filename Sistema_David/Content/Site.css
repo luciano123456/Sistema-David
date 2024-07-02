@@ -29,13 +29,13 @@ td {
     text-align: center !important;
 }
 
-.select-modal-personalizado{
+.select-modal-personalizado {
     background: white !important;
     color: black !important;
 }
 
 option {
-     background: white !important;
+    background: white !important;
     color: black !important;
 }
 
@@ -155,17 +155,17 @@ input {
 }
 
 
-    .btn-seccion:hover {
-        background: #0D62CF;
-    }
+.btn-seccion:hover {
+    background: #0D62CF;
+}
 
 
-    .menu-secciones {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        justify-content: center;
-    }
+.menu-secciones {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+}
 
 
 body {
@@ -201,6 +201,7 @@ tbody tr {
 .general {
     border: 1px solid;
 }
+
 .table-striped > tbody > tr:nth-child(odd) > td,
 .table-striped > tbody > tr:nth-child(odd) > th {
     background-color: #2a303a;
@@ -303,7 +304,7 @@ select {
 
 
 
-/* estilo predefinido al contenedor */
+    /* estilo predefinido al contenedor */
 
     #desplegable div a {
         display: block;
@@ -313,25 +314,23 @@ select {
     }
 
 
-/* posicion del contenedor en la pagina */
+    /* posicion del contenedor en la pagina */
 
-#desplegable div div {
-    position: relative;
-    float: left;
-    margin: 0;
-    padding: 0;
-
-}
-
-
-    /* efecto del contenedor al pasar el mouse por encima */
-
-    #desplegable div div:hover {
-      
+    #desplegable div div {
+        position: relative;
+        float: left;
+        margin: 0;
+        padding: 0;
     }
 
 
-/* Quitarenos la visivilidad con display:none cuando no estemos encima */
+        /* efecto del contenedor al pasar el mouse por encima */
+
+        #desplegable div div:hover {
+        }
+
+
+    /* Quitarenos la visivilidad con display:none cuando no estemos encima */
 
     #desplegable div ul {
         width: calc(5vh + 5vw);
@@ -349,19 +348,19 @@ select {
     }
 
 
-    /* Tamaño del contenido. AL estar al 100% el ancho se ajustara al ancho del contenedor */
+        /* Tamaño del contenido. AL estar al 100% el ancho se ajustara al ancho del contenedor */
 
-    #desplegable div ul li {
-        float: none;
-        width: 100%;
+        #desplegable div ul li {
+            float: none;
+            width: 100%;
+        }
+
+
+    /* Visualizaremos al pasar por encima el contenido de la lista o lo que queramos meter dentro. */
+
+    #desplegable div div:hover > ul {
+        display: block;
     }
-
-
-/* Visualizaremos al pasar por encima el contenido de la lista o lo que queramos meter dentro. */
-
-#desplegable div div:hover > ul {
-    display: block;
-}
 
 .usuario {
     width: 100%;
@@ -399,13 +398,13 @@ select {
     top: 0%;
 }
 
-.btnacciones{
+.btnacciones {
     border-radius: 10px;
 }
 
-.btnacciones:hover {
-    background: #0C0761;
-}
+    .btnacciones:hover {
+        background: #0C0761;
+    }
 
 .input-text-area {
     width: 100% !important;
@@ -415,7 +414,7 @@ select {
 }
 
 textarea:focus, input:focus {
-    border-color: red; 
+    border-color: red;
 }
 
 
@@ -425,7 +424,6 @@ textarea:focus, input:focus {
     position: absolute !important;
     left: 12px !important;
     font-size: calc(0.3vw, 0.7vh) !important;
-    
 }
 
 
@@ -433,4 +431,3 @@ textarea:focus, input:focus {
     text-decoration: none; /* Elimina el subrayado */
     color: white; /* Cambia el color del texto a tu preferencia */
 }
-

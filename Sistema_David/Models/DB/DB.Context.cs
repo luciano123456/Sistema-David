@@ -30,12 +30,17 @@ namespace Sistema_David.Models.DB
         public virtual DbSet<EstadosClientes> EstadosClientes { get; set; }
         public virtual DbSet<EstadosUsuarios> EstadosUsuarios { get; set; }
         public virtual DbSet<Productos> Productos { get; set; }
-        public virtual DbSet<ProductosVenta> ProductosVenta { get; set; }
         public virtual DbSet<Roles> Roles { get; set; }
-        public virtual DbSet<StockUsuarios> StockUsuarios { get; set; }
         public virtual DbSet<Usuarios> Usuarios { get; set; }
-        public virtual DbSet<Ventas> Ventas { get; set; }
-        public virtual DbSet<InformacionVentas> InformacionVentas { get; set; }
         public virtual DbSet<Zonas> Zonas { get; set; }
+        public virtual DbSet<StocksPendientes> StocksPendientes { get; set; }
+        public virtual DbSet<Limites> Limites { get; set; }
+        public virtual DbSet<StockUsuarios> StockUsuarios { get; set; }
+        public virtual DbSet<ProductosVenta> ProductosVenta { get; set; }
+        public virtual DbSet<InformacionVentas> InformacionVentas { get; set; }
+        public virtual DbSet<EstadosPedidos> EstadosPedidos { get; set; }
+        public virtual DbSet<Ventas> Ventas { get; set; }
+        public virtual DbSet<Pedidos> Pedidos { get; set; }
+        public virtual DbSet<ProductosPedidos> ProductosPedidos { get; set; }
     }
 }

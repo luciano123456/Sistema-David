@@ -30,13 +30,13 @@ namespace Sistema_David.Models.Modelo
         public string DniCliente { get; set; }
         public int Importante { get; set; }
         public int Orden { get; set; }
+        public int Comprobante { get; set; }
         public decimal ValorCuota { get; set; }
         public decimal SaldoCliente { get; set; }
         public decimal Interes { get; set; }
         public DateTime FechaCliente { get; set; }
-
-
-
+        public DateTime P_FechaCobro { get; set; }
+        public decimal P_ValorCuota { get; set; }
         public virtual Clientes Clientes { get; set; }
         public virtual Zonas Zonas { get; set; }
         

@@ -70,6 +70,7 @@
                         <div class="vw-75 d-flex float-lg-end mt-2 mb-4">
                             <a class="btn btn-success" id="exportacionExcel" onclick="exportarExcel()" hidden>Exportar Datos</a>
                             <a class="btn btn-success ms-2 me-2" id="importacionExcel" onclick="abrirmodalimportacionmasiva()" hidden>Importar Datos</a>
+                            <a class="btn btn-warning btnnuevo me-2" onclick="modalLimite()">Limites</a>
                             <a class="btn btn-primary btnnuevo" onclick="abrirmodal()">Nuevo</a>
 
                         </div>
@@ -86,6 +87,30 @@
 
 
     </body>
+
+
+<div class="modal fade centered-modal-importar" id="modalLimite" tabindex="-1" aria-labelledby="modalLimiteLabel" aria-hidden="true">
+    <div class="modal-dialog estilolimite">
+        <div class="estilolimite modal-content ">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLimitesLabel">Limite de clientes regulares</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                
+                <input type="text" placeholder="0" id="valorLimite" class="input-whatssap" oninput="formatoMoneda(event)" />
+
+
+            </div>
+            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button id="btnRegistrarModificarwsp" type="button" class="btn btn-primary" onclick="modificarLimiteVenta()">Modificar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <div class="modal fade centered-modal-importar" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
         <div class="modal-dialog estilowpp">

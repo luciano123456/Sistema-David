@@ -18,9 +18,11 @@ namespace Sistema_David.Models.DB
         public Usuarios()
         {
             this.Clientes = new HashSet<Clientes>();
+            this.StocksPendientes = new HashSet<StocksPendientes>();
+            this.StocksPendientes1 = new HashSet<StocksPendientes>();
             this.StockUsuarios = new HashSet<StockUsuarios>();
             this.Ventas = new HashSet<Ventas>();
-            this.Ventas1 = new HashSet<Ventas>();
+            this.Pedidos = new HashSet<Pedidos>();
         }
     
         public int Id { get; set; }
@@ -34,16 +36,22 @@ namespace Sistema_David.Models.DB
         public string Contrasena { get; set; }
         public Nullable<int> CantVentas { get; set; }
         public Nullable<int> IdEstado { get; set; }
+        public Nullable<System.DateTime> UltimaExportacion { get; set; }
+        public string UrlExportacion { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Clientes> Clientes { get; set; }
         public virtual EstadosUsuarios EstadosUsuarios { get; set; }
         public virtual Roles Roles { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<StocksPendientes> StocksPendientes { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<StocksPendientes> StocksPendientes1 { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StockUsuarios> StockUsuarios { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas> Ventas { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Ventas> Ventas1 { get; set; }
+        public virtual ICollection<Pedidos> Pedidos { get; set; }
     }
 }

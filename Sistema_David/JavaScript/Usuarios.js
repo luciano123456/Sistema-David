@@ -54,6 +54,7 @@ async function configurarDataTable() {
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         },
+        
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
         "columns": [
             { "data": "Usuario" },
@@ -81,7 +82,6 @@ async function configurarDataTable() {
                     "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='stockUsuario(" + data + ")'title='Stock'><i class='fa fa-shopping-basket fa-lg text-white' aria-hidden='true'></i></button>" +
                     "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarUsuario(" + data + ")'title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>" 
                 },
-
 
                 "orderable": true,
                 "searchable": true,
@@ -285,6 +285,9 @@ async function modificarusuario() {
     }
 }
 
+function abrirstockPendiente() {
+    document.location.href = "../../StockPendiente/Index/";
+}
 function abrirmodal() {
 
    
