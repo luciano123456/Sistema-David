@@ -1,8 +1,0 @@
-﻿.modal-dialog {
-  
-}
-
-.modal-body {
-    max-height: 65vh; /* Ajusta la altura máxima del contenido del modal */
-    overflow-y: auto; /* Habilita el scroll vertical en el contenido del modal */
-}
