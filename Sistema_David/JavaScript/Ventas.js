@@ -119,10 +119,10 @@ function aplicarFiltros() {
 
     if (userSession.IdRol == 4) {
         const cuatroDiasAntes = new Date(fechaActual);
-        cuatroDiasAntes.setDate(cuatroDiasAntes.getDate() - 4);
+        cuatroDiasAntes.setDate(cuatroDiasAntes.getDate() - 7);
 
         if (fechaDesdeDate < cuatroDiasAntes) {
-            alert("No puedes filtrar datos de más de cuatro días atrás de la fecha actual.");
+            alert("No puedes filtrar datos de más de siete días atrás de la fecha actual.");
             return;
         }
     }

@@ -68,6 +68,7 @@ namespace Sistema_David.Models.Modelo
             LEFT JOIN Usuarios u ON u.Id = v.idVendedor
             LEFT JOIN EstadosClientes ec ON ec.Id = c.IdEstado
             WHERE v.IdtipoNegocio = @tipoNegocio or @tipoNegocio = -1
+            AND v.IdVendedor = @idVendedor or @idVendedor = -1
         ",
                 new SqlParameter("idVendedor", idVendedor),
                 new SqlParameter("tipoNegocio", tipoNegocio))
@@ -93,7 +94,7 @@ namespace Sistema_David.Models.Modelo
                             where (v.idVendedor == idVendedor || idVendedor == -1)
                                && (v.Fecha >= FechaDesde && v.Fecha <= FechaHasta)
                                && (v.FechaLimite >= FechaLimiteDesde && v.FechaLimite <= FechaLimiteHasta)
-                               && ((Finalizadas == 1 && v.Restante == 0) || (Finalizadas == 0 && v.Restante > 0))
+                               && ((Finalizadas == 1 && v.Restante == 0) || (Finalizadas == 0 && v.Restante > 0 || Finalizadas == 2 && v.Restante >= 0))
                                && ((idVendedor == -1 && v.Estado == string.Empty || v.Estado == null) || idVendedor > 0)
                                && ((TipoNegocio == -1 || v.IdTipoNegocio == TipoNegocio))
                             select new Venta
@@ -559,7 +560,7 @@ namespace Sistema_David.Models.Modelo
                                 Comprobante = 0,
                                 Estado = estadoVenta,
                                 EstadoCobro = "0",
-                                Turno = model.Turno.ToUpper(),
+                                Turno = model.Turno != null ? model.Turno.ToUpper() : model.Turno,
                                 FranjaHoraria = model.FranjaHoraria,
                                 IdTipoNegocio = usuario.IdTipoNegocio,
                             };
