@@ -1,0 +1,79 @@
+﻿#map {
+    height: 50vh; /* Establece la altura al 50% del tamaño visible del viewport */
+    width: 100%; /* Ocupa el 100% del ancho disponible */
+    border: 3px solid rgb(128, 128, 128, 0.8); /* Borde negro semi-transparente */
+}
+
+#pac-input {
+    margin-top: 10px;
+    margin-left: 10px;
+    width: calc(100% - 20px);
+    height: 40px;
+    font-size: 16px;
+    border: 1px solid #d0d0d0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    padding: 0 12px;
+    text-overflow: ellipsis;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+input {
+    color: black !important;
+}
+
+#location-list {
+    height: auto;
+    overflow-y: auto;
+    max-height: 200px;
+    margin-top: 10px;
+}
+
+    #location-list li {
+        margin: 5px 0;
+        padding: 5px;
+        border: 2.1px solid rgb(128, 128, 128, 0.8); /* Borde negro semi-transparente */
+        background-color: darkgrey;
+    }
+
+        #location-list li.yellow {
+            border: 2.1px solid rgb(128, 128, 128, 0.8); /* Borde negro semi-transparente */
+            background-color: #b9b392;
+        }
+
+        #location-list li.green {
+            border: 2.1px solid rgb(128, 128, 128, 0.8); /* Borde negro semi-transparente */
+            background-color: #a5d6a7;
+        }
+
+
+.btnAccion {
+    background-color: #4285F4;
+    border-color: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 3px
+}
+
+
+.btn:disabled, .btn.disabled, fieldset:disabled .btn {
+    color: var(--bs-btn-disabled-color);
+    pointer-events: none;
+    background-color: darkgrey;
+    border-color: var(--bs-btn-disabled-border-color);
+    opacity: var(--bs-btn-disabled-opacity);
+}
+
+
+.tooltip-content {
+    color: black; /* Color del texto */
+    background-color: white; /* Fondo blanco */
+    padding: 5px; /* Espaciado interior */
+    border-radius: 3px; /* Bordes redondeados */
+    max-width: 200px; /* Ancho máximo */
+    font-size: 14px; /* Tamaño del texto */
+}

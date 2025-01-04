@@ -1,0 +1,1061 @@
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Sistema_David.dll.config
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Sistema_David.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Sistema_David.pdb
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csc.exe
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csc.exe.config
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csc.rsp
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csi.exe
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csi.exe.config
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csi.rsp
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.Scripting.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.Scripting.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.VisualBasic.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CSharp.Core.targets
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.amd64.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.x86.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.Managed.Core.targets
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.VisualBasic.Core.targets
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.Win32.Primitives.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.AppContext.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Collections.Immutable.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Console.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Diagnostics.DiagnosticSource.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Diagnostics.FileVersionInfo.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Diagnostics.StackTrace.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Globalization.Calendars.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.IO.Compression.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.IO.Compression.ZipFile.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.IO.FileSystem.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.IO.FileSystem.Primitives.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Net.Http.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Net.Sockets.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Reflection.Metadata.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Runtime.InteropServices.RuntimeInformation.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Security.Cryptography.Algorithms.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Security.Cryptography.Encoding.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Security.Cryptography.Primitives.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Security.Cryptography.X509Certificates.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Text.Encoding.CodePages.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Threading.Tasks.Extensions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.ValueTuple.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Xml.ReaderWriter.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Xml.XmlDocument.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Xml.XPath.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Xml.XPath.XDocument.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\vbc.exe
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\vbc.exe.config
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\vbc.rsp
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\VBCSCompiler.exe
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\VBCSCompiler.exe.config
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Antlr3.Runtime.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\BouncyCastle.Crypto.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\DocumentFormat.OpenXml.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\EntityFramework.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\EntityFramework.SqlServer.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Enums.NET.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\ICSharpCode.SharpZipLib.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\MathNet.Numerics.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Routing.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.DotNet.PlatformAbstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyModel.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Options.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Primitives.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Net.Http.Headers.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Web.Infrastructure.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Newtonsoft.Json.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OOXML.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXml4Net.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXmlFormats.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SixLabors.Fonts.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SixLabors.ImageSharp.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SpreadsheetLight.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Buffers.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.ComponentModel.Annotations.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Drawing.Common.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.IO.Packaging.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Memory.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Numerics.Vectors.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Text.Encoding.CodePages.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Text.Encodings.Web.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Threading.Tasks.Extensions.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.ValueTuple.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Helpers.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Mvc.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Optimization.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Razor.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.Deployment.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.Razor.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\WebGrease.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\BouncyCastle.Crypto.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\DocumentFormat.OpenXml.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\EntityFramework.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\EntityFramework.SqlServer.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Enums.NET.pdb
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Enums.NET.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\ICSharpCode.SharpZipLib.pdb
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\ICSharpCode.SharpZipLib.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\MathNet.Numerics.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Routing.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Options.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Primitives.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Net.Http.Headers.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.pdb
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OOXML.pdb
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OOXML.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXml4Net.pdb
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXml4Net.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXmlFormats.pdb
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXmlFormats.dll.config
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SixLabors.Fonts.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SixLabors.ImageSharp.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SpreadsheetLight.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Buffers.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.IO.Packaging.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Memory.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Numerics.Vectors.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Text.Encoding.CodePages.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Text.Encodings.Web.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Threading.Tasks.Extensions.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.ValueTuple.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Helpers.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Mvc.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Optimization.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Razor.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.Deployment.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.Razor.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Newtonsoft.Json.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Antlr3.Runtime.pdb
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.Helpers.resources.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.Mvc.resources.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.Optimization.resources.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.Razor.resources.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.WebPages.resources.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.WebPages.Deployment.resources.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.WebPages.Razor.resources.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\obj\Release\Sistema_David.csproj.CoreCompileInputs.cache
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\obj\Release\Sistema_David.csproj.CopyComplete
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\obj\Release\Sistema_David.dll
+C:\Users\Luciano\Desktop\Trabajo\David\Sistema_David\Sistema_David\obj\Release\Sistema_David.pdb
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Sistema_David.dll.config
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Sistema_David.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Sistema_David.pdb
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csc.exe
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csc.exe.config
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csc.rsp
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csi.exe
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csi.exe.config
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\csi.rsp
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.Scripting.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.Scripting.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.VisualBasic.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.CSharp.Core.targets
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.amd64.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.x86.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.Managed.Core.targets
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.VisualBasic.Core.targets
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\Microsoft.Win32.Primitives.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.AppContext.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Collections.Immutable.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Console.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Diagnostics.DiagnosticSource.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Diagnostics.FileVersionInfo.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Diagnostics.StackTrace.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Globalization.Calendars.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.IO.Compression.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.IO.Compression.ZipFile.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.IO.FileSystem.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.IO.FileSystem.Primitives.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Net.Http.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Net.Sockets.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Reflection.Metadata.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Runtime.InteropServices.RuntimeInformation.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Security.Cryptography.Algorithms.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Security.Cryptography.Encoding.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Security.Cryptography.Primitives.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Security.Cryptography.X509Certificates.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Text.Encoding.CodePages.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Threading.Tasks.Extensions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.ValueTuple.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Xml.ReaderWriter.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Xml.XmlDocument.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Xml.XPath.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\System.Xml.XPath.XDocument.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\vbc.exe
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\vbc.exe.config
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\vbc.rsp
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\VBCSCompiler.exe
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\roslyn\VBCSCompiler.exe.config
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Antlr3.Runtime.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\BouncyCastle.Crypto.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\DocumentFormat.OpenXml.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\EntityFramework.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\EntityFramework.SqlServer.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Enums.NET.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\ICSharpCode.SharpZipLib.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\MathNet.Numerics.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Routing.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.DotNet.PlatformAbstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyModel.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Options.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Primitives.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Net.Http.Headers.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Web.Infrastructure.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Newtonsoft.Json.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OOXML.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXml4Net.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXmlFormats.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SixLabors.Fonts.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SixLabors.ImageSharp.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SpreadsheetLight.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Buffers.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.ComponentModel.Annotations.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Drawing.Common.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.IO.Packaging.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Memory.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Numerics.Vectors.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Text.Encoding.CodePages.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Text.Encodings.Web.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Threading.Tasks.Extensions.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.ValueTuple.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Helpers.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Mvc.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Optimization.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Razor.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.Deployment.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.Razor.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\WebGrease.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\BouncyCastle.Crypto.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\DocumentFormat.OpenXml.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\EntityFramework.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\EntityFramework.SqlServer.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Enums.NET.pdb
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Enums.NET.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\ICSharpCode.SharpZipLib.pdb
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\ICSharpCode.SharpZipLib.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\MathNet.Numerics.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Routing.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Options.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Extensions.Primitives.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.Net.Http.Headers.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.pdb
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OOXML.pdb
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OOXML.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXml4Net.pdb
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXml4Net.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXmlFormats.pdb
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\NPOI.OpenXmlFormats.dll.config
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SixLabors.Fonts.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SixLabors.ImageSharp.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\SpreadsheetLight.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Buffers.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.IO.Packaging.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Memory.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Numerics.Vectors.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Text.Encoding.CodePages.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Text.Encodings.Web.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Threading.Tasks.Extensions.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.ValueTuple.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Helpers.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Mvc.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Optimization.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.Razor.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.Deployment.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\System.Web.WebPages.Razor.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Newtonsoft.Json.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Antlr3.Runtime.pdb
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.Helpers.resources.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.Mvc.resources.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.Optimization.resources.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.Razor.resources.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.WebPages.resources.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.WebPages.Deployment.resources.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\bin\es\System.Web.WebPages.Razor.resources.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\obj\Release\Sistema_David.csproj.AssemblyReference.cache
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\obj\Release\Sistema_David.csproj.CoreCompileInputs.cache
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\obj\Release\Sistema_David.csproj.CopyComplete
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\obj\Release\Sistema_David.dll
+C:\Users\PC\Desktop\Trabajo\David\Sistema_David\Sistema_David\obj\Release\Sistema_David.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\Sistema_David.dll.config
+C:\Users\PC\Desktop\David\Sistema_David\bin\Sistema_David.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Sistema_David.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\csc.exe
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\csc.exe.config
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\csc.rsp
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\csi.exe
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\csi.exe.config
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\csi.rsp
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.Scripting.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.Scripting.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.VisualBasic.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.CSharp.Core.targets
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.amd64.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.x86.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.Managed.Core.targets
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.VisualBasic.Core.targets
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\Microsoft.Win32.Primitives.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.AppContext.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Collections.Immutable.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Console.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Diagnostics.DiagnosticSource.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Diagnostics.FileVersionInfo.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Diagnostics.StackTrace.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Globalization.Calendars.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.IO.Compression.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.IO.Compression.ZipFile.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.IO.FileSystem.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.IO.FileSystem.Primitives.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Net.Http.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Net.Sockets.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Reflection.Metadata.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Runtime.InteropServices.RuntimeInformation.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Security.Cryptography.Algorithms.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Security.Cryptography.Encoding.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Security.Cryptography.Primitives.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Security.Cryptography.X509Certificates.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Text.Encoding.CodePages.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Threading.Tasks.Extensions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.ValueTuple.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Xml.ReaderWriter.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Xml.XmlDocument.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Xml.XPath.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\System.Xml.XPath.XDocument.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\vbc.exe
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\vbc.exe.config
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\vbc.rsp
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\VBCSCompiler.exe
+C:\Users\PC\Desktop\David\Sistema_David\bin\roslyn\VBCSCompiler.exe.config
+C:\Users\PC\Desktop\David\Sistema_David\bin\Antlr3.Runtime.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Aspose.Cells.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\BouncyCastle.Crypto.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\ClosedXML.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\DocumentFormat.OpenXml.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\EntityFramework.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\EntityFramework.SqlServer.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Enums.NET.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\EPPlus.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\EPPlus.Interfaces.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\EPPlus.System.Drawing.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\ExcelNumberFormat.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Auth.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Auth.PlatformServices.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Core.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Drive.v3.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.PlatformServices.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\ICSharpCode.SharpZipLib.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Irony.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\MathNet.Numerics.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.DotNet.PlatformAbstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.DependencyModel.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Options.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Primitives.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.IdentityModel.Logging.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.IdentityModel.Tokens.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Net.Http.Headers.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Web.Infrastructure.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Newtonsoft.Json.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.OOXML.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.OpenXml4Net.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.OpenXmlFormats.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\SixLabors.Fonts.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\SixLabors.ImageSharp.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\SpreadsheetLight.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Buffers.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.ComponentModel.Annotations.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Drawing.Common.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.IO.Packaging.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Memory.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Numerics.Vectors.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Text.Encoding.CodePages.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Text.Encodings.Web.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Threading.Tasks.Extensions.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.ValueTuple.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.Helpers.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.Mvc.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.Optimization.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.Razor.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.WebPages.Deployment.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.WebPages.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.WebPages.Razor.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Twilio.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\WebGrease.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\XLParser.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\Aspose.Cells.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\BouncyCastle.Crypto.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\ClosedXML.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\DocumentFormat.OpenXml.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\EntityFramework.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\EntityFramework.SqlServer.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Enums.NET.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\Enums.NET.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\EPPlus.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\ExcelNumberFormat.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Auth.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Auth.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Core.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Core.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Drive.v3.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\Google.Apis.Drive.v3.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\ICSharpCode.SharpZipLib.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\ICSharpCode.SharpZipLib.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\MathNet.Numerics.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Options.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Extensions.Primitives.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.IdentityModel.Tokens.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.Net.Http.Headers.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Newtonsoft.Json.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.OOXML.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.OOXML.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.OpenXml4Net.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.OpenXml4Net.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.OpenXmlFormats.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\NPOI.OpenXmlFormats.dll.config
+C:\Users\PC\Desktop\David\Sistema_David\bin\SixLabors.Fonts.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\SixLabors.ImageSharp.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\SpreadsheetLight.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Buffers.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.IdentityModel.Tokens.Jwt.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.IO.Packaging.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Memory.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Numerics.Vectors.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Text.Encoding.CodePages.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Text.Encodings.Web.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Threading.Tasks.Extensions.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.ValueTuple.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.Helpers.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.Mvc.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.Optimization.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.Razor.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.WebPages.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.WebPages.Deployment.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\System.Web.WebPages.Razor.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Twilio.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\Antlr3.Runtime.pdb
+C:\Users\PC\Desktop\David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
+C:\Users\PC\Desktop\David\Sistema_David\bin\es\System.Web.Helpers.resources.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\es\System.Web.Mvc.resources.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\es\System.Web.Optimization.resources.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\es\System.Web.Razor.resources.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\es\System.Web.WebPages.resources.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\es\System.Web.WebPages.Deployment.resources.dll
+C:\Users\PC\Desktop\David\Sistema_David\bin\es\System.Web.WebPages.Razor.resources.dll
+C:\Users\PC\Desktop\David\Sistema_David\obj\Release\Sistema_David.csproj.AssemblyReference.cache
+C:\Users\PC\Desktop\David\Sistema_David\obj\Release\Sistema_David.csproj.ResolveComReference.cache
+C:\Users\PC\Desktop\David\Sistema_David\obj\Release\Sistema_David.csproj.CoreCompileInputs.cache
+C:\Users\PC\Desktop\David\Sistema_David\obj\Release\Sistema_David.csproj.CopyComplete
+C:\Users\PC\Desktop\David\Sistema_David\obj\Release\Sistema_David.dll
+C:\Users\PC\Desktop\David\Sistema_David\obj\Release\Sistema_David.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Sistema_David.dll.config
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Sistema_David.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Sistema_David.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\csc.exe
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\csc.exe.config
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\csc.rsp
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\csi.exe
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\csi.exe.config
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\csi.rsp
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.Scripting.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.Scripting.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.VisualBasic.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CSharp.Core.targets
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.amd64.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.x86.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.Managed.Core.targets
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.VisualBasic.Core.targets
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.Win32.Primitives.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.AppContext.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Collections.Immutable.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Console.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Diagnostics.DiagnosticSource.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Diagnostics.FileVersionInfo.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Diagnostics.StackTrace.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Globalization.Calendars.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.IO.Compression.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.IO.Compression.ZipFile.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.IO.FileSystem.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.IO.FileSystem.Primitives.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Net.Http.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Net.Sockets.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Reflection.Metadata.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Runtime.InteropServices.RuntimeInformation.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Security.Cryptography.Algorithms.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Security.Cryptography.Encoding.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Security.Cryptography.Primitives.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Security.Cryptography.X509Certificates.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Text.Encoding.CodePages.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Threading.Tasks.Extensions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.ValueTuple.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Xml.ReaderWriter.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Xml.XmlDocument.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Xml.XPath.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Xml.XPath.XDocument.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\vbc.exe
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\vbc.exe.config
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\vbc.rsp
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\VBCSCompiler.exe
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\roslyn\VBCSCompiler.exe.config
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Antlr3.Runtime.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Aspose.Cells.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\BouncyCastle.Crypto.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\ClosedXML.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\DocumentFormat.OpenXml.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\EntityFramework.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\EntityFramework.SqlServer.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Enums.NET.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\EPPlus.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\EPPlus.Interfaces.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\EPPlus.System.Drawing.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\ExcelNumberFormat.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Auth.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Auth.PlatformServices.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Core.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Drive.v3.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.PlatformServices.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\ICSharpCode.SharpZipLib.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Irony.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\MathNet.Numerics.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.DotNet.PlatformAbstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyModel.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Options.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Primitives.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IdentityModel.Logging.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IdentityModel.Tokens.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Net.Http.Headers.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Web.Infrastructure.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Newtonsoft.Json.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.OOXML.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXml4Net.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXmlFormats.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\SixLabors.Fonts.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\SixLabors.ImageSharp.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\SpreadsheetLight.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Buffers.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.ComponentModel.Annotations.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Drawing.Common.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.IO.Packaging.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Memory.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Numerics.Vectors.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Text.Encoding.CodePages.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Text.Encodings.Web.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Threading.Tasks.Extensions.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.ValueTuple.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.Helpers.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.Mvc.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.Optimization.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.Razor.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.Deployment.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.Razor.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Twilio.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\WebGrease.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\XLParser.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Aspose.Cells.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\BouncyCastle.Crypto.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\ClosedXML.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\DocumentFormat.OpenXml.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\EntityFramework.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\EntityFramework.SqlServer.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Enums.NET.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Enums.NET.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\EPPlus.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\ExcelNumberFormat.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Auth.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Auth.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Core.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Core.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Drive.v3.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Drive.v3.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\ICSharpCode.SharpZipLib.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\ICSharpCode.SharpZipLib.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\MathNet.Numerics.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Options.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Primitives.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IdentityModel.Tokens.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Net.Http.Headers.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Newtonsoft.Json.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.OOXML.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.OOXML.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXml4Net.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXml4Net.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXmlFormats.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXmlFormats.dll.config
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\SixLabors.Fonts.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\SixLabors.ImageSharp.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\SpreadsheetLight.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Buffers.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.IdentityModel.Tokens.Jwt.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.IO.Packaging.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Memory.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Numerics.Vectors.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Text.Encoding.CodePages.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Text.Encodings.Web.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Threading.Tasks.Extensions.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.ValueTuple.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.Helpers.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.Mvc.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.Optimization.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.Razor.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.Deployment.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.Razor.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Twilio.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Antlr3.Runtime.pdb
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.Helpers.resources.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.Mvc.resources.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.Optimization.resources.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.Razor.resources.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.WebPages.resources.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.WebPages.Deployment.resources.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.WebPages.Razor.resources.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.csproj.AssemblyReference.cache
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.csproj.ResolveComReference.cache
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.csproj.CoreCompileInputs.cache
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.csproj.CopyComplete
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.dll
+C:\Users\PC\OneDrive\Mis archivos\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Sistema_David.dll.config
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Sistema_David.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Sistema_David.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\csc.exe
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\csc.exe.config
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\csc.rsp
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\csi.exe
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\csi.exe.config
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\csi.rsp
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.CSharp.Scripting.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.Scripting.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CodeAnalysis.VisualBasic.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.CSharp.Core.targets
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.amd64.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.DiaSymReader.Native.x86.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.Managed.Core.targets
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.VisualBasic.Core.targets
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\Microsoft.Win32.Primitives.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.AppContext.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Collections.Immutable.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Console.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Diagnostics.DiagnosticSource.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Diagnostics.FileVersionInfo.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Diagnostics.StackTrace.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Globalization.Calendars.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.IO.Compression.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.IO.Compression.ZipFile.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.IO.FileSystem.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.IO.FileSystem.Primitives.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Net.Http.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Net.Sockets.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Reflection.Metadata.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Runtime.InteropServices.RuntimeInformation.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Security.Cryptography.Algorithms.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Security.Cryptography.Encoding.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Security.Cryptography.Primitives.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Security.Cryptography.X509Certificates.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Text.Encoding.CodePages.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Threading.Tasks.Extensions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.ValueTuple.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Xml.ReaderWriter.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Xml.XmlDocument.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Xml.XPath.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\System.Xml.XPath.XDocument.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\vbc.exe
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\vbc.exe.config
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\vbc.rsp
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\VBCSCompiler.exe
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\roslyn\VBCSCompiler.exe.config
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Antlr3.Runtime.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Aspose.Cells.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\BouncyCastle.Crypto.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\ClosedXML.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\DocumentFormat.OpenXml.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\EntityFramework.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\EntityFramework.SqlServer.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Enums.NET.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\EPPlus.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\EPPlus.Interfaces.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\EPPlus.System.Drawing.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\ExcelNumberFormat.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Auth.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Auth.PlatformServices.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Core.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Drive.v3.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.PlatformServices.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\ICSharpCode.SharpZipLib.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Irony.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\MathNet.Numerics.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.DotNet.PlatformAbstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyModel.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Options.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Primitives.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IdentityModel.Logging.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IdentityModel.Tokens.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Net.Http.Headers.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Web.Infrastructure.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Newtonsoft.Json.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.OOXML.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXml4Net.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXmlFormats.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\SixLabors.Fonts.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\SixLabors.ImageSharp.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\SpreadsheetLight.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Buffers.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.ComponentModel.Annotations.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Drawing.Common.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.IO.Packaging.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Memory.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Numerics.Vectors.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Text.Encoding.CodePages.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Text.Encodings.Web.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Threading.Tasks.Extensions.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.ValueTuple.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.Helpers.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.Mvc.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.Optimization.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.Razor.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.Deployment.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.Razor.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Twilio.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\WebGrease.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\XLParser.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Aspose.Cells.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\BouncyCastle.Crypto.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\ClosedXML.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\DocumentFormat.OpenXml.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\EntityFramework.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\EntityFramework.SqlServer.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Enums.NET.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Enums.NET.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\EPPlus.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\ExcelNumberFormat.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Auth.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Auth.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Core.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Core.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Drive.v3.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Google.Apis.Drive.v3.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\ICSharpCode.SharpZipLib.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\ICSharpCode.SharpZipLib.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\MathNet.Numerics.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authentication.Core.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Authorization.Policy.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Extensions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Http.Features.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Mvc.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.Routing.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.AspNetCore.WebUtilities.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Configuration.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.DependencyInjection.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.FileProviders.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Hosting.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Logging.Abstractions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.ObjectPool.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Options.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Extensions.Primitives.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IdentityModel.Tokens.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.IO.RecyclableMemoryStream.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.Net.Http.Headers.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Newtonsoft.Json.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.OOXML.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.OOXML.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXml4Net.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXml4Net.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXmlFormats.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\NPOI.OpenXmlFormats.dll.config
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\SixLabors.Fonts.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\SixLabors.ImageSharp.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\SpreadsheetLight.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Buffers.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Diagnostics.DiagnosticSource.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.IdentityModel.Tokens.Jwt.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.IO.Packaging.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Memory.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Numerics.Vectors.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Runtime.CompilerServices.Unsafe.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Text.Encoding.CodePages.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Text.Encodings.Web.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Threading.Tasks.Extensions.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.ValueTuple.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.Helpers.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.Mvc.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.Optimization.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.Razor.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.Deployment.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\System.Web.WebPages.Razor.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Twilio.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Antlr3.Runtime.pdb
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.Helpers.resources.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.Mvc.resources.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.Optimization.resources.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.Razor.resources.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.WebPages.resources.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.WebPages.Deployment.resources.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\bin\es\System.Web.WebPages.Razor.resources.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.csproj.AssemblyReference.cache
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.csproj.ResolveComReference.cache
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.csproj.CoreCompileInputs.cache
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_.9500547D.Up2Date
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.dll
+C:\Users\PC\OneDrive\Xestion\Proyectos VB NET\David\Sistema_David\obj\Release\Sistema_David.pdb

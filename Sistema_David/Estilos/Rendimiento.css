@@ -1,0 +1,494 @@
+﻿.input-nuevomodif {
+    display: flex;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    width: 70%;
+    display: block;
+    position: relative;
+    left: 17%;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center !important;
+    font-size: 1.3vw;
+    max-width: 500px !important;
+    color: black !important;
+    display:inline-block;
+  
+}
+
+.lblRendimiento {
+    font-size: 20px;
+    color: red;
+    text-decoration: underline;
+    width: 100% !important;
+
+}
+
+.cursor-pointer{
+    cursor: pointer
+}
+
+.menu-seccionesRend {
+    display: grid; /* Muestra el menú de secciones como cuadrícula */
+    grid-template-columns: repeat(auto-fit, minmax(10px, 1fr));
+    gap: 10px;
+    padding: 0px !important;
+    margin: 0px !important;
+    text-align: center !important;
+    align-items: center !important;
+    align-content: center !important;
+    position: relative;
+    left: -5% !important;
+}
+
+    .input-nuevomodif:active {
+        border: none;
+        border-bottom: solid blue;
+    }
+
+    .input-nuevomodif::placeholder {
+        color: black;
+        opacity: 1 !important;
+    }
+
+    .input-nuevomodif:hover {
+        outline: none !important;
+    }
+
+    .input-nuevomodif:focus {
+        outline: none !important;
+        border-bottom: solid red;
+    }
+
+.btnAccion {
+    width: 2vw;
+    min-width: 25px;
+    background: #2E4053;
+    margin-left: 10px;
+}
+
+
+
+.btneliminar:hover{
+    cursor: pointer;
+}
+
+.btneditar {
+    margin-right: 5px !important;
+}
+
+.btn-accion {
+    background: #2E4053;
+    border-color: blue;
+    color: white;
+    font-size: 0.8vw;
+    height: 3.2vh;
+    width: auto;
+}
+
+.btn-accion:hover {
+        background: #0D62CF;
+    }
+
+
+@media (max-width: 1000px) {
+    .input-nuevomodif {
+        width: 90%;
+        left: 8%;
+        font-size: 3vw !important;
+    }
+
+    .lblNombreInput {
+        font-size: 3vw !important;
+    }
+
+    select {
+        font-size: 3vw !important;
+    }
+
+    .btnnuevo {
+        width: 150px !important;
+    }
+}
+
+@media (max-width: 450px) {
+    .input-nuevomodif {
+        width: 90% !important;
+        left: 8% !important;
+        font-size: 7vw !important;
+    }
+
+    .lblNombreInput {
+        font-size: 7vw !important;
+    }
+
+    select {
+        font-size: 7vw !important;
+    }
+
+    .btnnuevo {
+        width: 200px !important;
+    }
+
+.modal {
+	width: 90% !important;
+    }
+}
+
+/* Establecer el color de fondo azul para el listado */
+#listaUsuarios {
+    background-color: blue !important;
+}
+
+.card {
+    background: #2E4053;
+    opacity: 0.7 !important;
+}
+
+#contenedorlistaUsuarios {
+    border: 2px solid blue;
+    border-radius: 5px; /* Opcional: agregar bordes redondeados */
+    padding: 10px; /* Opcional: agregar espacio interno */
+}
+
+
+
+/* Estilo para las filas pares */
+.list-group-item:nth-child(even) {
+    background-color: #353c48; /* Color de fondo para filas pares */
+    color: white; /* Color de texto para filas pares */
+}
+
+/* Estilo para las filas impares */
+.list-group-item:nth-child(odd) {
+    background-color: #2a303a; /* Color de fondo para filas impares */
+    color: white; /* Color de texto para filas impares */
+}
+
+/* Estilos para resaltar el elemento seleccionado */
+.selected-user {
+    background-color: white !important; /* Cambia el color de fondo del elemento seleccionado */
+    color: black !important; /* Cambia el color del texto del elemento seleccionado */
+}
+
+.divCliente {
+    margin-block: 10px;
+    margin-top: 15px;
+    padding: 5px 5px 5px 15px;
+    border-color: white;
+    border-width: 1px;
+    border-style: double;
+}
+
+.divProducto {
+    display: inline-block !important;
+    position: relative !important;
+    margin-left: 10px !important;
+}
+
+.divFiltros {
+    padding: 5px 5px 5px 5px;
+    border: 3px solid;
+    border: solid blue;
+    display: flex;
+    width: 85%;
+    display: block;
+    position: relative;
+    left: 8%;
+    margin-top: 20px;
+    color: black;
+    text-align: center;
+}
+
+
+
+.lblNombreInput {
+    display: flex;
+    justify-content: center;
+    text-align: center !important;
+    color: #05056C;
+    font-size: 1vw;
+}
+
+.lblcliente {
+    margin-left: 30px;
+    font-size: 0.8vw;
+}
+
+.lblvendedor {
+    margin-left: 7px;
+    font-size: 0.7vw;
+}
+
+
+label {
+    color: white;
+}
+
+#grdVentas tbody tr:hover {
+    cursor: pointer;
+}
+
+
+.input-nuevo {
+    border: none;
+    border-bottom: 0px;
+    border-bottom: solid blue;
+    width: 50%;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center !important;
+    font-size: 0.6vw;
+    max-width: 150px !important;
+    background: #1B2631 !important;
+    color: white !important;
+}
+
+select {
+    font-size: 0.8vw !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 2px;
+    opacity: 0.9;
+    filter: invert(0.9);
+}
+
+
+.input-checkbox {
+    margin: 0px 0px 0px 0px !important;
+}
+
+.obs {
+    max-width: 500px !important;
+    width: 100% !important;
+}
+
+.input-nuevo:active {
+    border: none;
+    border-bottom: solid blue;
+}
+
+.input-nuevo::placeholder {
+    opacity: 1 !important;
+}
+
+.input-nuevo:hover {
+    outline: none !important;
+}
+
+.input-nuevo:focus {
+    outline: none !important;
+    border-bottom: solid red;
+}
+
+.direccion-link {
+    text-decoration: none; /* Elimina el subrayado */
+    color: white; /* Cambia el color del texto a tu preferencia */
+}
+
+
+@media (max-width: 1000px) {
+
+
+    .divProducto {
+        font-size: 2.7vw !important;
+    }
+
+    .input-nuevo {
+        width: 100% !important;
+        display: block !important;
+        max-width: 1500px !important;
+        font-size: 4vw !important;
+    }
+
+
+
+    .input-nuevomodif {
+        width: 99%;
+        left: 2%;
+        font-size: 3.7vw !important;
+        text-align: center !important;
+    }
+
+    .lblcliente {
+        font-size: 4vw !important;
+        display: block;
+        margin-left: -16px !important;
+    }
+
+    select {
+        max-width: 1500px !important;
+        font-size: 4vw !important;
+    }
+
+    .btnnuevo {
+        width: 150px !important;
+    }
+
+    .obs {
+        width: 99% !important;
+    }
+
+    .lblNombreInput {
+        font-size: 4vw !important;
+    }
+
+    .btnaccion {
+        width: 150px !important;
+    }
+
+
+    .btnaccionp {
+        width: 400px !important;
+    }
+
+    .dataTables_info {
+        font-size: 2.7vw !important;
+    }
+
+    option {
+        font-size: 2.7vw !important;
+    }
+}
+
+@media (max-width: 600px) {
+
+
+    #grdProductosVenta {
+        font-size: 3vw !important;
+    }
+
+    .dataTables_info {
+        font-size: 2.7vw !important;
+    }
+
+    .divProducto {
+        display: block !important;
+        position: relative !important;
+        margin-left: 0px !important;
+    }
+
+    .input-nuevomodif {
+        font-size: 4vw !important;
+    }
+
+    .lblNombreInput {
+        font-size: 4vw !important;
+    }
+
+    .btnaccion {
+        width: 175px !important;
+    }
+
+    .btnaccionp {
+        width: 450px !important;
+    }
+
+    option {
+        font-size: 3vw !important;
+    }
+}
+
+@media (max-width: 400px) {
+
+    .lblNombreInput {
+        font-size: 6vw !important;
+    }
+
+    .input-nuevomodif {
+        font-size: 6vw !important;
+    }
+
+    .btnaccionp {
+        width: 450px !important;
+    }
+
+    option {
+        font-size: 5vw !important;
+    }
+}
+
+.mb-md-2 {
+    margin-bottom: 2rem; /* Margen inferior de 2 rem para pantallas medianas y más grandes */
+}
+
+@media (max-width: 767.98px) {
+
+    #contenedorlista {
+        max-height: 300px !important; /* Ajusta este valor para pantallas pequeñas */
+       
+    }
+
+    /* Estilos para pantallas pequeñas */
+    .mb-md-2 {
+        margin-bottom: 1rem; /* Eliminar el margen inferior en pantallas pequeñas */
+    }
+
+    .mt-sm-2 {
+        margin-top: 2rem; /* Margen superior de 2 rem para elementos siguientes en pantallas pequeñas */
+    }
+}
+
+@media (max-width: 300px) {
+
+
+    .lblNombreInput {
+        font-size: 8vw !important;
+    }
+
+    .input-nuevomodif {
+        font-size: 8vw !important;
+    }
+
+    .btnaccion {
+        width: 200px !important;
+    }
+
+    .btnaccionp {
+        width: 450px !important;
+    }
+}
+
+@media (max-width: 260px) {
+
+    .divProducto {
+        font-size: 5vw;
+    }
+
+    .btnaccion {
+        width: 200px !important;
+    }
+
+    .btnaccionp {
+        width: 350px !important;
+    }
+}
+
+
+
+
+.seccion {
+    display: flex;
+    margin-left: 30px;
+}
+
+
+.cardTablePersonalizadoRendimiento {
+    width: 98%;
+    margin: 15px auto; /* Center the card */
+    border: none;
+    position: initial;
+}
+
+
+
+#imagenComprobante {
+    height: 100%;
+    width: 100%;
+    max-width: 1200px;
+    max-height: 750px;
+}

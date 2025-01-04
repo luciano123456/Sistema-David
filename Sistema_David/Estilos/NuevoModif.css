@@ -1,0 +1,71 @@
+﻿.NuevoModif {
+    margin-top: 20vh;
+    padding-top: 10px;
+    width: 25% !important;
+    height: 73vh !important;
+    border-radius: 30px;
+    position: absolute;
+    left: 35%;
+    top: 6%;
+    color: red;
+    background-color: white;
+    opacity: 0.8;
+    word-wrap: break-word;
+    min-height: 350px;
+    
+}
+
+.datos-error {
+    margin-top: -25px !important;
+    margin-bottom: 10px !important;
+}
+
+.input-nuevomodif {
+    display: flex;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    width: 70%;
+    display: block;
+    position: relative;
+    left: 4vw;
+    font-size: 30px;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center;
+    font-size: 1.8vw;
+    max-width: 500px !important;
+}
+
+.input-nuevomodif:active {
+    border: none;
+    border-bottom: solid blue;
+}
+
+.input-nuevomodif::placeholder {
+    color: black;
+    opacity: 1 !important;
+}
+
+.input-nuevomodif:hover {
+    outline: none !important;
+}
+
+.input-nuevomodif:focus {
+    outline: none !important;
+    border-bottom: solid red;
+}
+
+.btnagregar {
+    width: 8.7vw;
+    position: absolute;
+    left: 51%;
+    font-size: 0.9vw;
+}
+
+.btncancelar {
+    width: 8.7vw;
+    position: absolute;
+    left: 16%;
+    font-size: 0.9vw;
+}

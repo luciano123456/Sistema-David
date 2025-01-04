@@ -1,0 +1,142 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="~/Estilos/Stock.css" rel="stylesheet" />
+<link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+
+<body>
+
+    <script src="~/Scripts/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+
+    <div class="divPrecio mt-3">
+        <label class="lblNombreInput text-white">Stock de </label>
+        <label class="lblNombreInput ms-2 text-white" id="lblnombreusuario"></label>
+    </div>
+
+    <div class="divStock" id="divStock" hidden>
+        <label class="" id="">Dinero en stock: </label>
+        <label class="" id="precioventa">0</label>
+    </div>
+
+
+
+    <div class="col-lg-12">
+        <div class="card cardTablePersonalizado">
+            <div class="card-header">
+                Stock
+            </div>
+            <div class="card-body">
+                <table class="display nowrap" id="grdStock" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Imagen</th>
+                            <th class="text-center">Producto</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-center">Precio Unitario</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Aquí va el contenido de tu datatable -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vw-75 d-flex justify-content-end mt-2 mb-4">
+                <button id="btnStockPendiente" type="button" class="btn btn-warning me-2" onclick="abrirstockPendiente()">Stock Pendiente</button>
+                <a class="btn btn-primary" id="btnAgregar" onclick="abrirmodal()">Agregar</a>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Imagen Ampliada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid" alt="Imagen Ampliada" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="nuevoProductoModal" tabindex="-1" aria-labelledby="nuevoProductoModallLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="nuevoProductoModalLabel">Añadir producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <input type="Text" id="IdStock" class="input-nuevomodif" hidden />
+
+                    <label class="lblNombreInput">Producto</label>
+                    <select id="Productos" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
+                        <option value="" selected>Seleccione Producto</option>
+                    </select>
+
+                    @*<div role="group">
+                            <div class="non-active arrival params not-readonly">
+                                <label class="lblNombreInput">Producto</label>
+                            </div>
+                            <div class="minicontrol">
+                                <input autocomplete="off" id="Productos" class="input-params input-params-not-readonly text-black input-nuevomodif" list="lstProducto" data-error="errTxtProducto" required placeholder="Seleccione un producto" />
+                                <datalist id="lstProducto"></datalist>
+                                <div id="errTxtProducto"></div>
+                            </div>
+                        </div>*@
+
+
+                    <label class="lblNombreInput" hidden>Producto Precio</label>
+                    <select id="ProductosPrecio" name="select" class="input-nuevomodif select-modal-personalizado mt-3" hidden>
+                        <option value="" selected>Seleccione Producto</option>
+                    </select>
+                    <label class="lblNombreInput">Cantidad</label>
+                    <input type="number" placeholder="1" value="1" id="Cantidad" class="input-nuevomodif" />
+
+                    <div class="divPrecio">
+                        <label class="lblNombreInput">Precio Total: </label>
+                        <label class="lblNombreInput" id="precioTotal">0</label>
+                    </div>
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="agregarStock()">Añadir</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+
+
+<script src="~/Scripts/bootstrap.min.js"></script>
+<script src="~/JavaScript/Utils/Utils.js"></script>
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
+
+
+
+
+@section scripts{
+    <script src="~/JavaScript/Stock.js"></script>
+}

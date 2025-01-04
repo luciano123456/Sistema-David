@@ -1,0 +1,370 @@
+﻿@model List<Sistema_David.Models.ViewModels.Rendimiento>
+
+@{
+    ViewBag.Title = "Inicio";
+}
+
+
+<body>
+
+
+
+
+    @if (@ViewData["ErrorPermisos"] == null)
+    {
+
+
+
+
+        <div id="Filtros" class="divFiltros" hidden>
+
+            <label class="m-lg-2 lblcliente">Fecha Desde:</label>
+            <input type="date" placeholder="" value="" id="FechaDesde" class="input-nuevo" />
+
+            <label class="m-lg-2 lblcliente">Fecha Hasta:</label>
+            <input type="date" placeholder="" value="" id="FechaHasta" class="input-nuevo" />
+            <a class="ms-1" title="Hoy" onclick="fechaHoy()"><i class="fa fa-calendar cursor-pointer" style="color: wheat" aria-hidden="true"></i></a>
+            <a class="ms-1" title="Mensual" onclick="fechaMensual()"><i class="fa fa-calendar cursor-pointer" style="color: green" aria-hidden="true"></i></a>
+
+            <label class="lblcliente" id="lblcobrador">Tipo de Negocio</label>
+            <select id="TipoNegocio" name="select" class="input-nuevo">
+                <option value="" selected>Todos</option>
+            </select>
+
+
+
+            <div class="vw-75 d-flex float-lg-end mt-2">
+                <a class="btn btn-success btnaccion" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
+            </div>
+        </div>
+
+
+
+
+        <div class="menu-secciones mt-3">
+
+
+
+            <div class="seccion" id="seccionRendimiento">
+                <button class="btn-seccion" id="btnRendDiario" onclick="mostrarRendimiento('Diario')">
+                    <img src="~/Imagenes/rendimiento-diario.png" class="img-seccion" />
+                    Diario
+                </button>
+            </div>
+
+            <div class="seccion" id="seccionUsuarios">
+                <button class="btn-seccion" id="btnRendMensual" onclick="mostrarRendimiento('Mensual')">
+                    <img src="~/Imagenes/rendimiento-mensual.png" class="img-seccion" />
+                    Mensual
+                </button>
+            </div>
+
+        </div>
+
+        <div class="row mt-4 table-bordered table-borderless datatablepersonalizado">
+            <div id="RendimientoMensual" hidden>
+                <div class="card cardTablePersonalizadoRendimiento">
+                    <div class="card-header">
+                        <b>Rendimiento Mensual por dia</b>
+                    </div>
+                    <div class="card-body">
+                        <table class="display nowrap" id="grdRendimientoGeneral" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Capital Inicial</th>
+                                    <th>Ventas</th>
+                                    <th>Cobros</th>
+                                    <th>Capital Final</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Aquí va el contenido de tu datatable -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+
+
+
+            </div>
+
+
+
+            <div id="RendimientoCobrado" hidden>
+                <div class="card cardTablePersonalizadoRendimiento">
+                    <div class="card-header">
+                        <b>Cobros de vendedores</b>
+                    </div>
+                    <div class="card-body">
+                        <table class="display nowrap" id="grdRendimientoCobrado" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Vendedor</th>
+                                    <th>Total Cobrado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Aquí va el contenido de tu datatable -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="container mt-3">
+                <div class="row ">
+
+                    <!-- ListView de Usuarios -->
+                    <div class="col-md-3 col-lg-2 mb-md-2 col-md-10 " style="min-width: 300px;" id="divUsuarios">
+                        <!-- Cambio de clase aquí -->
+                        <div class="card w-90 mt-2">
+                            <div class="card-header text-white h5 font-weight-bold bg-primary">
+                                Lista de Vendedores
+                            </div>
+                            <div class="card-body text-lg" id="contenedorlista" style="max-height: 500px; overflow-y: auto">
+                                <ul id="listaUsuarios" class="list-group">
+                                    <!-- Cabecera para iconos V y C -->
+                                    <li class="list-group-item d-flex justify-content-end align-items-center">
+                                        <!-- Ventas -->
+                                        <div class="d-flex align-items-center mr-3">
+                                            <!-- Añadido mr-3 -->
+                                            <div class="me-3">V</div>
+                                            <div class="mr-0">C</div> <!-- Mantenida clase mr-2 -->
+                                        </div>
+                                    </li>
+                                    <!-- Lista de usuarios aquí -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                    <div class="col-sm-9">
+                        <div class="card-body">
+
+                            <div class="divCliente" id="divCliente">
+
+
+                                <div class="divProducto">
+                                    <label class="lblentrega" id="">Total Venta: </label>
+                                    <label class="" id="totventa">0</label>
+                                </div>
+
+                                <div class="divProducto">
+                                    <label class="lblpreciorestante" id="">Total Cobro: </label>
+                                    <label class="" id="totcobro">0</label>
+                                </div>
+
+                                <div class="divProducto">
+                                    <label class="lblentrega" id="">Total Interes: </label>
+                                    <label class="" id="totinteres">0</label>
+                                </div>
+
+                                <div class="divProducto">
+                                    <label class="lblentrega text-danger" id="">Capital: </label>
+                                    <label class="text-danger" id="totRestante">0</label>
+                                </div>
+
+                                <div class="divProducto">
+                                    <label class="lblentrega text-danger" id="">Capital en rojo: </label>
+                                    <label class="text-danger" id="totDeuda">0</label>
+                                </div>
+
+                                <div class="divProducto">
+                                    <label class="lblentrega" id="">Total Efectivo: </label>
+                                    <label class="" id="totefectivo">0</label>
+                                </div>
+
+                                <div class="divProducto">
+                                    <label class="lblentrega" id="">Total Transferencia: </label>
+                                    <label class="" id="tottransferencia">0</label>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+
+
+
+
+
+
+
+                        @*
+                            <table id="grdRendimiento" class="table table-striped">
+                                <thead>
+                                    <tr>*@
+
+
+                        <div id="RendimientoDiario">
+                            <div class="card cardTablePersonalizadoRendimiento">
+                                <div class="card-header">
+                                    Rendimiento Diario
+                                </div>
+                                <div class="card-body">
+                                    <table class="display nowrap" id="grdRendimiento" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Tipo de Negocio</th>
+                                                <th>Cliente</th>
+                                                <th>Capital Inicial</th>
+                                                <th>Ventas</th>
+                                                <th>Cobros</th>
+                                                <th>Interes</th>
+                                                <th>Capital Final</th>
+                                                <th>Metodo Pago</th>
+                                                <th>Proximo Cobro</th>
+                                                <th>Vencimiento</th>
+                                                <th>Descripcion</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="RendimientoClientesAusentes">
+                            <div class="card cardTablePersonalizadoRendimiento">
+                                <div class="card-header">
+                                    <b>Clientes Ausentes</b>
+                                </div>
+                                <div class="card-body">
+                                    <table class="display nowrap" id="grdClientesAusentes" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Cliente</th>
+                                                <th>Cobrador</th>
+                                                <th>Observacion</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Aquí va el contenido de tu datatable -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+
+
+
+
+                        </div>
+
+
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+        </div>
+    }
+    else
+    {
+        <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
+    }
+</body>
+
+
+
+<!-- Button trigger modal -->
+<!-- Modal -->
+<div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="usuarioModalLabel">Registrar nuevo usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <input type="Text" id="IdUsuario" class="input-nuevomodif" hidden />
+                <label class="lblNombreInput">Usuario</label>
+                <input type="Text" placeholder="" id="Usuario" class="input-nuevomodif" />
+                <label class="lblNombreInput">Nombre</label>
+                <input type="Text" placeholder="" id="Nombre" class="input-nuevomodif" />
+                <label class="lblNombreInput">Apellido</label>
+                <input type="Text" placeholder="" id="Apellido" class="input-nuevomodif" />
+                <label class="lblNombreInput">Dni</label>
+                <input type="Text" placeholder="" id="Dni" class="input-nuevomodif" />
+                <label class="lblNombreInput">Telefono</label>
+                <input type="Text" placeholder="" id="Telefono" class="input-nuevomodif" />
+                <label class="lblNombreInput">Direccion</label>
+                <input type="Text" placeholder="" id="Direccion" class="input-nuevomodif" />
+
+                <label class="lblNombreInput">Rol</label>
+                <select id="Rol" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
+                    <option value="0" selected>Seleccione Rol</option>
+                </select>
+
+                <label class="lblNombreInput">Contraseña</label>
+                <input type="password" placeholder="" id="Contrasena" class="input-nuevomodif" />
+
+                <label id="lblEstados" class="lblNombreInput" hidden>Estado</label>
+                <select id="Estado" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
+                    <option value="" selected>Seleccione Estado</option>
+                </select>
+
+            </div>
+            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btnnuevo" data-bs-dismiss="modal">Cerrar</button>
+                <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnnuevo" onclick="AccionBtn()"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para visualizar la imagen -->
+<div class="modal fade" id="modalComprobante" tabindex="-1" aria-labelledby="modalComprobanteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="usuarioModalLabel">Comprobante</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <!-- Aquí se mostrará la imagen -->
+                <img id="imagenComprobante" src="" alt="Comprobante" class="img-fluid">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
+<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
+<script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+<script src="~/Scripts/xlsx.full.min.js.js"></script>
+<link href="~/Estilos/Rendimiento.css?v=1.1" rel="stylesheet" />
+<script src="~/JavaScript/Utils/Utils.js"></script>
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
+@section scripts{
+    <script src="~/JavaScript/Rendimiento.js?v=1.1"></script>
+}
+
+
+

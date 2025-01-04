@@ -1,0 +1,124 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+
+<link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="~/Estilos/Productos.css" rel="stylesheet" />
+<link href="~/Estilos/Ventas.css" rel="stylesheet" />
+<link href="~/Estilos/Pedidos.css" rel="stylesheet" />
+
+<link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
+
+
+<body>
+
+    <div class="row mt-4 table-bordered table-borderless datatablepersonalizado">
+
+
+
+        <div id="Filtros" class="divFiltros" hidden>
+
+
+
+            <label class="lblcliente">Vendedor</label>
+            <select id="Vendedores" name="select" class="input-nuevo">
+                <option value="" selected>Vendedor</option>
+            </select>
+
+            <label class="m-lg-2 lblcliente">Fecha Entrega:</label>
+            <input type="date" placeholder="" value="" id="FechaEntrega" class="input-nuevo" />
+
+            <label class="lblcliente">Estado</label>
+            <select id="Estados" name="select" class="input-nuevo">
+                <option value="" selected>Estado</option>
+            </select>
+
+           
+
+            <div class="vw-75 d-flex float-lg-end mt-2">
+                <a class="btn btn-success btnaccion" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
+            </div>
+        </div>
+
+
+
+        <div class="col-sm-12 mt-2">
+
+
+            <div class="card-body">
+                <table id="grdVentas" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Fecha</th>
+                            <th class="text-center">Fecha Entrega</th>
+                            <th class="text-center">V</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Cliente</th>
+                            <th class="text-center">Dni</th>
+                            <th class="text-center">Direccion</th>
+                            <th class="text-center">Telefono</th>
+                            <th class="text-center">Entrega</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Restante</th>
+                            <th class="text-center">Observacion</th>
+                            <th class="text-center">Acciones</th>
+                    </thead>
+
+
+                </table>
+
+                <div class="vw-75 d-flex float-lg-end mt-2 mb-4">
+                    <a class="btn btn-success btnaccionp" id="exportacionExcel" onclick="exportarExcel()" hidden>Exportar Datos</a>
+                    <a class="btn btn-primary ms-2 btnaccionp" onclick="nuevoPedido()">Nuevo Pedido</a>
+                </div>
+
+
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <div class="modal fade centered-modal-importar" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
+        <div class="modal-dialog estilowpp">
+            <div class="estilowpp modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalWhatssapLabel">Enviar mensaje por whatssap</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <input type="Text" id="idClienteWhatssap" class="input-nuevomodif" hidden />
+                    <input type="Text" placeholder="Escribe el mensaje" id="mensajewsp" class="input-whatssap" />
+
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="enviarWhatssap()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+</body>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+<script src="~/Scripts/xlsx.full.min.js.js"></script>
+<script src="https://cdn.datatables.net/colreorder/1.5.4/js/dataTables.colReorder.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.5.4/css/colReorder.dataTables.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
+
+
+@section scripts{
+    <script src="~/JavaScript/Pedidos.js"></script>
+}

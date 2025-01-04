@@ -1,0 +1,238 @@
+﻿.centered-modal-importar {
+    position: fixed !important;
+    top: 30% !important;
+    left: 50% !important;
+    transform: translate(-50%, 0%) !important;
+}
+
+
+
+.input-nuevomodif {
+    display: flex;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    width: 70%;
+    display: block;
+    position: relative;
+    left: 17%;
+    font-size: 30px;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center;
+    font-size: 1.3vw;
+    max-width: 500px !important;
+    color: black !important;
+}
+
+.input-nuevomodif-concheck {
+    display: flex;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    position: relative;
+    width: 70%;
+    left: 17%;
+    color: black;
+    text-align: center;
+    font-size: 1.3vw;
+    max-width: 500px !important;
+    color: black !important;
+}
+
+
+    .input-nuevomodif:active {
+        border: none;
+        border-bottom: solid blue;
+    }
+
+    .input-nuevomodif::placeholder {
+        color: black;
+        opacity: 1 !important;
+    }
+
+    .input-nuevomodif:hover {
+        outline: none !important;
+    }
+
+    .input-nuevomodif:focus {
+        outline: none !important;
+        border-bottom: solid red;
+    }
+
+.input-nuevomodif-concheck:active {
+    border: none;
+    border-bottom: solid blue;
+}
+
+.input-nuevomodif-concheck::placeholder {
+    color: black;
+    opacity: 1 !important;
+}
+
+.input-nuevomodif-concheck:hover {
+    outline: none !important;
+}
+
+.input-nuevomodif-concheck:focus {
+    outline: none !important;
+    border-bottom: solid red;
+}
+
+.btnAccion {
+    width: 2vw;
+    min-width: 25px;
+    background: #2E4053;
+    margin-left: 10px;
+}
+
+
+.btneliminar:hover{
+    cursor: pointer;
+}
+
+
+
+.btneditar {
+    margin-right: 5px !important;
+}
+
+.btn-accion {
+    background: #2E4053;
+    border-color: blue;
+    color: white;
+    font-size: 0.8vw;
+    height: 3.2vh;
+    width: auto;
+}
+
+.btn-accion:hover {
+        background: #0D62CF;
+    }
+
+.divImagen {
+    padding: 5px 5px 5px 5px;
+    border: 3px solid;
+    border: solid blue;
+    width: 70%;
+    display: flex;
+    width: 70%;
+    display: block;
+    position: relative;
+    left: 17%;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center;
+    max-width: 500px !important;
+}
+
+.input-imagen {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    position: relative;
+    left: 30%;
+    width: 40%;
+}
+
+.divImagen:active {
+    border: solid red;
+}
+
+.divImagen::placeholder {
+    color: black;
+    opacity: 1 !important;
+}
+
+.divImagen:hover {
+    outline: none !important;
+}
+
+.divImagen:focus {
+    outline: none !important;
+    border: solid red;
+}
+
+.divArchivo {
+    padding: 5px 5px 5px 5px;
+    border: 3px solid;
+    border: solid blue;
+    width: 70%;
+    display: flex;
+    width: 70%;
+    display: block;
+    position: relative;
+    left: 17%;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center;
+    max-width: 500px !important;
+}
+
+.input-importacionmasiva {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    position: relative;
+    left: 27%;
+    width: 60%;
+}
+
+.divArchivo:active {
+    border: solid red;
+}
+
+.divArchivo::placeholder {
+    color: black;
+    opacity: 1 !important;
+}
+
+.divArchivo:hover {
+    outline: none !important;
+}
+
+.divArchivo:focus {
+    outline: none !important;
+    border: solid red;
+}
+
+@media (max-width: 1000px) {
+    .input-nuevomodif {
+        width: 90%;
+        left: 8%;
+        font-size: 3vw !important;
+    }
+
+    .lblNombreInput {
+        font-size: 3vw !important;
+    }
+
+    select {
+        font-size: 3vw !important;
+    }
+
+    .btnnuevo {
+        width: 150px !important;
+    }
+}
+
+@media (max-width: 450px) {
+    .input-nuevomodif {
+        width: 90% !important;
+        left: 8% !important;
+        font-size: 7vw !important;
+    }
+
+    .lblNombreInput {
+        font-size: 7vw !important;
+    }
+
+    select {
+        font-size: 7vw !important;
+    }
+
+    .btnnuevo {
+        width: 200px !important;
+    }
+	
+}

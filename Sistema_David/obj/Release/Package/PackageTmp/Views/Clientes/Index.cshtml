@@ -1,0 +1,197 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+
+
+<link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="~/Estilos/Clientes.css" rel="stylesheet" />
+<link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
+<body>
+
+
+    @if (@ViewData["ErrorPermisos"] == null)
+    {
+
+        @*<div class="row mt-4 table-bordered table-borderless datatablepersonalizado">*@
+
+        <div id="Filtros" class="divFiltros" hidden>
+
+            <label class="lblcliente">Vendedor</label>
+            <select id="VendedoresFiltro" name="select" class="input-nuevo">
+                <option value="" selected>Vendedor</option>
+            </select>
+
+            <label class="lblcliente">Zona</label>
+            <select id="ZonasFiltro" name="select" class="input-nuevo">
+                <option value="" selected>Zona</option>
+            </select>
+
+            <label class="m-lg-2 lblcliente">Nombre:</label>
+            <input type="text" placeholder="" value="" id="NombreFiltro" class="input-nuevo" />
+
+            <label class="m-lg-2 lblcliente">Apellido:</label>
+            <input type="text" placeholder="" value="" id="ApellidoFiltro" class="input-nuevo" />
+
+            <label class="m-lg-2 lblcliente">DNI:</label>
+            <input type="text" placeholder="" value="" id="DniFiltro" class="input-nuevo" />
+
+            <div class="vw-75 d-flex float-lg-end mt-2">
+                <a class="btn btn-success" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
+            </div>
+
+
+
+        </div>
+
+
+
+        <div class="menu-secciones mt-3">
+
+
+
+            <div class="seccion" id="seccionUsuarios">
+                <button class="btn-seccionCliente" id="btnRendMensual" onclick="abrirClientesCero()">
+                    <img src="~/Imagenes/clientes en cero.png" class="img-seccion" />
+                    Clientes en 0
+                </button>
+            </div>
+
+        </div>
+
+        <div class="col-lg-12">
+            <div class="card cardTablePersonalizado">
+                <div class="card-header">
+                    Clientes
+                </div>
+                <div class="card-body">
+                    <table class="display nowrap" id="grdClientes" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Nombre</th>
+                                <th class="text-center">Apellido</th>
+                                <th class="text-center">Dni</th>
+                                <th class="text-center">Direccion</th>
+                                <th class="text-center">Telefono</th>
+                                <th class="text-center">Vendedor</th>
+                                <th class="text-center">Zona</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Saldo</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Aquí va el contenido de tu datatable -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="vw-75 d-flex justify-content-end mt-2 mb-4">
+                    <a class="btn btn-success" id="exportacionExcel" onclick="exportarExcel()" hidden>Exportar Datos</a>
+                    <a class="btn btn-success ms-2 me-2" id="importacionExcel" onclick="abrirmodalimportacionmasiva()" hidden>Importar Datos</a>
+                    <a id="btnLimite" class="btn btn-warning btnnuevo me-2" onclick="modalLimite()" hidden>Limites</a>
+                    <a id="btnNuevo" class="btn btn-primary btnnuevo" onclick="nuevoCliente()" hidden>Nuevo</a>
+
+                </div>
+            </div>
+        </div>
+        @*</div>*@
+
+    }
+    else
+    {
+        <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
+    }
+
+
+
+</body>
+
+
+<div class="modal fade centered-modal-importar" id="modalLimite" tabindex="-1" aria-labelledby="modalLimiteLabel" aria-hidden="true">
+    <div class="modal-dialog estilolimite">
+        <div class="estilolimite modal-content ">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLimitesLabel">Limite de clientes regulares</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+
+                <input type="text" placeholder="0" id="valorLimite" class="input-whatssap" oninput="formatoMoneda(event)" />
+
+
+            </div>
+            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button id="btnRegistrarModificarwsp" type="button" class="btn btn-primary" onclick="modificarLimiteVenta()">Modificar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade centered-modal-importar" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
+    <div class="modal-dialog estilowpp">
+        <div class="estilowpp modal-content ">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalWhatssapLabel">Enviar mensaje por whatssap</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <input type="Text" id="idClienteWhatssap" class="input-nuevomodif" hidden />
+                <input type="Text" placeholder="Escribe el mensaje" id="mensajewsp" class="input-whatssap" />
+
+
+            </div>
+            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button id="btnRegistrarModificarwsp" type="button" class="btn btn-primary" onclick="enviarWhatssap()">Enviar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade centered-modal-importar" id="modalImportacionMasiva" tabindex="-1" aria-labelledby="modalImportacionMasivaLabel" aria-hidden="true">
+    <div class="modal-dialog estilowpp">
+        <div class="estilowpp modal-content ">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalImportacionMasivaLabel">Importacion Masiva</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="divArchivo">
+                    <h5>Archivo</h5>
+                    <input id="fileImportacionMasiva" class="input-importacionmasiva" type="file" placeholder="" name="adjunto" accept=".xlsx" />
+
+                    <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+
+                </div>
+
+            </div>
+            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="enviarImportacionMasiva()">Importar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="~/JavaScript/Utils/Utils.js"></script>
+<script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
+<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
+<script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
+
+<script src="~/Scripts/xlsx.full.min.js.js"></script>
+
+@section scripts{
+    <script src="~/JavaScript/Clientes.js"></script>
+}

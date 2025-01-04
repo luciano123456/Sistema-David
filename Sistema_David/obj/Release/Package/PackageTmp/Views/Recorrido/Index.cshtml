@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Maps API - Recorrido y Buscador</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <link href="~/Estilos/Recorrido.css" rel="stylesheet" />
+
+</head>
+
+<body>
+    <input id="pac-input" class="controls" type="text" placeholder="Buscar ubicaciones">
+    <div id="map" class="mt-5"></div>
+    <ul id="location-list"></ul>
+   
+    <button class="btn btnAccion" id="borrar-recorrido" onclick="armarRecorrido()">Iniciar recorrido</button>
+    <button class="btn btnAccion" id="ir" onclick="irAUbicacion()" hidden>Ir</button>
+    <button class="btn btnAccion" id="siguiente" onclick="siguienteUbicacion()" hidden>Siguiente</button>
+    <button class="btn btnAccion" id="finalizar-recorrido" onclick="finalizarRecorrido()" hidden>Finalizar recorrido</button>
+
+    <link href="~/Content/font-awesome.css" rel="stylesheet" />
+
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAddgDLrXa7JLbrOCGrCIBqkEDEBh6YtOQ&libraries=places&callback=initMap"></script>
+    <script src="~/JavaScript/Utils/Utils.js"></script>
+    <script src="~/JavaScript/Recorrido.js"></script>
+</body>
+</html>

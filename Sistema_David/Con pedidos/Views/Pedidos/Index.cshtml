@@ -1,0 +1,52 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+
+<link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="~/Estilos/Pedidos.css" rel="stylesheet" />
+<link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
+
+
+<body>
+
+    <div id="Filtros" class="divFiltros">
+
+
+
+        <label class="lblcliente">Vendedor</label>
+        <select id="Vendedores" name="select" class="input-nuevo">
+            <option value="" selected>Vendedor</option>
+        </select>
+
+        <label class="lblcliente">Estados</label>
+        <select id="Estados" name="select" class="input-nuevo">
+            <option value="" selected>Estado</option>
+        </select>
+
+        <label class="m-lg-2 lblcliente">Fecha:</label>
+        <input type="date" placeholder="" value="" id="Fecha" class="input-nuevo" />
+
+        <label class="m-lg-2 lblcliente" id="lbldninombre">DNI O NOMBRE:</label>
+        <input type="text" placeholder="" value="" id="Dni" class="input-nuevo" />
+
+        <div class="vw-75 d-flex float-lg-end">
+            <a class="btn btn-success btnaccion" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
+        </div>
+    </div>
+
+    </body>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="~/Scripts/xlsx.full.min.js.js"></script>
+    <script src="https://cdn.datatables.net/colreorder/1.5.4/js/dataTables.colReorder.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.5.4/css/colReorder.dataTables.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+    <link href="~/Content/font-awesome.css" rel="stylesheet" />
+
+
+    @section scripts{
+        <script src="~/JavaScript/Pedidos.js"></script>
+    }

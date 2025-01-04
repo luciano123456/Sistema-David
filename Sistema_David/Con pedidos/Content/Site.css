@@ -1,0 +1,433 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    background-attachment: fixed;
+    background-position: center center;
+    background-color: #1B2631;
+    background-repeat: no-repeat no-repeat;
+    background-size: cover;
+    width: 99.5%;
+    height: 98%;
+    margin-left: 5px;
+}
+
+/* Set padding to keep content from hitting the edges a
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+table,
+thead,
+tr,
+tbody,
+th,
+td {
+    text-align: center !important;
+}
+
+.select-modal-personalizado {
+    background: white !important;
+    color: black !important;
+}
+
+option {
+    background: white !important;
+    color: black !important;
+}
+
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+.lblNombreInput {
+    display: flex;
+    justify-content: center;
+    text-align: center !important;
+    color: #05056C;
+    font-size: 1.3vw;
+}
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+input {
+    color: white !important;
+}
+
+
+
+
+.titulo-font {
+    opacity: 0.7 !important;
+    background: #2E4053;
+    text-align: center !important;
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    color: rgb(255, 255, 255, 1) !important;
+    font-size: calc(1vh + 1vw);
+    border-radius: 20px;
+}
+
+
+
+.seccion {
+    display: flex;
+    margin-left: 30px;
+}
+
+
+
+
+.lblcerrarSession {
+    color: white;
+    font-size: 0.8vw;
+    justify-content: center;
+    display: flex;
+    text-align: center !important;
+    position: absolute;
+    left: 90%;
+    top: 10%;
+}
+
+#modalLogin {
+    width: calc(5vh + 5vw);
+    position: absolute;
+    left: 90%;
+    top: 100px;
+    z-index: 1;
+}
+
+
+
+.nav-user {
+    opacity: 0.7 !important;
+    background: #2E4053;
+    text-align: center;
+    font-weight: bold;
+    color: rgb(255, 255, 255, 1) !important;
+    font-size: 2vw;
+    border-radius: 20px;
+    width: auto !important;
+    height: calc(1.7vh + 1.7vw);
+    padding-top: 5px;
+}
+
+    .nav-user:hover {
+        opacity: 1 !important;
+    }
+
+.img-seccion {
+    width: 5vh;
+}
+
+.btn-seccion {
+    margin-top: 10px;
+    width: 10vw;
+    height: 8vh;
+    background: #1B2631;
+    border-radius: 20px;
+    border-color: blue;
+    color: white;
+    font-size: 1.2vw;
+    min-height: 25px;
+    min-width: 35px;
+}
+
+.btn-seccion-rendimiento {
+    margin-top: 10px;
+    width: 10vw;
+    height: 8vh;
+    background: #1B2631;
+    border-radius: 20px;
+    border-color: blue;
+    color: white;
+    font-size: 0.8vw;
+    min-height: 25px;
+    min-width: 35px;
+}
+
+
+.btn-seccion:hover {
+    background: #0D62CF;
+}
+
+
+.menu-secciones {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+}
+
+
+body {
+    color: white;
+}
+
+
+td {
+    color: white;
+}
+
+tr {
+    color: white;
+}
+
+th {
+    text-align: center;
+}
+
+table {
+    color: white;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #097CF7;
+}
+
+
+tbody tr {
+    background-image: url(noise.png);
+}
+
+.general {
+    border: 1px solid;
+}
+
+.table-striped > tbody > tr:nth-child(odd) > td,
+.table-striped > tbody > tr:nth-child(odd) > th {
+    background-color: #2a303a;
+    color: white;
+}
+
+.table-striped > tbody > tr:nth-child(even) > td,
+.table-striped > tbody > tr:nth-child(even) > th {
+    background-color: #353c48;
+    color: white;
+}
+
+.table-striped > thead > tr > th {
+    background-color: #323844;
+    color: white;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    margin-top: 10px;
+}
+
+.dataTables_filter {
+    margin-top: 10px;
+}
+
+select {
+    color: white !important;
+    background: white;
+}
+
+
+h1, h2, h3, h4, h5 {
+    color: black;
+}
+
+::placeholder {
+    font-size: 1.2vw;
+}
+
+option {
+    font-size: 1.2vw;
+}
+
+select {
+    font-size: 1.2vw !important;
+}
+
+
+
+@media screen and (max-width: 1000px) {
+    .btn-seccion {
+        width: 14vw;
+        min-width: 70px;
+        height: 10vh;
+        font-size: 2.5vw;
+    }
+
+    .btn-seccion-rendimiento {
+        width: 14vw;
+        min-width: 70px;
+        height: 10vh;
+        font-size: 2.1vw;
+    }
+}
+
+@media screen and (max-width: 450px) {
+    .btn-seccion {
+        font-size: 3.1vw;
+    }
+
+    .btn-seccion-rendimiento {
+        font-size: 2.5vw;
+    }
+}
+
+
+
+
+@media screen and (max-width: 540px) {
+    .img-seccion {
+        width: 3vh;
+    }
+}
+
+#desplegable ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* color del fondo del contenedor */
+
+#desplegable div {
+    position: absolute;
+    left: 0%;
+    height: calc(1vh + 1vw);
+    width: calc(1vh + 1vw);
+}
+
+
+
+    /* estilo predefinido al contenedor */
+
+    #desplegable div a {
+        display: block;
+        color: #fff;
+        text-decoration: none;
+        padding: 10px;
+    }
+
+
+    /* posicion del contenedor en la pagina */
+
+    #desplegable div div {
+        position: relative;
+        float: left;
+        margin: 0;
+        padding: 0;
+    }
+
+
+        /* efecto del contenedor al pasar el mouse por encima */
+
+        #desplegable div div:hover {
+        }
+
+
+    /* Quitarenos la visivilidad con display:none cuando no estemos encima */
+
+    #desplegable div ul {
+        width: calc(5vh + 5vw);
+        display: none;
+        position: absolute;
+        top: 110%;
+        left: 60%;
+        background: white;
+        color: black;
+        border-radius: 30px;
+        padding: 0;
+        font-size: calc(0.5vh + 0.5vw);
+        height: calc(0.8vh + 0.8vw);
+        cursor: pointer;
+    }
+
+
+        /* Tamaño del contenido. AL estar al 100% el ancho se ajustara al ancho del contenedor */
+
+        #desplegable div ul li {
+            float: none;
+            width: 100%;
+        }
+
+
+    /* Visualizaremos al pasar por encima el contenido de la lista o lo que queramos meter dentro. */
+
+    #desplegable div div:hover > ul {
+        display: block;
+    }
+
+.usuario {
+    width: 100%;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    font-size: calc(0.7vh + 0.7vw);
+    color: rgb(255, 255, 255, 1) !important;
+    text-decoration: none;
+    text-align: left !important;
+    position: absolute;
+    left: 160%;
+    margin-top: -5px !important;
+    min-width: 300px !important;
+}
+
+    .usuario a {
+        text-decoration: none;
+        color: white !important;
+    }
+
+    .usuario:hover {
+        cursor: pointer;
+    }
+
+
+
+.userImg {
+    height: calc(1vh + 1vw);
+    width: calc(1vh + 1vw);
+    max-height: 100px;
+    margin-left: 15px;
+    margin-top: 2px;
+    position: absolute;
+    left: 0%;
+    top: 0%;
+}
+
+.btnacciones {
+    border-radius: 10px;
+}
+
+    .btnacciones:hover {
+        background: #0C0761;
+    }
+
+.input-text-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-color: blue;
+    outline: none;
+}
+
+textarea:focus, input:focus {
+    border-color: red;
+}
+
+
+.datatablepersonalizado {
+    width: 99% !important;
+    max-width: auto !important;
+    position: absolute !important;
+    left: 12px !important;
+    font-size: calc(0.3vw, 0.7vh) !important;
+}
+
+
+.direccion-link {
+    text-decoration: none; /* Elimina el subrayado */
+    color: white; /* Cambia el color del texto a tu preferencia */
+}

@@ -1,0 +1,140 @@
+﻿
+@{
+    ViewBag.Title = "Editar";
+}
+
+<link href="~/Estilos/VentasNuevo.css" rel="stylesheet" />
+
+<h1 class="datos">Datos del Cliente</h1>
+
+<div class="divCliente">
+    <label class="lblcliente">Dni:</label>
+    <input type="Text" placeholder="" value="" id="Dni" class="input-nuevo" />
+
+    <label class="lblcliente" id="idcliente" hidden></label>
+    <label class="lblcliente" id="nombrecliente"></label>
+    <label class="lblcliente" id="estadocliente"></label>
+    <label class="lblcliente" id="direccioncliente"></label>
+    <label class="lblcliente" id="telefonocliente"></label>
+</div>
+
+
+<h1 class="datos">Datos de Venta</h1>
+
+<div class="divCliente">
+
+    <label class="lblcliente" hidden>Entrega:</label>
+    <input type="Text" placeholder="0" value="$0" id="Entrega" class="input-nuevo" hidden />
+
+    <label id="lblfechacobro" class="lblcliente" hidden>Fecha Cobro:</label>
+    <input type="date" placeholder="" value="" id="FechaCobro" class="input-nuevo" hidden />
+
+    <label class="lblcliente">Fecha Limite:</label>
+    <input type="date" placeholder="" value="" id="FechaLimite" class="input-nuevo" />
+
+    <br />
+
+    <label class="lblcliente">Valor Cuota:</label>
+    <input type="Text" placeholder="0" value="$0" id="ValorCuota" class="input-nuevo" />
+
+    <label class="lblcliente">Turno</label>
+    <select id="TurnoCobro" name="select" class="input-nuevo select-modal-personalizado mt-3" required>
+        <option value="">Seleccionar</option>
+        <option value="MAÑANA">Mañana</option>
+        <option value="TARDE">Tarde</option>
+    </select>
+
+    <label class="lblcliente">Franja Horaria</label>
+    <select id="FranjaHorariaCobro" name="select" class="input-nuevo select-modal-personalizado mt-3" required>
+        <option value="">Seleccionar</option>
+    </select>
+
+
+    <br />
+    <label class="lblcliente">Observacion:</label>
+    <input type="Text" placeholder="" value="" id="Observacion" class="input-nuevo obs" />
+
+</div>
+
+
+<h1 class="datos">Productos</h1>
+
+<table id="grdProductosVenta" class="table table-striped nowrap table-responsive" style="width: 100%;">
+    <thead>
+        <tr>
+
+            <th>Imagen</th>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio Total</th>
+            @*<th>Acciones</th>*@
+        </tr>
+    </thead>
+</table>
+
+
+
+
+
+<div class="divCliente">
+
+    <div class="divProducto">
+        <label class="" id="">Total: </label>
+        <label class="" id="precioventa">0</label>
+    </div>
+
+    <div class="divProducto">
+        <label class="lblentrega" id="">Total Interes: </label>
+        <label class="" id="Interes">0</label>
+    </div>
+
+    <div class="divProducto">
+        <label class="lblentrega" id="">Restante: </label>
+        <label class="" id="montorestante">0</label>
+        <label class="" id="montorestanteinicial" hidden>0</label>
+    </div>
+
+
+
+    <label class="lblcliente" id="idcliente" hidden></label>
+    <label class="lblcliente" id="idvendedor" hidden></label>
+    <label class="lblcliente" id="nombrecliente"></label>
+    <label class="lblcliente" id="estadocliente"></label>
+    <label class="lblcliente" id="direccioncliente"></label>
+</div>
+
+
+
+
+<div class="vw-75 d-flex float-lg-end mt-2 mb-4">
+    <a class="btn btn-outline-info btnaccion" onclick="cancelar()">Cancelar</a>
+    <a id="btnRestaurar" class="btn btn-warning ms-2 btnaccion" onclick="InformacionVenta()" hidden>Restaurar</a>
+    <a id="btnModificar" class="btn btn-success ms-2 btnaccion" onclick="modificarVenta()" hidden>Modificar</a>
+</div>
+
+
+<div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Imagen Ampliada</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="Imagen Ampliada" />
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section scripts{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"
+            integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"></script>
+    <script src="~/JavaScript/VentasEditar.js?v=1.1"></script>
+}
+
+

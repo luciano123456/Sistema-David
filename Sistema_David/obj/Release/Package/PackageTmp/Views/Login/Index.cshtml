@@ -1,0 +1,49 @@
+﻿
+@{
+    ViewBag.Title = "Login";
+    Layout = null;
+}
+
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+<link href="~/Estilos/Login.css" rel="stylesheet" />
+
+<!DOCTYPE html>
+<html>
+
+
+<body>
+
+    @if (!string.IsNullOrEmpty(ViewBag.MensajeBloqueo))
+    {
+        <div class="alert alert-danger">
+            @ViewBag.MensajeBloqueo
+        </div>
+    }
+
+
+    <div class="Login">
+        <div class="Principal">
+            <img class="imglogo" src="~/Imagenes/Login.jpeg" />
+            <div class="titulo">
+                <h1 class="titulo-font">Login</h1>
+            </div>
+
+        </div>
+        <div>
+            <input id="Usuario" class="input-login" type="text" placeholder="Usuario">
+            <div class="input-container">
+                <input id="Contrasena" class="input-login" type="password" placeholder="Contraseña">
+                <span class="show-password" onclick="togglePassword()">👁️</span>
+            </div>
+            <p class="text-center text-danger datos-error d-none"></p>
+            <button class="boton-login" onclick="Loguear()">Conectarse</button>
+        </div>
+    </div>
+
+</body>
+<script src="~/JavaScript/Utils/Utils.js"></script>
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<script src="~/JavaScript/Login.js"></script>
+
+</html>

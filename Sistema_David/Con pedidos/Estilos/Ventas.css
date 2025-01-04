@@ -1,0 +1,429 @@
+﻿body {
+}
+
+.custom-checkbox {
+    cursor: pointer;
+}
+
+.checkbox.checked {
+    color: green; /* Cambia el color del icono cuando está seleccionado */
+}
+
+.custom-checkbox .checkbox.fa.fa-square {
+    color: white !important;
+}
+
+/* Estilo cuando está seleccionado */
+.custom-checkbox.selected .checkbox.fa.fa-check-square {
+    color: green !important;
+}
+.centered-modal-cobranza {
+    position: fixed !important;
+    top: 8% !important;
+    left: 50% !important;
+    transform: translate(-50%, 0%) !important;
+}
+
+
+.centered-modal-importar {
+    position: fixed !important;
+    top: 30% !important;
+    left: 50% !important;
+    transform: translate(-50%, 0%) !important;
+}
+
+.input-checkbox {
+    border: 10px solid rgba(0, 0, 0, 0.25);
+}
+
+
+.btneditar {
+    margin-right: 0px !important;
+}
+
+
+.estilowpp {
+    max-width: 800px !important;
+    min-width: 800px !important;
+    width: 70% !important;
+}
+
+.divSaldo {
+    width: 50vw !important;
+    margin-block: 10px;
+    margin-top: 15px;
+    border-color: white;
+    border-width: 1px !important;
+    border-style: double;
+    min-width: 350px;
+}
+
+.divTotalSaldo {
+    display: inline-block !important;
+    position: relative !important;
+    margin-left: 10px !important;
+   
+}
+
+.nombre-cliente-verde {
+    color: #DFDB95 !important;
+}
+
+.cliente-link-no-style {
+    text-decoration: none; /* Elimina el subrayado del enlace */
+    color: inherit; /* Usa el color heredado para eliminar el color azul */
+    border: none; /* Elimina el borde del enlace */
+}
+
+.btn-ocultarFiltros {
+    padding-top: 0px !important;
+    width: 60px;
+    height: 25px;
+    color: white;
+    background: red;
+    font-size: 0.8vw;
+    position: absolute;
+    left: 8%;
+    top: 200px;
+    outline: none !important;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none !important;
+
+}
+
+
+span label {
+    background: transparent; /* Fondo transparente */
+}
+
+/* Estilos para el input cuando se muestra como editable */
+span input[type="number"] {
+    font-size: 14px;
+    color: black; /* Color de letra negro */
+    background: transparent; /* Fondo transparente */
+    border: none; /* Elimina el borde predeterminado del input */
+    padding: 0; /* Elimina el espacio interior del input */
+    border-bottom: 2px solid red; /* Borde rojo en la parte inferior */
+    width: 50px; /* Tamaño personalizado */
+    outline: none; /* Elimina el borde de enfoque al hacer clic */
+}
+
+    /* Ocultar las flechas de incremento y decremento en el input de tipo número */
+    span input[type="number"]::-webkit-inner-spin-button,
+    span input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+    }
+
+
+/* Clase para texto en verde */
+.text-green {
+    color: green !important; /* Puedes usar !important si es necesario */
+}
+
+/* Clase para texto en rojo */
+.text-red {
+    color: white !important; /* Puedes usar !important si es necesario */
+}
+
+.text-red-important {
+    color: red !important;
+
+}
+.input-whatssap {
+    display: flex;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    width: 95%;
+    display: block;
+    position: relative;
+    left: 0.8vw;
+    font-size: 30px;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center;
+    font-size: 1.8vw;
+    max-width: 1000px !important;
+    color: black !important;
+}
+.divArchivo {
+    padding: 5px 5px 5px 5px;
+    border: 3px solid;
+    border: solid blue;
+    width: 70%;
+    display: flex;
+    width: 70%;
+    display: block;
+    position: relative;
+    left: 17%;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center;
+    max-width: 500px !important;
+}
+
+
+.divFiltros {
+    padding: 5px 5px 5px 5px;
+    border: 3px solid;
+    border: solid blue;
+    display: flex;
+    width: 85%;
+    display: block;
+    position: relative;
+    left: 8%;
+    margin-top: 20px;
+    color: black;
+     text-align: center;
+}
+
+
+
+.lblNombreInput {
+    display: flex;
+    justify-content: center;
+    text-align: center !important;
+    color: #05056C;
+    font-size: 1vw;
+}
+
+.lblcliente {
+    margin-left: 30px;
+    font-size: 0.8vw;
+}
+
+.lblvendedor {
+    margin-left: 7px;
+    font-size: 0.7vw;
+}
+
+
+label {
+    color: white;
+
+}
+#grdVentas tbody tr:hover {
+    cursor: pointer;
+}
+
+
+.input-nuevo {
+    border: none;
+    border-bottom: 0px;
+    border-bottom: solid blue;
+    width: 50%;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center !important;
+    font-size: 0.6vw;
+    max-width: 150px !important;
+    background: #1B2631 !important;
+    color: white !important;
+}
+
+select {
+    font-size: 0.8vw !important;
+}
+input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 2px;
+    opacity: 0.9;
+    filter: invert(0.9);
+}
+
+
+.input-checkbox {
+    margin: 0px 0px 0px 0px !important;
+}
+
+.obs {
+    max-width: 500px !important;
+    width: 100% !important;
+}
+
+.input-nuevo:active {
+    border: none;
+    border-bottom: solid blue;
+}
+
+.input-nuevo::placeholder {
+    opacity: 1 !important;
+}
+
+.input-nuevo:hover {
+    outline: none !important;
+}
+
+.input-nuevo:focus {
+    outline: none !important;
+    border-bottom: solid red;
+}
+
+.direccion-link {
+    text-decoration: none; /* Elimina el subrayado */
+    color: white; /* Cambia el color del texto a tu preferencia */
+}
+
+
+
+@media (max-width: 1000px) {
+
+
+    .divProducto {
+        font-size: 2.7vw !important;
+    }
+
+    .input-nuevo {
+        width: 100% !important;
+        display: block !important;
+        max-width: 1500px !important;
+        font-size: 4vw !important;
+    }
+
+
+
+    .input-nuevomodif {
+        width: 99%;
+        left: 2%;
+        font-size: 3.7vw !important;
+        text-align: center !important;
+    }
+
+    .lblcliente {
+        font-size: 4vw !important;
+        display: block;
+        margin-left: -16px !important;
+    }
+
+    select {
+        max-width: 1500px !important;
+        font-size: 4vw !important;
+    }
+
+    .btnnuevo {
+        width: 150px !important;
+    }
+
+    .obs {
+        width: 99% !important;
+    }
+
+    .lblNombreInput {
+        font-size: 4vw !important;
+    }
+
+    .btnaccion {
+        width: 150px !important;
+    }
+
+
+    .btnaccionp {
+        width: 400px !important;
+    }
+
+    .dataTables_info {
+        font-size: 2.7vw !important;
+    }
+
+    option {
+        font-size: 2.7vw !important;
+    }
+}
+
+@media (max-width: 600px) {
+
+
+    #grdProductosVenta {
+        font-size: 3vw !important;
+    }
+
+    .dataTables_info {
+        font-size: 2.7vw !important;
+    }
+
+    .divProducto {
+        display: block !important;
+        position: relative !important;
+        margin-left: 0px !important;
+    }
+
+    .input-nuevomodif {
+        font-size: 4vw !important;
+    }
+
+    .lblNombreInput {
+        font-size: 4vw !important;
+    }
+
+    .btnaccion {
+        width: 175px !important;
+    }
+
+    .btnaccionp {
+        width: 450px !important;
+    }
+
+    option {
+        font-size: 3vw !important;
+    }
+}
+
+@media (max-width: 400px) {
+
+    .lblNombreInput {
+        font-size: 6vw !important;
+    }
+
+    .input-nuevomodif {
+        font-size: 6vw !important;
+    }
+
+    .btnaccionp {
+        width: 450px !important;
+    }
+
+    option {
+        font-size: 5vw !important;
+    }
+}
+
+
+@media (max-width: 300px) {
+
+
+    .lblNombreInput {
+        font-size: 8vw !important;
+    }
+
+    .input-nuevomodif {
+        font-size: 8vw !important;
+    }
+
+    .btnaccion {
+        width: 200px !important;
+    }
+
+    .btnaccionp {
+        width: 450px !important;
+    }
+}
+
+@media (max-width: 260px) {
+
+    .divProducto {
+        font-size: 5vw;
+    }
+
+    .btnaccion {
+        width: 200px !important;
+    }
+
+    .btnaccionp {
+        width: 350px !important;
+    }
+}
+

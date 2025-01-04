@@ -1,0 +1,290 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+
+<link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="~/Estilos/Productos.css" rel="stylesheet" />
+<link href="~/Estilos/Ventas.css" rel="stylesheet" />
+
+<link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
+
+
+<body>
+
+    @if (@ViewData["ErrorPermisos"] == null)
+    {
+
+        @*<div class="vw-75 d-inline float-lg-end mt-2">
+                <a class="btn btn-success" id="aplicarFiltros" onclick="ocultarFiltros()">Aplicar</a>
+            </div>*@
+
+
+
+        <div class="row mt-4 table-bordered table-borderless datatablepersonalizado">
+
+
+
+
+
+            <div id="Filtros" class="divFiltros">
+
+
+
+                <label class="lblcliente" id="lblvendedor">Vendedor</label>
+                <select id="Vendedores" name="select" class="input-nuevo">
+                    <option value="" selected>Vendedor</option>
+                </select>
+
+                <label class="lblcliente" id="lblcobrador">Cobrador</label>
+                <select id="CobradorFiltro" name="select" class="input-nuevo">
+                    <option value="" selected>Cobrador</option>
+                </select>
+
+                <label class="lblcliente">Zona</label>
+                <select id="Zonas" name="select" class="input-nuevo">
+                    <option value="" selected>Zona</option>
+                </select>
+
+                <br />
+
+                <label id="lblfechacobrodesde" class="m-lg-2 lblcliente" hidden>Fecha Cobro Desde:</label>
+                <input type="date" placeholder="" value="" id="FechaCobroDesde" class="input-nuevo" hidden />
+
+                <label id="lblfechacobrohasta" class="m-lg-2 lblcliente" hidden>Fecha Cobro Hasta:</label>
+                <input type="date" placeholder="" value="" id="FechaCobroHasta" class="input-nuevo" hidden />
+
+                <label class="m-lg-2 lblcliente" id="lbldninombre">DNI O NOMBRE:</label>
+                <input type="text" placeholder="" value="" id="Dni" class="input-nuevo" />
+
+                <div class="vw-75 d-flex float-lg-end mt-2">
+                    <a class="btn btn-success" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
+                </div>
+            </div>
+
+            <div>
+
+                <div class="divSaldo" id="divSaldo" hidden>
+
+                    <div class="divTotalSaldo">
+                        <label class="" id="totsaldo">0</label>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+
+
+
+            <div class="col-sm-12 mt-2">
+
+
+                <div class="card-body">
+                    <table id="grdCobranzas" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Orden</th>
+                                <th class="text-center">Cliente</th>
+                                <th class="text-center">Zona</th>
+                                <th class="text-center">Direccion</th>
+                                <th class="text-center">Cuota</th>
+                                <th class="text-center">Entrega</th>
+                                <th class="text-center">Restante</th>
+                                <th class="text-center">Cobro</th>
+                                <th class="text-center">V</th>
+
+                                <th class="text-center">Acciones</th>
+                        </thead>
+
+                    </table>
+
+                    <div id="btnAsignarCobrador" class="vw-75 float-lg-end mt-2 mb-4" style="display: none;">
+                        <a class="btn btn-success btnnuevo" onclick="abrirmodalCobrador()">Asignar Cobrador</a>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+    }
+    else
+    {
+        <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
+    }
+
+
+    <div class="modal fade centered-modal-importar" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
+        <div class="modal-dialog estilowpp">
+            <div class="estilowpp modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalWhatssapLabel">Enviar mensaje por whatssap</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <input type="Text" id="idClienteWhatssap" class="input-nuevomodif" hidden />
+                    <input type="Text" placeholder="Escribe el mensaje" id="mensajewsp" class="input-whatssap" />
+
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="enviarWhatssap()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade centered-modal-importar" id="modalCobradores" tabindex="-1" aria-labelledby="modalCobradoresLabel" aria-hidden="true">
+        <div class="modal-dialog estilowpp">
+            <div class="estilowpp modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCobradorespLabel">Asignar Cobrador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <label class="lblNombreInput" hidden>Cobrador</label>
+                <select id="Cobrador" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
+                    <option value="" selected>Seleccione Cobrador</option>
+                </select>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="asignarCobrador()">Asignar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="modal fade centered-modal-cobranza" id="cobranzaModal" tabindex="-1" aria-labelledby="cobranzaModallLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cobranzaModalLabel">Cobranza</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <label class="lblNombreInput text-bg-secondary" id="saldoRestante" hidden></label>
+
+
+                    <input type="Text" id="IdVenta" class="input-nuevomodif" hidden />
+                    <label class="lblNombreInput text-bg-secondary" id="ValordelaCuota"></label>
+
+                    <br />
+                    <label class="lblNombreInput" id="lblImporte"> Importe: </label>
+                    <input type="number" placeholder="0" value="0" id="Entrega" class="input-nuevomodif" />
+                    <label class="lblNombreInput text-danger mb-2 mt-0" id="errorImporteCobranza" hidden></label>
+
+
+                    <label class="lblNombreInput" id="lblValorCuota" hidden> Nuevo Valor de Cuota: </label>
+                    <label class="lblNombreInput text-danger mb-2 mt-0" id="errorValorCuotaCobranza" hidden></label>
+
+
+                    <div class="d-flex align-items-center">
+                        <input type="number" placeholder="Valor de la cuota" value="0" id="ValorCuota" class="input-nuevomodif" />
+                        <input type="number" placeholder="Valor de la cuota" value="0" id="ValorCuotahidden" hidden class="input-nuevomodif" />
+
+                        <input type="checkbox" id="checkValorCuota" class="form-check-input input-checkbox" style="z-index:1; position:relative; top: -10px;" onclick="calcularRestanteCuota()"/>
+
+                        <label class="text-danger ml-2" id="errorValorCuotaCobranza" hidden></label>
+                    </div>
+
+                    <label class="lblNombreInput" id="lblValorInteres"> Intereses: </label>
+                    <input type="number" placeholder="Interes" value="0" id="ValorInteres" class="input-nuevomodif" />
+
+                    <label class="lblNombreInput">Metodo de pago</label>
+                    <select id="MetodoPago" name="select" class="input-nuevomodif select-modal-personalizado mt-3" onchange="habilitarCBU()" required>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="transferencia">Transferencia</option>
+                    </select>
+
+                    <label class="lblNombreInput" id="lblCBU" hidden> CBU: </label>
+                    <input type="number" placeholder="0000003100091738152325" value="0000003100091738152325" id="CBU" class="input-nuevomodif fs-5" hidden disabled />
+
+                    <label class="lblNombreInput" id="lblFechaCobro">Nueva Fecha de Cobro</label>
+                    <input type="date" placeholder="1" value="1" id="FechaCobro" class="input-nuevomodif" />
+
+                    <label class="lblNombreInput" id="lblImporte"> Observacion: </label>
+                    <input type="Text" placeholder="" value="" id="Observacion" class="input-nuevomodif" />
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnCobrar" type="button" class="btn" onclick="hacerCobranza()">Cobrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade centered-modal-importar" id="importanteModal" tabindex="-1" aria-labelledby="importanteModallLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importanteModalLabel">Cobranza Importante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <input type="Text" id="IdVentaImportante" class="input-nuevomodif" hidden />
+
+                    <label class="lblNombreInput" id="lblImporte"> Orden: </label>
+                    <input type="number" placeholder="" value="" id="OrdenCobranza" class="input-nuevomodif" />
+
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="cobranzaImportanteModal()">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+<div class="modal fade centered-modal-importar" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
+    <div class="modal-dialog estilowpp">
+        <div class="estilowpp modal-content ">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalWhatssapLabel">Enviar mensaje por whatssap</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <input type="Text" id="idClienteWhatssap" class="input-nuevomodif" hidden />
+
+                <input type="Text" placeholder="Escribe el mensaje" id="mensajewsp" class="input-whatssap" />
+
+
+            </div>
+            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="enviarWhatssap()">Enviar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+<script src="~/Scripts/xlsx.full.min.js.js"></script>
+<script src="https://cdn.datatables.net/colreorder/1.5.4/js/dataTables.colReorder.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.5.4/css/colReorder.dataTables.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+<script src="~/JavaScript/Utils/Utils.js"></script>
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
+@section scripts{
+    <script src="~/JavaScript/Cobranzas.js"></script>
+}

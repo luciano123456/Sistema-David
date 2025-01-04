@@ -1,0 +1,353 @@
+﻿
+.input-nuevo {
+    border: none;
+    border-bottom: 0px;
+    border-bottom: solid blue;
+    width: 70%;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center !important;
+    font-size: 0.8vw;
+    max-width: 200px !important;
+    background: #1B2631 !important;
+    color: white !important;
+}
+
+
+.centered-modal-nuevo {
+    position: fixed !important;
+    top: 2% !important;
+    left: 50% !important;
+    transform: translate(-50%, 0%) !important;
+}
+
+.centered-modal-importar {
+    position: fixed !important;
+    top: 30% !important;
+    left: 50% !important;
+    transform: translate(-50%, 0%) !important;
+}
+
+.centered-modal-producto {
+    position: fixed !important;
+    top: 20% !important;
+    left: 50% !important;
+    transform: translate(-50%, 0%) !important;
+}
+
+.divCliente {
+    margin-block: 10px;
+    margin-top: 15px;
+    padding: 5px 5px 5px 15px;
+    border-color: white;
+    border-width: 1px;
+    border-style: double;
+}
+
+#Clientes {
+    margin-left: 5px;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    margin-bottom: 20px;
+    color: white !important;
+    text-align: center;
+    font-size: 1.8vw;
+    background: transparent !important;
+}
+
+
+.select-modal-personalizado {
+    font-size: 0.8vw !important;
+    max-width: 150px !important;
+}
+
+.lblNombreInput {
+    display: flex;
+    justify-content: center;
+    text-align: center !important;
+    color: #05056C;
+    font-size: 1.6vw;
+}
+
+.lblcliente {
+    margin-left: 30px;
+    font-size: 0.7vw;
+}
+
+
+.obs {
+    max-width: 500px !important;
+    width: 100% !important;
+}
+
+.input-nuevo:active {
+    border: none;
+    border-bottom: solid blue;
+}
+
+.input-nuevo::placeholder {
+    opacity: 1 !important;
+}
+
+.input-nuevo:hover {
+    outline: none !important;
+}
+
+.input-nuevo:focus {
+    outline: none !important;
+    border-bottom: solid red;
+}
+
+
+.input-nuevomodif {
+    display: flex;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    width: 70%;
+    display: block;
+    position: relative;
+    left: 17%;
+    font-size: 30px;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center;
+    font-size: 1.3vw;
+    max-width: 500px !important;
+    color: black !important;
+}
+
+    .input-nuevomodif:active {
+        border: none;
+        border-bottom: solid blue;
+    }
+
+    .input-nuevomodif::placeholder {
+        color: black;
+        opacity: 1 !important;
+    }
+
+    .input-nuevomodif:hover {
+        outline: none !important;
+    }
+
+    .input-nuevomodif:focus {
+        outline: none !important;
+        border-bottom: solid red;
+    }
+
+
+input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 2px;
+    opacity: 0.9;
+    filter: invert(0.9);
+    position: relative;
+    text-align: center !important;
+}
+
+.btnAccion {
+    width: 2vw;
+    min-width: 25px;
+    background: #2E4053;
+    margin-left: 10px;
+}
+
+
+.btneliminar:hover {
+    cursor: pointer;
+}
+
+.divDatoVenta {
+}
+
+
+
+.btneditar {
+    margin-right: 5px !important;
+}
+
+.btn-accion {
+    background: #2E4053;
+    border-color: blue;
+    color: white;
+    font-size: 0.8vw;
+    height: 3.2vh;
+    width: auto;
+}
+
+    .btn-accion:hover {
+        background: #0D62CF;
+    }
+
+
+.divPrecio {
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+
+.datos {
+    color: white;
+    margin: 30px 30px 30px 0px;
+}
+
+.divProducto {
+    display: inline-block !important;
+    position: relative !important;
+    margin-left: 10px !important;
+}
+
+@media (max-width: 1000px) {
+
+
+.divProducto {
+    font-size: 2.7vw !important;	
+}
+
+.input-nuevo {
+    width: 99% !important;
+    display: block !important;
+    max-width: 1500px !important;
+    font-size: 3.7vw !important;			
+}
+
+ 
+
+    .input-nuevomodif {
+        width: 99%;
+        left: 2%;
+        font-size: 3.7vw !important;
+        text-align: center !important;
+    }
+
+    .lblcliente {
+        font-size: 4vw !important;
+        display: block;
+    }
+
+    select {
+        max-width: 1500px !important;
+        font-size: 3.7vw !important;
+    }
+
+    .btnnuevo {
+        width: 150px !important;
+    }
+
+    .obs {
+        width: 99% !important;
+    }
+
+    .lblNombreInput {
+        font-size: 3.7vw !important;
+    }
+
+    .btnaccion {
+        width: 150px !important;
+    }
+
+ #grdProductosVenta {
+font-size: 3vw !important;
+}
+
+.btnaccionp {
+        width: 400px !important;
+    }
+
+.dataTables_info{
+font-size: 2.7vw !important;
+}
+
+}
+
+@media (max-width: 600px) {
+ 
+
+  #grdProductosVenta {
+font-size: 3vw !important;
+}
+
+.dataTables_info{
+font-size: 2.7vw !important;
+}
+
+    .divProducto {
+        display: block !important;
+        position: relative !important;
+        margin-left: 0px !important;
+    }
+
+    .input-nuevomodif {
+        font-size: 4vw !important;
+    }
+
+    .lblNombreInput {
+        font-size: 4vw !important;
+    }
+
+    .btnaccion {
+        width: 175px !important;
+    }
+
+.btnaccionp {
+        width: 450px !important;
+    }
+
+}
+
+@media (max-width: 400px) {
+
+    .lblNombreInput {
+        font-size: 6vw !important;
+    }
+
+    .input-nuevomodif {
+        font-size: 6vw !important;
+    }
+
+.btnaccionp {
+        width: 450px !important;
+    }
+}
+
+
+@media (max-width: 300px) {
+
+
+    .lblNombreInput {
+        font-size: 8vw !important;
+    }
+
+    .input-nuevomodif {
+        font-size: 8vw !important;
+    }
+
+    .btnaccion {
+        width: 200px !important;
+    }
+
+.btnaccionp {
+        width: 450px !important;
+    }
+   
+}
+
+@media (max-width: 260px) {
+
+    .divProducto {
+        font-size: 5vw;
+    }
+
+    .btnaccion {
+        width: 200px !important;
+    }
+
+.btnaccionp {
+        width: 350px !important;
+    }
+
+}
