@@ -14,3 +14,4 @@ packages/
 # Ignorar las carpetas obj y .vs dentro de Sistema_David
 Sistema_David/obj/
 Sistema_David/.vs/
+Sistema_David/bin/
