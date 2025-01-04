@@ -2243,7 +2243,7 @@ async function cargarTiposDeNegocio() {
 
             $('#TipoNegocio option').remove();
 
-            if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
+            if (userSession.IdRol == 1 || userSession.IdRol == 4) { //ROL ADMINISTRADOR Y comprobantes
                 option = document.createElement("option");
                 option.value = -1;
                 option.text = "Todos";

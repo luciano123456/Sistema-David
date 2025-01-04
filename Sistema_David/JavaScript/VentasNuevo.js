@@ -124,7 +124,7 @@ async function cargarCliente() {
         var url = "/Clientes/GetCliente";
 
         let value = JSON.stringify({
-            Dni: document.getElementById("Dni").value
+            Dni: document.getElementById("Dni").value.trim()
         });
 
         let options = {
@@ -358,7 +358,7 @@ function modificarProducto() {
 
 }
 
-function añadirProducto() {
+async function añadirProducto() {
     let actualizo = false;
     let stock = true;
     var table = $('#grdProductosVenta').DataTable();
@@ -412,7 +412,8 @@ function añadirProducto() {
         alert("Producto agregado con éxito.");
     }
 
-    actualizarPrecio();
+    await actualizarPrecio();
+   
 }
 
 
@@ -505,6 +506,7 @@ const eliminarProducto = async id => {
             table.rows(index).remove().draw();
 
             actualizarPrecio();
+            
 
 
         }
@@ -529,15 +531,19 @@ function actualizarPrecio() {
 
     $("#precioventa").text(formatNumber(total));
 
-    total -= retornarEntero(document.querySelector("#Entrega").value);
+    var entrega = document.querySelector("#Entrega");
 
-    if (total < 0) {
-        $("#montorestante").css("color", "red");
+  
+    total -= retornarEntero(entrega.value);
+
+    if (total <= 0) {
+        $("#montorestante").text(formatNumber(0));
     } else {
-        $("#montorestante").css("color", "white");
+        $("#montorestante").text(formatNumber(total));
     }
 
-    $("#montorestante").text(formatNumber(total));
+    
+    verificarRestante();
 
 }
 const cantidad = document.querySelector("#Cantidad");
@@ -649,25 +655,33 @@ async function validarVenta() {
 
     const Turno = document.querySelector("#TurnoCobro").value;
     const FranjaHoraria = document.querySelector("#FranjaHorariaCobro").value;
+    const restante = document.querySelector("#montorestante").innerText;
+    const fechaCobro = document.getElementById("FechaCobro").value; // Obtiene la fecha de cobro
 
     if ($('#nombrecliente').text() == "") {
         alert("Debes elegir un cliente.");
         return false;
     }
-    if ($('#ValorCuota').val() == "") {
-        alert("Debes elegir un valor cuota.");
-        return false;
-    }
 
-    if (Turno == "") {
-        alert("Debes poner un Turno");
-        return false;
-    }
+    if (retornarEntero(restante) > 0) {
+        if (moment(fechaCobro).isBefore(moment(), 'day')) {
+            alert("La fecha de cobro no puede ser menor a la fecha actual.");
+            return false;
+        }
+        if ($('#ValorCuota').val() == "") {
+            alert("Debes elegir un valor cuota.");
+            return false;
+        }
 
-    if (FranjaHoraria == "")
-    {
-        alert("Debes poner una Franja Horaria");
-        return false;
+        if (Turno == "") {
+            alert("Debes poner un Turno");
+            return false;
+        }
+
+        if (FranjaHoraria == "") {
+            alert("Debes poner una Franja Horaria");
+            return false;
+        }
     }
 
     if ($('#estadocliente').text() == "Estado: Regular") {
@@ -701,18 +715,20 @@ async function registrarVentaAjax() {
 
         actualizarPrecio(); //ACTUALIZAMOS LOS PRECIOS POR UN TEMA DE SEGURIDAD
 
+        let restante = retornarEntero($("#montorestante").text());
+
         let value = JSON.stringify({
             idVendedor: data.Id,
             idCliente: document.getElementById("idcliente").innerText,
             Fecha: moment().format('DD/MM/YYYY'),
             Entrega: retornarEntero(document.getElementById("Entrega").value),
-            Restante: retornarEntero($("#montorestante").text()),
+            Restante: restante,
             FechaCobro: moment(document.getElementById("FechaCobro").value).format('DD/MM/YYYY'),
             FechaLimite: moment(document.getElementById("FechaLimite").value).format('DD/MM/YYYY'),
             Observacion: document.getElementById("Observacion").value,
-            ValorCuota: retornarEntero(document.getElementById("ValorCuota").value),
-            FranjaHoraria: document.getElementById("FranjaHorariaCobro").value,
-            Turno: document.querySelector('#TurnoCobro option:checked').textContent,
+            ValorCuota: restante <= 0 ? 0 : retornarEntero(document.getElementById("ValorCuota").value),
+            FranjaHoraria: restante <= 0 ? null : document.getElementById("FranjaHorariaCobro").value,
+            Turno: restante <= 0 ? null : document.querySelector('#TurnoCobro option:checked').textContent,
             ProductosVenta: productos
         });
 
@@ -967,6 +983,13 @@ valorCuota.addEventListener("input", (e) => {
 const entrega = document.querySelector("#Entrega");
 entrega.addEventListener("change", (e) => {
 
+    const restante = document.querySelector("#montorestante");
+    const total = document.querySelector("#precioventa");
+
+    if (retornarEntero(entrega.value) > retornarEntero(total.innerText)) {
+        entrega.value = formatNumber(retornarEntero(total.innerText));
+    }
+
     if (retornarEntero($("#precioventa").text()) > 0)
         actualizarPrecio();
 
@@ -977,10 +1000,49 @@ entrega.addEventListener("change", (e) => {
         entrega.value = formatNumber(0);
     }
 
+    
+
+    verificarRestante();
+
     $("#lblentrega").text(formatNumber(retornarEntero(entrega.value)));
 
 });
 
+async function verificarRestante() {
+    const restante = document.querySelector("#montorestante");
+    let entrega = document.querySelector("#Entrega");
+    let lblentrega = document.querySelector("#lblentrega");
+    const total = document.querySelector("#precioventa");   
+
+    if (retornarEntero(entrega.value) >= retornarEntero(total.innerText)) {
+        entrega.value = formatNumber(retornarEntero(total.innerText));
+        lblentrega.innerText = formatNumber(retornarEntero(total.innerText));
+    }
+
+    if (retornarEntero(restante.innerText) == 0 && retornarEntero(total.innerText) > 0) {
+        $("#lblfechacobro").attr("hidden", "hidden")
+        $("#FechaCobro").attr("hidden", "hidden")
+        $("#lblfechalimite").attr("hidden", "hidden")
+        $("#FechaLimite").attr("hidden", "hidden")
+        $("#lblvalorcuota").attr("hidden", "hidden")
+        $("#ValorCuota").attr("hidden", "hidden")
+        $("#lblturno").attr("hidden", "hidden")
+        $("#TurnoCobro").attr("hidden", "hidden")
+        $("#lblfranjahoraria").attr("hidden", "hidden")
+        $("#FranjaHorariaCobro").attr("hidden", "hidden")
+    } else {
+        $("#lblfechacobro").removeAttr("hidden", "hidden")
+        $("#FechaCobro").removeAttr("hidden", "hidden")
+        $("#lblfechalimite").removeAttr("hidden", "hidden")
+        $("#FechaLimite").removeAttr("hidden", "hidden")
+        $("#lblvalorcuota").removeAttr("hidden", "hidden")
+        $("#ValorCuota").removeAttr("hidden", "hidden")
+        $("#lblturno").removeAttr("hidden", "hidden")
+        $("#TurnoCobro").removeAttr("hidden", "hidden")
+        $("#lblfranjahoraria").removeAttr("hidden", "hidden")
+        $("#FranjaHorariaCobro").removeAttr("hidden", "hidden")
+    }
+}
 
 const turnoCobroSelect = document.getElementById('TurnoCobro');
 const franjaHorariaSelect = document.getElementById('FranjaHorariaCobro');

@@ -87,7 +87,7 @@ namespace Sistema_David.Controllers
 
             if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 2 || SessionHelper.GetUsuarioSesion().IdRol == 3) //ROL VENDEDOR
             {
-                result = VentasModel.ListaVentas(SessionHelper.GetUsuarioSesion().Id, FechaDesde, FechaHasta, FechaLimiteDesde, FechaLimiteHasta, Finalizadas, TipoNegocio);
+                result = VentasModel.ListaVentas(SessionHelper.GetUsuarioSesion().Id, FechaDesde, FechaHasta, FechaLimiteDesde, FechaLimiteHasta, 2, TipoNegocio);
             }
             else
             {
