@@ -1,0 +1,16 @@
+# Ignorar bin y obj
+bin/
+obj/
+
+# Ignorar paquetes NuGet
+packages/
+
+# Ignorar configuraciones temporales de Visual Studio
+*.user
+*.suo
+*.vspx
+*.vs/
+
+# Ignorar las carpetas obj y .vs dentro de Sistema_David
+Sistema_David/obj/
+Sistema_David/.vs/
