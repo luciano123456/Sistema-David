@@ -168,8 +168,8 @@
 
 /* Estilos para resaltar el elemento seleccionado */
 .selected-user {
-    background-color: white !important; /* Cambia el color de fondo del elemento seleccionado */
-    color: black !important; /* Cambia el color del texto del elemento seleccionado */
+    background-color: #065f8c !important; /* Cambia el color de fondo del elemento seleccionado */
+    color: white !important; /* Cambia el color del texto del elemento seleccionado */
 }
 
 .divCliente {
