@@ -170,7 +170,7 @@ namespace Sistema_David.Models
                                     INNER JOIN Ventas V ON IV.IdVenta = V.Id
                                     INNER JOIN CLIENTES C ON V.idCliente = C.Id
                                 WHERE 
-                                    (IV.IdVendedor = @idVendedor OR @idVendedor = -99)
+                                    (IV.IdVendedor = @idVendedor OR @idVendedor = -1)
                                     AND (IV.IdTipoNegocio = @tiponegocio or @tiponegocio = -1)
                                     AND ((@ventas = 1 AND IV.Descripcion LIKE '%venta%') OR (@cobranzas = 1 AND IV.Descripcion LIKE '%cobranza%' or IV.Descripcion LIKE '%interes%'))
                                     AND IV.Fecha >= @fechadesde AND IV.Fecha <= @fechahasta
