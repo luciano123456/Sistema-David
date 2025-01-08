@@ -8,7 +8,7 @@ $(document).ready(function () {
     userSession = JSON.parse(sessionStorage.getItem('usuario'));
 
 
-    
+
     if (userSession.IdRol == 1) {
         idUserStock = localStorage.getItem("idUserStock");
     } else {
@@ -166,7 +166,7 @@ const editarStock = async id => {
 
             $("#Productos").prop('disabled', true);
 
-            
+
 
             $("#precioTotal").text(formatNumber(result.data.Total));
 
@@ -502,6 +502,7 @@ async function cargarNombre() {
 
             let nombrecompleto = result.Nombre + " " + result.Apellido;
             $("#lblnombreusuario").text(nombrecompleto);
+            $("#lbltelefono").text(result.Telefono);
 
         } else {
             alert("Ha ocurrido un error en los datos");
@@ -560,4 +561,13 @@ function openModal(imageSrc) {
     document.getElementById('modalImage').src = imageSrc;
     // Muestra el modal
     $('#imageModal').modal('show');
+}
+
+
+async function enviarWhatssap() {
+
+    var telefono = document.getElementById("lbltelefono").innerText;
+
+    const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${telefono}&text=''`;
+    window.open(urlwsp, '_blank');
 }

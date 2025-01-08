@@ -658,13 +658,14 @@ a:hover {
     width: calc(1vh + 1vw);
     color: #25D366; /* Verde para WhatsApp */
     margin-left: -5px;
+
 }
 
 .btn-call i {
     height: calc(1vh + 1vw);
     width: calc(1vh + 1vw);
     color: #FF0000; /* Rojo para llamada */
-    margin-left: -25px !important;
+    margin-left: -35px !important;
 }
 
 .btn-wsp, .btn-call {
