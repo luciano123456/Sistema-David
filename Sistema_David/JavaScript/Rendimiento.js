@@ -90,7 +90,7 @@ async function configurarDataDiario() {
     }
 
     await cargarUsuarios()
-    configurarDataTable(-99, 1, 1, FechaDesde, FechaHasta, tiponegocio);
+    configurarDataTable(-1, 1, 1, FechaDesde, FechaHasta, tiponegocio);
     configurarDataTableClientesAusentes(FechaDesde, FechaHasta);
     cargarVentas(-1);
 
@@ -126,6 +126,19 @@ function configurarDataMensual() {
     $("#btnRendMensual").css("background", "#1B2631");
     $("#btnRendDiario").css("background", "#2E4053");
 }
+
+
+
+
+function getRol(idRol) {
+    switch (idRol) {
+        case 1: return "A";
+        case 2: return "V";
+        case 3: return "C";
+        default: return "";
+    }
+}
+
 
 async function cargarUsuarios() {
     try {
@@ -169,8 +182,33 @@ async function cargarUsuarios() {
                 listaUsuarios.appendChild(listItem);
             });
 
-            // Agregar el item "GENERAL"
-            listaUsuarios.appendChild(createGeneralItem());
+            // Crear y agregar el item "GENERAL"
+            const generalUsuario = {
+                Id: -1,  // ID especial para "GENERAL"
+                Nombre: "GENERAL",
+                IdRol: ""  // Puedes dejarlo vacío o asignarle un valor especial si lo necesitas
+            };
+
+            // Usamos createUsuarioNombre con el objeto "generalUsuario"
+            const generalItem = document.createElement("li");
+            generalItem.className = "list-group-item d-flex justify-content-between align-items-center selected-user";
+            generalItem.setAttribute("data-id", generalUsuario.Id);
+
+            usuarioSeleccionadoId = generalUsuario.Id;
+
+            // Nombre del usuario "GENERAL"
+            const nombreGeneral = createUsuarioNombre(generalUsuario, "");
+
+            // Div de acciones para el ítem "GENERAL"
+            const accionesDivGeneral = document.createElement("div");
+            accionesDivGeneral.appendChild(createIconoVentasGeneral());
+            accionesDivGeneral.appendChild(createIconoCobranzasGeneral());
+
+            generalItem.appendChild(nombreGeneral);
+            generalItem.appendChild(accionesDivGeneral);
+
+            // Añadir a la lista
+            listaUsuarios.appendChild(generalItem);
         }
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.');
@@ -178,14 +216,31 @@ async function cargarUsuarios() {
     }
 }
 
-function getRol(idRol) {
-    switch (idRol) {
-        case 1: return "A";
-        case 2: return "V";
-        case 3: return "C";
-        default: return "";
-    }
+// Función para crear el ícono de ventas para el usuario "GENERAL"
+function createIconoVentasGeneral() {
+    const iconVentas = document.createElement("i");
+    iconVentas.className = "fa fa-check text-success mx-2";  // Color verde por defecto
+    iconVentas.setAttribute("title", "Ventas");
+    iconVentas.style.cursor = "pointer";
+    iconVentas.addEventListener("click", function () {
+        alternarColorIcono(iconVentas);  // Se agrega la funcionalidad de alternar color
+    });
+    return iconVentas;
 }
+
+// Función para crear el ícono de cobranzas para el usuario "GENERAL"
+function createIconoCobranzasGeneral() {
+    const iconCobranzas = document.createElement("i");
+    iconCobranzas.className = "fa fa-check text-success";  // Color verde por defecto
+    iconCobranzas.setAttribute("title", "Cobranzas");
+    iconCobranzas.style.cursor = "pointer";
+    iconCobranzas.addEventListener("click", function () {
+        alternarColorIcono(iconCobranzas);  // Se agrega la funcionalidad de alternar color
+    });
+    return iconCobranzas;
+}
+
+
 
 function createUsuarioNombre(usuario, rol) {
     const nombreUsuario = document.createElement("span");
@@ -239,41 +294,8 @@ function createIconoCobranzas(usuario) {
     return iconCobranzas;
 }
 
-function createGeneralItem() {
-    const generalItem = document.createElement("li");
-    generalItem.className = "list-group-item d-flex justify-content-between align-items-center selected-user";
-    generalItem.textContent = "GENERAL";
-    generalItem.setAttribute("data-id", -99);
 
-    const generalAccionesDiv = document.createElement("div");
-    generalAccionesDiv.appendChild(createIconoVentasGeneral());
-    generalAccionesDiv.appendChild(createIconoCobranzasGeneral());
 
-    generalItem.appendChild(generalAccionesDiv);
-    return generalItem;
-}
-
-function createIconoVentasGeneral() {
-    const iconVentas = document.createElement("i");
-    iconVentas.className = "fa fa-check text-success mx-2";
-    iconVentas.setAttribute("title", "Ventas");
-    iconVentas.style.cursor = "pointer";
-    iconVentas.addEventListener("click", function () {
-        alternarColorIcono(iconVentas);
-    });
-    return iconVentas;
-}
-
-function createIconoCobranzasGeneral() {
-    const iconCobranzas = document.createElement("i");
-    iconCobranzas.className = "fa fa-check text-success";
-    iconCobranzas.setAttribute("title", "Cobranzas");
-    iconCobranzas.style.cursor = "pointer";
-    iconCobranzas.addEventListener("click", function () {
-        alternarColorIcono(iconCobranzas);
-    });
-    return iconCobranzas;
-}
 
 
 
@@ -400,7 +422,6 @@ function seleccionarRendimiento(elemento, idVendedor) {
         document.getElementById("FechaHasta").value
     );
 
-    if (idVendedor == -99) idVendedor = -1;
 
     usuarioSeleccionadoId = idVendedor;
 
@@ -499,7 +520,7 @@ function aplicarFiltros() {
         configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta, tipoNegocio);
 
     } else {
-        configurarDataTable(-99, 1, 1, fechaDesde, fechaHasta, -1);
+        configurarDataTable(-1, 1, 1, fechaDesde, fechaHasta, -1);
     }
 
     //$('#grdRendimientoGeneral').DataTable().clear().draw();
