@@ -27,6 +27,14 @@
 }
 
 
+
+.btn-wspstock i {
+    height: calc(1vh + 1vw);
+    width: calc(1vh + 1vw);
+    color: #25D366; /* Verde para WhatsApp */
+    margin-left: -5px;
+}
+
 .select2-results__option {
     color: red;
 }
@@ -176,4 +184,10 @@
     margin: 15px auto; /* Center the card */
     border: none;
     position: initial;
+}
+
+@media (max-width: 1700px) {
+    .btn-wspstock {
+        margin-top: -15px;
+    }
 }
