@@ -83,7 +83,7 @@ namespace Sistema_David.Models.Modelo
 
 
 
-        public static List<Venta> ListaVentas(int idVendedor, DateTime FechaDesde, DateTime FechaHasta, DateTime FechaLimiteDesde, DateTime FechaLimiteHasta, int Finalizadas, int TipoNegocio)
+        public static List<Venta> ListaVentas(int idVendedor, DateTime FechaDesde, DateTime FechaHasta, int Finalizadas, int TipoNegocio)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -93,7 +93,6 @@ namespace Sistema_David.Models.Modelo
                             join t in db.TipoNegocio on v.IdTipoNegocio equals t.Id
                             where (v.idVendedor == idVendedor || idVendedor == -1)
                                && (v.Fecha >= FechaDesde && v.Fecha <= FechaHasta)
-                               && (v.FechaLimite >= FechaLimiteDesde && v.FechaLimite <= FechaLimiteHasta)
                                && ((Finalizadas == 1 && v.Restante == 0) || (Finalizadas == 0 && v.Restante > 0 || Finalizadas == 2 && v.Restante >= 0))
                                && ((idVendedor == -1 && v.Estado == string.Empty || v.Estado == null) || idVendedor > 0)
                                && ((TipoNegocio == -1 || v.IdTipoNegocio == TipoNegocio))

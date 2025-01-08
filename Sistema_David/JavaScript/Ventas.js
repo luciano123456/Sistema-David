@@ -26,7 +26,7 @@ $(document).ready(async function () {
     await cargarUsuarios();
 
 
-    var FechaDesde, FechaHasta, FechaLimiteDesde, FechaLimiteHasta, VentaFinalizada;
+    var FechaDesde, FechaHasta, VentaFinalizada;
 
 
     if (userSession.IdRol == 1) { //ROL ADMIN
@@ -42,17 +42,6 @@ $(document).ready(async function () {
             FechaHasta = localStorage.getItem("FechaHastaVenta");
         }
 
-        if (localStorage.getItem("FechaLimiteDesdeVenta") == null) {
-            FechaLimiteDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
-        } else {
-            FechaLimiteDesde = localStorage.getItem("FechaLimiteDesdeVenta");
-        }
-
-        if (localStorage.getItem("FechaLimiteHastaVenta") == null) {
-            FechaLimiteHasta = moment().add(60, 'days').format('YYYY-MM-DD');
-        } else {
-            FechaLimiteHasta = localStorage.getItem("FechaLimiteHastaVenta");
-        }
 
         if (localStorage.getItem("VentaFinalizada") == null) {
             VentaFinalizada = 1;
@@ -63,8 +52,6 @@ $(document).ready(async function () {
         FechaDesde = moment().format('YYYY-MM-DD');
         FechaHasta = moment().format('YYYY-MM-DD');
         VentaFinalizada = 0;
-        FechaLimiteDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
-        FechaLimiteHasta = moment().add(60, 'days').format('YYYY-MM-DD');
     }
 
 
@@ -72,10 +59,7 @@ $(document).ready(async function () {
     document.getElementById("FechaHasta").value = FechaHasta;
 
 
-    document.getElementById("FechaLimiteDesde").value = FechaLimiteDesde;
-    document.getElementById("FechaLimiteHasta").value = FechaLimiteHasta;
-
-    configurarDataTable(-1, FechaDesde, FechaHasta, FechaLimiteDesde, FechaLimiteHasta, VentaFinalizada, -1);
+    configurarDataTable(-1, FechaDesde, FechaHasta, VentaFinalizada, -1);
 
     if (userSession.IdRol == 1) listarVentasPendientes();
 
@@ -131,20 +115,18 @@ function aplicarFiltros() {
         gridVentas.destroy();
     }
 
-    configurarDataTable(idVendedor, document.getElementById("FechaDesde").value, document.getElementById("FechaHasta").value, document.getElementById("FechaLimiteDesde").value, document.getElementById("FechaLimiteHasta").value, document.getElementById("VentaFinalizada").checked ? 1 : 0, tipoNegocio);
+    configurarDataTable(idVendedor, document.getElementById("FechaDesde").value, document.getElementById("FechaHasta").value, document.getElementById("VentaFinalizada").checked ? 1 : 0, tipoNegocio);
 
     localStorage.setItem("FechaDesdeVenta", document.getElementById("FechaDesde").value);
     localStorage.setItem("FechaHastaVenta", document.getElementById("FechaHasta").value);
-    localStorage.setItem("FechaLimiteDesdeVenta", document.getElementById("FechaLimiteDesde").value);
-    localStorage.setItem("FechaLimiteHastaVenta", document.getElementById("FechaLimiteHasta").value);
     localStorage.setItem("VentaFinalizada", document.getElementById("VentaFinalizada").checked ? 1 : 0);
 
 }
 
-const configurarDataTable = async (idVendedor, fechaDesde, fechaHasta, fechaLimiteDesde, fechaLimiteHasta, Finalizadas, tipoNegocio) => {
+const configurarDataTable = async (idVendedor, fechaDesde, fechaHasta, Finalizadas, tipoNegocio) => {
     gridVentas = $('#grdVentas').DataTable({
         "ajax": {
-            "url": `/Ventas/Listar?idVendedor=${idVendedor}&FechaDesde=${fechaDesde}&FechaHasta=${fechaHasta}&FechaLimiteDesde=${fechaLimiteDesde}&FechaLimiteHasta=${fechaLimiteHasta}&Finalizadas=${Finalizadas}&tipoNegocio=${tipoNegocio}`,
+            "url": `/Ventas/Listar?idVendedor=${idVendedor}&FechaDesde=${fechaDesde}&FechaHasta=${fechaHasta}&Finalizadas=${Finalizadas}&tipoNegocio=${tipoNegocio}`,
             "type": "GET",
             "dataType": "json"
         },
