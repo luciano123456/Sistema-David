@@ -22,7 +22,7 @@ $(document).ready(function () {
     cargarEstados();
 
 
-    var FechaEntrega, FechaHasta, FechaLimiteDesde, FechaLimiteHasta, VentaFinalizada;
+    var FechaEntrega, FechaHasta, VentaFinalizada;
 
 
     if (userSession.IdRol == 1) { //ROL ADMIN

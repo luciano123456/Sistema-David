@@ -81,17 +81,17 @@ namespace Sistema_David.Controllers
 
 
 
-        public ActionResult Listar(int idVendedor, DateTime FechaDesde, DateTime FechaHasta, DateTime FechaLimiteDesde, DateTime FechaLimiteHasta, int Finalizadas, int TipoNegocio)
+        public ActionResult Listar(int idVendedor, DateTime FechaDesde, DateTime FechaHasta, int Finalizadas, int TipoNegocio)
         {
             List<Venta> result;
 
             if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 2 || SessionHelper.GetUsuarioSesion().IdRol == 3) //ROL VENDEDOR
             {
-                result = VentasModel.ListaVentas(SessionHelper.GetUsuarioSesion().Id, FechaDesde, FechaHasta, FechaLimiteDesde, FechaLimiteHasta, 2, TipoNegocio);
+                result = VentasModel.ListaVentas(SessionHelper.GetUsuarioSesion().Id, FechaDesde, FechaHasta, 2, TipoNegocio);
             }
             else
             {
-                result = VentasModel.ListaVentas(idVendedor, FechaDesde, FechaHasta, FechaLimiteDesde, FechaLimiteHasta, Finalizadas, TipoNegocio);
+                result = VentasModel.ListaVentas(idVendedor, FechaDesde, FechaHasta, Finalizadas, TipoNegocio);
             }
 
 
