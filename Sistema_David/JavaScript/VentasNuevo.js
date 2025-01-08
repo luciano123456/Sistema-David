@@ -199,6 +199,38 @@ async function cargarCliente() {
 }
 
 
+async function TotalVentasCliente(idCliente) {
+    try {
+
+
+
+        var url = "/Ventas/RestanteVentasCliente";
+
+        let value = JSON.stringify({
+            idcliente: idCliente
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result.data != null) {
+            return(result.totalRestante)
+        }
+    } catch (error) {
+        //$('.datos-error').text('Ha ocurrido un error.')
+        //$('.datos-error').removeClass('d-none')
+    }
+}
+
+
 $("#Dni").blur(function () {
     if (document.getElementById("Dni").value != "") {
         cargarCliente();
@@ -657,7 +689,8 @@ async function validarVenta() {
     const FranjaHoraria = document.querySelector("#FranjaHorariaCobro").value;
     const restante = document.querySelector("#montorestante").innerText;
     const fechaCobro = document.getElementById("FechaCobro").value; // Obtiene la fecha de cobro
-
+    const idCliente = document.getElementById("idcliente").innerText; // Obtiene la fecha de cobro
+ 
     if ($('#nombrecliente').text() == "") {
         alert("Debes elegir un cliente.");
         return false;
@@ -666,6 +699,10 @@ async function validarVenta() {
     if (retornarEntero(restante) > 0) {
         if (moment(fechaCobro).isBefore(moment(), 'day')) {
             alert("La fecha de cobro no puede ser menor a la fecha actual.");
+            return false;
+        }
+        if (userSession.IdRol != 1 && moment(fechaCobro).isAfter(moment().add(30, 'days'), 'day')) {
+            alert("La fecha de cobro no puede ser mayor a 30 días desde la fecha actual. Avise a un Administrador");
             return false;
         }
         if ($('#ValorCuota').val() == "") {
@@ -692,7 +729,9 @@ async function validarVenta() {
 
         var precioVenta = retornarEntero($('#precioventa').text());
 
-        if (precioVenta > result) {
+        var restanteTotalCliente = await TotalVentasCliente(idCliente)
+
+        if (parseInt(restanteTotalCliente) > parseInt(result)) {
             alert("El limite maximo de venta para un cliente regular es de $" + result + " pesos.");
             return false;
         }

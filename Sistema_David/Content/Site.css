@@ -325,6 +325,15 @@ select {
 
 
 
+@media screen and (min-width: 800px) {
+
+    .cerrar-sesion {
+        margin-top: -20px !important;
+    }
+}
+
+
+
 
 @media screen and (max-width: 540px) {
     .img-seccion {
@@ -677,4 +686,5 @@ a:hover {
 .cerrar-sesion {
     cursor: pointer;
     color: red; /* Color del texto para "Cerrar Sesión" */
+   
 }

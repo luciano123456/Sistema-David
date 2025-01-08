@@ -217,6 +217,36 @@ namespace Sistema_David.Models.Modelo
         }
 
 
+
+
+        public static (List<Venta> Ventas, decimal TotalRestante) RestanteVentasCliente(int idCliente)
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                // Obtenemos la lista de ventas del cliente
+                var ventas = (from v in db.Ventas
+                              join c in db.Clientes on v.idCliente equals c.Id
+                              join u in db.Usuarios on v.idVendedor equals u.Id
+                              join t in db.TipoNegocio on v.IdTipoNegocio equals t.Id
+                              where v.idCliente == idCliente
+                              select new Venta
+                              {
+                                  Id = v.Id,
+                                  idCliente = v.idCliente,
+                                  Fecha = v.Fecha,
+                                  Entrega = v.Entrega,
+                                  Restante = v.Restante,
+                              }).ToList();
+
+                // Calculamos la suma de los valores restantes
+                decimal totalRestante = ventas.Sum(v => v.Restante ?? 0); // Manejo de nulos si Restante puede ser null
+
+                // Devolvemos la lista de ventas y la suma de los restantes
+                return (ventas, totalRestante);
+            }
+        }
+
+
         public static List<Venta> ListaVentasCliente(int idCliente)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
@@ -258,6 +288,7 @@ namespace Sistema_David.Models.Modelo
                 return result;
             }
         }
+
 
 
 
