@@ -108,6 +108,19 @@ namespace Sistema_David.Controllers
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
+        public ActionResult RestanteVentasCliente(int idCliente)
+        {
+            // Obtenemos la lista de ventas y el total restante
+            var (ventas, totalRestante) = VentasModel.RestanteVentasCliente(idCliente);
+
+            // Retornamos ambos valores como un objeto JSON
+            return Json(new
+            {
+                data = ventas,
+                totalRestante = totalRestante
+            }, JsonRequestBehavior.AllowGet);
+        }
+
         public JsonResult EstadoHome(int id)
         {
             bool result = VentasModel.EstadoHome(id);

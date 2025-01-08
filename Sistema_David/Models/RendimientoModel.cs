@@ -129,14 +129,20 @@ namespace Sistema_David.Models
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
+                // Obtenemos la fecha actual (solo la parte de la fecha sin la hora)
+                DateTime fechaActual = DateTime.Today;
+
                 // Contamos el número de registros que coinciden con las condiciones
                 int cantidadClientesAusentes = db.InformacionVentas
-                    .Where(iv => iv.ClienteAusente == 1 && iv.whatssap == 0)
+                    .Where(iv => iv.ClienteAusente == 1
+                                 && iv.whatssap == 0
+                                 && DbFunctions.TruncateTime(iv.Fecha) == fechaActual)
                     .Count();
 
                 return cantidadClientesAusentes;
             }
         }
+
 
 
 
