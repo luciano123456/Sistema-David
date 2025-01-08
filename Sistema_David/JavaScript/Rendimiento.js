@@ -77,6 +77,8 @@ async function configurarDataDiario() {
     document.getElementById("FechaHasta").value = FechaHasta;
 
     var tiponegocio = document.getElementById("TipoNegocio").value;
+    var metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
+
 
     const fechaActual = new Date();
 
@@ -90,7 +92,7 @@ async function configurarDataDiario() {
     }
 
     await cargarUsuarios()
-    configurarDataTable(-1, 1, 1, FechaDesde, FechaHasta, tiponegocio);
+    configurarDataTable(-1, 1, 1, FechaDesde, FechaHasta, tiponegocio, metodoPago);
     configurarDataTableClientesAusentes(FechaDesde, FechaHasta);
     cargarVentas(-1);
 
@@ -328,6 +330,7 @@ function alternarColorIcono(icono) {
     const estadoVentas = iconoVentas && iconoVentas.classList.contains("text-success") ? 1 : 0;
     const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
 
+    const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
     // Llamar a la función para actualizar la DataTable con los nuevos estados
     configurarDataTable(
         dataId,
@@ -335,7 +338,8 @@ function alternarColorIcono(icono) {
         estadoCobranzas,
         document.getElementById("FechaDesde").value,
         document.getElementById("FechaHasta").value,
-        document.getElementById("TipoNegocio").value
+        document.getElementById("TipoNegocio").value,
+        metodoPago
     );
 }
 
@@ -404,6 +408,7 @@ function seleccionarRendimiento(elemento, idVendedor) {
     // Obtener el estado actual de los íconos de "Ventas" y "Cobranzas"
     const estadoVentas = iconoVentas && iconoVentas.classList.contains("text-success") ? 1 : 0;
     const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
+    const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
 
     // Limpiar y reconfigurar la DataTable
     $('#grdRendimiento').DataTable().clear().draw();
@@ -414,7 +419,8 @@ function seleccionarRendimiento(elemento, idVendedor) {
         estadoCobranzas,
         document.getElementById("FechaDesde").value,
         document.getElementById("FechaHasta").value,
-        document.getElementById("TipoNegocio").value
+        document.getElementById("TipoNegocio").value,
+        metodoPago
     );
 
     obtenerDatosRendimiento(
@@ -475,6 +481,7 @@ function aplicarFiltros() {
     const fechaDesde = document.getElementById("FechaDesde").value;
     const fechaHasta = document.getElementById("FechaHasta").value;
     const tipoNegocio = document.getElementById("TipoNegocio").value;
+    const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
 
 
 
@@ -517,10 +524,10 @@ function aplicarFiltros() {
         localStorage.setItem("FechaHastaRendimiento", document.getElementById("FechaHasta").value);
 
         $('#grdRendimiento').DataTable().clear().draw();
-        configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta, tipoNegocio);
+        configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta, tipoNegocio, metodoPago);
 
     } else {
-        configurarDataTable(-1, 1, 1, fechaDesde, fechaHasta, -1);
+        configurarDataTable(-1, 1, 1, fechaDesde, fechaHasta, -1, "Todos");
     }
 
     //$('#grdRendimientoGeneral').DataTable().clear().draw();
@@ -532,7 +539,7 @@ function aplicarFiltros() {
 
 
 
-const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio) => {
+const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio, metodoPago) => {
 
     let totVenta = 0;
     let totCobro = 0;
@@ -547,7 +554,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
         // Si la tabla no existe, crearla
         const table = $('#grdRendimiento').DataTable({
             "ajax": {
-                "url": `/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}`,
+                "url": `/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}`,
                 "type": "GET",
                 "dataType": "json"
             },
@@ -678,7 +685,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
        
 
-        table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}`).load(function () {
+        table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}`).load(function () {
             // Recorrer los datos de la tabla después de que se hayan cargado
             table.data().each(async function (rowData) {
 

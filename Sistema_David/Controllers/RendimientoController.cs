@@ -42,11 +42,11 @@ namespace Sistema_David.Controllers
 
 
         [HttpGet]
-        public ActionResult MostrarRendimiento(int id, int ventas, int cobranzas,DateTime fechadesde, DateTime fechahasta, int tiponegocio)
+        public ActionResult MostrarRendimiento(int id, int ventas, int cobranzas,DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago)
         {
 
 
-            var result = RendimientosModel.MostrarRendimiento(id, ventas, cobranzas, fechadesde, fechahasta, tiponegocio);
+            var result = RendimientosModel.MostrarRendimiento(id, ventas, cobranzas, fechadesde, fechahasta, tiponegocio, metodoPago);
 
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }

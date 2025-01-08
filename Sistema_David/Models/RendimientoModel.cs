@@ -146,7 +146,7 @@ namespace Sistema_David.Models
 
 
 
-        public static List<Rendimiento> MostrarRendimiento(int idVendedor, int ventas, int cobranzas, DateTime fechadesde, DateTime fechahasta, int tiponegocio)
+        public static List<Rendimiento> MostrarRendimiento(int idVendedor, int ventas, int cobranzas, DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -172,6 +172,7 @@ namespace Sistema_David.Models
                                 WHERE 
                                     (IV.IdVendedor = @idVendedor OR @idVendedor = -1)
                                     AND (IV.IdTipoNegocio = @tiponegocio or @tiponegocio = -1)
+                                    AND (IV.MetodoPago = @metodoPago or @metodoPago = 'Todos')
                                     AND ((@ventas = 1 AND IV.Descripcion LIKE '%venta%') OR (@cobranzas = 1 AND IV.Descripcion LIKE '%cobranza%' or IV.Descripcion LIKE '%interes%'))
                                     AND IV.Fecha >= @fechadesde AND IV.Fecha <= @fechahasta
                                 GROUP BY 
@@ -201,7 +202,10 @@ namespace Sistema_David.Models
                 var tiponegocioParam = new SqlParameter("@tiponegocio", SqlDbType.Int);
                 tiponegocioParam.Value = tiponegocio;
 
-                var resultList = db.Database.SqlQuery<Rendimiento>(query, idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam).ToList();
+                var metodoPagoParam = new SqlParameter("@metodoPago", SqlDbType.VarChar);
+                metodoPagoParam.Value = metodoPago;
+
+                var resultList = db.Database.SqlQuery<Rendimiento>(query, idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam, metodoPagoParam).ToList();
 
                 return resultList;
             }
