@@ -20,7 +20,7 @@ $(document).ready(async function () {
 
     await cargarTiposDeNegocio();
     configurarDataDiario();
-   
+
 
 
     $("#btnRendimiento").css("background", "#2E4053");
@@ -129,13 +129,12 @@ function configurarDataMensual() {
 
 async function cargarUsuarios() {
     try {
-        var url = "/Usuarios/ListarActivos";
-
-        let value = JSON.stringify({
+        const url = "/Usuarios/ListarActivos";
+        const value = JSON.stringify({
             tipoNegocio: document.getElementById("TipoNegocio").value
         });
 
-        let options = {
+        const options = {
             type: "POST",
             url: url,
             async: true,
@@ -144,119 +143,268 @@ async function cargarUsuarios() {
             dataType: "json"
         };
 
-        let result = await MakeAjax(options);
+        const result = await MakeAjax(options);
 
-        if (result != null) {
+        if (result && result.data) {
             listaUsuarios = document.getElementById("listaUsuarios");
-            listaUsuarios.innerHTML = ''; // Limpiar la lista
-
-            var rol = "";
-
+            [...listaUsuarios.querySelectorAll("li:not(:first-child)")].forEach(item => item.remove());
 
             result.data.forEach(usuario => {
-
-                rol = "";
-
-                if (usuario.IdRol == 1) {
-                    rol = "A"
-                } else if (usuario.IdRol == 2) {
-                    rol = "V"
-                } else if (usuario.IdRol == 3) {
-                    rol = "C"
-                
-                }
-
+                const rol = getRol(usuario.IdRol);
                 const listItem = document.createElement("li");
-                listItem.className = "list-group-item d-flex justify-content-between align-items-center"; // Usar las clases de Bootstrap
-                listItem.textContent = usuario.Nombre + (rol ? ` (${rol})` : "");
+                listItem.className = "list-group-item d-flex justify-content-between align-items-center";
                 listItem.setAttribute("data-id", usuario.Id);
-                listItem.setAttribute("onclick", `seleccionarRendimiento(this,${usuario.Id})`);
 
+                // Nombre del usuario
+                const nombreUsuario = createUsuarioNombre(usuario, rol);
+                listItem.appendChild(nombreUsuario);
 
-
-                // Crear un div para los botones de acción
+                // Div de acciones
                 const accionesDiv = document.createElement("div");
+                accionesDiv.appendChild(createBloqueoButton(usuario));
+                accionesDiv.appendChild(createIconoVentas(usuario));
+                accionesDiv.appendChild(createIconoCobranzas(usuario));
 
-                // Crear el botón de bloqueo/desbloqueo
-                var color = usuario.BloqueoSistema ? "danger" : "success";
-                var titulo = usuario.BloqueoSistema ? "Desbloquear" : "Bloquear";
-                var estadoInverso = usuario.BloqueoSistema ? 0 : 1;
-
-                const botonBloqueo = document.createElement("button");
-                botonBloqueo.className = `btn btn-sm btn-${color} btnacciones`;
-                botonBloqueo.setAttribute("type", "button");
-                botonBloqueo.setAttribute("title", titulo);
-                botonBloqueo.innerHTML = `<i class="fa fa-power-off fa-lg text-white" aria-hidden="true"></i>`;
-                botonBloqueo.addEventListener("click", function () {
-                    bloqueoSistema(usuario.Id, estadoInverso);
-                });
-                accionesDiv.appendChild(botonBloqueo);
-
-                // Crear el icono de "Ventas" con tooltip, tildes verdes y cursor de botón
-                const iconVentas = document.createElement("i");
-                iconVentas.className = "fa fa-check text-danger mx-2";
-                iconVentas.setAttribute("title", "Ventas"); // Agregar el tooltip
-                iconVentas.style.cursor = "pointer"; // Agregar cursor de puntero
-                iconVentas.addEventListener("click", function () {
-                    alternarColorIcono(iconVentas);
-                });
-                accionesDiv.appendChild(iconVentas);
-
-                // Crear el icono de "Cobranzas" con tooltip, tildes verdes y cursor de botón
-                const iconCobranzas = document.createElement("i");
-                iconCobranzas.className = "fa fa-check text-danger";
-                iconCobranzas.setAttribute("title", "Cobranzas"); // Agregar el tooltip
-                iconCobranzas.style.cursor = "pointer"; // Agregar cursor de puntero
-                iconCobranzas.addEventListener("click", function () {
-                    alternarColorIcono(iconCobranzas);
-                });
-                accionesDiv.appendChild(iconCobranzas);
-
-                // Agregar el div de acciones al listItem
                 listItem.appendChild(accionesDiv);
-
                 listaUsuarios.appendChild(listItem);
             });
 
-            // Agregar el elemento "GENERAL" con iconos y onclick
-            const listItem = document.createElement("li");
-            listItem.className = "list-group-item d-flex justify-content-between align-items-center selected-user";
-            listItem.textContent = "GENERAL";
-            listItem.setAttribute("data-id", -99);
-            listItem.setAttribute("onclick", "seleccionarRendimiento(this,-99)");
-
-            // Crear un div para los botones de acción de "GENERAL"
-            const accionesDiv = document.createElement("div");
-
-            // Crear el icono de "Ventas" con tooltip, tildes verdes y cursor de botón
-            const iconVentas = document.createElement("i");
-            iconVentas.className = "fa fa-check text-success mx-2";
-            iconVentas.setAttribute("title", "Ventas"); // Agregar el tooltip
-            iconVentas.style.cursor = "pointer"; // Agregar cursor de puntero
-            iconVentas.addEventListener("click", function () {
-                alternarColorIcono(iconVentas);
-            });
-            accionesDiv.appendChild(iconVentas);
-
-            // Crear el icono de "Cobranzas" con tooltip, tildes verdes y cursor de botón
-            const iconCobranzas = document.createElement("i");
-            iconCobranzas.className = "fa fa-check text-success";
-            iconCobranzas.setAttribute("title", "Cobranzas"); // Agregar el tooltip
-            iconCobranzas.style.cursor = "pointer"; // Agregar cursor de puntero
-            iconCobranzas.addEventListener("click", function () {
-                alternarColorIcono(iconCobranzas);
-            });
-            accionesDiv.appendChild(iconCobranzas);
-
-            // Agregar el div de acciones al listItem "GENERAL"
-            listItem.appendChild(accionesDiv);
-
-            listaUsuarios.appendChild(listItem);
+            // Agregar el item "GENERAL"
+            listaUsuarios.appendChild(createGeneralItem());
         }
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.');
         $('.datos-error').removeClass('d-none');
     }
+}
+
+function getRol(idRol) {
+    switch (idRol) {
+        case 1: return "A";
+        case 2: return "V";
+        case 3: return "C";
+        default: return "";
+    }
+}
+
+function createUsuarioNombre(usuario, rol) {
+    const nombreUsuario = document.createElement("span");
+    nombreUsuario.textContent = usuario.Nombre + (rol ? ` (${rol})` : "");
+    nombreUsuario.style.cursor = "pointer";
+    nombreUsuario.addEventListener("click", function () {
+        seleccionarRendimiento(this.parentElement, usuario.Id);
+    });
+    return nombreUsuario;
+}
+
+function createBloqueoButton(usuario) {
+    const color = usuario.BloqueoSistema ? "danger" : "success";
+    const titulo = usuario.BloqueoSistema ? "Desbloquear" : "Bloquear";
+    const estadoInverso = usuario.BloqueoSistema ? 0 : 1;
+
+    const botonBloqueo = document.createElement("button");
+    botonBloqueo.className = `btn btn-sm btn-${color} btnacciones`;
+    botonBloqueo.setAttribute("type", "button");
+    botonBloqueo.setAttribute("title", titulo);
+    botonBloqueo.innerHTML = `<i class="fa fa-power-off fa-lg text-white" aria-hidden="true"></i>`;
+    botonBloqueo.addEventListener("click", function (e) {
+        e.stopPropagation(); // Detener propagación para que no afecte el listItem
+        bloqueoSistema(usuario.Id, estadoInverso);
+    });
+
+    return botonBloqueo;
+}
+
+function createIconoVentas(usuario) {
+    const iconVentas = document.createElement("i");
+    iconVentas.className = "fa fa-check text-danger ventas-icon mx-2";
+    iconVentas.setAttribute("title", "Ventas");
+    iconVentas.style.cursor = "pointer";
+    iconVentas.addEventListener("click", function (e) {
+        e.stopPropagation(); // Detener propagación para que no afecte el listItem
+        alternarColorIcono(iconVentas);
+    });
+    return iconVentas;
+}
+
+function createIconoCobranzas(usuario) {
+    const iconCobranzas = document.createElement("i");
+    iconCobranzas.className = "fa fa-check text-danger cobranzas-icon";
+    iconCobranzas.setAttribute("title", "Cobranzas");
+    iconCobranzas.style.cursor = "pointer";
+    iconCobranzas.addEventListener("click", function (e) {
+        e.stopPropagation(); // Detener propagación para que no afecte el listItem
+        alternarColorIcono(iconCobranzas);
+    });
+    return iconCobranzas;
+}
+
+function createGeneralItem() {
+    const generalItem = document.createElement("li");
+    generalItem.className = "list-group-item d-flex justify-content-between align-items-center selected-user";
+    generalItem.textContent = "GENERAL";
+    generalItem.setAttribute("data-id", -99);
+
+    const generalAccionesDiv = document.createElement("div");
+    generalAccionesDiv.appendChild(createIconoVentasGeneral());
+    generalAccionesDiv.appendChild(createIconoCobranzasGeneral());
+
+    generalItem.appendChild(generalAccionesDiv);
+    return generalItem;
+}
+
+function createIconoVentasGeneral() {
+    const iconVentas = document.createElement("i");
+    iconVentas.className = "fa fa-check text-success mx-2";
+    iconVentas.setAttribute("title", "Ventas");
+    iconVentas.style.cursor = "pointer";
+    iconVentas.addEventListener("click", function () {
+        alternarColorIcono(iconVentas);
+    });
+    return iconVentas;
+}
+
+function createIconoCobranzasGeneral() {
+    const iconCobranzas = document.createElement("i");
+    iconCobranzas.className = "fa fa-check text-success";
+    iconCobranzas.setAttribute("title", "Cobranzas");
+    iconCobranzas.style.cursor = "pointer";
+    iconCobranzas.addEventListener("click", function () {
+        alternarColorIcono(iconCobranzas);
+    });
+    return iconCobranzas;
+}
+
+
+
+
+
+
+
+
+function alternarColorIcono(icono) {
+    const listItem = icono.closest("li");
+    let dataId = listItem.getAttribute("data-id");
+
+    if (dataId != usuarioSeleccionadoId) {
+        return false;
+    }
+
+    // Cambiar solo el color del ícono seleccionado (Ventas o Cobranzas) sin afectar al otro
+    if (icono.classList.contains("text-success")) {
+        icono.classList.remove("text-success");
+        icono.classList.add("text-danger");
+    } else {
+        icono.classList.remove("text-danger");
+        icono.classList.add("text-success");
+    }
+
+    // Actualizar el estado de los íconos de Ventas y Cobranzas
+    const iconoVentas = listItem.querySelector(".fa-check[title='Ventas']");
+    const iconoCobranzas = listItem.querySelector(".fa-check[title='Cobranzas']");
+
+    const estadoVentas = iconoVentas && iconoVentas.classList.contains("text-success") ? 1 : 0;
+    const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
+
+    // Llamar a la función para actualizar la DataTable con los nuevos estados
+    configurarDataTable(
+        dataId,
+        estadoVentas,
+        estadoCobranzas,
+        document.getElementById("FechaDesde").value,
+        document.getElementById("FechaHasta").value,
+        document.getElementById("TipoNegocio").value
+    );
+}
+
+let usuarioSeleccionadoId = null; // Variable para realizar un seguimiento del usuario seleccionado
+
+function seleccionarRendimiento(elemento, idVendedor) {
+    const usuarios = document.getElementsByClassName("list-group-item");
+
+    // Limpiar selección previa
+    Array.from(usuarios).forEach(usuario => {
+        usuario.classList.remove("selected-user");
+        const iconoVentas = usuario.querySelector(".fa-check[title='Ventas']");
+        const iconoCobranzas = usuario.querySelector(".fa-check[title='Cobranzas']");
+
+        // Restablecer íconos a rojo por defecto
+        if (iconoVentas) {
+            iconoVentas.classList.remove("text-success");
+            iconoVentas.classList.add("text-danger");
+        }
+        if (iconoCobranzas) {
+            iconoCobranzas.classList.remove("text-success");
+            iconoCobranzas.classList.add("text-danger");
+        }
+    });
+
+    // Agregar la clase 'selected-user' al elemento seleccionado
+    elemento.classList.add("selected-user");
+
+    // Marcar los íconos de "Ventas" y "Cobranzas" en verde por defecto
+    const iconoVentas = elemento.querySelector(".fa-check[title='Ventas']");
+    const iconoCobranzas = elemento.querySelector(".fa-check[title='Cobranzas']");
+
+    if (iconoVentas) {
+        iconoVentas.classList.remove("text-danger");
+        iconoVentas.classList.add("text-success");
+    }
+    if (iconoCobranzas) {
+        iconoCobranzas.classList.remove("text-danger");
+        iconoCobranzas.classList.add("text-success");
+    }
+
+    // Reconfigurar los eventos de clic para los íconos después de cambiar el color
+    if (iconoVentas) {
+        iconoVentas.removeEventListener("click", alternarColorIcono);  // Eliminar el evento anterior
+        iconoVentas.addEventListener("click", function () {
+            alternarColorIcono(iconoVentas);
+        });
+    }
+
+    if (iconoCobranzas) {
+        iconoCobranzas.removeEventListener("click", alternarColorIcono);  // Eliminar el evento anterior
+        iconoCobranzas.addEventListener("click", function () {
+            alternarColorIcono(iconoCobranzas);
+        });
+    }
+
+    // Alternar los íconos cuando se haga clic
+    iconoVentas.addEventListener("click", function () {
+        alternarColorIcono(iconoVentas);
+    });
+
+    iconoCobranzas.addEventListener("click", function () {
+        alternarColorIcono(iconoCobranzas);
+    });
+
+    // Obtener el estado actual de los íconos de "Ventas" y "Cobranzas"
+    const estadoVentas = iconoVentas && iconoVentas.classList.contains("text-success") ? 1 : 0;
+    const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
+
+    // Limpiar y reconfigurar la DataTable
+    $('#grdRendimiento').DataTable().clear().draw();
+
+    configurarDataTable(
+        idVendedor,
+        estadoVentas,
+        estadoCobranzas,
+        document.getElementById("FechaDesde").value,
+        document.getElementById("FechaHasta").value,
+        document.getElementById("TipoNegocio").value
+    );
+
+    obtenerDatosRendimiento(
+        document.getElementById("FechaDesde").value,
+        document.getElementById("FechaHasta").value
+    );
+
+    if (idVendedor == -99) idVendedor = -1;
+
+    usuarioSeleccionadoId = idVendedor;
+
+    cargarVentas(idVendedor);
 }
 
 async function cargarVentas(idvendedor) {
@@ -300,87 +448,6 @@ async function cargarVentas(idvendedor) {
         $('.datos-error').removeClass('d-none');
     }
 }
-
-
-
-
-function alternarColorIcono(icono) {
-    const listItem = icono.closest("li");
-    let dataId = listItem.getAttribute("data-id");
-
-    const usuarios = document.getElementsByClassName("list-group-item");
-
-    Array.from(usuarios).forEach(usuario => {
-        usuario.classList.remove("selected-user");
-
-        if (dataId != usuarioSeleccionadoId) {
-
-            const iconoVentas = usuario.querySelector(".fa-check[title='Ventas']");
-            if (iconoVentas) {
-                iconoVentas.classList.remove("text-success");
-                iconoVentas.classList.add("text-danger");
-            }
-
-            const iconoCobranzas = usuario.querySelector(".fa-check[title='Cobranzas']");
-            if (iconoCobranzas) {
-                iconoCobranzas.classList.remove("text-success");
-                iconoCobranzas.classList.add("text-danger");
-            }
-        }
-
-    });
-
-    usuarioSeleccionadoId = dataId;
-
-    if (icono.classList.contains("text-success")) {
-        icono.classList.remove("text-success");
-        icono.classList.add("text-danger");
-    } else {
-        icono.classList.remove("text-danger");
-        icono.classList.add("text-success");
-    }
-
-
-}
-
-
-let usuarioSeleccionadoId = null; // Variable para realizar un seguimiento del usuario seleccionado
-
-function seleccionarRendimiento(elemento, idVendedor) {
-    const usuarios = document.getElementsByClassName("list-group-item");
-
-
-
-    Array.from(usuarios).forEach(usuario => {
-        usuario.classList.remove("selected-user");
-    });
-
-
-    // Agregar la clase 'selected-user' al elemento seleccionado
-    elemento.classList.add("selected-user");
-
-    // Verificar si el icono de Ventas está en verde (1) o rojo (0)
-    const iconoVentas = elemento.querySelector(".fa-check[title='Ventas']");
-    const estadoVentas = iconoVentas.classList.contains("text-success") ? 1 : 0;
-
-    // Verificar si el icono de Cobranzas está en verde (1) o rojo (0)
-    const iconoCobranzas = elemento.querySelector(".fa-check[title='Cobranzas']");
-    const estadoCobranzas = iconoCobranzas.classList.contains("text-success") ? 1 : 0;
-
-
-
-    $('#grdRendimiento').DataTable().clear().draw();
-    //$('#grdRendimientoGeneral').DataTable().clear().draw();
-    //$('#grdRendimientoCobrado').DataTable().clear().draw();
-
-    configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, document.getElementById("FechaDesde").value, document.getElementById("FechaHasta").value, document.getElementById("TipoNegocio").value);
-    obtenerDatosRendimiento(document.getElementById("FechaDesde").value, document.getElementById("FechaHasta").value);
-
-    if (idVendedor == -99) idVendedor = -1
-    cargarVentas(idVendedor);
-}
-
-
 
 function aplicarFiltros() {
 
@@ -445,6 +512,14 @@ function aplicarFiltros() {
 
 
 const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio) => {
+
+    let totVenta = 0;
+    let totCobro = 0;
+    let totInteres = 0;
+    let totEfectivo = 0;
+    let totTransferencia = 0;
+    let totRestante = 0;
+
     const tableExists = $.fn.DataTable.isDataTable('#grdRendimiento');
 
     if (!tableExists) {
@@ -524,7 +599,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                     "render": function (data, type, row) {
                         return formatNumber(data); // Formatear número en la columna
                     },
-                    "targets": [3,4, 5, 6, 7] // Columnas Venta, Cobro, Capital Final
+                    "targets": [3, 4, 5, 6, 7] // Columnas Venta, Cobro, Capital Final
                 }
             ],
 
@@ -534,12 +609,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
             "initComplete": function (settings, json) {
                 // Calcular los totales de Venta y Cobro
-                let totVenta = 0;
-                let totCobro = 0;
-                let totInteres = 0;
-                let totEfectivo = 0;
-                let totTransferencia = 0;
-                let totRestante = 0;
+               
 
                 table.data().each(function (rowData) {
                     if (rowData.Descripcion.includes("Cobranza")) {
@@ -585,15 +655,13 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
         // Si la tabla ya existe, simplemente actualizar los datos
         const table = $('#grdRendimiento').DataTable();
 
-        totVenta = 0;
-        totCobro = 0;
-        totInteres = 0;
-        totEfectivo = 0;
-        totTransferencia = 0;
+       
 
         table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}`).load(function () {
             // Recorrer los datos de la tabla después de que se hayan cargado
-            table.data().each(function (rowData) {
+            table.data().each(async function (rowData) {
+
+
                 if (rowData.Descripcion.includes("Cobranza")) {
                     totCobro += rowData.Cobro;
 
@@ -836,7 +904,7 @@ const configurarDataTableGeneral = async (selectorTabla, fechadesde, fechahasta,
 
 const configurarDataTableCobrado = async (selectorTabla, fechadesde, fechahasta, result) => {
     const datos = result;
-    console.log(datos); // Agregar este console.log para verificar los datos recibidos
+
     const tableExists = $.fn.DataTable.isDataTable(selectorTabla);
 
     if (!tableExists) {
@@ -944,7 +1012,7 @@ async function enviarWhatssap(id) {
             // Determinamos el saludo segun la hora
 
 
-            
+
 
             if (horaActual > 5 && horaActual < 12) {
                 saludo = "Buenos días";
@@ -954,7 +1022,7 @@ async function enviarWhatssap(id) {
                 saludo = "Buenas noches";
             }
 
-           
+
 
             if (result.InformacionVenta.Descripcion != null) {
 
@@ -1011,7 +1079,7 @@ async function enviarWhatssap(id) {
                 if (data.IdRol != 2) {
                     CantidadClientesAusentes();
                 }
-               
+
 
             }
 
