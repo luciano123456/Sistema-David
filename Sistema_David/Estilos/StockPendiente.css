@@ -31,7 +31,7 @@
 
 .half-white {
     background-color: white;
-    border-radius: 10px 10px 10px 10px;
+    border-radius: 0px 0px 10px 10px;
     color: #495057;
     height: 180px; /* Ajustar altura como desees */
     width: 100%; /* Ancho del 100% */
@@ -135,10 +135,7 @@
     
 }
 
-.texto-titulo {
-    font-size: 1.5em; /* Tamaño de fuente inicial */
 
-}
 
 
 .edit-icon:hover,
@@ -162,7 +159,7 @@
 }
 
 .botones {
-    display: block; /* Utilizar flexbox para alinear los elementos */
+    display: flex; /* Utilizar flexbox para alinear los elementos */
     justify-content: center; /* Centrar los elementos horizontalmente */
     align-items: center; /* Centrar los elementos verticalmente */
     margin: 0 !important;
@@ -291,7 +288,9 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
         max-width: 1500px !important;
         font-size: 4vw !important;
     }
-
+    .btn-pendiente {
+        margin-top: -5px;
+    }
 
 
 
@@ -384,6 +383,7 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
         font-size: 6vw !important;
     }
 
+   
     .input-nuevomodif {
         font-size: 6vw !important;
     }
@@ -436,3 +436,41 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
     }
 }
 
+.half-white {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    width: 100%;
+    overflow: hidden; /* Evita desbordes */
+}
+
+.divBotones {
+    display: flex;
+    flex-wrap: nowrap; /* No permite que los botones pasen a otra línea */
+    justify-content: center;
+    gap: 10px; /* Espacio entre los botones */
+    width: 100%;
+}
+
+.botones {
+    width: 100%;
+}
+
+    .divBotones button {
+        flex: 1; /* Distribuye el espacio equitativamente */
+        max-width: 45%; /* Asegura que cada botón ocupe la mitad del espacio disponible */
+        min-width: 100px; /* Evita que los botones sean demasiado pequeños */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.9em;
+    }
+
+/* ✅ Botón "Pendiente" debe ocupar el 90% del ancho */
+.btn-pendiente {
+    width: 90%;
+    max-width: 90%;
+    text-align: center;
+}

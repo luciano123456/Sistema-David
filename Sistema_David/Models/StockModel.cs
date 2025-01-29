@@ -27,7 +27,7 @@ namespace Sistema_David.Models
                                   Producto = d.Productos.Nombre,
                                   PrecioVenta = (decimal)d.Productos.PrecioVenta,
                                   Total = (decimal)d.Productos.PrecioVenta * d.Cantidad,
-                                  Imagen = d.Productos.Imagen
+                                  Imagen = ""
                               }).Where(x => x.IdUsuario == id)
                                 .OrderBy(x => x.Producto)
                                 .ToList();
