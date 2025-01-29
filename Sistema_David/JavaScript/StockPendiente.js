@@ -43,14 +43,25 @@ $(document).ready(async function () {
 });
 
 
-function aplicarFiltros() {
+async function aplicarFiltros() {
 
     document.querySelector('.cards-container').innerHTML = '';
 
     var idVendedor = document.getElementById("Vendedores").value;
     var estado = document.getElementById("Estados").options[document.getElementById("Estados").selectedIndex].text;;
 
-    cargarStock(idVendedor, estado, document.getElementById("Fecha").value);
+
+    if (userSession.IdRol == 1) { //Administrador
+        await cargarStock(idVendedor, "Pendiente", document.getElementById("Fecha").value);
+        $("#btnUsuarios").css("background", "#2E4053");
+        document.getElementById("divStock").removeAttribute("hidden");
+        document.getElementById("btnAgregar").removeAttribute("hidden");
+    } else {
+        cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value);
+        $("#btnStock").css("background", "#2E4053");
+    }
+
+
 
 }
 
@@ -173,7 +184,7 @@ async function cargarStock(idUsuario, Estado, Fecha) {
                 <span class="texto-titulo text-white">${result.data[i].Usuario}</span>
                 <div class="round-image"></div>
                 ${userSession.IdRol === 1 && result.data[i].Estado === "Pendiente" && result.data[i].Asignacion == "USUARIO" ?
-                        `<input type="checkbox" class="form-check-input checkbox position-absolute top-0 end-0 me-2 mt-2" id="checkbox-${cardId}" onclick="toggleCheckbox(${cardId})">
+                        `<input type="checkbox" class="form-check-input checkbox position-absolute top-0 end-0 me-2" id="checkbox-${cardId}" onclick="toggleCheckbox(${cardId})">
                      <label for="checkbox-${cardId}" class="form-check-label position-absolute top-0 end-0"></label>
                      <div class="icons-container position-absolute top-30 end-0 translate-middle-y me-2">
                          <i class="fa fa-pencil-square-o text-yellow edit-icon" aria-hidden="true" onclick="editarStock(${cardId})" style="font-size: 1.2em; color: yellow; cursor: pointer;"></i>
@@ -208,7 +219,7 @@ async function cargarStock(idUsuario, Estado, Fecha) {
 
 
                         userSession.Id == result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && result.data[i].Asignacion == "USUARIO" && userSession.IdRol != 1 ?
-                            `<button class="btn btn-warning full-width mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` :
+                                `<button class="btn btn-warning btn-pendiente mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` :
 
                            
 
@@ -223,14 +234,15 @@ async function cargarStock(idUsuario, Estado, Fecha) {
 
                          </div>` :
                                 userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' ?
-                                    `<button class="btn btn-warning full-width mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` :
+                                            `<button class="btn btn-warning btn-pendiente mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` :
                                     ''
                     }
                 </div>
             </div>`;
 
                 var roundImage = newCard.querySelector('.round-image');
-                var imageUrl = result.data[i].ImagenProducto == null ? "/Imagenes/productodefault.png" : 'data:image/png;base64,' + result.data[i].ImagenProducto;
+                var imageUrl = '/Productos/ObtenerImagen/' + result.data[i].IdProducto;
+
                 roundImage.style.backgroundImage = `url(${imageUrl})`;
 
                 cardsContainer.appendChild(newCard);

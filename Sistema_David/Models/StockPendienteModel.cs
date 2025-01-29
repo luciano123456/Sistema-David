@@ -59,7 +59,7 @@ namespace Sistema_David.Models
             {
 
                 var result = (from d in db.StocksPendientes
-                          .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Cantidad, sp.Estado, p.Imagen, p.Nombre, u.Nombre, sp.Asignacion from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
+                          .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Cantidad, sp.Estado, p.Nombre, u.Nombre, sp.Asignacion from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
                               select new StockPendientes
                               {
                                   Id = d.Id,
@@ -71,7 +71,7 @@ namespace Sistema_David.Models
                                   Usuario = d.Usuarios != null ? d.Usuarios.Nombre : "",
                                   Producto = d.Productos.Nombre,
                                   Estado = d.Estado,
-                                  ImagenProducto = d.Productos.Imagen,
+                                  
                                   Fecha = d.Fecha?.Date,
                                   Asignacion = d.Asignacion != null ? d.Asignacion : "ADMINISTRADOR"
 

@@ -55,15 +55,11 @@ async function configurarDataTable() {
 
             {
                 "data": "Imagen",
-                "render": function (data) {
-                    if (!data) {
-                        return 'N/A';
-                    }
-                    else {
-                        var img = 'data:image/png;base64,' + data;
-                        // Clase adicional "img-thumbnail" para formato de imagen en miniatura
-                        return '<img src="' + img + '" height="45px" width="45px" class="" style="background-color: transparent; cursor: pointer;" onclick="openModal(\'' + img + '\')" />';
-                    }
+                "render": function (data, type, row) { 
+                    var imgUrl = '/Productos/ObtenerImagen/' + row.IdProducto;
+
+                    // Aquí se agrega el evento onclick para abrir el modal
+                    return '<img src="' + imgUrl + '" height="45px" width="45px" class="img-thumbnail" style="background-color: transparent; cursor: pointer;" onclick="openModal(\'' + imgUrl + '\')" />';
                 }
             },
 
