@@ -17,9 +17,9 @@ namespace Sistema_David.Controllers
         public ActionResult Index()
         {
 
-            var stockPendiente = StockPendienteModel.ListarStockPendienteId(SessionHelper.GetUsuarioSesion().Id, "Pendiente");
+            var stockPendiente = StockPendienteModel.ExisteStockPendiente(SessionHelper.GetUsuarioSesion().Id, "Pendiente");
 
-            if (stockPendiente.Count > 0 && SessionHelper.GetUsuarioSesion().IdRol != 1) // No afecta a administradores
+            if (stockPendiente == true && SessionHelper.GetUsuarioSesion().IdRol != 1) // No afecta a administradores
             {
                 // Si hay stock pendiente, redirige al índice de StockController
                 return RedirectToAction("Index", "StockPendiente");
@@ -32,9 +32,7 @@ namespace Sistema_David.Controllers
         public ActionResult BuscarStock(int id)
         {
             var result = StockModel.BuscarStock(id);
-            var json = Json(new { data = result }, JsonRequestBehavior.AllowGet);
-            json.MaxJsonLength = 500000000;
-            return json;
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
        

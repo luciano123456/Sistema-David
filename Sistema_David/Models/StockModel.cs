@@ -16,7 +16,7 @@ namespace Sistema_David.Models
             {
 
                 var result = (from d in db.StockUsuarios
-                         .SqlQuery("select s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, p.Imagen, s.IdCategoria from StockUsuarios s inner join Usuarios u on u.Id = s.IdUsuario inner join Productos p on p.Id = s.IdProducto")
+                         .SqlQuery("select s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre,  s.IdCategoria from StockUsuarios s inner join Usuarios u on u.Id = s.IdUsuario inner join Productos p on p.Id = s.IdProducto")
                               select new StockUsuarios
                               {
                                   Id = d.Id,
@@ -27,7 +27,6 @@ namespace Sistema_David.Models
                                   Producto = d.Productos.Nombre,
                                   PrecioVenta = (decimal)d.Productos.PrecioVenta,
                                   Total = (decimal)d.Productos.PrecioVenta * d.Cantidad,
-                                  Imagen = ""
                               }).Where(x => x.IdUsuario == id)
                                 .OrderBy(x => x.Producto)
                                 .ToList();

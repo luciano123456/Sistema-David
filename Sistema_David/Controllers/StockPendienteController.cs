@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using Newtonsoft.Json;
 using Sistema_David.Helpers;
 using Sistema_David.Models;
 using Sistema_David.Models.DB;
@@ -113,7 +114,7 @@ namespace Sistema_David.Controllers
             try
             {
 
-                
+
                 var result = StockPendienteModel.Agregar(model);
                 if (result)
                     return Json(new { Status = 1 });
