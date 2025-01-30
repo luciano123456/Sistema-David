@@ -31,11 +31,16 @@ $(document).ready(async function () {
     if (userSession.IdRol == 1) { //Administrador
         await cargarStock(-1, "Pendiente", document.getElementById("Fecha").value);
         $("#btnUsuarios").css("background", "#2E4053");
+        $('#divSeleccionarTodos').fadeIn();  // Con animación
+        $('#divSeleccionarTodos').removeClass('d-none');  // Desoculta el div
+        $('#selectAllCheckbox').prop('checked', false);   // Desmarca el checkbox
         document.getElementById("divStock").removeAttribute("hidden");
         document.getElementById("btnAgregar").removeAttribute("hidden");
+      
     } else {
         cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value);
         $("#btnStock").css("background", "#2E4053");
+
     }
 
 
@@ -52,10 +57,8 @@ async function aplicarFiltros() {
 
 
     if (userSession.IdRol == 1) { //Administrador
-        await cargarStock(idVendedor, "Pendiente", document.getElementById("Fecha").value);
+        await cargarStock(idVendedor, estado, document.getElementById("Fecha").value);
         $("#btnUsuarios").css("background", "#2E4053");
-        document.getElementById("divStock").removeAttribute("hidden");
-        document.getElementById("btnAgregar").removeAttribute("hidden");
     } else {
         cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value);
         $("#btnStock").css("background", "#2E4053");
@@ -430,7 +433,23 @@ function toggleCheckbox(cardId) {
         document.getElementById("btnAceptarTodas").style.display = "none";
         document.getElementById("btnRechazarTodas").style.display = "none";
     }
+
+    console.log(cardsSeleccionadas)
 }
+
+
+
+function toggleCheckboxAll() {
+
+    if (cardsSeleccionadas.length > 0) {
+        document.getElementById("btnAceptarTodas").style.display = "block";
+        document.getElementById("btnRechazarTodas").style.display = "block";
+    } else {
+        document.getElementById("btnAceptarTodas").style.display = "none";
+        document.getElementById("btnRechazarTodas").style.display = "none";
+    }
+}
+
 
 
 
@@ -510,6 +529,7 @@ async function aceptarStocks() {
             $("#modalEdit").modal("hide");
             document.getElementById("btnAceptarTodas").style.display = "none";
             document.getElementById("btnRechazarTodas").style.display = "none";
+            $('#selectAllCheckbox').prop('checked', false);  // Asumiendo que tu checkbox "Seleccionar Todos" tiene el id "select-all-checkbox"
             alert("Stocks aceptados exitosamente.")
             aplicarFiltros();
             desmarcarCheckBoxes();
@@ -552,6 +572,7 @@ async function rechazarStocks() {
             $("#modalEdit").modal("hide");
             document.getElementById("btnAceptarTodas").style.display = "none";
             document.getElementById("btnRechazarTodas").style.display = "none";
+            $('#selectAllCheckbox').prop('checked', false);  // Asumiendo que tu checkbox "Seleccionar Todos" tiene el id "select-all-checkbox"
             alert("Stocks rechazados exitosamente.")
             aplicarFiltros();
             desmarcarCheckBoxes();
@@ -569,3 +590,37 @@ async function rechazarStocks() {
 function abrirstockPendiente() {
     document.location.href = "../../StockPendiente/Index/";
 }
+
+$('#selectAllCheckbox').on('click', function () {
+    var isChecked = $(this).is(':checked'); // Verifica si está seleccionado
+    var visibleCheckboxes = $('.cards-container .checkbox:visible'); // Selecciona los checkboxes visibles
+
+    cardsSeleccionadas = [];
+
+    // Recorrer cada fila visible y manejar la selección
+    $(visibleCheckboxes).each(function () {
+        $(this).prop('checked', isChecked).trigger('change'); // Marca o desmarca los checkboxes
+        var checkbox = $(this).find('.custom-checkbox .fa'); // Encuentra el ícono de checkbox en la fila
+        var cardId = parseInt($(this).closest('.card').attr('id')); // Obtiene el id del contenedor .card
+
+        // Si "Seleccionar Todos" está marcado, selecciona todas las filas visibles
+        if (isChecked) {
+            if (!checkbox.hasClass('checked')) {
+                checkbox.addClass('checked fa-check-square').removeClass('fa-square-o'); // Marcar el ícono
+                if (!cardsSeleccionadas.includes(cardId)) {
+                    cardsSeleccionadas.push(cardId); // Agregar al array de seleccionados si no está ya
+                }
+            }
+        } else {
+            // Si no está marcado, deselecciona todas las filas visibles
+            
+                checkbox.removeClass('checked fa-check-square').addClass('fa-square-o'); // Desmarcar el ícono
+                
+        }
+    });
+
+    console.log(cardsSeleccionadas)
+
+    // Mostrar u ocultar botones basados en el estado de selectedCheckboxes
+    toggleCheckboxAll();
+});
