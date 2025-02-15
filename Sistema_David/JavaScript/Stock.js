@@ -198,7 +198,7 @@ async function transferenciaStock() {
         IdStock: idStock,
         Cantidad: cantidad,
         IdUser: idUser,
-        idUserAsignado: parseInt(localStorage.getItem("idUserStock"))
+        idUserAsignado: idUserStock
     });
 
     let options = {

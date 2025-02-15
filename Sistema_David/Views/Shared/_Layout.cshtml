@@ -76,9 +76,10 @@
 
 
         <div class="seccion" id="seccionUsuarios" hidden>
-            <button class="btn-seccion" id="btnUsuarios" onclick="document.location.href='@Url.Content("~/Usuarios/Index/")'">
+            <button class="btn-seccion-rendimiento" id="btnUsuarios" onclick="document.location.href='@Url.Content("~/Usuarios/Index/")'">
                 <img src="~/Imagenes/vendedor.png" class="img-seccion" />
-                Usuarios
+                Usuarios<br />
+                <i id="notificationStock" class="fa fa-check text-danger" style="display:none;"></i>
             </button>
         </div>
 
@@ -257,6 +258,35 @@
        
     }
 
+    async function CantidadStocksPendientes() {
+
+        var url = "/StockPendiente/MostrarCantidadStocksPendientes";
+
+        let value = JSON.stringify({
+
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result > 0) {
+
+            document.getElementById("notificationStock").style.display = "inline";
+            document.getElementById("notificationStock").textContent = ` (${result})`;
+        } else {
+            document.getElementById("notificationStock").style.display = "none";
+        }
+
+    }
+
 
     var data = JSON.parse(sessionStorage.getItem('usuario'));
 
@@ -265,6 +295,7 @@
         if (data.IdRol != 2) {
 
             CantidadClientesAusentes();
+            CantidadStocksPendientes();
         }
     }
 

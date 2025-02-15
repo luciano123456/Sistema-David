@@ -30,7 +30,7 @@ $(document).ready(async function () {
 
 
     if (userSession.IdRol == 1) { //Administrador
-        await cargarStock(-1, "Pendiente", document.getElementById("Fecha").value);
+        await cargarStock(-1, "Pendiente", document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
         $("#btnUsuarios").css("background", "#2E4053");
         $('#divSeleccionarTodos').fadeIn();  // Con animación
         $('#divSeleccionarTodos').removeClass('d-none');  // Desoculta el div
@@ -39,7 +39,7 @@ $(document).ready(async function () {
         document.getElementById("btnAgregar").removeAttribute("hidden");
       
     } else {
-        cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value);
+        cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value, "Todos");
         $("#btnStock").css("background", "#2E4053");
 
     }
@@ -58,10 +58,10 @@ async function aplicarFiltros() {
 
 
     if (userSession.IdRol == 1) { //Administrador
-        await cargarStock(idVendedor, estado, document.getElementById("Fecha").value);
+        await cargarStock(idVendedor, estado, document.getElementById("Fecha").value, document.getElementById("Asignacion").value );
         $("#btnUsuarios").css("background", "#2E4053");
     } else {
-        cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value);
+        cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
         $("#btnStock").css("background", "#2E4053");
     }
 
@@ -153,7 +153,7 @@ async function cargarUsuarios() {
     }
 }
 
-async function cargarStock(idUsuario, Estado, Fecha) {
+async function cargarStock(idUsuario, Estado, Fecha, Asignacion) {
     try {
         var url = "/StockPendiente/ListarStockPendiente";
 
@@ -161,6 +161,7 @@ async function cargarStock(idUsuario, Estado, Fecha) {
             Id: idUsuario,
             Estado: Estado,
             Fecha: Fecha,
+            Asignacion: Asignacion
         });
 
         let options = {
@@ -184,7 +185,7 @@ async function cargarStock(idUsuario, Estado, Fecha) {
 
                 // Mostrar la parte azul y la parte blanca común a ambos tipos de asignación
                 newCard.innerHTML = `
-            <div class="${result.data[i].Asignacion === 'TRANSFERENCIA' ? 'half-transferencia' : 'half-blue'}">
+            <div class="${result.data[i].Asignacion.toUpperCase() === 'TRANSFERENCIA' ? 'half-transferencia' : 'half-blue'}">
                 <span class="texto-titulo text-white">${result.data[i].Usuario}</span>
                 <div class="round-image"></div>
                 ${userSession.IdRol === 1 && result.data[i].Estado === "Pendiente" && (result.data[i].Asignacion == "USUARIO") ?
@@ -199,11 +200,11 @@ async function cargarStock(idUsuario, Estado, Fecha) {
                         : ''}
             </div>
             <div class="half-white">
-            <div class="mt-2 text-center">
+            <div class="mt-1 text-center">
                     <i class="fa fa-info-circle me-1 mb-1" title="Fecha"></i>
-                    <span class="texto-titulo" style="font-weight: bold; color: blue;">${moment(result.data[i].Fecha).format("DD-MM-YYYY")}</span>
+                    <span class="texto-titulo" style="font-weight: bold; color: black;">${moment(result.data[i].Fecha).format("DD-MM-YYYY")}</span>
                 </div>
-                <div class="mt-2 text-center">
+                <div class="mt-1 text-center">
                     <i class="fa fa-info-circle me-1 mb-1" title="Nombre del producto"></i>
                     <span class="texto-titulo" style="font-weight: bold; color: blue;">${result.data[i].Cantidad} ${result.data[i].Producto}</span>
                 </div>
@@ -299,7 +300,7 @@ async function modificarStock() {
 
             alert("Stock modificado correctamente");
             document.querySelector('.cards-container').innerHTML = '';
-            cargarStock(-1, "Pendiente", document.getElementById("Fecha").value);
+            cargarStock(-1, "Pendiente", document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
 
         } else {
             alert("Ha ocurrido un error en los datos");

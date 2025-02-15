@@ -30,7 +30,13 @@ namespace Sistema_David.Controllers
             return View();
         }
 
-        public ActionResult ListarStockPendiente(int id, string Estado, DateTime Fecha)
+        public int MostrarCantidadStocksPendientes()
+        {
+            int cantidad = StockPendienteModel.MostrarCantidadStocksPendiente();
+            return cantidad;
+        }
+
+        public ActionResult ListarStockPendiente(int id, string Estado, DateTime Fecha, string Asignacion)
         {
             List<StockPendientes> stockPendiente;
 
@@ -39,11 +45,11 @@ namespace Sistema_David.Controllers
 
             if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 1) // ROL ADMIN
             {
-                stockPendiente = StockPendienteModel.ListarStockPendiente(id > 0 ? id : -1, Estado, fechaFiltro);
+                stockPendiente = StockPendienteModel.ListarStockPendiente(id > 0 ? id : -1, Estado, fechaFiltro, Asignacion);
             }
             else
             {
-                stockPendiente = StockPendienteModel.ListarStockPendiente(id, Estado, fechaFiltro);
+                stockPendiente = StockPendienteModel.ListarStockPendiente(id, Estado, fechaFiltro, "Todos");
             }
 
             var json = Json(new { data = stockPendiente }, JsonRequestBehavior.AllowGet);
