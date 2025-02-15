@@ -9,13 +9,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using AutoMapper;
 
 namespace Sistema_David.Controllers
 {
 
+
     [CheckBloqueoSistema]
+
+
+    
     public class StockPendienteController : Controller
     {
+
+
+
         // GET: Stock
         public ActionResult Index()
         {
@@ -47,14 +55,49 @@ namespace Sistema_David.Controllers
 
         public ActionResult AceptarStock(int id)
         {
-            var result = StockPendienteModel.AceptarStock(id);
+            StockPendientes stock = StockPendienteModel.BuscarStockPendiente(id);
+
+            if (stock.Estado.ToUpper() == "PENDIENTE") { 
+                var result = StockPendienteModel.AceptarStock(id);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+            return Json(new { data = "" }, JsonRequestBehavior.AllowGet);
         }
 
         public ActionResult RechazarStock(int id)
         {
-            var result = StockPendienteModel.RechazarStock(id);
-            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+            StockPendientes stock = StockPendienteModel.BuscarStockPendiente(id);
+
+            if (stock.Estado.ToUpper() == "PENDIENTE")
+            {
+                if (stock.Asignacion == "TRANSFERENCIA")
+                {
+
+                    var producto = StockModel.BuscarStockUser((int)stock.IdUsuarioAsignado, (int)stock.IdProducto);
+
+                    if (producto != null)
+                    {
+                        StockModel.SumarStock((int)stock.IdUsuarioAsignado, (int)stock.IdProducto, (int)stock.Cantidad);
+                    }
+                    else
+                    {
+                        var config = new MapperConfiguration(cfg => cfg.CreateMap<StockPendientes, StocksPendientes>());
+                        var mapper = config.CreateMapper();
+                        StocksPendientes stockNuevo = mapper.Map<StocksPendientes>(stock);
+
+                        stockNuevo.IdUsuario = stock.IdUsuarioAsignado;
+                        StockModel.Agregar(stockNuevo);
+                    }
+
+
+                }
+
+                var result = StockPendienteModel.RechazarStock(id);
+                return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+
+            }
+            return Json(new { data = "" }, JsonRequestBehavior.AllowGet);
+
         }
 
 

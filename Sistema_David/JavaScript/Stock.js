@@ -70,8 +70,14 @@ async function configurarDataTable() {
             { "data": "Total" },
             {
                 "data": "Id", "render": function (data) {
-                    return "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
-                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>"
+                    var botones = ""
+
+                    botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
+                    botones += userSession.IdRol == 1 ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
+                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>" : ""
+
+                    return botones
+                    
                 },
                 "orderable": true,
                 "searchable": true,
@@ -87,7 +93,7 @@ async function configurarDataTable() {
                 "targets": [3, 4] // Columnas PrecioVenta y Total
             },
             {
-                "targets": [4, 5], // Columnas de acciones
+                "targets": [4], // Columnas de acciones
                 "visible": (userSession.IdRol == 1) // Ocultar si el rol no es 1
             }
         ],
@@ -174,6 +180,51 @@ const editarStock = async id => {
     }
 }
 
+async function transferirStock(id) {
+    await cargarUsuarios();
+    $("#CantidadTransferencia").val("1");
+    $("#IdStockTransferencia").val(id);
+    $("#transferenciaModal").modal("show");
+}
+
+async function transferenciaStock() {
+    var cantidad = parseInt(document.getElementById("CantidadTransferencia").value);
+    var idStock = parseInt(document.getElementById("IdStockTransferencia").value);
+    var idUser = parseInt(document.getElementById("Usuarios").value);
+
+    var url = "/Stock/Transferir";
+
+    let value = JSON.stringify({
+        IdStock: idStock,
+        Cantidad: cantidad,
+        IdUser: idUser,
+        idUserAsignado: parseInt(localStorage.getItem("idUserStock"))
+    });
+
+    let options = {
+        type: "POST",
+        url: url,
+        async: true,
+        data: value,
+        contentType: "application/json",
+        dataType: "json"
+    };
+
+    let result = await MakeAjax(options);
+
+    if (result != null) {
+        if (result.data == "-1") {
+            alert("No tienes esa cantidad para transferir.");
+            return false;
+        }
+        alert("Stock transferido correctamente")
+        document.location.href = "../../Stock/Index/";
+    }
+
+
+
+}
+
 
 function abrirmodal() {
     $("#nuevoProductoModal").modal("show");
@@ -232,6 +283,43 @@ async function cargarProductos() {
     }
 }
 
+
+async function cargarUsuarios() {
+    try {
+        var url = "/Usuarios/ListarUserActivos";
+
+        let value = JSON.stringify({
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result != null) {
+
+            selectUsuarios = document.getElementById("Usuarios");
+
+            $('#Usuarios option').remove();
+            for (var i = 0; i < result.data.length; i++) {
+                option = document.createElement("option");
+                option.value = result.data[i].Id;
+                option.text = result.data[i].Nombre;
+                selectUsuarios.appendChild(option);
+
+            }
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
 
 async function cargarProductosAll() {
     try {

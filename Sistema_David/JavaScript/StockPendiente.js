@@ -3,6 +3,7 @@ const productos = [];
 let userSession;
 let idUserStock = 0;
 let cardsSeleccionadas = [];
+let enProceso = false;
 
 $(document).ready(async function () {
     userSession = JSON.parse(sessionStorage.getItem('usuario'));
@@ -183,10 +184,10 @@ async function cargarStock(idUsuario, Estado, Fecha) {
 
                 // Mostrar la parte azul y la parte blanca común a ambos tipos de asignación
                 newCard.innerHTML = `
-            <div class="half-blue">
+            <div class="${result.data[i].Asignacion === 'TRANSFERENCIA' ? 'half-transferencia' : 'half-blue'}">
                 <span class="texto-titulo text-white">${result.data[i].Usuario}</span>
                 <div class="round-image"></div>
-                ${userSession.IdRol === 1 && result.data[i].Estado === "Pendiente" && result.data[i].Asignacion == "USUARIO" ?
+                ${userSession.IdRol === 1 && result.data[i].Estado === "Pendiente" && (result.data[i].Asignacion == "USUARIO") ?
                         `<input type="checkbox" class="form-check-input checkbox position-absolute top-0 end-0 me-2" id="checkbox-${cardId}" onclick="toggleCheckbox(${cardId})">
                      <label for="checkbox-${cardId}" class="form-check-label position-absolute top-0 end-0"></label>
                      <div class="icons-container position-absolute top-30 end-0 translate-middle-y me-2">
@@ -213,30 +214,30 @@ async function cargarStock(idUsuario, Estado, Fecha) {
                         `<button class="btn btn-danger full-width mt-4"><i class="fa fa-times"></i> Rechazado</button>` :
 
 
-
-                        userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && result.data[i].Asignacion == "ADMINISTRADOR" && userSession.IdRol != 1 ?
+                        userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "ADMINISTRADOR" || result.data[i].Asignacion.toUpperCase() == "TRANSFERENCIA") && userSession.IdRol != 1 ?
                             `<div class="divBotones botones-row mt-4 row justify-content-center">
                              <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
                              <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>` :
 
 
 
-                        userSession.Id == result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && result.data[i].Asignacion == "USUARIO" && userSession.IdRol != 1 ?
+                            userSession.Id == result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "USUARIO" || result.data[i].Asignacion.toUpperCase() == "TRANSFERENCIA") && userSession.IdRol != 1 ?
                                 `<button class="btn btn-warning btn-pendiente mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` :
 
                            
 
-                            userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && result.data[i].Asignacion == "USUARIO" && userSession.IdRol == 1 ?
+                                userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "USUARIO" || (result.data[i].Asignacion.toUpperCase() === "TRANSFERENCIA")) && userSession.IdRol == 1 ?
                                 `<div class="divBotones botones-row mt-4 row justify-content-center">
                              <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
                              <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>` :
-                            userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && result.data[i].Asignacion == "USUARIO" ?
+
+                         userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && result.data[i].Asignacion == "USUARIO" ?
                                 `<div class="divBotones botones-row mt-4 row justify-content-center">
                              <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
                              <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
+                                 </div>` :
 
-                         </div>` :
-                                userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' ?
+                         userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' ?
                                             `<button class="btn btn-warning btn-pendiente mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` :
                                     ''
                     }
@@ -343,8 +344,10 @@ const editarStock = async id => {
     }
 }
 
-
 async function aceptarStock(id) {
+    if (enProceso) return; // Si ya está ejecutándose, no continuar
+    enProceso = true;
+
     try {
         var url = "/StockPendiente/AceptarStock";
 
@@ -372,17 +375,21 @@ async function aceptarStock(id) {
         }
     } catch (error) {
         alert("Ha ocurrido un error en los datos");
+    } finally {
+        enProceso = false; // Se libera la variable para permitir una nueva ejecución
     }
 }
 
 
+
 async function rechazarStock(id) {
+    if (enProceso) return; // Evita que se ejecute si ya está en proceso
+    enProceso = true;
+
     try {
         var url = "/StockPendiente/RechazarStock";
 
-        let value = JSON.stringify({
-            Id: id
-        });
+        let value = JSON.stringify({ Id: id });
 
         let options = {
             type: "POST",
@@ -404,6 +411,8 @@ async function rechazarStock(id) {
         }
     } catch (error) {
         alert("Ha ocurrido un error en los datos");
+    } finally {
+        enProceso = false; // Se libera después de terminar
     }
 }
 
@@ -504,6 +513,8 @@ const eliminarStock = async id => {
 
 
 async function aceptarStocks() {
+    if (enProceso) return; // Si ya está ejecutándose, no continuar
+    enProceso = true;
 
     try {
         var url = "/StockPendiente/ModificarEstadoStockList";
@@ -524,23 +535,25 @@ async function aceptarStocks() {
 
         let result = await MakeAjax(options);
 
-
         if (result) {
             $("#modalEdit").modal("hide");
             document.getElementById("btnAceptarTodas").style.display = "none";
             document.getElementById("btnRechazarTodas").style.display = "none";
-            $('#selectAllCheckbox').prop('checked', false);  // Asumiendo que tu checkbox "Seleccionar Todos" tiene el id "select-all-checkbox"
-            alert("Stocks aceptados exitosamente.")
+            $('#selectAllCheckbox').prop('checked', false);
+            alert("Stocks aceptados exitosamente.");
             aplicarFiltros();
             desmarcarCheckBoxes();
         } else {
-            alert("No se han podido cambiar los estado correctamente.")
+            alert("No se han podido cambiar los estados correctamente.");
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.');
+        $('.datos-error').removeClass('d-none');
+    } finally {
+        enProceso = false; // Se libera la variable para permitir una nueva ejecución
     }
 }
+
 
 
 

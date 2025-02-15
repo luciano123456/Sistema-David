@@ -40,10 +40,10 @@ namespace Sistema_David.Models
                             IdProducto = model.IdProducto,
                             IdUsuario = model.IdUsuario,
                             Fecha = DateTime.Now,
-                            IdUsuarioAsignado = idUsuarioSesion,
+                            IdUsuarioAsignado = model.IdUsuarioAsignado > 0 ? model.IdUsuarioAsignado : idUsuarioSesion,
                             Cantidad = model.Cantidad,
                             Estado = "Pendiente",
-                            Asignacion = model.IdUsuario == idUsuarioSesion ? "USUARIO" : "ADMINISTRADOR"
+                            Asignacion = (model.Asignacion == "TRANSFERENCIA" ? "TRANSFERENCIA" : (model.IdUsuario ==  idUsuarioSesion ? "USUARIO" : "ADMINISTRADOR"))
                         };
 
                         db.StocksPendientes.Add(nuevoStock);
@@ -281,6 +281,7 @@ namespace Sistema_David.Models
                 {
 
                     var result = db.StocksPendientes.Find(id);
+
 
                     result.Estado = "Rechazado";
 
