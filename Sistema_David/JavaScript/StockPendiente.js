@@ -199,6 +199,10 @@ async function cargarStock(idUsuario, Estado, Fecha) {
                         : ''}
             </div>
             <div class="half-white">
+            <div class="mt-2 text-center">
+                    <i class="fa fa-info-circle me-1 mb-1" title="Fecha"></i>
+                    <span class="texto-titulo" style="font-weight: bold; color: blue;">${moment(result.data[i].Fecha).format("DD-MM-YYYY")}</span>
+                </div>
                 <div class="mt-2 text-center">
                     <i class="fa fa-info-circle me-1 mb-1" title="Nombre del producto"></i>
                     <span class="texto-titulo" style="font-weight: bold; color: blue;">${result.data[i].Cantidad} ${result.data[i].Producto}</span>
