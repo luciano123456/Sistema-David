@@ -1,6 +1,7 @@
 ﻿using Sistema_David.Helpers;
 using Sistema_David.Models;
 using Sistema_David.Models.DB;
+using Sistema_David.Models.Modelo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace Sistema_David.Controllers
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
-       
+
 
 
 
@@ -53,6 +54,43 @@ namespace Sistema_David.Controllers
         {
             var result = StockModel.EditarInfo(id);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
+
+        public ActionResult Transferir(int idStock, int cantidad, int idUser, int idUserAsignado)
+        {
+            var stock = StockModel.EditarInfo(idStock);
+
+            if (stock.Cantidad < cantidad)
+            {
+                return Json(new { data = "-1" }, JsonRequestBehavior.AllowGet);
+            }
+
+            var restarStock = StockModel.RestarStock(idStock, cantidad, idUserAsignado);
+
+            if (restarStock)
+            {
+                StocksPendientes model = new StocksPendientes();
+
+                model.Fecha = DateTime.Now;
+                model.Cantidad = cantidad;
+                model.IdUsuarioAsignado = idUserAsignado;
+                model.IdUsuario = idUser;
+                model.Estado = "Pendiente";
+                model.Asignacion = "TRANSFERENCIA";
+                model.IdProducto = stock.IdProducto;
+
+
+                var stockPendiente = StockPendienteModel.Agregar(model);
+
+                return Json(new { data = stockPendiente }, JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                return Json(new { data = "-1" }, JsonRequestBehavior.AllowGet);
+            }
+
+           
         }
 
         public ActionResult Agregar(StocksPendientes model)

@@ -112,6 +112,44 @@ namespace Sistema_David.Models
             }
         }
 
+
+        public static bool RestarStock(int idStock, int Cantidad, int idUsuario)
+        {
+
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                {
+
+                    StockUsuarios result = new StockUsuarios();
+
+                    var stock = db.StockUsuarios.Where(x => x.Id == idStock && x.IdUsuario == idUsuario).FirstOrDefault();
+
+                    var cantidadTotal = stock.Cantidad - Cantidad;
+
+                    if (cantidadTotal > 0)
+                    {
+                        stock.Cantidad -= Cantidad;
+                        db.Entry(stock).State = System.Data.Entity.EntityState.Modified;
+
+                    }
+                    else
+                    {
+                        db.StockUsuarios.Remove(stock);
+                    }
+
+                    db.SaveChanges();
+
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+
+        }
         public static bool AgregarStockEliminarVenta(StockUsuarios model)
         {
 

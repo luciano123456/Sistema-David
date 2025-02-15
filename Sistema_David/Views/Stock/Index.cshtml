@@ -95,18 +95,6 @@
                         <option value="" selected>Seleccione Producto</option>
                     </select>
 
-                    @*<div role="group">
-                            <div class="non-active arrival params not-readonly">
-                                <label class="lblNombreInput">Producto</label>
-                            </div>
-                            <div class="minicontrol">
-                                <input autocomplete="off" id="Productos" class="input-params input-params-not-readonly text-black input-nuevomodif" list="lstProducto" data-error="errTxtProducto" required placeholder="Seleccione un producto" />
-                                <datalist id="lstProducto"></datalist>
-                                <div id="errTxtProducto"></div>
-                            </div>
-                        </div>*@
-
-
                     <label class="lblNombreInput" hidden>Producto Precio</label>
                     <select id="ProductosPrecio" name="select" class="input-nuevomodif select-modal-personalizado mt-3" hidden>
                         <option value="" selected>Seleccione Producto</option>
@@ -124,6 +112,37 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="agregarStock()">Añadir</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="transferenciaModal" tabindex="-1" aria-labelledby="transferenciaModallLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="transferenciaModalLabel">Transferir Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <label class="lblNombreInput">Usuario</label>
+                    <select id="Usuarios" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
+                        <option value="" selected>Seleccione Usuario</option>
+                    </select>
+
+                    <input type="Text" id="IdStockTransferencia" class="input-nuevomodif" hidden />
+
+                    <label class="lblNombreInput">Cantidad</label>
+                    <input type="number" placeholder="1" value="1" id="CantidadTransferencia" class="input-nuevomodif" />
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="transferenciaStock()">Transferir</button>
 
                 </div>
             </div>

@@ -29,6 +29,16 @@
     z-index: 1;
 }
 
+.half-transferencia {
+    background-color: green; /* Violeta */
+    border-radius: 10px 10px 0px 0px;
+    color: #6a0dad;
+    height: 180px; /* Ajustar altura como desees */
+    width: 100%; /* Ancho del 100% */
+    position: relative; /* Agregado para posicionar elementos hijos */
+    z-index: 1;
+}
+
 .half-white {
     background-color: white;
     border-radius: 0px 0px 10px 10px;
