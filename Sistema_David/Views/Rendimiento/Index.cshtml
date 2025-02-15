@@ -18,11 +18,18 @@
 
         <div id="Filtros" class="divFiltros" hidden>
 
+
             <label class="m-lg-2 lblcliente">Fecha Desde:</label>
+            <i class="fa fa-arrow-left text-success cursor-pointer" onclick="cambiarFecha('FechaDesde', -1)"></i>
+            <i class="fa fa-arrow-right text-success cursor-pointer" onclick="cambiarFecha('FechaDesde',1)"></i>
             <input type="date" placeholder="" value="" id="FechaDesde" class="input-nuevo" />
 
+
             <label class="m-lg-2 lblcliente">Fecha Hasta:</label>
+            <i class="fa fa-arrow-left text-success cursor-pointer" onclick="cambiarFecha('FechaHasta', -1)"></i>
+            <i class="fa fa-arrow-right text-success cursor-pointer" onclick="cambiarFecha('FechaHasta',1)"></i>
             <input type="date" placeholder="" value="" id="FechaHasta" class="input-nuevo" />
+
             <a class="ms-1" title="Hoy" onclick="fechaHoy()"><i class="fa fa-calendar cursor-pointer" style="color: wheat" aria-hidden="true"></i></a>
             <a class="ms-1" title="Mensual" onclick="fechaMensual()"><i class="fa fa-calendar cursor-pointer" style="color: green" aria-hidden="true"></i></a>
 
@@ -42,12 +49,12 @@
             </select>
 
             @*<label class="lblcliente" id="lblmetodopago">Metodo de pago</label>
-            <select id="MetodoPago" name="select" class="input-nuevo select-modal-personalizado mt-3" onchange="habilitarCBU()" required>
-                <option value="">Seleccionar</option>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia Propia">Transferencia Propia</option>
-                <option value="Transferencia a Terceros">Transferencia a Terceros</option>
-            </select>*@
+        <select id="MetodoPago" name="select" class="input-nuevo select-modal-personalizado mt-3" onchange="habilitarCBU()" required>
+            <option value="">Seleccionar</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Transferencia Propia">Transferencia Propia</option>
+            <option value="Transferencia a Terceros">Transferencia a Terceros</option>
+        </select>*@
 
 
 
