@@ -3,6 +3,7 @@ using Sistema_David.Models.DB;
 using Sistema_David.Models.Modelo;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -60,8 +61,25 @@ namespace Sistema_David.Models
         }
 
 
+        public static int MostrarCantidadStocksPendiente()
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
 
-        public static List<StockPendientes> ListarStockPendiente(int idUser, string Estado, DateTime? Fecha)
+                // Contamos el número de registros que coinciden con las condiciones
+                int cantidad = db.StocksPendientes
+                    .Where(iv => iv.Estado.ToUpper() == "PENDIENTE"
+                                 && iv.Asignacion.ToUpper() == "USUARIO" && 
+                                 iv.IdProducto > 0
+                                 )
+                    .Count();
+
+                return cantidad;
+            }
+        }
+
+
+        public static List<StockPendientes> ListarStockPendiente(int idUser, string Estado, DateTime? Fecha, string Asignacion)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -83,9 +101,10 @@ namespace Sistema_David.Models
                                   Fecha = d.Fecha?.Date,
                                   Asignacion = d.Asignacion != null ? d.Asignacion : "ADMINISTRADOR"
 
-                              }).Where(x => (x.IdUsuario == idUser || idUser == -1) &&
+                              }).Where(x => ((x.IdUsuario == idUser || idUser == -1) &&
                                   (x.Estado == Estado || Estado == "Todos") &&
-                                  (!Fecha.HasValue || (DateTime)x.Fecha == Fecha)).ToList();
+                                  (x.Asignacion.ToUpper() == Asignacion.ToUpper() || Asignacion == "Todos") &&
+                                  (!Fecha.HasValue || (DateTime)x.Fecha == Fecha)) || (x.IdUsuarioAsignado == idUser && x.Asignacion == "TRANSFERENCIA" && x.Estado == "Pendiente")).ToList();
 
                 return result;
             }
