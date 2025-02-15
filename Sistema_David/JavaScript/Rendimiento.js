@@ -1329,3 +1329,20 @@ const bloqueoSistema = async (id, estado) => {
         $('.datos-error').removeClass('d-none')
     }
 }
+
+// Función para cambiar la fecha (sumar o restar un día)
+function cambiarFecha(inputId, incremento) {
+    let fechaInput = document.getElementById(inputId);
+    let fechaActual = new Date(fechaInput.value);  // Obtener fecha actual del campo
+
+    // Si la fecha está vacía, asignamos la fecha actual
+    if (isNaN(fechaActual.getTime())) {
+        fechaActual = new Date();
+    }
+
+    // Incrementar o decrementar un día
+    fechaActual.setDate(fechaActual.getDate() + incremento);
+
+    // Establecer la nueva fecha en el campo (formato yyyy-mm-dd)
+    fechaInput.value = fechaActual.toISOString().split('T')[0];
+}
