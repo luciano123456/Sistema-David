@@ -32,23 +32,23 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListarStockPendiente(int id, string Estado, DateTime Fecha)
         {
-
-
             List<StockPendientes> stockPendiente;
 
-            if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 1) //ROL ADMIN, ADMIN TRAE TODOS, SI ES VENDEDOR, SOLO SU USER
+            // Si el estado es 'pendiente', no se filtra por fecha (se pasa null)
+            DateTime? fechaFiltro = Estado == "Pendiente" ? (DateTime?)null : Fecha;
+
+            if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 1) // ROL ADMIN
             {
-                stockPendiente = StockPendienteModel.ListarStockPendiente(id > 0 ? id : -1, Estado, Fecha);
+                stockPendiente = StockPendienteModel.ListarStockPendiente(id > 0 ? id : -1, Estado, fechaFiltro);
             }
             else
             {
-                stockPendiente = StockPendienteModel.ListarStockPendiente(id, Estado, null);
+                stockPendiente = StockPendienteModel.ListarStockPendiente(id, Estado, fechaFiltro);
             }
 
             var json = Json(new { data = stockPendiente }, JsonRequestBehavior.AllowGet);
             json.MaxJsonLength = 500000000;
             return json;
-
         }
 
 
