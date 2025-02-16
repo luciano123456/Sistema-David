@@ -38,8 +38,6 @@ namespace Sistema_David.Controllers
 
 
 
-
-
         public ActionResult BuscarStockUser(int idUsuario, int idProducto)
         {
             var result = StockModel.BuscarStockUser(idUsuario, idProducto);
