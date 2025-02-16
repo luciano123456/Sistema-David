@@ -44,7 +44,8 @@ namespace Sistema_David.Models
                             IdUsuarioAsignado = model.IdUsuarioAsignado > 0 ? model.IdUsuarioAsignado : idUsuarioSesion,
                             Cantidad = model.Cantidad,
                             Estado = "Pendiente",
-                            Asignacion = (model.Asignacion == "TRANSFERENCIA" ? "TRANSFERENCIA" : (model.IdUsuario ==  idUsuarioSesion ? "USUARIO" : "ADMINISTRADOR"))
+                            Asignacion = (model.Asignacion == "TRANSFERENCIA" ? "TRANSFERENCIA" : (model.IdUsuario ==  idUsuarioSesion ? "USUARIO" : "ADMINISTRADOR")),
+                            Tipo = model.Tipo
                         };
 
                         db.StocksPendientes.Add(nuevoStock);

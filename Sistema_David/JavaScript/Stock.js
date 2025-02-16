@@ -71,15 +71,18 @@ async function configurarDataTable() {
             { "data": "PrecioVenta" },
             { "data": "Total" },
             {
-                "data": "Id", "render": function (data) {
-                    var botones = ""
+                "data": "Id",
+                "render": function (data, type, row) {
+                    var botones = "";
 
-                    botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
+                    botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='sumarStock(" + data + ", " + row.IdProducto + ")' title='Agregar'><i class='fa fa-plus fa-lg text-success' aria-hidden='true'></i></button>" +
+                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='restarStock(" + data + ", " + row.IdProducto + ")' title='Quitar'><i class='fa fa-minus fa-lg text-danger' aria-hidden='true'></i></button>" +
+                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ", " + row.IdProducto + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
+
                     botones += userSession.IdRol == 1 ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
-                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>" : ""
+                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>" : "";
 
-                    return botones
-                    
+                    return botones;
                 },
                 "orderable": true,
                 "searchable": true,
@@ -187,6 +190,20 @@ async function transferirStock(id) {
     $("#CantidadTransferencia").val("1");
     $("#IdStockTransferencia").val(id);
     $("#transferenciaModal").modal("show");
+}
+
+async function sumarStock(id, idproducto) {
+    $("#CantidadAgregarStock").val("1");
+    $("#IdStockAgregar").val(id);
+    $("#IdProductoAgregar").val(idproducto);
+    $("#agregarStockModal").modal("show");
+}
+
+async function restarStock(id, idproducto) {
+    $("#CantidadRestarStock").val("1");
+    $("#IdStockRestar").val(id);
+    $("#IdProductoRestar").val(idproducto);
+    $("#restarStockModal").modal("show");
 }
 
 async function transferenciaStock() {
@@ -500,6 +517,51 @@ async function agregarStockUser() {
     }
 }
 
+
+
+async function sumaStock() {
+
+    try {
+        var url = "/StockPendiente/Agregar";
+
+        let value = JSON.stringify({
+            //IdProducto: obtenerIdListSeleccionado(),
+            IdProducto: $("#IdProductoAgregar").val(),
+            Cantidad: Number($("#Cantidad").val()),
+            IdUsuario: idUserStock,
+            Tipo: 'Agregar'
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result.Status == 1) {
+            alert('Se ha agregado el producto a stock pendiente.');
+            $('.datos-error').removeClass('d-none');
+            document.location.href = "../../Stock/Index/";
+
+        } else if (result.Status == 2) {
+
+            $('.datos-error').text('El usuario ya tiene ese producto.')
+            $('.datos-error').removeClass('d-none');
+
+        } else {
+            $('.datos-error').text('Ha ocurrido un error en los datos.')
+            $('.datos-error').removeClass('d-none')
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
 const eliminarStock = async id => {
 
     try {

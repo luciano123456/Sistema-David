@@ -26,6 +26,7 @@ namespace Sistema_David.Models.DB
         public string Usuario { get; internal set; }
         public string Producto { get; internal set; }
         public string Imagen { get; internal set; }
+        public string Estado { get; internal set; }
         public decimal PrecioVenta { get; internal set; }
         public decimal Total { get; internal set; }
     }

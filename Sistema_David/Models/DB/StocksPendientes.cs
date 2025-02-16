@@ -22,6 +22,7 @@ namespace Sistema_David.Models.DB
         public Nullable<int> Cantidad { get; set; }
         public string Estado { get; set; }
         public string Asignacion { get; set; }
+        public string Tipo { get; set; }
     
         public virtual Productos Productos { get; set; }
         public virtual Usuarios Usuarios { get; set; }

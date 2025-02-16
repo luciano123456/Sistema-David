@@ -153,6 +153,63 @@
         </div>
     </div>
 
+
+
+    <div class="modal fade" id="agregarStockModal" tabindex="-1" aria-labelledby="agregarStockModallLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agregarStockModalLabel">Agregar Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <input type="Text" id="IdStockAgregar" class="input-nuevomodif" hidden />
+                    <input type="Text" id="IdProductoAgregar" class="input-nuevomodif" hidden />
+
+                    <label class="lblNombreInput">Cantidad</label>
+                    <input type="number" placeholder="1" value="1" id="CantidadAgregarStock" class="input-nuevomodif" />
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="sumaStock()">Aceptar</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="restarStockModal" tabindex="-1" aria-labelledby="restarStockModallLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="restarStockModalLabel">Restar Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <input type="Text" id="IdStockRestar" class="input-nuevomodif" hidden />
+                    <input type="Text" id="IdProductoResta" class="input-nuevomodif" hidden />
+
+                    <label class="lblNombreInput">Cantidad</label>
+                    <input type="number" placeholder="1" value="1" id="CantidadRestarStock" class="input-nuevomodif" />
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="restaStock()">Aceptar</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </body>
 
 
