@@ -1,0 +1,222 @@
+﻿.select-modal-personalizado {
+    font-size: 0.8vw !important;
+    max-width: 150px !important;
+}
+
+.lblNombreInput {
+    display: flex;
+    justify-content: center;
+    text-align: center !important;
+    color: #05056C;
+    font-size: 1vw;
+}
+
+.lblusuario {
+    margin-left: 30px;
+    font-size: 0.7vw;
+}
+
+
+.divStock {
+    margin-block: 10px;
+    margin-top: 15px;
+    padding: 5px 5px 5px 15px;
+    border-color: white;
+    border-width: 1px;
+    border-style: double;
+}
+
+
+
+.btn-wspstock i {
+    height: calc(1vh + 1vw);
+    width: calc(1vh + 1vw);
+    color: #25D366; /* Verde para WhatsApp */
+    margin-left: -5px;
+}
+
+.select2-results__option {
+    color: red;
+}
+
+.select2-container {
+    z-index: 9999999999;
+}
+
+    /* Establece el color de los textos de Select2 en negro */
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        color: black;
+    }
+
+    /* Elimina el borde del contenedor de selección */
+    .select2-container .select2-selection--single {
+        border: none; /* Elimina el borde del contenedor */
+        box-shadow: none; /* Elimina el sombreado del contenedor */
+    }
+
+    /* Opcional: si también quieres eliminar los bordes del dropdown */
+    .select2-container .select2-dropdown {
+        border: none; /* Elimina el borde del dropdown */
+        box-shadow: none; /* Elimina el sombreado del dropdown */
+    }
+
+.input-nuevo {
+    border: none;
+    border-bottom: 0px;
+    border-bottom: solid blue;
+    width: 70%;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center !important;
+    font-size: 0.8vw;
+    max-width: 200px !important;
+    background: #1B2631 !important;
+    color: white !important;
+}
+
+.obs {
+    max-width: 500px !important;
+    width: 100% !important;
+}
+
+.input-nuevo:active {
+    border: none;
+    border-bottom: solid blue;
+}
+
+.input-nuevo::placeholder {
+    opacity: 1 !important;
+}
+
+.input-nuevo:hover {
+    outline: none !important;
+}
+
+.input-nuevo:focus {
+    outline: none !important;
+    border-bottom: solid red;
+}
+
+
+.input-nuevomodif {
+    display: flex;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    width: 70%;
+    display: block;
+    position: relative;
+    left: 17%;
+    font-size: 30px;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center;
+    font-size: 1.3vw;
+    max-width: 500px !important;
+    color: black !important;
+}
+
+    .input-nuevomodif:active {
+        border: none;
+        border-bottom: solid blue;
+    }
+
+    .input-nuevomodif::placeholder {
+        color: black;
+        opacity: 1 !important;
+    }
+
+    .input-nuevomodif:hover {
+        outline: none !important;
+    }
+
+    .input-nuevomodif:focus {
+        outline: none !important;
+        border-bottom: solid red;
+    }
+
+
+.btnAccion {
+    width: 2vw;
+    min-width: 25px;
+    background: #2E4053;
+    margin-left: 10px;
+}
+
+
+.btneliminar:hover {
+    cursor: pointer;
+}
+
+
+.btneditar {
+    margin-right: 5px !important;
+}
+
+.btn-accion {
+    background: #2E4053;
+    border-color: blue;
+    color: white;
+    font-size: 0.8vw;
+    height: 3.2vh;
+    width: auto;
+}
+
+    .btn-accion:hover {
+        background: #0D62CF;
+    }
+
+
+.divPrecio {
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.mt-10 {
+    margin-top: 40rem;
+}
+
+
+
+.cardTablePersonalizadoStock {
+    width: 98%;
+    margin: 15px auto; /* Center the card */
+    border: none;
+    position: initial;
+}
+
+@media (max-width: 1700px) {
+    .btn-wspstock {
+        margin-top: -15px;
+    }
+}
+
+
+.divFiltros {
+    padding: 5px 5px 5px 5px;
+    border: 3px solid;
+    border: solid blue;
+    display: flex;
+    width: 85%;
+    display: block;
+    position: relative;
+    left: 8%;
+    margin-top: 20px;
+    color: black;
+    text-align: center;
+}
+
+.input-nuevo {
+    border: none;
+    border-bottom: 0px;
+    border-bottom: solid blue;
+    width: 70%;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center !important;
+    font-size: 0.8vw;
+    max-width: 200px !important;
+    background: #1B2631 !important;
+    color: white !important;
+    

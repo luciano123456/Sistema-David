@@ -1,5 +1,6 @@
 ﻿let userSession;
 let gridVentas = null
+let gridProductos;
 
 $(document).ready(function () {
     configurarDataTable();

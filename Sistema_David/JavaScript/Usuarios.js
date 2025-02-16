@@ -471,6 +471,10 @@ function abrirstockPendiente() {
     document.location.href = "../../StockPendiente/Index/";
 }
 
+function abrirstockGeneral() {
+    document.location.href = "../../Stock/General/";
+}
+
 const bloqueoSistema = async (id, estado) => {
 
     try {
