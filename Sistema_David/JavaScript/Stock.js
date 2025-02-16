@@ -3,6 +3,8 @@ const productos = [];
 let userSession;
 let idUserStock = 0;
 let productoNombres = {};
+let nombreUser;
+
 
 $(document).ready(function () {
     userSession = JSON.parse(sessionStorage.getItem('usuario'));
@@ -654,4 +656,117 @@ async function enviarWhatssap() {
 
     const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${telefono}&text=''`;
     window.open(urlwsp, '_blank');
+}
+
+
+async function exportarPdf() { 
+
+    try {
+
+        var url = "/Stock/BuscarStock";
+
+        let value = JSON.stringify({
+            Id: idUserStock
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+
+
+        if (result != null) {
+            nombreUser = document.getElementById("lblnombreusuario").innerText;
+            const facturaPDF = generarFacturaPDF(result);
+            descargarFacturaPDF(facturaPDF);
+
+
+        } else {
+            alert('Ha ocurrido un error en los datos.')
+        }
+    } catch (error) {
+        alert('Ha ocurrido un error en los datos.')
+    }
+}
+
+function generarFacturaPDF(factura) {
+    const doc = new jsPDF();
+    let fecha = moment().format('DD/MM/YYYY');
+    const pageHeight = doc.internal.pageSize.height; // Altura máxima de la página
+
+    let y = 20; // Posición inicial de la primera página
+    let primeraPagina = true; // Controla si es la primera página
+
+    // Función para agregar encabezado en la primera página
+    function agregarEncabezadoPrimeraPagina() {
+        doc.setFontSize(32);
+        doc.setTextColor(115, 195, 178);
+        doc.text(`Indumentaria DG`, 10, y);
+        doc.setTextColor(0);
+        doc.setFontSize(12);
+        doc.text(`Fecha: ${fecha}`, 10, y + 10);
+        doc.text(`Stock de ${nombreUser}`, 10, y + 18);
+        y += 28; // Mover el cursor hacia abajo después del encabezado
+    }
+
+    // Función para agregar encabezado de la tabla en cada página
+    function agregarEncabezadoTabla() {
+        doc.setFontSize(12);
+        doc.setFillColor(115, 195, 178);
+        doc.rect(10, y, 190, 10, 'F');
+        doc.setTextColor(0);
+        doc.text('PRODUCTO', 12, y + 8);
+        doc.text('CANTIDAD', 102, y + 8);
+        doc.text('PRECIO UNITARIO', 142, y + 8);
+        y += 18; // Espacio debajo del encabezado de tabla
+    }
+
+    // Agregar encabezado de la primera página
+    agregarEncabezadoPrimeraPagina();
+    agregarEncabezadoTabla();
+
+    let color = true;
+
+    factura.data.forEach(item => {
+        // Si el contenido excede el límite de la página, crear una nueva página
+        if (y > pageHeight - 20) {
+            doc.addPage();
+            y = 20; // Reiniciar la posición vertical en la nueva página
+            agregarEncabezadoTabla(); // Agregar el encabezado de tabla en la nueva página
+        }
+
+        // Alternar color de fondo para filas
+        if (!color) {
+            doc.setFillColor(232, 238, 237);
+            doc.rect(10, y - 7, 190, 10, 'F');
+        }
+        color = !color;
+
+        // Agregar datos del producto
+        doc.setFontSize(12);
+        doc.text(item.Producto, 12, y);
+        doc.text(item.Cantidad.toString(), 107, y);
+        doc.text(formatNumber(item.PrecioVenta), 147, y);
+
+        // Dibujar línea separadora
+        doc.setLineWidth(0.5);
+        doc.line(10, y + 3, 200, y + 3);
+
+        y += 10; // Incrementar la posición vertical
+    });
+
+    return doc;
+}
+
+
+function descargarFacturaPDF(facturaPDF) {
+    let fecha = moment().format('DD/MM/YYYY');
+    facturaPDF.save(`stock_${nombreUser} - ${fecha} .pdf`);
 }
