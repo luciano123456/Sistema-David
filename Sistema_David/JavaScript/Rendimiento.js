@@ -1031,6 +1031,7 @@ async function enviarWhatssap(id) {
 
 
             var fecha = moment(result.InformacionVenta.Fecha).format('DD/MM/YYYY');
+            var fechaHora = moment(result.InformacionVenta.Fecha).format('HH:mm');
             var fechaCobro = moment(result.Venta.FechaCobro).format('DD/MM/YYYY');
 
             const horaActual = new Date().getHours();
@@ -1103,7 +1104,7 @@ async function enviarWhatssap(id) {
                 const table = $('#grdClientesAusentes').DataTable();
                 table.ajax.reload();
 
-                mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} hemos visitado su casa para realizar un cobro y el vendedor no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
+                mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro y el vendedor no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
                 if (data.IdRol != 2) {
                     CantidadClientesAusentes();
                 }
