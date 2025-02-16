@@ -521,6 +521,7 @@
     <Content Include="Content\font-awesome.min.css" />
     <Content Include="Estilos\ClientesEditar.css" />
     <Content Include="Estilos\Recorrido.css" />
+    <Content Include="Estilos\StockGeneral.css" />
     <Content Include="Estilos\StockPendiente.css" />
     <Content Include="Estilos\Stock.css" />
     <Content Include="Estilos\Clientes.css" />
@@ -550,6 +551,7 @@
     <Content Include="JavaScript\InformacionVenta.js" />
     <Content Include="JavaScript\PedidosEditar.js" />
     <Content Include="JavaScript\PedidosNuevo.js" />
+    <Content Include="JavaScript\StockGeneral.js" />
     <Content Include="JavaScript\StockPendiente.js" />
     <Content Include="JavaScript\Stock.js" />
     <Content Include="JavaScript\ImportacionExcelClientes.js" />
@@ -688,6 +690,7 @@
     <Content Include="Views\Pedidos\Index.cshtml" />
     <Content Include="Views\Pedidos\Nuevo.cshtml" />
     <Content Include="Views\Recorrido\Index.cshtml" />
+    <Content Include="Views\Stock\General.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

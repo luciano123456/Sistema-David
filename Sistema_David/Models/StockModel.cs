@@ -35,6 +35,55 @@ namespace Sistema_David.Models
             }
         }
 
+        public static List<StockUsuario> BuscarStockProducto(string producto)
+        {
+            if (string.IsNullOrEmpty(producto) || producto.Length < 3)
+            {
+                return new List<StockUsuario>(); // Retorna vacío si el producto tiene menos de 3 letras
+            }
+
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                var query = (from s in db.StockUsuarios
+                             join u in db.Usuarios on s.IdUsuario equals u.Id
+                             join p in db.Productos on s.IdProducto equals p.Id
+                             join t in db.TipoNegocio on u.IdTipoNegocio equals t.Id into tipoNegocioJoin // LEFT JOIN con TipoNegocios
+                             from t in tipoNegocioJoin.DefaultIfEmpty() // Esto es lo que hace el LEFT JOIN
+                             where p.Nombre != null && p.Nombre.ToUpper().Contains(producto.ToUpper()) // Filtro en BD
+                             select new
+                             {
+                                 s.Id,
+                                 s.IdProducto,
+                                 s.Cantidad,
+                                 s.IdUsuario,
+                                 Usuario = u.Nombre,
+                                 Producto = p.Nombre,
+                                 PrecioVenta = (decimal)p.PrecioVenta,
+                                 TipoNegocio = t != null ? t.Nombre : null // Si t es null, no existe tipo de negocio
+                             })
+                             .OrderBy(x => x.Producto)
+                             .ToList(); // Se ejecuta la consulta aquí
+
+                // Mapeo manual a StockUsuarios después de la consulta
+                var result = query.Select(x => new StockUsuario
+                {
+                    Id = x.Id,
+                    IdProducto = x.IdProducto,
+                    Cantidad = x.Cantidad,
+                    IdUsuario = x.IdUsuario,
+                    Usuario = x.Usuario,
+                    Producto = x.Producto,
+                    PrecioVenta = x.PrecioVenta,
+                    Total = x.PrecioVenta * x.Cantidad,
+                    TipoNegocio = x.TipoNegocio // El tipo de negocio ahora ya está incluido en la consulta
+                }).ToList();
+
+                return result;
+            }
+        }
+
+
+
 
 
 

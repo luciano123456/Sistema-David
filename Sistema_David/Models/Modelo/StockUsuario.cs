@@ -16,9 +16,10 @@ namespace Sistema_David.Models.Modelo
 
         public string Usuario { get; set; }
 
-        public double Total { get; set; }
+        public decimal Total { get; set; }
 
         public decimal PrecioVenta { get; set; }
+        public string TipoNegocio { get; set; }
 
         public string Producto { get; set; }
         public virtual Productos Productos { get; set; }

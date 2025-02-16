@@ -29,10 +29,30 @@ namespace Sistema_David.Controllers
             return View();
         }
 
+        public ActionResult General()
+        {
+
+            var stockPendiente = StockPendienteModel.ExisteStockPendiente(SessionHelper.GetUsuarioSesion().Id, "Pendiente");
+
+            if (stockPendiente == true && SessionHelper.GetUsuarioSesion().IdRol != 1) // No afecta a administradores
+            {
+                // Si hay stock pendiente, redirige al índice de StockController
+                return RedirectToAction("Index", "StockPendiente");
+            }
+
+            return View();
+        }
+
 
         public ActionResult BuscarStock(int id)
         {
             var result = StockModel.BuscarStock(id);
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult BuscarStockProducto(string producto)
+        {
+            var result = StockModel.BuscarStockProducto(producto);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
