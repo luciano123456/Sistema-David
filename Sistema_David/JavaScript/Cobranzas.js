@@ -520,6 +520,7 @@ function validarCobranza() {
     const FranjaHoraria = document.querySelector("#FranjaHorariaCobro").value;
     const Turno = document.querySelector("#TurnoCobro").value;
     const EstadoCobro = document.querySelector("#estadoCobro").value;
+    const interes = document.querySelector("#ValorInteres").value;
 
 
     var nuevaFecha = moment(document.getElementById("FechaCobro").value, "YYYY-MM-DD");
@@ -550,6 +551,9 @@ function validarCobranza() {
         return false;
     } else if (importeCobranza <= 0 && EstadoCobro == "") {
         alert("Debes poner un Estado de Cobro");
+        return false;
+    } else if (importeCobranza <= 0 && interes == "") {
+        alert("Debes poner un Interes");
         return false;
     }
     if (importeCobranza < saldoRestante && importeValorCuotaCobranza < saldoRestante && fechaHoy.isSameOrAfter(nuevaFecha, 'day') && fechaHoy.isSameOrAfter(nuevaFecha, 'month') && fechaHoy.isSameOrAfter(nuevaFecha, 'year')) {

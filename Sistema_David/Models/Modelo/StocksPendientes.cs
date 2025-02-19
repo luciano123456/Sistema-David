@@ -22,6 +22,7 @@ namespace Sistema_David.Models.Modelo
         public string Producto { get; set; }
         public string ImagenProducto { get; set; }
         public string Asignacion { get; set; }
+        public string Tipo { get; set; }
 
     }
 }

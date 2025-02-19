@@ -484,3 +484,21 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
     max-width: 90%;
     text-align: center;
 }
+
+.card {
+    opacity: 0; /* Inicialmente transparente */
+    transform: scale(0.9); /* Inicialmente más pequeñas */
+    animation: appear 0.6s ease-out forwards; /* Animación */
+}
+
+@keyframes appear {
+    0% {
+        opacity: 0;
+        transform: scale(0.9); /* Comienza pequeña */
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1); /* Tamaño final */
+    }
+}

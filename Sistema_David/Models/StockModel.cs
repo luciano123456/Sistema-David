@@ -4,32 +4,88 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Mvc;
 
 namespace Sistema_David.Models
 {
     public class StockModel
     {
 
+
+  
+
+
         public static List<StockUsuarios> BuscarStock(int id)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            using (var db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.StockUsuarios
-                         .SqlQuery("select s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre,  s.IdCategoria from StockUsuarios s inner join Usuarios u on u.Id = s.IdUsuario inner join Productos p on p.Id = s.IdProducto")
-                              select new StockUsuarios
+                var result = (from s in db.StockUsuarios
+                              join u in db.Usuarios on s.IdUsuario equals u.Id
+                              join p in db.Productos on s.IdProducto equals p.Id
+                              where s.IdUsuario == id
+                              orderby p.Nombre
+                              select new
                               {
-                                  Id = d.Id,
-                                  IdProducto = d.IdProducto,
-                                  Cantidad = d.Cantidad,
-                                  IdUsuario = d.IdUsuario,
-                                  Usuario = d.Usuarios.Nombre,
-                                  Producto = d.Productos.Nombre,
-                                  PrecioVenta = (decimal)d.Productos.PrecioVenta,
-                                  Total = (decimal)d.Productos.PrecioVenta * d.Cantidad,
-                              }).Where(x => x.IdUsuario == id)
-                                .OrderBy(x => x.Producto)
-                                .ToList();
+                                  s.Id,
+                                  s.IdProducto,
+                                  s.Cantidad,
+                                  s.IdUsuario,
+                                  Usuario = u.Nombre,
+                                  Producto = p.Nombre,
+                                  PrecioVenta = (decimal)p.PrecioVenta,
+                                  Total = (decimal)p.PrecioVenta * s.Cantidad
+                              })
+                              .AsEnumerable() // Materializa la consulta en memoria
+                              .Select(x => new StockUsuarios
+                              {
+                                  Id = x.Id,
+                                  IdProducto = x.IdProducto,
+                                  Cantidad = x.Cantidad,
+                                  IdUsuario = x.IdUsuario,
+                                  Usuario = x.Usuario,
+                                  Producto = x.Producto,
+                                  PrecioVenta = x.PrecioVenta,
+                                  Total = x.Total
+                              })
+                              .ToList();
+
+                return result;
+            }
+        }
+
+        public static StockUsuarios BuscarStockId(int id)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var result = (from s in db.StockUsuarios
+                              join u in db.Usuarios on s.IdUsuario equals u.Id
+                              join p in db.Productos on s.IdProducto equals p.Id
+                              where s.Id == id
+                              orderby p.Nombre
+                              select new
+                              {
+                                  s.Id,
+                                  s.IdProducto,
+                                  s.Cantidad,
+                                  s.IdUsuario,
+                                  Usuario = u.Nombre,
+                                  Producto = p.Nombre,
+                                  PrecioVenta = (decimal)p.PrecioVenta,
+                                  Total = (decimal)p.PrecioVenta * s.Cantidad
+                              })
+                              .AsEnumerable() // Materializa la consulta en memoria
+                              .Select(x => new StockUsuarios
+                              {
+                                  Id = x.Id,
+                                  IdProducto = x.IdProducto,
+                                  Cantidad = x.Cantidad,
+                                  IdUsuario = x.IdUsuario,
+                                  Usuario = x.Usuario,
+                                  Producto = x.Producto,
+                                  PrecioVenta = x.PrecioVenta,
+                                  Total = x.Total
+                              })
+                              .FirstOrDefault();
 
                 return result;
             }
@@ -86,46 +142,72 @@ namespace Sistema_David.Models
 
 
 
-
         public static StockUsuarios EditarInfo(int id)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            using (var db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.StockUsuarios
-                          .SqlQuery("select s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.IdCategoria from StockUsuarios s inner join Usuarios u on u.Id = s.IdUsuario inner join Productos p on p.Id = s.IdProducto")
-                              select new StockUsuarios
+                var result = (from s in db.StockUsuarios
+                              join u in db.Usuarios on s.IdUsuario equals u.Id
+                              join p in db.Productos on s.IdProducto equals p.Id
+                              where s.Id == id
+                              select new
                               {
-                                  Id = d.Id,
-                                  IdProducto = d.IdProducto,
-                                  Cantidad = d.Cantidad,
-                                  IdUsuario = d.IdUsuario,
-                                  Usuario = d.Usuarios.Nombre,
-                                  Producto = d.Productos.Nombre,
-                                  Total = (decimal)d.Productos.PrecioVenta * d.Cantidad
-                              }).Where(x => x.Id == id).FirstOrDefault();
+                                  s.Id,
+                                  s.IdProducto,
+                                  s.Cantidad,
+                                  s.IdUsuario,
+                                  Usuario = u.Nombre,
+                                  Producto = p.Nombre,
+                                  Total = (decimal)p.PrecioVenta * s.Cantidad
+                              })
+                              .AsEnumerable() // Trae los datos a memoria antes de convertir a StockUsuarios
+                              .Select(x => new StockUsuarios
+                              {
+                                  Id = x.Id,
+                                  IdProducto = x.IdProducto,
+                                  Cantidad = x.Cantidad,
+                                  IdUsuario = x.IdUsuario,
+                                  Usuario = x.Usuario,
+                                  Producto = x.Producto,
+                                  Total = x.Total
+                              })
+                              .FirstOrDefault();
 
                 return result;
             }
         }
 
+
         public static StockUsuarios BuscarStockUser(int idUser, int idProducto)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            using (var db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.StockUsuarios
-                          .SqlQuery("select s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.IdCategoria from StockUsuarios s inner join Usuarios u on u.Id = s.IdUsuario inner join Productos p on p.Id = s.IdProducto")
-                              select new StockUsuarios
+                var result = (from s in db.StockUsuarios
+                              join u in db.Usuarios on s.IdUsuario equals u.Id
+                              join p in db.Productos on s.IdProducto equals p.Id
+                              where s.IdUsuario == idUser && s.IdProducto == idProducto
+                              select new
                               {
-                                  Id = d.Id,
-                                  IdProducto = d.IdProducto,
-                                  Cantidad = d.Cantidad,
-                                  IdUsuario = d.IdUsuario,
-                                  Usuario = d.Usuarios.Nombre,
-                                  Producto = d.Productos.Nombre,
-                                  Total = (decimal)d.Productos.PrecioVenta * d.Cantidad
-                              }).Where(x => x.IdUsuario == idUser && x.IdProducto == idProducto).FirstOrDefault();
+                                  s.Id,
+                                  s.IdProducto,
+                                  s.Cantidad,
+                                  s.IdUsuario,
+                                  Usuario = u.Nombre,
+                                  Producto = p.Nombre,
+                                  Total = (decimal)p.PrecioVenta * s.Cantidad
+                              })
+                              .AsEnumerable() // Materializa la consulta en memoria
+                              .Select(x => new StockUsuarios
+                              {
+                                  Id = x.Id,
+                                  IdProducto = x.IdProducto,
+                                  Cantidad = x.Cantidad,
+                                  IdUsuario = x.IdUsuario,
+                                  Usuario = x.Usuario,
+                                  Producto = x.Producto,
+                                  Total = x.Total
+                              })
+                              .FirstOrDefault();
 
                 return result;
             }

@@ -152,6 +152,7 @@
           <Property Name="Cantidad" Type="int" />
           <Property Name="Estado" Type="varchar" MaxLength="255" />
           <Property Name="Asignacion" Type="varchar" MaxLength="50" />
+          <Property Name="Tipo" Type="varchar" MaxLength="100" />
         </EntityType>
         <EntityType Name="StockUsuarios">
           <Key>
@@ -162,6 +163,7 @@
           <Property Name="Cantidad" Type="int" Nullable="false" />
           <Property Name="IdCategoria" Type="int" Nullable="false" />
           <Property Name="IdUsuario" Type="int" Nullable="false" />
+          <Property Name="Estado" Type="varchar" MaxLength="100" />
         </EntityType>
         <EntityType Name="sysdiagrams">
           <Key>
@@ -851,6 +853,7 @@
           <NavigationProperty Name="Productos" Relationship="Sistema_DavidModel.FK_Stock_Productos" FromRole="StockUsuarios" ToRole="Productos" />
           <NavigationProperty Name="Productos1" Relationship="Sistema_DavidModel.FK_Stock_Productos1" FromRole="StockUsuarios" ToRole="Productos" />
           <NavigationProperty Name="Usuarios" Relationship="Sistema_DavidModel.FK_Stock_Usuarios" FromRole="StockUsuarios" ToRole="Usuarios" />
+          <Property Name="Estado" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
         </EntityType>
         <Association Name="FK_Stock_Productos">
           <End Type="Sistema_DavidModel.Productos" Role="Productos" Multiplicity="1" />
@@ -979,6 +982,7 @@
           <NavigationProperty Name="Productos" Relationship="Sistema_DavidModel.FK_StocksPendientes_Productos" FromRole="StocksPendientes" ToRole="Productos" />
           <NavigationProperty Name="Usuarios" Relationship="Sistema_DavidModel.FK_StocksPendientes_Usuarios" FromRole="StocksPendientes" ToRole="Usuarios" />
           <NavigationProperty Name="Usuarios1" Relationship="Sistema_DavidModel.FK_StocksPendientes_Usuarios_Asignados" FromRole="StocksPendientes" ToRole="Usuarios" />
+          <Property Name="Tipo" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
         </EntityType>
         <Association Name="FK_StocksPendientes_Productos">
           <End Type="Sistema_DavidModel.Productos" Role="Productos" Multiplicity="0..1" />
@@ -1329,6 +1333,7 @@
           <EntitySetMapping Name="StockUsuarios">
             <EntityTypeMapping TypeName="Sistema_DavidModel.StockUsuarios">
               <MappingFragment StoreEntitySet="StockUsuarios">
+                <ScalarProperty Name="Estado" ColumnName="Estado" />
                 <ScalarProperty Name="IdUsuario" ColumnName="IdUsuario" />
                 <ScalarProperty Name="IdCategoria" ColumnName="IdCategoria" />
                 <ScalarProperty Name="Cantidad" ColumnName="Cantidad" />
@@ -1374,6 +1379,7 @@
           <EntitySetMapping Name="StocksPendientes">
             <EntityTypeMapping TypeName="Sistema_DavidModel.StocksPendientes">
               <MappingFragment StoreEntitySet="StocksPendientes">
+                <ScalarProperty Name="Tipo" ColumnName="Tipo" />
                 <ScalarProperty Name="Asignacion" ColumnName="Asignacion" />
                 <ScalarProperty Name="Estado" ColumnName="Estado" />
                 <ScalarProperty Name="Cantidad" ColumnName="Cantidad" />

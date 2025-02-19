@@ -38,7 +38,6 @@ namespace Sistema_David.Controllers
             var result = ProductosModel.ListaProductos();
 
             var json = Json(new { data = result }, JsonRequestBehavior.AllowGet);
-            json.MaxJsonLength = 500000000;
             return json;
             
         }

@@ -19,14 +19,14 @@ namespace Sistema_David.Models.DB
         public int Cantidad { get; set; }
         public int IdCategoria { get; set; }
         public int IdUsuario { get; set; }
+        public string Estado { get; set; }
     
         public virtual Productos Productos { get; set; }
         public virtual Productos Productos1 { get; set; }
         public virtual Usuarios Usuarios { get; set; }
-        public string Usuario { get; internal set; }
-        public string Producto { get; internal set; }
-        public string Imagen { get; internal set; }
         public decimal PrecioVenta { get; internal set; }
+        public string Producto { get; internal set; }
+        public string Usuario { get; internal set; }
         public decimal Total { get; internal set; }
     }
 }

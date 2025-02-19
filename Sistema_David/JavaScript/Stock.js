@@ -71,15 +71,16 @@ async function configurarDataTable() {
             { "data": "PrecioVenta" },
             { "data": "Total" },
             {
-                "data": "Id", "render": function (data) {
-                    var botones = ""
+                "data": "Id",
+                "render": function (data, type, row) {
+                    var botones = "";
 
-                    botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
-                    botones += userSession.IdRol == 1 ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
-                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>" : ""
+                    botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ", " + row.IdProducto + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
 
-                    return botones
-                    
+                    botones += "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
+                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>";
+
+                    return botones;
                 },
                 "orderable": true,
                 "searchable": true,
@@ -153,6 +154,16 @@ const editarStock = async id => {
 
         if (result != null) {
 
+            // Ocultar los campos y botones adicionales (Cantidad Nueva, Quitar, Agregar)
+            $("#CantidadNueva").show();
+            $("#btnQuitar").show();
+            $("#btnAgregar").show();
+            $("#lblAgregarQuitar").show();
+            $("#btnRegistrarModificar").hide();
+            $("#Cantidad").prop('disabled', true);
+
+            document.getElementById("nuevoProductoModalLabel").textContent = "Editar Stock"
+
             await cargarProductosAll();
 
             $("#nuevoProductoModal").modal("show");
@@ -187,6 +198,20 @@ async function transferirStock(id) {
     $("#CantidadTransferencia").val("1");
     $("#IdStockTransferencia").val(id);
     $("#transferenciaModal").modal("show");
+}
+
+async function sumarStock(id, idproducto) {
+    $("#CantidadAgregarStock").val("1");
+    $("#IdStockAgregar").val(id);
+    $("#IdProductoAgregar").val(idproducto);
+    $("#agregarStockModal").modal("show");
+}
+
+async function restarStock(id, idproducto) {
+    $("#CantidadRestarStock").val("1");
+    $("#IdStockRestar").val(id);
+    $("#IdProductoRestar").val(idproducto);
+    $("#restarStockModal").modal("show");
 }
 
 async function transferenciaStock() {
@@ -227,14 +252,31 @@ async function transferenciaStock() {
 
 }
 
-
 function abrirmodal() {
+    // Mostrar el modal para añadir
     $("#nuevoProductoModal").modal("show");
+
+    // Cambiar texto del botón a "Añadir"
     $("#btnRegistrarModificar").text("Añadir");
+
+    // Habilitar campo de Producto y Cantidad
     $("#Productos").prop('disabled', false);
-    $("#Cantidad").val("1");
-    $("#IdStock").text("0");
-    $("#IdStock").value = 0;
+    $("#Cantidad").prop('disabled', false); // Habilitar cantidad para edición
+
+    // Limpiar valores del modal
+    $("#IdStock").val(0); // Establecer el ID en 0
+    $("#Cantidad").val(1); // Establecer valor predeterminado de cantidad
+    $("#precioTotal").text("0"); // Precio inicial
+    document.getElementById("nuevoProductoModalLabel").textContent = "Añadir Producto"
+
+    // Ocultar los campos y botones adicionales (Cantidad Nueva, Quitar, Agregar)
+    $("#CantidadNueva").hide();
+    $("#btnQuitar").hide();
+    $("#btnAgregar").hide();
+    $("#lblAgregarQuitar").hide();
+    $("#btnRegistrarModificar").show();
+
+    // Cargar productos si es necesario
     cargarProductos();
 }
 
@@ -421,6 +463,75 @@ async function agregarStock() {
 
 }
 
+
+async function agregarStockCantidad() {
+    try {
+        var url = "/Stock/AgregarStockCantidad";
+
+        let value = JSON.stringify({
+            Cantidad: document.getElementById("CantidadNueva").value,
+            Id: document.getElementById("IdStock").innerText
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result.Status) {
+            alert('Stock pendiente agregado correctamente.');
+            $('.datos-error').removeClass('d-none');
+            document.location.href = "../../Stock/Index/";
+        } else {
+            alert("El usuario ya tiene un stock pendiente de este producto, antes de eliminar, debe aceptar o rechazar el que tiene en curso.")
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+async function restarStockCantidad() {
+    try {
+        var url = "/Stock/RestarStockCantidad";
+
+        let value = JSON.stringify({
+            Cantidad: document.getElementById("CantidadNueva").value,
+            Id: document.getElementById("IdStock").innerText
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result.Status) {
+            alert('Stock pendiente agregado correctamente.');
+            $('.datos-error').removeClass('d-none');
+            document.location.href = "../../Stock/Index/";
+        } else {
+            alert("El usuario ya tiene un stock pendiente de este producto, antes de eliminar, debe aceptar o rechazar el que tiene en curso.")
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+
+
 async function modificarStockuser() {
     try {
         var url = "/Stock/Editar";
@@ -446,8 +557,7 @@ async function modificarStockuser() {
             $('.datos-error').removeClass('d-none');
             document.location.href = "../../Stock/Index/";
         } else {
-            $('.datos-error').text('Ha ocurrido un error en los datos.')
-            $('.datos-error').removeClass('d-none')
+            alert("El usuario ya tiene un stock pendiente de este producto, antes de eliminar, debe aceptar o rechazar el que tiene en curso.")
         }
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.')
@@ -500,6 +610,51 @@ async function agregarStockUser() {
     }
 }
 
+
+
+async function sumaStock() {
+
+    try {
+        var url = "/StockPendiente/Agregar";
+
+        let value = JSON.stringify({
+            //IdProducto: obtenerIdListSeleccionado(),
+            IdProducto: $("#IdProductoAgregar").val(),
+            Cantidad: Number($("#Cantidad").val()),
+            IdUsuario: idUserStock,
+            Tipo: 'Agregar'
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result.Status == 1) {
+            alert('Se ha agregado el producto a stock pendiente.');
+            $('.datos-error').removeClass('d-none');
+            document.location.href = "../../Stock/Index/";
+
+        } else if (result.Status == 2) {
+
+            $('.datos-error').text('El usuario ya tiene ese producto.')
+            $('.datos-error').removeClass('d-none');
+
+        } else {
+            $('.datos-error').text('Ha ocurrido un error en los datos.')
+            $('.datos-error').removeClass('d-none')
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
 const eliminarStock = async id => {
 
     try {
@@ -522,12 +677,11 @@ const eliminarStock = async id => {
             let result = await MakeAjax(options);
 
             if (result.Status) {
-                alert('Stock eliminado correctamente.');
+                alert('El stock eliminado ha sido agregado a stocks pendientes del usuario correctamente.');
                 $('.datos-error').removeClass('d-none');
                 document.location.href = "../../Stock/Index/";
             } else {
-                $('.datos-error').text('Ha ocurrido un error en los datos.')
-                $('.datos-error').removeClass('d-none')
+                alert("El usuario ya tiene un stock pendiente de este producto, antes de eliminar, debe aceptar o rechazar el que tiene en curso.")
             }
         }
     } catch (error) {

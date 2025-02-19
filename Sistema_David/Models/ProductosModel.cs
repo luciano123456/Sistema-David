@@ -14,33 +14,44 @@ namespace Sistema_David.Models
     {
         public static List<Producto> ListaProductos()
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            using (var db = new Sistema_DavidEntities())
             {
-                var result = (from d in db.Productos
-                              .SqlQuery(@"SELECT p.Id AS Id, p.Codigo AS Codigo, p.Nombre AS Nombre, 
-                                  p.Stock AS Stock, p.PrecioCompra AS PrecioCompra, p.Imagen as Imagen, 
-                                  p.PrecioVenta AS PrecioVenta, p.PorcVenta AS PorcVenta, 
-                                  p.Activo, p.idCategoria AS idCategoria, c.Nombre AS Categoria 
-                                  FROM Productos p 
-                                  INNER JOIN Categorias c ON p.idCategoria = c.Id")
-                              select new Producto
+                var result = (from p in db.Productos
+                              join c in db.Categorias on p.idCategoria equals c.Id
+                              orderby p.Activo descending
+                              select new
                               {
-                                  Id = d.Id,
-                                  Codigo = d.Codigo,
-                                  Nombre = d.Nombre,
-                                  idCategoria = d.idCategoria,
-                                  Categoria = d.Categorias.Nombre,
-                                  Stock = d.Stock,
-                                  PrecioCompra = d.PrecioCompra,
-                                  PrecioVenta = d.PrecioVenta,
-                                  Total = d.PrecioCompra * d.Stock,
-                                  Activo = (int)d.Activo,
-                                  Imagen = null
-                              }).ToList();
+                                  p.Id,
+                                  p.Codigo,
+                                  p.Nombre,
+                                  p.idCategoria,
+                                  Categoria = c.Nombre,
+                                  p.Stock,
+                                  p.PrecioCompra,
+                                  p.PrecioVenta,
+                                  Total = p.PrecioCompra * p.Stock,
+                                  p.Activo,
+                              })
+                              .AsEnumerable() // Materializa antes de mapear a Producto
+                              .Select(x => new Producto
+                              {
+                                  Id = x.Id,
+                                  Codigo = x.Codigo,
+                                  Nombre = x.Nombre,
+                                  idCategoria = x.idCategoria,
+                                  Categoria = x.Categoria,
+                                  Stock = x.Stock,
+                                  PrecioCompra = x.PrecioCompra,
+                                  PrecioVenta = x.PrecioVenta,
+                                  Total = x.Total,
+                                  Activo = x.Activo ?? 0, // Maneja nulos si Activo es nullable
+                              })
+                              .ToList();
 
-                return result.OrderByDescending(p => p.Activo).ToList();
+                return result;
             }
         }
+
 
 
         public static string ObtenerImagenProducto(int id)
@@ -63,32 +74,44 @@ namespace Sistema_David.Models
 
 
 
-
-            public static List<Producto> ListaProductosActivos()
+        public static List<Producto> ListaProductosActivos()
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            using (var db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.Productos
-                                 .SqlQuery("select p.Id as Id, p.Codigo as Codigo, p.Nombre as Nombre, p.Imagen as Imagen, p.Stock as Stock, p.PrecioCompra as PrecioCompra, p.PrecioVenta as PrecioVenta, p.PorcVenta as PorcVenta, p.Activo,  p.idCategoria as idCategoria, c.Nombre as Categoria from Productos p inner join Categorias c on p.idCategoria = c.Id")
-
-                              select new Producto
+                var result = (from p in db.Productos
+                              join c in db.Categorias on p.idCategoria equals c.Id
+                              where p.Activo == 1
+                              orderby p.Nombre
+                              select new
                               {
-                                  Id = d.Id,
-                                  Codigo = d.Codigo,
-                                  Nombre = d.Nombre,
-                                  Imagen = null,
-                                  idCategoria = d.idCategoria,
-                                  Categoria = d.Categorias.Nombre,
-                                  Stock = d.Stock,
-                                  PrecioCompra = d.PrecioCompra,
-                                  PrecioVenta = d.PrecioVenta,
-                                  Total = d.PrecioCompra * d.Stock,
-                                  PorcVenta = d.PorcVenta,
-                                  Activo = (int)d.Activo
-                              }).Where(x => x.Activo == 1).ToList();
-
-                result = result.OrderBy(p => p.Nombre).ToList();
+                                  p.Id,
+                                  p.Codigo,
+                                  p.Nombre,
+                                  p.idCategoria,
+                                  Categoria = c.Nombre,
+                                  p.Stock,
+                                  p.PrecioCompra,
+                                  p.PrecioVenta,
+                                  p.PorcVenta,
+                                  Total = p.PrecioCompra * p.Stock,
+                                  p.Activo
+                              })
+                              .AsEnumerable() // Materializa antes de mapear a Producto
+                              .Select(x => new Producto
+                              {
+                                  Id = x.Id,
+                                  Codigo = x.Codigo,
+                                  Nombre = x.Nombre,
+                                  idCategoria = x.idCategoria,
+                                  Categoria = x.Categoria,
+                                  Stock = x.Stock,
+                                  PrecioCompra = x.PrecioCompra,
+                                  PrecioVenta = x.PrecioVenta,
+                                  Total = x.Total,
+                                  PorcVenta = x.PorcVenta,
+                                  Activo = x.Activo ?? 0 // Maneja valores nulos en Activo
+                              })
+                              .ToList();
 
                 return result;
             }
@@ -96,21 +119,20 @@ namespace Sistema_David.Models
 
         public static List<Categoria> ListaCategorias()
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            using (var db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.Categorias
-                                 .SqlQuery("select * from Categorias")
-
-                              select new Categoria
-                              {
-                                  Id = d.Id,
-                                  Nombre = d.Nombre
-                              }).ToList();
-
-                return result;
+                return db.Categorias
+                         .OrderBy(c => c.Nombre)
+                         .Select(c => new Categoria
+                         {
+                             Id = c.Id,
+                             Nombre = c.Nombre
+                         })
+                         .ToList();
             }
         }
+
+
 
         public static bool GuardarDatos(FileInput Imagenes, string path)
         {

@@ -58,7 +58,7 @@
                 </button>
 
                 <button id="btnStockPendiente" type="button" class="btn btn-warning me-2" onclick="abrirstockPendiente()">Stock Pendiente</button>
-                <a class="btn btn-primary" id="btnAgregar" onclick="abrirmodal()">Agregar</a>
+                <a class="btn btn-primary" id="btnAgregarProd" onclick="abrirmodal()">Agregar</a>
 
             </div>
         </div>
@@ -83,7 +83,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="nuevoProductoModal" tabindex="-1" aria-labelledby="nuevoProductoModallLabel" aria-hidden="true">
+    <div class="modal fade" id="nuevoProductoModal" tabindex="-1" aria-labelledby="nuevoProductoModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -103,24 +103,41 @@
                     <select id="ProductosPrecio" name="select" class="input-nuevomodif select-modal-personalizado mt-3" hidden>
                         <option value="" selected>Seleccione Producto</option>
                     </select>
-                    <label class="lblNombreInput">Cantidad</label>
-                    <input type="number" placeholder="1" value="1" id="Cantidad" class="input-nuevomodif" />
 
-                    <div class="divPrecio">
+                    <!-- Cantidad (no editable) -->
+                    <label class="lblNombreInput">Cantidad</label>
+                    <input type="number" value="1" id="Cantidad" class="input-nuevomodif" disabled /> <!-- Desactivado -->
+                    <!-- Precio Total -->
+                    <div class="divPrecio mt-3">
                         <label class="lblNombreInput">Precio Total: </label>
                         <label class="lblNombreInput" id="precioTotal">0</label>
                     </div>
+
+                    <!-- Nueva sección con cantidad nueva -->
+                    <label id="lblAgregarQuitar" class="lblNombreInput mt-3">Agregar / Quitar</label>
+                    <div class="d-flex justify-content-center">
+                        <!-- Botón Quitar a la izquierda -->
+                        <button type="button" id="btnQuitar" class="btn btn-danger" onclick="restarStockCantidad('Quitar')">Quitar</button>
+
+                        <!-- Campo de Cantidad Nueva -->
+                        <input type="number" id="CantidadNueva" value="1" class="input-nuevomodifCantidadNueva text-center" />
+
+                        <!-- Botón Agregar a la derecha -->
+                        <button type="button" id="btnAgregar" class="btn btn-success" onclick="agregarStockCantidad('Agregar')">Agregar</button>
+                    </div>
+
+
 
                 </div>
                 <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="agregarStock()">Añadir</button>
-
                 </div>
             </div>
         </div>
     </div>
+
 
 
     <div class="modal fade" id="transferenciaModal" tabindex="-1" aria-labelledby="transferenciaModallLabel" aria-hidden="true">
@@ -152,6 +169,63 @@
             </div>
         </div>
     </div>
+
+
+
+    <div class="modal fade" id="agregarStockModal" tabindex="-1" aria-labelledby="agregarStockModallLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agregarStockModalLabel">Agregar Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <input type="Text" id="IdStockAgregar" class="input-nuevomodif" hidden />
+                    <input type="Text" id="IdProductoAgregar" class="input-nuevomodif" hidden />
+
+                    <label class="lblNombreInput">Cantidad</label>
+                    <input type="number" placeholder="1" value="1" id="CantidadAgregarStock" class="input-nuevomodif" />
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="sumaStock()">Aceptar</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="restarStockModal" tabindex="-1" aria-labelledby="restarStockModallLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="restarStockModalLabel">Restar Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <input type="Text" id="IdStockRestar" class="input-nuevomodif" hidden />
+                    <input type="Text" id="IdProductoResta" class="input-nuevomodif" hidden />
+
+                    <label class="lblNombreInput">Cantidad</label>
+                    <input type="number" placeholder="1" value="1" id="CantidadRestarStock" class="input-nuevomodif" />
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="restaStock()">Aceptar</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 </body>
 

@@ -137,18 +137,29 @@ namespace Sistema_David.Controllers
 
         }
 
-        public ActionResult Eliminar(int id)
+
+        public ActionResult AgregarStockCantidad(int id, int cantidad)
         {
             try
             {
 
-                var result = StockModel.Eliminar(id);
+                StockUsuarios stock = StockModel.BuscarStockId(id);
 
-                if (result)
-                    return Json(new { Status = true });
+                StocksPendientes stockPendiente = new StocksPendientes();
 
-                else
-                    return Json(new { Status = false });
+                stockPendiente.Estado = "Pendiente";
+                stockPendiente.Cantidad = cantidad;
+                stockPendiente.IdProducto = stock.IdProducto;
+                stockPendiente.Tipo = "SUMAR";
+                stockPendiente.Asignacion = "ADMINISTRADOR";
+                stockPendiente.IdUsuario = stock.IdUsuario;
+                stockPendiente.IdUsuarioAsignado = SessionHelper.GetUsuarioSesion().Id;
+                stockPendiente.Fecha = DateTime.Now;
+
+                var result = StockPendienteModel.Sumar(stockPendiente);
+
+                return Json(new { Status = result });
+
             }
             catch (Exception ex)
             {
@@ -156,6 +167,70 @@ namespace Sistema_David.Controllers
             }
 
         }
+
+        public ActionResult RestarStockCantidad(int id, int cantidad)
+        {
+            try
+            {
+
+                StockUsuarios stock = StockModel.BuscarStockId(id);
+
+                StocksPendientes stockPendiente = new StocksPendientes();
+
+                stockPendiente.Estado = "Pendiente";
+                stockPendiente.Cantidad = cantidad;
+                stockPendiente.IdProducto = stock.IdProducto;
+                stockPendiente.Tipo = "RESTAR";
+                stockPendiente.Asignacion = "ADMINISTRADOR";
+                stockPendiente.IdUsuario = stock.IdUsuario;
+                stockPendiente.IdUsuarioAsignado = SessionHelper.GetUsuarioSesion().Id;
+                stockPendiente.Fecha = DateTime.Now;
+
+                var result = StockPendienteModel.Restar(stockPendiente);
+
+                return Json(new { Status = result });
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false });
+            }
+
+        }
+
+        public ActionResult Eliminar(int id)
+        {
+            try
+            {
+
+                StockUsuarios stock = StockModel.BuscarStockId(id);
+
+                StocksPendientes stockPendiente = new StocksPendientes();
+
+                stockPendiente.Estado = "Pendiente";
+                stockPendiente.Cantidad = stock.Cantidad;
+                stockPendiente.IdProducto = stock.IdProducto;
+                stockPendiente.Tipo = "ELIMINAR";
+                stockPendiente.Asignacion = "ADMINISTRADOR";
+                stockPendiente.IdUsuario = stock.IdUsuario;
+                stockPendiente.IdUsuarioAsignado = SessionHelper.GetUsuarioSesion().Id;
+                stockPendiente.Fecha = DateTime.Now;
+
+
+
+                var result = StockPendienteModel.Eliminar(stockPendiente);
+
+                    return Json(new { Status = result });
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false });
+            }
+
+        }
+
+
 
         public ActionResult Editar(StockUsuarios model)
         {

@@ -155,46 +155,27 @@ namespace Sistema_David.Models
             }
         }
 
-        public static List<User> ListaUsuariosConAsignacionActivos()
-        {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
-            {
-                // Obtén los usuarios activos con la consulta SQL
-                var usuariosActivos = db.Usuarios
-                    .SqlQuery(@"SELECT u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado,  u.IdTipoNegocio, u.BloqueoSistema, u.ClientesCero, r.Nombre AS Rol, u.UltimaExportacion, u.UrlExportacion, eu.Nombre AS Estado
-                        FROM Usuarios u
-                        INNER JOIN Roles r ON u.IdRol = r.Id
-                        INNER JOIN EstadosUsuarios eu ON u.IdEstado = eu.Id
-                        WHERE u.IdEstado = 1")
-                    .ToList();
+       public static List<User> ListaUsuariosConAsignacionActivos()
+{
+    using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+    {
+        // Optimizar consulta SQL para contar TotalAsignados directamente en la consulta
+        var usuariosActivos = db.Database.SqlQuery<User>(
+            @"
+                SELECT u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, 
+                       u.IdEstado, u.IdTipoNegocio, u.BloqueoSistema, u.ClientesCero, r.Nombre AS Rol, u.UltimaExportacion, 
+                       u.UrlExportacion, eu.Nombre AS Estado,
+                       (SELECT COUNT(*) FROM Clientes c WHERE c.IdVendedorAsignado = u.Id) AS TotalAsignados
+                FROM Usuarios u
+                INNER JOIN Roles r ON u.IdRol = r.Id
+                INNER JOIN EstadosUsuarios eu ON u.IdEstado = eu.Id
+                WHERE u.IdEstado = 1")
+            .ToList();
 
-                // Convierte los resultados a la lista de usuarios y calcula TotalAsignados
-                var listUser = usuariosActivos.Select(d => new User
-                {
-                    Id = d.Id,
-                    Usuario = d.Usuario,
-                    Nombre = d.Nombre,
-                    Apellido = d.Apellido,
-                    Dni = d.Dni,
-                    Telefono = d.Telefono,
-                    Direccion = d.Direccion,
-                    IdRol = d.IdRol,
-                    Contrasena = d.Contrasena,
-                    CantVentas = d.CantVentas,
-                    IdEstado = d.IdEstado,
-                    Estado = d.EstadosUsuarios?.Nombre,  // Asegúrate de manejar valores nulos
-                    Rol = d.Roles?.Nombre,  // Asegúrate de manejar valores nulos
-                    UltimaExportacion = d.UltimaExportacion,
-                    UrlExportacion = d.UrlExportacion,
-                    ClientesCero = (int)d.ClientesCero,
-                    TotalAsignados = db.Clientes.Count(c => c.IdVendedorAsignado == d.Id), // Calcula TotalAsignados,
-                    IdTipoNegocio = d.IdTipoNegocio,
-                    BloqueoSistema = d.BloqueoSistema
-                }).ToList();
+        return usuariosActivos;
+    }
+}
 
-                return listUser;
-            }
-        }
 
 
 
@@ -317,86 +298,92 @@ namespace Sistema_David.Models
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
+                // Usar LINQ para obtener los roles de la base de datos
+                var result = db.Roles
+                               .Select(r => new { r.Id, r.Nombre })
+                               .ToList();
 
-                var result = (from d in db.Roles
-                          .SqlQuery("select * from Roles")
-                              select new Roles
-                              {
-                                  Id = d.Id,
-                                  Nombre = d.Nombre
-                              }).ToList();
+                // Convertir el resultado a una lista de objetos Roles
+                var roles = result.Select(r => new Roles { Id = r.Id, Nombre = r.Nombre }).ToList();
 
-                return result;
+                return roles;
             }
         }
+
 
         public static List<Roles> ListaEstados()
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
+                // Usar LINQ para obtener los estados de la base de datos
+                var result = db.EstadosUsuarios
+                               .Select(e => new { e.Id, e.Nombre }) // Selecciona solo los campos necesarios
+                               .ToList();
 
-                var result = (from d in db.EstadosUsuarios
-                          .SqlQuery("select * from EstadosUsuarios")
-                              select new Roles
-                              {
-                                  Id = d.Id,
-                                  Nombre = d.Nombre
-                              }).ToList();
+                // Convertir el resultado a una lista de objetos Roles
+                var estados = result.Select(e => new Roles { Id = e.Id, Nombre = e.Nombre }).ToList();
 
-                return result;
+                return estados;
             }
         }
+
+
 
         public static List<Zonas> ListaZonas()
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.Zonas
-                          .SqlQuery("select * from Zonas")
-                              select new Zonas
-                              {
-                                  Id = d.Id,
-                                  Nombre = d.Nombre
-                              }).ToList();
+                // Usar LINQ en lugar de SQL directo para obtener las zonas
+                var result = db.Zonas
+                               .Select(z => new Zonas
+                               {
+                                   Id = z.Id,
+                                   Nombre = z.Nombre
+                               })
+                               .ToList();
 
                 return result;
             }
         }
 
+
         public static User BuscarUsuario(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
-                var user = (from d in db.Usuarios
-                         .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
-                            select new User
+                // Uso de SQL directamente para hacer un solo SELECT
+                var user = db.Usuarios
+                            .Where(u => u.Id == id)
+                            .Join(db.Roles, u => u.IdRol, r => r.Id, (u, r) => new { u, r })
+                            .Join(db.EstadosUsuarios, ur => ur.u.IdEstado, eu => eu.Id, (ur, eu) => new { ur.u, ur.r, eu })
+                            .Join(db.TipoNegocio, ure => ure.u.IdTipoNegocio, tn => tn.Id, (ure, tn) => new User
                             {
-                                Id = d.Id,
-                                Usuario = d.Usuario,
-                                Nombre = d.Nombre,
-                                Apellido = d.Apellido,
-                                Dni = d.Dni,
-                                Telefono = d.Telefono,
-                                Direccion = d.Direccion,
-                                IdRol = d.IdRol,
-                                Contrasena = d.Contrasena,
-                                CantVentas = d.CantVentas,
-                                IdEstado = d.IdEstado,
-                                Estado = d.EstadosUsuarios.Nombre,
-                                Rol = d.Roles.Nombre,
-                                UltimaExportacion = d.UltimaExportacion,
-                                UrlExportacion = d.UrlExportacion,
-                                ClientesCero = (int)d.ClientesCero,
-                                IdTipoNegocio = d.IdTipoNegocio,
-                                BloqueoSistema = d.BloqueoSistema,
-                                TipoNegocio = db.TipoNegocio.FirstOrDefault(u => u.Id == d.IdTipoNegocio).Nombre,
-                            }).Where(x => x.Id == id).FirstOrDefault();
+                                Id = ure.u.Id,
+                                Usuario = ure.u.Usuario,
+                                Nombre = ure.u.Nombre,
+                                Apellido = ure.u.Apellido,
+                                Dni = ure.u.Dni,
+                                Telefono = ure.u.Telefono,
+                                Direccion = ure.u.Direccion,
+                                IdRol = ure.u.IdRol,
+                                Contrasena = ure.u.Contrasena,
+                                CantVentas = ure.u.CantVentas,
+                                IdEstado = ure.u.IdEstado,
+                                Estado = ure.eu.Nombre,
+                                Rol = ure.r.Nombre,
+                                UltimaExportacion = ure.u.UltimaExportacion,
+                                UrlExportacion = ure.u.UrlExportacion,
+                                ClientesCero = (int)ure.u.ClientesCero,
+                                IdTipoNegocio = ure.u.IdTipoNegocio,
+                                BloqueoSistema = ure.u.BloqueoSistema,
+                                TipoNegocio = tn.Nombre
+                            })
+                            .FirstOrDefault();
 
                 return user;
             }
         }
+
 
         public static User BuscarUsuario(string nombre)
         {

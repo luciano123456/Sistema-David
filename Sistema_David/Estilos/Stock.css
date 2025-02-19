@@ -98,6 +98,45 @@
 }
 
 
+.input-nuevomodifCantidadNueva {
+    display: flex;
+    border: none;
+    border-bottom: 10px;
+    border-bottom: solid blue;
+    width: 30% !important;
+    margin-right: 20px;
+    display: block;
+    position: relative;
+    left: 2%;
+    font-size: 30px;
+    color: black;
+    text-align: center;
+    font-size: 1.3vw;
+    max-width: 300px !important;
+    color: black !important;
+}
+
+
+    .input-nuevomodifCantidadNueva:active {
+        border: none;
+        border-bottom: solid blue;
+    }
+
+    .input-nuevomodifCantidadNueva::placeholder {
+        color: black;
+        opacity: 1 !important;
+    }
+
+    .input-nuevomodifCantidadNueva:hover {
+        outline: none !important;
+    }
+
+    .input-nuevomodifCantidadNueva:focus {
+        outline: none !important;
+        border-bottom: solid red;
+    }
+
+
 .input-nuevomodif {
     display: flex;
     border: none;
@@ -115,6 +154,7 @@
     max-width: 500px !important;
     color: black !important;
 }
+
 
     .input-nuevomodif:active {
         border: none;
@@ -190,4 +230,11 @@
     .btn-wspstock {
         margin-top: -15px;
     }
+}
+
+#btnQuitar, #btnAgregar {
+    font-size: 0.9rem; /* Tamaño de fuente más pequeño */
+    padding: 5px 10px; /* Espaciado interno más pequeño */
+    max-width: 100px; /* Limitar el ancho máximo */
+    max-height: 50px; /* Limitar el ancho máximo */
 }
