@@ -41,10 +41,10 @@ namespace Sistema_David.Models.DB
         public Nullable<int> Comprobante { get; set; }
         public string Estado { get; set; }
         public string Turno { get; set; }
-        public string MetodoPago { get; set; }
         public string FranjaHoraria { get; set; }
         public string EstadoCobro { get; set; }
         public string Imagen { get; set; }
+        public string MetodoPago { get; set; }
         public Nullable<int> IdTipoNegocio { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

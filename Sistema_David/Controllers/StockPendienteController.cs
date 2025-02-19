@@ -53,7 +53,6 @@ namespace Sistema_David.Controllers
             }
 
             var json = Json(new { data = stockPendiente }, JsonRequestBehavior.AllowGet);
-            json.MaxJsonLength = 500000000;
             return json;
         }
 

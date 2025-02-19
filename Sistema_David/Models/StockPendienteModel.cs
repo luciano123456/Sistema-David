@@ -13,6 +13,153 @@ namespace Sistema_David.Models
     public class StockPendienteModel
     {
 
+        public static bool Sumar(StocksPendientes model)
+        {
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                {
+                    if (model == null)
+                        return false;
+
+                    int idUsuarioSesion = SessionHelper.GetUsuarioSesion().Id;
+
+                    // Buscar si ya existe un stock pendiente con el mismo IdProducto y el mismo IdUsuario
+                    var stockExistente = db.StocksPendientes
+                        .FirstOrDefault(s => s.IdProducto == model.IdProducto && s.IdUsuario == model.IdUsuario && s.Estado == "Pendiente");
+
+                    if (stockExistente != null && stockExistente.Tipo == "SUMAR")
+                    {
+                        // Si existe y es de quitar, sumarle la cantidad
+                        stockExistente.Cantidad += model.Cantidad;
+                    } else if(stockExistente != null && (stockExistente.Tipo == "RESTAR" || stockExistente.Tipo == "ELIMINAR")) { 
+                        return false;
+                    }
+                    else
+                    {
+                        // Si no existe, crear uno nuevo
+                        var nuevoStock = new StocksPendientes
+                        {
+                            IdProducto = model.IdProducto,
+                            IdUsuario = model.IdUsuario,
+                            Fecha = DateTime.Now,
+                            IdUsuarioAsignado = model.IdUsuarioAsignado > 0 ? model.IdUsuarioAsignado : idUsuarioSesion,
+                            Cantidad = model.Cantidad,
+                            Estado = "Pendiente",
+                            Asignacion = (model.Asignacion == "TRANSFERENCIA" ? "TRANSFERENCIA" : (model.IdUsuario == idUsuarioSesion ? "USUARIO" : "ADMINISTRADOR")),
+                            Tipo = model.Tipo
+                        };
+
+                        db.StocksPendientes.Add(nuevoStock);
+                    }
+
+                    db.SaveChanges();
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static bool Restar(StocksPendientes model)
+        {
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                {
+                    if (model == null)
+                        return false;
+
+                    var UsuarioSesion = SessionHelper.GetUsuarioSesion();
+
+                    // Buscar si ya existe un stock pendiente con el mismo IdProducto y el mismo IdUsuario
+                    var stockExistente = db.StocksPendientes
+                        .FirstOrDefault(s => s.IdProducto == model.IdProducto && s.IdUsuario == model.IdUsuario && s.Estado == "Pendiente");
+
+                    if (stockExistente != null && stockExistente.Tipo == "RESTAR")
+                    {
+                        // Si existe y es de restar, sumarle la cantidad
+                        stockExistente.Cantidad += model.Cantidad;
+                    } else if(stockExistente != null && (stockExistente.Tipo == "SUMAR" || stockExistente.Tipo == "ELIMINAR")) { 
+                        return false;
+                    }
+                    else
+                    {
+                        // Si no existe, crear uno nuevo
+                        var nuevoStock = new StocksPendientes
+                        {
+                            IdProducto = model.IdProducto,
+                            IdUsuario = model.IdUsuario,
+                            Fecha = DateTime.Now,
+                            IdUsuarioAsignado = model.IdUsuarioAsignado > 0 ? model.IdUsuarioAsignado : UsuarioSesion.Id,
+                            Cantidad = model.Cantidad,
+                            Estado = "Pendiente",
+                            Asignacion = (UsuarioSesion.IdRol == 1 ? "ADMINISTRADOR" : "USUARIO"),
+                            Tipo = model.Tipo
+                        };
+
+                        db.StocksPendientes.Add(nuevoStock);
+                    }
+
+                    db.SaveChanges();
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static bool Eliminar(StocksPendientes model)
+        {
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                {
+                    if (model == null)
+                        return false;
+
+                    int idUsuarioSesion = SessionHelper.GetUsuarioSesion().Id;
+
+                    // Buscar si ya existe un stock pendiente con el mismo IdProducto y el mismo IdUsuario
+                    var stockExistente = db.StocksPendientes
+                        .FirstOrDefault(s => s.IdProducto == model.IdProducto && s.IdUsuario == model.IdUsuario && s.Estado == "Pendiente");
+
+                    if (stockExistente != null)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        // Si no existe, crear uno nuevo
+                        var nuevoStock = new StocksPendientes
+                        {
+                            IdProducto = model.IdProducto,
+                            IdUsuario = model.IdUsuario,
+                            Fecha = DateTime.Now,
+                            IdUsuarioAsignado = model.IdUsuarioAsignado > 0 ? model.IdUsuarioAsignado : idUsuarioSesion,
+                            Cantidad = model.Cantidad,
+                            Estado = "Pendiente",
+                            Asignacion = (model.Asignacion == "TRANSFERENCIA" ? "TRANSFERENCIA" : (model.IdUsuario == idUsuarioSesion ? "USUARIO" : "ADMINISTRADOR")),
+                            Tipo = model.Tipo
+                        };
+
+                        db.StocksPendientes.Add(nuevoStock);
+                    }
+
+                    db.SaveChanges();
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public static bool Agregar(StocksPendientes model)
         {
             try
@@ -44,7 +191,7 @@ namespace Sistema_David.Models
                             IdUsuarioAsignado = model.IdUsuarioAsignado > 0 ? model.IdUsuarioAsignado : idUsuarioSesion,
                             Cantidad = model.Cantidad,
                             Estado = "Pendiente",
-                            Asignacion = (model.Asignacion == "TRANSFERENCIA" ? "TRANSFERENCIA" : (model.IdUsuario ==  idUsuarioSesion ? "USUARIO" : "ADMINISTRADOR")),
+                            Asignacion = (model.Asignacion == "TRANSFERENCIA" ? "TRANSFERENCIA" : (model.IdUsuario == idUsuarioSesion ? "USUARIO" : "ADMINISTRADOR")),
                             Tipo = model.Tipo
                         };
 
@@ -70,7 +217,7 @@ namespace Sistema_David.Models
                 // Contamos el número de registros que coinciden con las condiciones
                 int cantidad = db.StocksPendientes
                     .Where(iv => iv.Estado.ToUpper() == "PENDIENTE"
-                                 && iv.Asignacion.ToUpper() == "USUARIO" && 
+                                 && iv.Asignacion.ToUpper() == "USUARIO" &&
                                  iv.IdProducto > 0
                                  )
                     .Count();
@@ -84,9 +231,8 @@ namespace Sistema_David.Models
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
                 var result = (from d in db.StocksPendientes
-                          .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Cantidad, sp.Estado, p.Nombre, u.Nombre, sp.Asignacion from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
+                            .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Cantidad, sp.Estado, sp.Tipo, p.Nombre, u.Nombre, sp.Asignacion from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
                               select new StockPendientes
                               {
                                   Id = d.Id,
@@ -98,18 +244,21 @@ namespace Sistema_David.Models
                                   Usuario = d.Usuarios != null ? d.Usuarios.Nombre : "",
                                   Producto = d.Productos.Nombre,
                                   Estado = d.Estado,
-                                  
                                   Fecha = d.Fecha?.Date,
-                                  Asignacion = d.Asignacion != null ? d.Asignacion : "ADMINISTRADOR"
-
-                              }).Where(x => ((x.IdUsuario == idUser || idUser == -1) &&
-                                  (x.Estado == Estado || Estado == "Todos") &&
-                                  (x.Asignacion.ToUpper() == Asignacion.ToUpper() || Asignacion == "Todos") &&
-                                  (!Fecha.HasValue || (DateTime)x.Fecha == Fecha)) || (x.IdUsuarioAsignado == idUser && x.Asignacion == "TRANSFERENCIA" && x.Estado == "Pendiente")).ToList();
+                                  Asignacion = d.Asignacion != null ? d.Asignacion : "ADMINISTRADOR",
+                                  Tipo = d.Tipo
+                              })
+                            .Where(x => ((x.IdUsuario == idUser || idUser == -1) &&
+                                (x.Estado == Estado || Estado == "Todos") &&
+                                (x.Asignacion.ToUpper() == Asignacion.ToUpper() || Asignacion == "Todos") &&
+                                (!Fecha.HasValue || (DateTime)x.Fecha == Fecha)) || (x.IdUsuarioAsignado == idUser && x.Asignacion == "TRANSFERENCIA" && x.Estado == "Pendiente"))
+                            .OrderByDescending(x => x.Fecha) // Ordenar por fecha más nueva
+                            .ToList();
 
                 return result;
             }
         }
+
 
         public static List<StockPendientes> ListarStockPendienteId(int idUser, string Estado)
         {
@@ -117,7 +266,7 @@ namespace Sistema_David.Models
             {
 
                 var result = (from d in db.StocksPendientes
-                          .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Cantidad, sp.Estado, p.Nombre, u.Nombre, sp.Asignacion from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
+                          .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Tipo, sp.Cantidad, sp.Estado, p.Nombre, u.Nombre, sp.Asignacion from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
                               select new StockPendientes
                               {
                                   Id = d.Id,
@@ -144,13 +293,13 @@ namespace Sistema_David.Models
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
                 var existeStock = db.StocksPendientes
-                    .SqlQuery(@"select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Cantidad, sp.Estado, p.Nombre, u.Nombre, sp.Asignacion 
+                    .SqlQuery(@"select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Tipo, sp.Cantidad, sp.Estado, p.Nombre, u.Nombre, sp.Asignacion 
                         from StocksPendientes sp 
                         inner join Productos p on p.Id = sp.IdProducto 
                         inner join Usuarios u on sp.IdUsuarioAsignado = u.Id")
                     .Any(d => (d.IdUsuario == idUser || idUser == -1) &&
                               (d.Estado == Estado || Estado == "Todos") &&
-                              (d.Asignacion == "ADMINISTRADOR") &&
+                              (d.Asignacion == "ADMINISTRADOR" || d.Asignacion == "TRANSFERENCIA") &&
                               d.Cantidad > 0); // Verifica si la cantidad es mayor a cero
 
                 return existeStock;
@@ -161,29 +310,32 @@ namespace Sistema_David.Models
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
-                var result = (from d in db.StocksPendientes
-                          .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Cantidad, sp.Estado, sp.Asignacion,  p.Imagen, p.Nombre, u.Nombre from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
+                var result = (from sp in db.StocksPendientes
+                              join p in db.Productos on sp.IdProducto equals p.Id
+                              join u in db.Usuarios on sp.IdUsuarioAsignado equals u.Id into usuarios
+                              from u in usuarios.DefaultIfEmpty() // To handle cases where there is no assigned user
+                              where sp.Id == idStock
                               select new StockPendientes
                               {
-                                  Id = d.Id,
-                                  IdProducto = d.IdProducto,
-                                  Cantidad = d.Cantidad,
-                                  IdUsuario = d.IdUsuario,
-                                  IdUsuarioAsignado = d.IdUsuarioAsignado,
-                                  UsuarioAsignado = d.Usuarios1.Nombre,
-                                  Usuario = d.Usuarios != null ? d.Usuarios.Nombre : "",
-                                  Producto = d.Productos.Nombre,
-                                  Estado = d.Estado,
-                                  ImagenProducto = d.Productos.Imagen,
-                                  Fecha = d.Fecha?.Date,
-                                  Asignacion = d.Asignacion != null ? d.Asignacion : "ADMINISTRADOR"
-
-                              }).Where(x => (x.Id == idStock)).FirstOrDefault();
+                                  Id = sp.Id,
+                                  IdProducto = sp.IdProducto,
+                                  Cantidad = sp.Cantidad,
+                                  IdUsuario = sp.IdUsuario,
+                                  IdUsuarioAsignado = sp.IdUsuarioAsignado,
+                                  UsuarioAsignado = u.Nombre,
+                                  Usuario = sp.Usuarios != null ? sp.Usuarios.Nombre : "",
+                                  Producto = p.Nombre,
+                                  Estado = sp.Estado,
+                                  ImagenProducto = p.Imagen,
+                                  Fecha = sp.Fecha,
+                                  Asignacion = sp.Asignacion ?? "ADMINISTRADOR"
+                              }).FirstOrDefault();
 
                 return result;
             }
         }
+
+
 
 
 
@@ -195,22 +347,31 @@ namespace Sistema_David.Models
                 using (Sistema_DavidEntities db = new Sistema_DavidEntities())
                 {
 
-                        var result = db.StocksPendientes.Find(id);
+                    var result = db.StocksPendientes.Find(id);
 
-                        result.Estado = "Aceptado";
+                    var resultFinal = false;
 
-                        db.Entry(result).State = System.Data.Entity.EntityState.Modified;
-                        db.SaveChanges();
+                    result.Estado = "Aceptado";
 
-                        var producto = StockModel.BuscarStockUser((int)result.IdUsuario, (int)result.IdProducto);
+                    db.Entry(result).State = System.Data.Entity.EntityState.Modified;
+                    db.SaveChanges();
 
-                        if (producto != null)
+                    var producto = StockModel.BuscarStockUser((int)result.IdUsuario, (int)result.IdProducto);
+
+                    if (producto != null)
+                    {
+                        if (result.Tipo == "ELIMINAR" || result.Tipo == "RESTAR")
                         {
-                            StockModel.SumarStock((int)result.IdUsuario, (int)result.IdProducto, (int)result.Cantidad);
-                            return true;
+                            resultFinal = StockModel.RestarStock(producto.Id, (int)result.Cantidad, (int)result.IdUsuario);
                         }
+                        else
+                        {
+                            resultFinal =StockModel.SumarStock((int)result.IdUsuario, (int)result.IdProducto, (int)result.Cantidad);
+                        }
+                        return true;
+                    }
 
-                    StockModel.Agregar(result);
+                    if(resultFinal) StockModel.Agregar(result);
 
                     return true;
                 }
@@ -317,7 +478,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static bool EliminarStock (int id)
+        public static bool EliminarStock(int id)
         {
 
             try

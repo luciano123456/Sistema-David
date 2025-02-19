@@ -156,6 +156,7 @@ async function cargarCliente() {
                 alert("El cliente pertenece a otro vendedor, la venta se pondra en estado de aprobacion")
             }
 
+
             if (result.data.Estado == "Inhabilitado") {
                 $("#estadocliente").css("color", "red");
                 alert("El cliente esta inhabilitado");
@@ -178,6 +179,12 @@ async function cargarCliente() {
             }
 
         } else {
+            if (userSession.IdRol == 1) {
+                $("#nombrecliente").text("Nombre: " + result.data.Nombre)
+                $("#estadocliente").text("Estado: " + result.data.Estado)
+                $("#direccioncliente").text("Direccion: " + result.data.Direccion)
+                $("#telefonocliente").text("Tel: " + result.data.Telefono)
+            } else {
             if (confirm("No se ha encontrado ningun cliente tuyo con ese Dni, ¿deseas ir a agregar uno?")) {
 
 
@@ -190,6 +197,7 @@ async function cargarCliente() {
                 $("#telefonocliente").text("");
                 $("#idcliente").text("");
 
+                }
             }
         }
     } catch (error) {

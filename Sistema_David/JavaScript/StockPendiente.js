@@ -25,7 +25,7 @@ $(document).ready(async function () {
     cargarUsuarios();
 
 
-    
+
 
 
 
@@ -37,7 +37,7 @@ $(document).ready(async function () {
         $('#selectAllCheckbox').prop('checked', false);   // Desmarca el checkbox
         document.getElementById("divStock").removeAttribute("hidden");
         document.getElementById("btnAgregar").removeAttribute("hidden");
-      
+
     } else {
         cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value, "Todos");
         $("#btnStock").css("background", "#2E4053");
@@ -58,7 +58,7 @@ async function aplicarFiltros() {
 
 
     if (userSession.IdRol == 1) { //Administrador
-        await cargarStock(idVendedor, estado, document.getElementById("Fecha").value, document.getElementById("Asignacion").value );
+        await cargarStock(idVendedor, estado, document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
         $("#btnUsuarios").css("background", "#2E4053");
     } else {
         cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
@@ -176,90 +176,92 @@ async function cargarStock(idUsuario, Estado, Fecha, Asignacion) {
         let result = await MakeAjax(options);
 
         if (result != null) {
+            var cardsContainer = document.querySelector('.cards-container');
             for (let i = 0; i < result.data.length; i++) {
-                var cardsContainer = document.querySelector('.cards-container');
-                var newCard = document.createElement('div');
                 var cardId = result.data[i].Id;
+                var newCard = document.createElement('div');
                 newCard.id = cardId;
                 newCard.classList.add('card', 'mb-3', 'position-relative');
 
-                // Mostrar la parte azul y la parte blanca común a ambos tipos de asignación
-                newCard.innerHTML = `
-            <div class="${result.data[i].Asignacion.toUpperCase() === 'TRANSFERENCIA' ? 'half-transferencia' : 'half-blue'}">
-                <span class="texto-titulo text-white">${result.data[i].Usuario}</span>
-                <div class="round-image"></div>
-                ${userSession.IdRol === 1 && result.data[i].Estado === "Pendiente" && (result.data[i].Asignacion == "USUARIO") ?
-                        `<input type="checkbox" class="form-check-input checkbox position-absolute top-0 end-0 me-2" id="checkbox-${cardId}" onclick="toggleCheckbox(${cardId})">
-                     <label for="checkbox-${cardId}" class="form-check-label position-absolute top-0 end-0"></label>
-                     <div class="icons-container position-absolute top-30 end-0 translate-middle-y me-2">
-                         <i class="fa fa-pencil-square-o text-yellow edit-icon" aria-hidden="true" onclick="editarStock(${cardId})" style="font-size: 1.2em; color: yellow; cursor: pointer;"></i>
-                     </div>
-                     <div class="icons-containereliminar position-absolute top-45 end-0 translate-middle-y me-2">
-                         <i class="fa fa-times text-red delete-icon" aria-hidden="true" onclick="eliminarStock(${cardId})" style="font-size: 1.2em; color: red; cursor: pointer;"></i>
-                     </div>`
-                        : ''}
-            </div>
-            <div class="half-white">
-            <div class="mt-1 text-center">
-                    <i class="fa fa-info-circle me-1 mb-1" title="Fecha"></i>
-                    <span class="texto-titulo" style="font-weight: bold; color: black;">${moment(result.data[i].Fecha).format("DD-MM-YYYY")}</span>
+                // Construcción del contenido de la tarjeta
+                let cardContent = `
+                <div class="${result.data[i].Asignacion.toUpperCase() === 'TRANSFERENCIA' ? 'half-transferencia' : 'half-blue'}">
+                    <span class="texto-titulo text-white">Recibe: ${result.data[i].Usuario}</span>
+                    <div class="round-image"></div>
+                    ${userSession.IdRol === 1 && result.data[i].Estado === "Pendiente" && (result.data[i].Asignacion == "USUARIO") ? `
+                        <input type="checkbox" class="form-check-input checkbox position-absolute top-0 end-0 me-2" id="checkbox-${cardId}" onclick="toggleCheckbox(${cardId})">
+                        <label for="checkbox-${cardId}" class="form-check-label position-absolute top-0 end-0"></label>
+                        <div class="icons-container position-absolute top-30 end-0 translate-middle-y me-2">
+                            <i class="fa fa-pencil-square-o text-yellow edit-icon" aria-hidden="true" onclick="editarStock(${cardId})" style="font-size: 1.2em; color: yellow; cursor: pointer;"></i>
+                        </div>
+                        <div class="icons-containereliminar position-absolute top-45 end-0 translate-middle-y me-2">
+                            <i class="fa fa-times text-red delete-icon" aria-hidden="true" onclick="eliminarStock(${cardId})" style="font-size: 1.2em; color: red; cursor: pointer;"></i>
+                        </div>` : ''}
                 </div>
-                <div class="mt-1 text-center">
-                    <i class="fa fa-info-circle me-1 mb-1" title="Nombre del producto"></i>
-                    <span class="texto-titulo" style="font-weight: bold; color: blue;">${result.data[i].Cantidad} ${result.data[i].Producto}</span>
-                </div>
-                <div class="text-center">
-                    <i class="fa fa-user me-1 mb-3" title="Usuario que te asigno el stock"></i>
-                    <span class="texto-titulo">${result.data[i].UsuarioAsignado}</span>
-                </div>
-                <div class="botones mt-2">
-                    ${result.data[i].Estado === 'Aceptado' ?
+                <div class="half-white">
+                    <div class="mt-1 text-center">
+                        <i class="fa fa-info-circle me-1 mb-1" title="Fecha"></i>
+                        <span class="texto-titulo" style="font-weight: bold; color: black;">${moment(result.data[i].Fecha).format("DD-MM-YYYY")}</span>
+                    </div>
+                    <div class="mt-1 text-center">
+                        <i class="fa fa-info-circle me-1 mb-1" title="Nombre del producto"></i>
+                        <span class="texto-titulo" style="font-weight: bold; color: ${result.data[i].Tipo === 'ELIMINAR' || result.data[i].Tipo === 'RESTAR' ? 'red' : 'green'};">
+                            ${result.data[i].Tipo === 'ELIMINAR' || result.data[i].Tipo === 'RESTAR'  ? '-' : '+'} ${result.data[i].Cantidad} ${result.data[i].Producto}
+                        </span>
+                    </div>
+
+                    <div class="text-center">
+                        <i class="fa fa-user me-1 mb-3" title="Usuario que te asigno el stock"></i>
+                        <span class="texto-titulo">Envia: ${result.data[i].UsuarioAsignado}</span>
+                    </div>
+                    <div class="botones mt-2">
+                        ${result.data[i].Estado === 'Aceptado' ?
                         `<button class="btn btn-success full-width mt-4"><i class="fa fa-check"></i> Aceptado</button>` :
                         result.data[i].Estado === 'Rechazado' ?
-                        `<button class="btn btn-danger full-width mt-4"><i class="fa fa-times"></i> Rechazado</button>` :
-
-
-                        userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "ADMINISTRADOR" || result.data[i].Asignacion.toUpperCase() == "TRANSFERENCIA") && userSession.IdRol != 1 ?
-                            `<div class="divBotones botones-row mt-4 row justify-content-center">
-                             <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
-                             <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>` :
-
-
-
-                            userSession.Id == result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "USUARIO" || result.data[i].Asignacion.toUpperCase() == "TRANSFERENCIA") && userSession.IdRol != 1 ?
+                            `<button class="btn btn-danger full-width mt-4"><i class="fa fa-times"></i> Rechazado</button>` :
+                            userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "ADMINISTRADOR" || result.data[i].Asignacion.toUpperCase() == "TRANSFERENCIA") && userSession.IdRol != 1 ?
+                                `<div class="divBotones botones-row mt-4 row justify-content-center">
+                                    <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
+                                    <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
+                                </div>` :
+                                userSession.Id == result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "USUARIO" || result.data[i].Asignacion.toUpperCase() == "TRANSFERENCIA") && userSession.IdRol != 1 ?
                                 `<button class="btn btn-warning btn-pendiente mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` :
-
-                           
-
-                                userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "USUARIO" || (result.data[i].Asignacion.toUpperCase() === "TRANSFERENCIA")) && userSession.IdRol == 1 ?
-                                `<div class="divBotones botones-row mt-4 row justify-content-center">
-                             <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
-                             <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>` :
-
-                         userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && result.data[i].Asignacion == "USUARIO" ?
-                                `<div class="divBotones botones-row mt-4 row justify-content-center">
-                             <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
-                             <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
-                                 </div>` :
-
-                         userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' ?
-                                            `<button class="btn btn-warning btn-pendiente mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` :
-                                    ''
+                                userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "ADMINISTRADOR" || (result.data[i].Asignacion.toUpperCase() === "TRANSFERENCIA")) && userSession.IdRol == 1 ?
+                                    `<div class="divBotones botones-row mt-4 row justify-content-center">
+                                    <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
+                                    <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
+                                </div>` :
+                                    userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "USUARIO" || (result.data[i].Asignacion.toUpperCase() === "TRANSFERENCIA")) && userSession.IdRol == 1 ?
+                                        `<div class="divBotones botones-row mt-4 row justify-content-center">
+                                    <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
+                                    <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
+                                </div>` :
+                                        userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && result.data[i].Asignacion == "USUARIO" ?
+                                            `<div class="divBotones botones-row mt-4 row justify-content-center">
+                                    <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
+                                    <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
+                                </div>` :
+                                            userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' ?
+                                                `<button class="btn btn-warning btn-pendiente mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` : ''
                     }
-                </div>
-            </div>`;
+                    </div>
+                </div>`;
 
+                // Asignar contenido HTML a la tarjeta
+                newCard.innerHTML = cardContent;
+
+                // Asignar la imagen
                 var roundImage = newCard.querySelector('.round-image');
                 var imageUrl = '/Productos/ObtenerImagen/' + result.data[i].IdProducto;
-
                 roundImage.style.backgroundImage = `url(${imageUrl})`;
 
+                // Añadir la tarjeta al contenedor
                 cardsContainer.appendChild(newCard);
             }
 
+            // Mostrar el nombre del usuario
             let nombrecompleto = result.Nombre + " " + result.Apellido;
             $("#lblnombreusuario").text(nombrecompleto);
-
         } else {
             alert("Ha ocurrido un error en los datos");
         }
@@ -268,7 +270,6 @@ async function cargarStock(idUsuario, Estado, Fecha, Asignacion) {
         alert("Ha ocurrido un error en los datos");
     }
 }
-
 
 
 async function modificarStock() {
@@ -372,7 +373,7 @@ async function aceptarStock(id) {
         let result = await MakeAjax(options);
 
         if (result != null) {
-            alert("El producto ha sido agregado a tu stock.");
+            alert("Stock pendiente aceptado correctamente.");
             aplicarFiltros();
             desmarcarCheckBoxes();
         } else {
@@ -408,7 +409,7 @@ async function rechazarStock(id) {
         let result = await MakeAjax(options);
 
         if (result != null) {
-            alert("Has rechazado el producto.");
+            alert("Has rechazado el stock.");
             aplicarFiltros();
             desmarcarCheckBoxes();
         } else {
@@ -631,9 +632,9 @@ $('#selectAllCheckbox').on('click', function () {
             }
         } else {
             // Si no está marcado, deselecciona todas las filas visibles
-            
-                checkbox.removeClass('checked fa-check-square').addClass('fa-square-o'); // Desmarcar el ícono
-                
+
+            checkbox.removeClass('checked fa-check-square').addClass('fa-square-o'); // Desmarcar el ícono
+
         }
     });
 

@@ -414,14 +414,14 @@ namespace Sistema_David.Models.Modelo
                                 Longitud = d.Longitud,
                                 Latitud = d.Latitud,
                                 FechaenCero = d.FechaenCero != null ? d.FechaenCero : null,
-                                IdVendedorAsignado = d.IdVendedorAsignado != null ? d.IdVendedorAsignado : null
-                            }).Where(x => x.Dni == documento).FirstOrDefault();
+                                IdVendedorAsignado = d.IdVendedorAsignado != null || d.IdVendedorAsignado == 0 ? d.IdVendedorAsignado : null
+                            }).Where(x => x.Dni.Trim() == documento.Trim()).FirstOrDefault();
 
                 return user;
             }
         }
 
-        public static (List<Venta> Ventas, decimal TotalRestante) RestanteVentasCliente(int idCliente)
+        public static (List<Venta> Ventas  , decimal TotalRestante) RestanteVentasCliente(int idCliente)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {

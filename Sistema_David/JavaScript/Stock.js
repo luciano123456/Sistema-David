@@ -75,12 +75,10 @@ async function configurarDataTable() {
                 "render": function (data, type, row) {
                     var botones = "";
 
-                    botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='sumarStock(" + data + ", " + row.IdProducto + ")' title='Agregar'><i class='fa fa-plus fa-lg text-success' aria-hidden='true'></i></button>" +
-                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='restarStock(" + data + ", " + row.IdProducto + ")' title='Quitar'><i class='fa fa-minus fa-lg text-danger' aria-hidden='true'></i></button>" +
-                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ", " + row.IdProducto + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
+                    botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ", " + row.IdProducto + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
 
-                    botones += userSession.IdRol == 1 ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
-                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>" : "";
+                    botones += "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
+                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>";
 
                     return botones;
                 },
@@ -155,6 +153,16 @@ const editarStock = async id => {
 
 
         if (result != null) {
+
+            // Ocultar los campos y botones adicionales (Cantidad Nueva, Quitar, Agregar)
+            $("#CantidadNueva").show();
+            $("#btnQuitar").show();
+            $("#btnAgregar").show();
+            $("#lblAgregarQuitar").show();
+            $("#btnRegistrarModificar").hide();
+            $("#Cantidad").prop('disabled', true);
+
+            document.getElementById("nuevoProductoModalLabel").textContent = "Editar Stock"
 
             await cargarProductosAll();
 
@@ -244,14 +252,31 @@ async function transferenciaStock() {
 
 }
 
-
 function abrirmodal() {
+    // Mostrar el modal para añadir
     $("#nuevoProductoModal").modal("show");
+
+    // Cambiar texto del botón a "Añadir"
     $("#btnRegistrarModificar").text("Añadir");
+
+    // Habilitar campo de Producto y Cantidad
     $("#Productos").prop('disabled', false);
-    $("#Cantidad").val("1");
-    $("#IdStock").text("0");
-    $("#IdStock").value = 0;
+    $("#Cantidad").prop('disabled', false); // Habilitar cantidad para edición
+
+    // Limpiar valores del modal
+    $("#IdStock").val(0); // Establecer el ID en 0
+    $("#Cantidad").val(1); // Establecer valor predeterminado de cantidad
+    $("#precioTotal").text("0"); // Precio inicial
+    document.getElementById("nuevoProductoModalLabel").textContent = "Añadir Producto"
+
+    // Ocultar los campos y botones adicionales (Cantidad Nueva, Quitar, Agregar)
+    $("#CantidadNueva").hide();
+    $("#btnQuitar").hide();
+    $("#btnAgregar").hide();
+    $("#lblAgregarQuitar").hide();
+    $("#btnRegistrarModificar").show();
+
+    // Cargar productos si es necesario
     cargarProductos();
 }
 
@@ -438,6 +463,75 @@ async function agregarStock() {
 
 }
 
+
+async function agregarStockCantidad() {
+    try {
+        var url = "/Stock/AgregarStockCantidad";
+
+        let value = JSON.stringify({
+            Cantidad: document.getElementById("CantidadNueva").value,
+            Id: document.getElementById("IdStock").innerText
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result.Status) {
+            alert('Stock pendiente agregado correctamente.');
+            $('.datos-error').removeClass('d-none');
+            document.location.href = "../../Stock/Index/";
+        } else {
+            alert("El usuario ya tiene un stock pendiente de este producto, antes de eliminar, debe aceptar o rechazar el que tiene en curso.")
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+async function restarStockCantidad() {
+    try {
+        var url = "/Stock/RestarStockCantidad";
+
+        let value = JSON.stringify({
+            Cantidad: document.getElementById("CantidadNueva").value,
+            Id: document.getElementById("IdStock").innerText
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result.Status) {
+            alert('Stock pendiente agregado correctamente.');
+            $('.datos-error').removeClass('d-none');
+            document.location.href = "../../Stock/Index/";
+        } else {
+            alert("El usuario ya tiene un stock pendiente de este producto, antes de eliminar, debe aceptar o rechazar el que tiene en curso.")
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+
+
 async function modificarStockuser() {
     try {
         var url = "/Stock/Editar";
@@ -463,8 +557,7 @@ async function modificarStockuser() {
             $('.datos-error').removeClass('d-none');
             document.location.href = "../../Stock/Index/";
         } else {
-            $('.datos-error').text('Ha ocurrido un error en los datos.')
-            $('.datos-error').removeClass('d-none')
+            alert("El usuario ya tiene un stock pendiente de este producto, antes de eliminar, debe aceptar o rechazar el que tiene en curso.")
         }
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.')
@@ -584,12 +677,11 @@ const eliminarStock = async id => {
             let result = await MakeAjax(options);
 
             if (result.Status) {
-                alert('Stock eliminado correctamente.');
+                alert('El stock eliminado ha sido agregado a stocks pendientes del usuario correctamente.');
                 $('.datos-error').removeClass('d-none');
                 document.location.href = "../../Stock/Index/";
             } else {
-                $('.datos-error').text('Ha ocurrido un error en los datos.')
-                $('.datos-error').removeClass('d-none')
+                alert("El usuario ya tiene un stock pendiente de este producto, antes de eliminar, debe aceptar o rechazar el que tiene en curso.")
             }
         }
     } catch (error) {
