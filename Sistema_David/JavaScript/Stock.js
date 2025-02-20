@@ -576,7 +576,7 @@ async function agregarStockUser() {
             IdProducto: $("#Productos").find("option:selected").val(),
             Cantidad: Number($("#Cantidad").val()),
             IdUsuario: idUserStock,
-
+            Tipo: 'SUMAR'
         });
 
         let options = {
@@ -622,7 +622,7 @@ async function sumaStock() {
             IdProducto: $("#IdProductoAgregar").val(),
             Cantidad: Number($("#Cantidad").val()),
             IdUsuario: idUserStock,
-            Tipo: 'Agregar'
+            Tipo: 'SUMAR'
         });
 
         let options = {

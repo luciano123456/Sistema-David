@@ -371,7 +371,7 @@ namespace Sistema_David.Models
                         return true;
                     }
 
-                    if(resultFinal) StockModel.Agregar(result);
+                    if(!resultFinal) StockModel.Agregar(result);
 
                     return true;
                 }

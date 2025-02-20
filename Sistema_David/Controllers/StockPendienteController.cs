@@ -62,7 +62,7 @@ namespace Sistema_David.Controllers
         {
             StockPendientes stock = StockPendienteModel.BuscarStockPendiente(id);
 
-            if (stock.Estado.ToUpper() == "PENDIENTE") { 
+                if (stock.Estado.ToUpper() == "PENDIENTE") { 
                 var result = StockPendienteModel.AceptarStock(id);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
