@@ -1,67 +1,156 @@
 ﻿///*var url =  "//Login/Login_User";*/
 
-async function Loguear() {
-    const $botonLogin = $('.boton-login'); // Selecciona el botón por clase
+//async function Loguear() {
+//    const $botonLogin = $('.boton-login'); // Selecciona el botón por clase
 
-    // Mostrar la barra de carga
-    $botonLogin.css('opacity', '1');
+//    // Mostrar la barra de carga
+//    $botonLogin.css('opacity', '1');
 
-    // Cambiar el texto del botón a "Cargando..."
-    $botonLogin.text('Cargando...');
+//    // Cambiar el texto del botón a "Cargando..."
+//    $botonLogin.text('Cargando...');
 
-    $('.datos-error').text('');
-    $('.datos-error').addClass('d-none');
+//    $('.datos-error').text('');
+//    $('.datos-error').addClass('d-none');
 
-    try {
-        let value = JSON.stringify({
-            Usuario: document.getElementById("Usuario").value,
-            Contrasena: document.getElementById("Contrasena").value
-        });
+//    try {
+//        let value = JSON.stringify({
+//            Usuario: document.getElementById("Usuario").value,
+//            Contrasena: document.getElementById("Contrasena").value
+//        });
 
-        let options = {
-            type: "POST",
-            url: '/Login/Login_User',
-            async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
+//        console.log('Enviando solicitud a /Login/Login_User');  // Agregar un log de envío
+
+//        let options = {
+//            type: "POST",
+//            url: '/Login/Login_User',
+//            async: true,
+//            data: value,
+//            contentType: "application/json",
+//            dataType: "json"
+//        };
+
+//        let result = await MakeAjax(options);
+
+//        if (result.Status) {
+//            $('.datos-error').text('');
+//            $('.datos-error').addClass('d-none');
+//            sessionStorage.setItem("usuario", JSON.stringify(result.Data));
+//            document.location.href = "../Ventas/Index";
+//        } else {
+//            $('.datos-error').text(result.Mensaje);
+//            $('.datos-error').removeClass('d-none');
+
+//            setTimeout(() => {
+//                $('.datos-error').text('');
+//                $('.datos-error').addClass('d-none');
+//            }, 2000);
+//        }
+//    } catch (error) {
+//        console.log('Error en la solicitud: ', error); // Mostrar más detalles del error
+//        $('.datos-error').text('Ha ocurrido un error: ' + error.message);
+//        $('.datos-error').removeClass('d-none');
+//    } finally {
+//        // Restaurar el texto del botón a "Conectarse"
+//        $botonLogin.text('Conectarse');
+//    }
+//}
+
+
+$(document).ready(function () {
+
+    // Verificar si el usuario tiene credenciales guardadas
+    if (localStorage.getItem('rememberMe') === 'true') {
+        // Si el checkbox estaba seleccionado la última vez
+        $("#username").val(localStorage.getItem('username'));
+        $("#password").val(localStorage.getItem('password'));
+        $("#rememberMe").prop('checked', true);
+        $("#checkIcon").show(); // Mostrar el ícono verde de check
+    }
+
+    // Al enviar el formulario
+    $("#loginForm").on("submit", function (event) {
+        event.preventDefault(); // Evitar el envío tradicional del formulario
+
+        var username = $("#username").val(); // Obtener el nombre de usuario
+        var password = $("#password").val(); // Obtener la contraseña
+        var token = $('input[name="__RequestVerificationToken"]').val(); // Obtener token CSRF
+        var rememberMe = $("#rememberMe").prop('checked'); // Obtener el estado del checkbox
+
+        // Crear el objeto de datos para enviar
+        var data = {
+            Usuario: username,
+            Contrasena: password,
+            __RequestVerificationToken: token // Enviar el token CSRF
         };
 
-        let result = await MakeAjax(options);
+        fetch(loginUrl, { // Aquí usamos la variable generada por Razor
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token // Enviar el token CSRF
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                console.log(response); // Verificar la respuesta
+                if (!response.ok) {
+                    throw new Error("Error en la respuesta del servidor");
+                }
+                return response.json(); // Parsear la respuesta JSON
+            })
+            .then(data => {
+                console.log(data); // Verificar los datos recibidos
+                if (data.Status) {
 
-        if (result.Status) {
-            $('.datos-error').text('');
-            $('.datos-error').addClass('d-none');
-            sessionStorage.setItem("usuario", JSON.stringify(result.Data));
-            document.location.href = "../Ventas/Index";
-        } else {
-            $('.datos-error').text(result.Mensaje);
-            $('.datos-error').removeClass('d-none');
+                    // Si "Recordar credenciales" está seleccionado, guarda las credenciales
+                    if (rememberMe) {
+                        localStorage.setItem('username', username);
+                        localStorage.setItem('password', password);
+                        localStorage.setItem('rememberMe', true);
+                        $("#checkIcon").show(); // Mostrar el ícono verde de check
+                    } else {
+                        // Si no está seleccionado, eliminar las credenciales guardadas
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('password');
+                        localStorage.removeItem('rememberMe');
+                        $("#checkIcon").hide(); // Ocultar el ícono de check
+                    }
 
-            setTimeout(() => {
-                $('.datos-error').text('');
-                $('.datos-error').addClass('d-none');
-            }, 2000);
-        }
-    } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.');
-        $('.datos-error').removeClass('d-none');
-    } finally {
-        // Restaurar el texto del botón a "Conectarse"
-        $botonLogin.text('Conectarse');
-    }
-}
+                    // Redirigir a la página principal
+                    sessionStorage.setItem("usuario", JSON.stringify(data.Data));
+                    document.location.href = "../Ventas/Index";
+                } else {
+                    // Mostrar el mensaje de error
+                    $(document).ready(function () {
+                        // Mostrar el mensaje de error
+                        $("#errorMessage").text(data.Mensaje).show(); // Establecer el mensaje
+                        $("#diverrorMessage").show(); // Mostrar el div
 
+                        // Ocultar el div después de 3 segundos
+                        setTimeout(function () {
+                            $("#diverrorMessage").fadeOut();
+                        }, 3000); // 3000 milisegundos = 3 segundos
+                    });
+
+
+                }
+            })
+            .catch(error => {
+                console.error("Error: " + error);
+                $("#errorMessage").text("Hubo un problema al procesar la solicitud. Error: " + error).show();
+            });
+    });
+});
 
 //ACCIONES AL APRETAR ENTER
-document.getElementById('Usuario').addEventListener('keydown', inputUsuario);
+document.getElementById('username').addEventListener('keydown', inputUsuario);
 function inputUsuario(event) {
     if (event.keyCode == 13) {
-        document.getElementById('Contrasena').focus();
+        document.getElementById('password').focus();
     }
 }
 
-document.getElementById('Contrasena').addEventListener('keydown', inputContrasena);
+document.getElementById('password').addEventListener('keydown', inputContrasena);
 function inputContrasena(event) {
     if (event.keyCode == 13) {
         Loguear();
@@ -80,3 +169,22 @@ function togglePassword() {
         passwordIcon.textContent = "👁️";
     }
 }
+
+
+// Al cambiar el estado del checkbox, mostrar u ocultar el ícono
+$("#rememberMe").on("change", function () {
+    var username = $("#username").val(); // Obtener el nombre de usuario
+    var password = $("#password").val(); // Obtener la contraseña
+    if ($(this).prop('checked')) {
+        $("#checkIcon").show(); // Mostrar el ícono verde de check
+        localStorage.setItem('username', username);
+        localStorage.setItem('password', password);
+        localStorage.setItem('rememberMe', true);
+    } else {
+        $("#checkIcon").hide(); // Ocultar el ícono de check
+        localStorage.removeItem('username');
+        localStorage.removeItem('password');
+        localStorage.removeItem('rememberMe');
+    }
+});
+
