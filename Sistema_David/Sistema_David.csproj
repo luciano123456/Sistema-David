@@ -535,6 +535,7 @@
     <Content Include="Imagenes\clientes en cero.png" />
     <Content Include="Imagenes\configuraciones.png" />
     <Content Include="Imagenes\excel.png" />
+    <Content Include="Imagenes\Login.png" />
     <Content Include="Imagenes\menu.png" />
     <Content Include="Imagenes\productodefault.png" />
     <Content Include="Imagenes\rendimiento-diario.png" />
@@ -660,6 +661,7 @@
     <Content Include="Views\Clientes\Editar.cshtml" />
     <Content Include="Views\Clientes\Index.cshtml" />
     <Content Include="Views\Cobranzas\Index.cshtml" />
+    <Content Include="Views\Login\Index.cshtml" />
     <Content Include="Views\Productos\Index.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\StockPendiente\Index.cshtml" />
@@ -682,7 +684,6 @@
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
-    <Content Include="Views\Login\Index.cshtml" />
     <Content Include="Scripts\moment.min.js.map" />
     <Content Include="Scripts\moment-with-locales.min.js.map" />
     <Content Include="Views\Rendimiento\Index.cshtml" />
