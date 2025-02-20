@@ -22,7 +22,7 @@ namespace Sistema_David.Models
                 var result = (from s in db.StockUsuarios
                               join u in db.Usuarios on s.IdUsuario equals u.Id
                               join p in db.Productos on s.IdProducto equals p.Id
-                              where s.IdUsuario == id
+                              where s.IdUsuario == id 
                               orderby p.Nombre
                               select new
                               {
@@ -105,7 +105,7 @@ namespace Sistema_David.Models
                              join p in db.Productos on s.IdProducto equals p.Id
                              join t in db.TipoNegocio on u.IdTipoNegocio equals t.Id into tipoNegocioJoin // LEFT JOIN con TipoNegocios
                              from t in tipoNegocioJoin.DefaultIfEmpty() // Esto es lo que hace el LEFT JOIN
-                             where p.Nombre != null && p.Nombre.ToUpper().Contains(producto.ToUpper()) // Filtro en BD
+                             where p.Nombre != null && p.Nombre.ToUpper().Contains(producto.ToUpper()) && u.IdEstado == 1 // Filtro en BD
                              select new
                              {
                                  s.Id,

@@ -8,8 +8,8 @@ $(document).ready(function () {
     userSession = JSON.parse(sessionStorage.getItem('usuario'));
 
     if (userSession.IdRol == 1) {
-        document.getElementById("botonesAcciones").classList.remove("d-none");
-        document.getElementById("botonesAcciones").classList.add("d-block");
+        document.getElementById("btnImportarDatos").removeAttribute("hidden");
+        document.getElementById("btnNuevo").removeAttribute("hidden");
     }
 });
 
@@ -515,4 +515,9 @@ function cargarImagenProducto(idProducto) {
             console.log('Error al cargar la imagen del producto ' + idProducto);
         }
     });
+}
+
+
+function abrirstockGeneral() {
+    document.location.href = "../../Stock/General/";
 }
