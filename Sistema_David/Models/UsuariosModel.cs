@@ -311,7 +311,7 @@ namespace Sistema_David.Models
         }
 
 
-        public static List<Roles> ListaEstados()
+        public static List<EstadosUsuarios> ListaEstados()
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -321,30 +321,29 @@ namespace Sistema_David.Models
                                .ToList();
 
                 // Convertir el resultado a una lista de objetos Roles
-                var estados = result.Select(e => new Roles { Id = e.Id, Nombre = e.Nombre }).ToList();
+                var estados = result.Select(e => new EstadosUsuarios { Id = e.Id, Nombre = e.Nombre }).ToList();
+
+                return estados;
+            }
+        }
+
+        public static List<Zonas> ListaZonas()
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                // Usar LINQ para obtener los estados de la base de datos
+                var result = db.Zonas
+                               .Select(e => new { e.Id, e.Nombre }) // Selecciona solo los campos necesarios
+                               .ToList();
+
+                // Convertir el resultado a una lista de objetos Roles
+                var estados = result.Select(e => new Zonas { Id = e.Id, Nombre = e.Nombre }).ToList();
 
                 return estados;
             }
         }
 
 
-
-        public static List<Zonas> ListaZonas()
-        {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
-            {
-                // Usar LINQ en lugar de SQL directo para obtener las zonas
-                var result = db.Zonas
-                               .Select(z => new Zonas
-                               {
-                                   Id = z.Id,
-                                   Nombre = z.Nombre
-                               })
-                               .ToList();
-
-                return result;
-            }
-        }
 
 
         public static User BuscarUsuario(int id)

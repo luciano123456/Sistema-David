@@ -32,7 +32,9 @@ namespace Sistema_David.Models
                     {
                         // Si existe y es de quitar, sumarle la cantidad
                         stockExistente.Cantidad += model.Cantidad;
-                    } else if(stockExistente != null && (stockExistente.Tipo == "RESTAR" || stockExistente.Tipo == "ELIMINAR")) { 
+                    }
+                    else if (stockExistente != null && (stockExistente.Tipo == "RESTAR" || stockExistente.Tipo == "ELIMINAR"))
+                    {
                         return false;
                     }
                     else
@@ -82,7 +84,9 @@ namespace Sistema_David.Models
                     {
                         // Si existe y es de restar, sumarle la cantidad
                         stockExistente.Cantidad += model.Cantidad;
-                    } else if(stockExistente != null && (stockExistente.Tipo == "SUMAR" || stockExistente.Tipo == "ELIMINAR")) { 
+                    }
+                    else if (stockExistente != null && (stockExistente.Tipo == "SUMAR" || stockExistente.Tipo == "ELIMINAR"))
+                    {
                         return false;
                     }
                     else
@@ -366,12 +370,12 @@ namespace Sistema_David.Models
                         }
                         else
                         {
-                            resultFinal =StockModel.SumarStock((int)result.IdUsuario, (int)result.IdProducto, (int)result.Cantidad);
+                            resultFinal = StockModel.SumarStock((int)result.IdUsuario, (int)result.IdProducto, (int)result.Cantidad);
                         }
                         return true;
                     }
 
-                    if(!resultFinal) StockModel.Agregar(result);
+                    if (!resultFinal) StockModel.Agregar(result);
 
                     return true;
                 }
@@ -405,7 +409,10 @@ namespace Sistema_David.Models
                             {
                                 StockModel.SumarStock((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto, (int)stockPendiente.Cantidad);
                             }
-                            StockModel.Agregar(stockPendiente);
+                            else
+                            {
+                                StockModel.Agregar(stockPendiente);
+                            }
                         }
                         else
                         {

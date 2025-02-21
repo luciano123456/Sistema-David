@@ -1331,19 +1331,24 @@ const bloqueoSistema = async (id, estado) => {
     }
 }
 
-// Función para cambiar la fecha (sumar o restar un día)
-function cambiarFecha(inputId, incremento) {
-    let fechaInput = document.getElementById(inputId);
-    let fechaActual = new Date(fechaInput.value);  // Obtener fecha actual del campo
+function sumarFecha(){;
+    var FechaDesde = document.getElementById("FechaDesde").value;
+    var FechaHasta = document.getElementById("FechaHasta").value;
 
-    // Si la fecha está vacía, asignamos la fecha actual
-    if (isNaN(fechaActual.getTime())) {
-        fechaActual = new Date();
-    }
+    let FechaDesdeNew = moment(FechaDesde).add(1, 'days').format('YYYY-MM-DD');
+    let FechaHastaNew = moment(FechaHasta).add(1, 'days').format('YYYY-MM-DD');
 
-    // Incrementar o decrementar un día
-    fechaActual.setDate(fechaActual.getDate() + incremento);
+    document.getElementById("FechaDesde").value = FechaDesdeNew;
+    document.getElementById("FechaHasta").value = FechaHastaNew
+}
 
-    // Establecer la nueva fecha en el campo (formato yyyy-mm-dd)
-    fechaInput.value = fechaActual.toISOString().split('T')[0];
+function restarFecha() {
+    var FechaDesde = document.getElementById("FechaDesde").value;
+    var FechaHasta = document.getElementById("FechaHasta").value;
+
+    let FechaDesdeNew = moment(FechaDesde).add(-1, 'days').format('YYYY-MM-DD');
+    let FechaHastaNew = moment(FechaHasta).add(-1, 'days').format('YYYY-MM-DD');
+
+    document.getElementById("FechaDesde").value = FechaDesdeNew;
+    document.getElementById("FechaHasta").value = FechaHastaNew
 }
