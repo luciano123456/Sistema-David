@@ -179,12 +179,7 @@ async function cargarCliente() {
             }
 
         } else {
-            if (userSession.IdRol == 1) {
-                $("#nombrecliente").text("Nombre: " + result.data.Nombre)
-                $("#estadocliente").text("Estado: " + result.data.Estado)
-                $("#direccioncliente").text("Direccion: " + result.data.Direccion)
-                $("#telefonocliente").text("Tel: " + result.data.Telefono)
-            } else {
+            
             if (confirm("No se ha encontrado ningun cliente tuyo con ese Dni, ¿deseas ir a agregar uno?")) {
 
 
@@ -198,7 +193,6 @@ async function cargarCliente() {
                 $("#idcliente").text("");
 
                 }
-            }
         }
     } catch (error) {
         //$('.datos-error').text('Ha ocurrido un error.')

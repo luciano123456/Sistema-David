@@ -415,7 +415,7 @@ namespace Sistema_David.Models.Modelo
                                 Latitud = d.Latitud,
                                 FechaenCero = d.FechaenCero != null ? d.FechaenCero : null,
                                 IdVendedorAsignado = d.IdVendedorAsignado != null || d.IdVendedorAsignado == 0 ? d.IdVendedorAsignado : null
-                            }).Where(x => x.Dni.Trim() == documento.Trim()).FirstOrDefault();
+                            }).Where(x => x.Dni != null && x.Dni.Trim() == documento.Trim()).FirstOrDefault();
 
                 return user;
             }
