@@ -1,5 +1,4 @@
-﻿body {
-}
+﻿
 
 .custom-checkbox {
     cursor: pointer;
@@ -442,11 +441,12 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
 }
 
 
-.container-fluid {
+.container-fluid2 {
     position: absolute;
-    width: 100%;
-    left: 0px;
+    width: 98%;
+    left: 3px;
 }
+
 
 
 .btn-uniform {

@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <title>My favorite book</title>
+    <!-- Estilos de Bootstrap y otros -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="~/Estilos/NavBarLogin.css" rel="stylesheet" />
+    <link href="~/Content/font-awesome.css" rel="stylesheet" />
+    <style>
+        /* Tus estilos adicionales aquí */
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: rgba(112, 112, 112, 0.1);">
+        <div class="container-fluid">
+            <a class="navbar-brand">Indumentaria DG</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mt-2 mb-2 mb-lg-0">
+                    <!-- Items del menú aquí -->
+
+
+                    <li class="nav-item" id="seccionUsuarios" hidden>
+                        <a class="nav-link" id="btnUsuarios" href="@Url.Action("Index", "Usuarios")">
+                            Usuarios <i id="notificationStock" class="fa fa-check text-danger" style="display:none;"></i>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" id="seccionRendimiento" hidden>
+                        <a class="nav-link" id="btnRendimiento" href="@Url.Action("Index", "Rendimiento")">
+                            Rendimiento <i id="notificationHome" class="fa fa-home text-danger" style="display:none;"></i>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" id="seccionProductos" hidden>
+                        <a class="nav-link" id="btnProductos" href="@Url.Action("Index", "Productos")">Productos</a>
+                    </li>
+                    <li class="nav-item" id="seccionCobranzas" hidden>
+                        <a class="nav-link" id="btnCobranzas" href="@Url.Action("Index", "Cobranzas")">Cobranzas</a>
+                    </li>
+                    <li class="nav-item" id="seccionVentas">
+                        <a class="nav-link" id="btnVentas" href="@Url.Action("Index", "Ventas")">Ventas</a>
+                    </li>
+                    <li class="nav-item" id="seccionStock" hidden>
+                        <a class="nav-link" id="btnProductos" href="@Url.Action("Index", "Stock")">Stock</a>
+                    </li>
+                    <li class="nav-item" id="seccionClientes" hidden>
+                        <a class="nav-link" id="btnClientes" href="@Url.Action("Index", "Clientes")">Clientes</a>
+                    </li>
+                    <li class="nav-item dropdown" id="configDropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="configDropdownLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Soporte
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="configDropdownLink">
+                            <li>
+                                <a class="dropdown-item" href="https://wa.me/5493777710884">
+                                    <i class="fa fa-whatsapp text-success"></i> Contactar via WhatsApp
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="tel:+5493777710884">
+                                    <i class="fa fa-phone text-danger"></i> Llamar a Soporte
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Agrega el enlace a Font Awesome 4.7 si no lo tienes -->
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+                    </li>
+
+                </ul>
+
+                <!-- Usuario Dropdown -->
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                           <span id="userName"></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" onclick="cerrarSession();">Cerrar Sesión</a></li>
+                        </ul>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+
+
+    <script src="~/JavaScript/Utils/Utils.js"></script>
+    <link href="~/Content/font-awesome.css" rel="stylesheet" />
+
+
+    <script src="~/JavaScript/NavBarLogin.js"></script>
+</body>

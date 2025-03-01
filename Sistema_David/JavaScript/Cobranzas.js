@@ -87,10 +87,10 @@ $(document).ready(async function () {
 
 
 }).on('init.dt', function () {
-    if (data.Restante <= 0) {
-        var cobranzaId = "Cobranza(" + data.Id + ")"
-    }
-    // Acciones a realizar una vez que los campos se hayan cargado
+    //if (data.Restante <= 0) {
+    //    var cobranzaId = "Cobranza(" + data.Id + ")"
+    //}
+    //// Acciones a realizar una vez que los campos se hayan cargado
 
     verificarCobranzas();
 
