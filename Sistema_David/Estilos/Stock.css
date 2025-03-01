@@ -238,3 +238,69 @@
     max-width: 100px; /* Limitar el ancho máximo */
     max-height: 50px; /* Limitar el ancho máximo */
 }
+
+
+/* Cambiar el color del texto en los elementos select2 */
+.select2-container .select2-selection__rendered {
+    color: black !important; /* Asegura que el color del texto sea negro */
+}
+
+/* Cambiar el color del texto cuando el elemento select2 está abierto */
+.select2-dropdown {
+    color: black !important; /* Asegura que el color del texto sea negro en el dropdown */
+}
+
+/* Cambiar el color del texto en el desplegable de opciones */
+.select2-container--default .select2-results__option {
+    color: black !important; /* Asegura que el color del texto sea negro en las opciones */
+}
+
+
+/* Elimina los bordes y deja solo un borde inferior rojo */
+.select2-container--default .select2-selection--single {
+    border: none !important;
+    border-bottom: 3px solid blue !important;
+    border-radius: 0px !important;
+    background-color: transparent !important;
+    margin-top: 20px;
+}
+
+.select2-search--dropdown .select2-search__field {
+    padding: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    color: black !important;
+}
+
+/* Contenedor de Select2 */
+.select2-container .select2-selection--single {
+    display: flex;
+    border: none;
+    border-bottom: 10px solid blue;
+    width: 70%;
+    position: relative;
+    left: 17%;
+    font-size: 1.3vw;
+    margin-bottom: 20px;
+    color: black;
+    text-align: center;
+    max-width: 500px !important;
+    background-color: white;
+}
+
+/* Estilo del texto dentro del Select2 */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    text-align: center;
+    font-size: 1.3vw;
+    color: black !important;
+}
+
+/* Ajusta el tamaño del dropdown */
+.select2-dropdown {
+   text-align: center;
+}
+
+/* Ajusta la alineación de las opciones */
+.select2-results__option {
+    text-align: center;
+}

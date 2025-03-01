@@ -19,6 +19,7 @@ $(document).ready(function () {
 
 
 
+
     configurarDataTable();
 
     cargarNombre();
@@ -252,9 +253,10 @@ async function transferenciaStock() {
 
 }
 
-function abrirmodal() {
+async function abrirmodal() {
     // Mostrar el modal para añadir
     $("#nuevoProductoModal").modal("show");
+
 
     // Cambiar texto del botón a "Añadir"
     $("#btnRegistrarModificar").text("Añadir");
@@ -277,7 +279,16 @@ function abrirmodal() {
     $("#btnRegistrarModificar").show();
 
     // Cargar productos si es necesario
-    cargarProductos();
+    await cargarProductos();
+
+    $("#Productos").select2({
+        dropdownParent: $("#nuevoProductoModal"),
+        width: "100%",
+        placeholder: "Selecciona una opción",
+        allowClear: false
+    });
+
+
 }
 
 async function cargarProductos() {
