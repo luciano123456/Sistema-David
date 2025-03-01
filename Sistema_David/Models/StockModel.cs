@@ -12,42 +12,29 @@ namespace Sistema_David.Models
     {
 
 
-  
 
 
         public static List<StockUsuarios> BuscarStock(int id)
         {
-            using (var db = new Sistema_DavidEntities())
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var result = (from s in db.StockUsuarios
-                              join u in db.Usuarios on s.IdUsuario equals u.Id
-                              join p in db.Productos on s.IdProducto equals p.Id
-                              where s.IdUsuario == id 
-                              orderby p.Nombre
-                              select new
+
+                var result = (from d in db.StockUsuarios
+                         .SqlQuery("select s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.Estado,  s.IdCategoria from StockUsuarios s inner join Usuarios u on u.Id = s.IdUsuario inner join Productos p on p.Id = s.IdProducto")
+                              select new StockUsuarios
                               {
-                                  s.Id,
-                                  s.IdProducto,
-                                  s.Cantidad,
-                                  s.IdUsuario,
-                                  Usuario = u.Nombre,
-                                  Producto = p.Nombre,
-                                  PrecioVenta = (decimal)p.PrecioVenta,
-                                  Total = (decimal)p.PrecioVenta * s.Cantidad
-                              })
-                              .AsEnumerable() // Materializa la consulta en memoria
-                              .Select(x => new StockUsuarios
-                              {
-                                  Id = x.Id,
-                                  IdProducto = x.IdProducto,
-                                  Cantidad = x.Cantidad,
-                                  IdUsuario = x.IdUsuario,
-                                  Usuario = x.Usuario,
-                                  Producto = x.Producto,
-                                  PrecioVenta = x.PrecioVenta,
-                                  Total = x.Total
-                              })
-                              .ToList();
+                                  Id = d.Id,
+                                  IdProducto = d.IdProducto,
+                                  Cantidad = d.Cantidad,
+                                  IdUsuario = d.IdUsuario,
+                                  Usuario = d.Usuarios.Nombre,
+                                  Producto = d.Productos.Nombre,
+                                  PrecioVenta = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta : 0,
+                                  Total = d.Productos.PrecioVenta != null ?  (decimal)d.Productos.PrecioVenta * d.Cantidad : 0,
+                                   Estado = d.Estado,
+                              }).Where(x => x.IdUsuario == id)
+                                .OrderBy(x => x.Producto)
+                                .ToList();
 
                 return result;
             }

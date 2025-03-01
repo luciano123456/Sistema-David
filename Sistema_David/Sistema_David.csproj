@@ -529,6 +529,7 @@
     <Content Include="Estilos\Pedidos.css" />
     <Content Include="Estilos\PedidosNuevo.css" />
     <Content Include="Estilos\Cobranzas.css" />
+    <Content Include="Estilos\NavBarLogin.css" />
     <Content Include="Estilos\VentasNuevo.css" />
     <Content Include="Estilos\Ventas.css" />
     <Content Include="fonts\fontawesome-webfont.svg" />
@@ -546,6 +547,7 @@
     <Content Include="JavaScript\ClientesCero.js" />
     <Content Include="JavaScript\ClientesEditar.js" />
     <Content Include="JavaScript\InformacionCliente.js" />
+    <Content Include="JavaScript\NavBarLogin.js" />
     <Content Include="JavaScript\RecorridoCobranzas.js" />
     <Content Include="JavaScript\Recorrido.js" />
     <Content Include="JavaScript\Cobranzas.js" />
@@ -692,6 +694,7 @@
     <Content Include="Views\Pedidos\Nuevo.cshtml" />
     <Content Include="Views\Recorrido\Index.cshtml" />
     <Content Include="Views\Stock\General.cshtml" />
+    <Content Include="Views\Shared\Partials\NavBarLogin.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
