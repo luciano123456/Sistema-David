@@ -50,6 +50,11 @@
                     <li class="nav-item" id="seccionClientes" hidden>
                         <a class="nav-link" id="btnClientes" href="@Url.Action("Index", "Clientes")">Clientes</a>
                     </li>
+                    <li class="nav-item" id="seccionClientesCero" hidden>
+                        <a class="nav-link" id="btnRendimiento" href="@Url.Action("Index", "ClientesCero")">
+                            Clientes <i id="notificationIcon" class="fa fa-bell text-danger" style="display:none;"></i>
+                        </a>
+                    </li>
                     <li class="nav-item dropdown" id="configDropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="configDropdownLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Soporte
@@ -97,5 +102,5 @@
     <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
 
-    <script src="~/JavaScript/NavBarLogin.js"></script>
+    <script src="~/JavaScript/NavBarLogin.js?v=1.0"></script>
 </body>

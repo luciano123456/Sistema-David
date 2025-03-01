@@ -81,7 +81,6 @@ async function configurarDataTable() {
             },
             { "data": "TipoNegocio" },
             { "data": "Rol" },
-            { "data": "CantVentas" },
             { "data": "Estado" },
             {
                 "data": "Id", "render": function (data, type, full) {
@@ -109,7 +108,15 @@ async function configurarDataTable() {
             } else if (data.Estado == "Inactivo") {
                 $('td', nRow).css('background-color', ' #DED803');
             }
+        },
+
+         "initComplete": function (settings, json) {
+
+            configurarOpcionesColumnas()
+
         }
+
+      
 
     });
 
@@ -556,4 +563,48 @@ async function cargarTiposDeNegocio() {
         $('.datos-error').text('Ha ocurrido un error.')
         $('.datos-error').removeClass('d-none')
     }
+}
+
+
+function configurarOpcionesColumnas() {
+    const grid = $('#grdUsuarios').DataTable(); // Accede al objeto DataTable utilizando el id de la tabla
+    const columnas = grid.settings().init().columns; // Obtiene la configuración de columnas
+    const container = $('#configColumnasMenu'); // El contenedor del dropdown específico para configurar columnas
+
+    const storageKey = `Usuarios_Columnas`; // Clave única para esta pantalla
+
+    const savedConfig = JSON.parse(localStorage.getItem(storageKey)) || {}; // Recupera configuración guardada o inicializa vacía
+
+    container.empty(); // Limpia el contenedor
+
+    columnas.forEach((col, index) => {
+        if (col.data && col.data !== "Id") { // Solo agregar columnas que no sean "Id"
+            // Recupera el valor guardado en localStorage, si existe. Si no, inicializa en 'false' para no estar marcado.
+            const isChecked = savedConfig && savedConfig[`col_${index}`] !== undefined ? savedConfig[`col_${index}`] : true;
+
+            // Asegúrate de que la columna esté visible si el valor es 'true'
+            grid.column(index).visible(isChecked);
+
+            const columnName = index != 6 ? col.data : "Direccion";
+
+            // Ahora agregamos el checkbox, asegurándonos de que se marque solo si 'isChecked' es 'true'
+            container.append(`
+                <li>
+                    <label class="dropdown-item">
+                        <input type="checkbox" class="toggle-column" data-column="${index}" ${isChecked ? 'checked' : ''}>
+                        ${columnName}
+                    </label>
+                </li>
+            `);
+        }
+    });
+
+    // Asocia el evento para ocultar/mostrar columnas
+    $('.toggle-column').on('change', function () {
+        const columnIdx = parseInt($(this).data('column'), 10);
+        const isChecked = $(this).is(':checked');
+        savedConfig[`col_${columnIdx}`] = isChecked;
+        localStorage.setItem(storageKey, JSON.stringify(savedConfig));
+        grid.column(columnIdx).visible(isChecked);
+    });
 }
