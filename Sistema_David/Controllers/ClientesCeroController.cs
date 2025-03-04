@@ -33,10 +33,10 @@ namespace Sistema_David.Controllers
         {
             ViewBag.ErrorPermisos = null;
 
-            if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 2) //ROL  VENDEDOR
-            {
-                ViewBag.ErrorPermisos = "No puedes acceder a esta pantalla";
-            }
+            //if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 2) //ROL  VENDEDOR
+            //{
+            //    ViewBag.ErrorPermisos = "No puedes acceder a esta pantalla";
+            //}
 
             var stockPendiente = StockPendienteModel.ExisteStockPendiente(SessionHelper.GetUsuarioSesion().Id, "Pendiente");
 
@@ -227,11 +227,8 @@ namespace Sistema_David.Controllers
 
                 var result = ClientesModel.Nuevo(model);
 
-                if (result)
-                    return Json(new { Status = true });
+                    return Json(new { Status = result });
 
-                else
-                    return Json(new { Status = false });
             }
             catch (Exception ex)
             {

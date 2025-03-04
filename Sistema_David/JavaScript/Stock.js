@@ -101,6 +101,13 @@ async function configurarDataTable() {
                 "visible": (userSession.IdRol == 1) // Ocultar si el rol no es 1
             }
         ],
+
+        "initComplete": async function (settings, json) {
+
+            await configurarOpcionesColumnas();
+
+
+        }
     };
 
     $('#grdStock').DataTable(dataTableOptions);
@@ -425,14 +432,20 @@ async function cargarProductosAll() {
 
 
 
-const Productos = document.querySelector("#Productos");
-Productos.addEventListener("change", (e) => {
-    var x = document.getElementById("Productos").selectedIndex;
-    var y = document.getElementById("Productos").options;
-    $("#precioTotal").text(formatNumber(precioVenta[y[x].index] * cantidad.value));
+$("#Productos").on("change", function () {
+    let selectedValue = $(this).prop('selectedIndex'); // Obtiene el valor seleccionado
+    let cantidadInput = document.getElementById("Cantidad"); // Busca el input de cantidad
 
+    if (!cantidadInput) {
+        console.error("El campo cantidad no se encontró en el DOM.");
+        return; // Salimos de la función si no existe
+    }
+
+    let cantidad = cantidadInput.value || 1; // Asignar un valor por defecto si está vacío
+    let precio = precioVenta[selectedValue] || 0; // Obtener el precio según el producto seleccionado
+
+    $("#precioTotal").text(formatNumber(precio * cantidad)); // Actualizar el precio total
 });
-
 
 const cantidad = document.querySelector("#Cantidad");
 
@@ -934,4 +947,59 @@ function generarFacturaPDF(factura) {
 function descargarFacturaPDF(facturaPDF) {
     let fecha = moment().format('DD/MM/YYYY');
     facturaPDF.save(`stock_${nombreUser} - ${fecha} .pdf`);
+}
+
+
+function configurarOpcionesColumnas() {
+    const grid = $('#grdStock').DataTable(); // Accede al objeto DataTable utilizando el id de la tabla
+    const columnas = grid.settings().init().columns; // Obtiene la configuración de columnas
+    const container = $('#configColumnasMenu'); // El contenedor del dropdown específico para configurar columnas
+
+
+    const storageKey = `Stocks_Columnas`; // Clave única para esta pantalla
+
+    const savedConfig = JSON.parse(localStorage.getItem(storageKey)) || {}; // Recupera configuración guardada o inicializa vacía
+
+    container.empty(); // Limpia el contenedor
+
+    columnas.forEach((col, index) => {
+
+
+
+        if (col.data && col.data !== "Id" && col.data != "Activo") { // Solo agregar columnas que no sean "Id"
+
+            if (userSession.IdRol != 4) {
+                if (index == 4) {
+                    return;
+                }
+            }
+
+            // Recupera el valor guardado en localStorage, si existe. Si no, inicializa en 'false' para no estar marcado.
+            const isChecked = savedConfig && savedConfig[`col_${index}`] !== undefined ? savedConfig[`col_${index}`] : true;
+
+            // Asegúrate de que la columna esté visible si el valor es 'true'
+            grid.column(index).visible(isChecked);
+
+            const columnName = index == 0 ? "Imagen" : col.data;
+
+            // Ahora agregamos el checkbox, asegurándonos de que se marque solo si 'isChecked' es 'true'
+            container.append(`
+                <li>
+                    <label class="dropdown-item">
+                        <input type="checkbox" class="toggle-column" data-column="${index}" ${isChecked ? 'checked' : ''}>
+                        ${columnName}
+                    </label>
+                </li>
+            `);
+        }
+    });
+
+    // Asocia el evento para ocultar/mostrar columnas
+    $('.toggle-column').on('change', function () {
+        const columnIdx = parseInt($(this).data('column'), 10);
+        const isChecked = $(this).is(':checked');
+        savedConfig[`col_${columnIdx}`] = isChecked;
+        localStorage.setItem(storageKey, JSON.stringify(savedConfig));
+        grid.column(columnIdx).visible(isChecked);
+    });
 }

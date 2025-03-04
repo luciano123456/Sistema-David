@@ -63,12 +63,27 @@ async function configurarDataTable() {
                 "searchable": true
             }
         ],
-        "initComplete": function (settings, json) {
+
+        "columnDefs": [
+            {
+                "render": function (data, type, row) {
+                    return formatNumber(data); // Formatear números
+                },
+                "targets": [5,6,7] // Índices de las columnas de números
+            },
+        ],
+
+        "initComplete": async function (settings, json) {
+
             if (userSession.IdRol == 4) {
                 gridProductos.column(5).visible(false);
                 gridProductos.column(6).visible(false);
                 gridProductos.column(8).visible(false);
             }
+
+            await configurarOpcionesColumnas();
+
+          
         }
     });
 }
@@ -133,7 +148,7 @@ const eliminarProducto = async id => {
             if (result.Status) {
                 alert('Producto eliminado correctamente.');
                 $('.datos-error').removeClass('d-none');
-                document.location.href = "../Index/";
+                document.location.href = "../../Index/";
             } else {
                 $('.datos-error').text('Ha ocurrido un error en los datos.')
                 $('.datos-error').removeClass('d-none')
@@ -520,4 +535,58 @@ function cargarImagenProducto(idProducto) {
 
 function abrirstockGeneral() {
     document.location.href = "../../Stock/General/";
+}
+
+function configurarOpcionesColumnas() {
+    const grid = $('#grdProductos').DataTable(); // Accede al objeto DataTable utilizando el id de la tabla
+    const columnas = grid.settings().init().columns; // Obtiene la configuración de columnas
+    const container = $('#configColumnasMenu'); // El contenedor del dropdown específico para configurar columnas
+
+
+    const storageKey = `Productos_Columnas`; // Clave única para esta pantalla
+
+    const savedConfig = JSON.parse(localStorage.getItem(storageKey)) || {}; // Recupera configuración guardada o inicializa vacía
+
+    container.empty(); // Limpia el contenedor
+
+    columnas.forEach((col, index) => {
+
+       
+
+        if (col.data && col.data !== "Id" && col.data != "Activo") { // Solo agregar columnas que no sean "Id"
+
+            if (userSession.IdRol == 4) {
+                if (index == 5 || index == 6 || index == 8) {
+                    return;
+                }
+            }
+
+            // Recupera el valor guardado en localStorage, si existe. Si no, inicializa en 'false' para no estar marcado.
+            const isChecked = savedConfig && savedConfig[`col_${index}`] !== undefined ? savedConfig[`col_${index}`] : true;
+
+            // Asegúrate de que la columna esté visible si el valor es 'true'
+            grid.column(index).visible(isChecked);
+
+            const columnName = index == 0 ? "Imagen" : col.data;
+
+            // Ahora agregamos el checkbox, asegurándonos de que se marque solo si 'isChecked' es 'true'
+            container.append(`
+                <li>
+                    <label class="dropdown-item">
+                        <input type="checkbox" class="toggle-column" data-column="${index}" ${isChecked ? 'checked' : ''}>
+                        ${columnName}
+                    </label>
+                </li>
+            `);
+        }
+    });
+
+    // Asocia el evento para ocultar/mostrar columnas
+    $('.toggle-column').on('change', function () {
+        const columnIdx = parseInt($(this).data('column'), 10);
+        const isChecked = $(this).is(':checked');
+        savedConfig[`col_${columnIdx}`] = isChecked;
+        localStorage.setItem(storageKey, JSON.stringify(savedConfig));
+        grid.column(columnIdx).visible(isChecked);
+    });
 }

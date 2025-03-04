@@ -36,6 +36,10 @@ async function MakeAjaxFormData(options) {
 }
 
 
+
+
+
+
 function formatNumber(number) {
     if (typeof number !== 'number' || isNaN(number)) {
         return "$0"; // Devuelve un valor predeterminado si 'number' no es válido
@@ -45,4 +49,3 @@ function formatNumber(number) {
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     return "$" + parts.join(",");
 }
-

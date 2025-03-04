@@ -219,23 +219,25 @@ async function registrarCliente() {
 
             let result = await MakeAjax(options);
 
-            if (result.Status) {
+
+            if (result.Status == 1) {
+                alert("Ha ocurrido un error al registrar el cliente. Consulte con un Administador");
+                return;
+            } else if (result.Status == 2) {
+                alert("Ya existe un cliente con ese DNI registrado");
+                return
+            } else {
                 alert('Cliente agregado correctamente.');
                 $('.datos-error').removeClass('d-none');
 
                 if (localStorage.getItem('RegistrarClienteVenta') == 1) {
                     localStorage.setItem("DNIClienteVenta", document.getElementById("Dni").value);
-                   
+
                     document.location.href = "../../../Ventas/Nuevo/";
 
                 } else {
                     document.location.href = "../Index/";
                 }
-
-
-            } else {
-                //$('.datos-error').text('Ha ocurrido un error en los datos.')
-                //$('.datos-error').removeClass('d-none')
             }
         } catch (error) {
             $('.datos-error').text('Ha ocurrido un error.')

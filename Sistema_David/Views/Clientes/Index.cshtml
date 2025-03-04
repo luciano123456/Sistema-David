@@ -63,9 +63,17 @@
 
         <div class="col-lg-12">
             <div class="card cardTablePersonalizado">
-                <div class="card-header">
-                    Clientes
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Clientes</span>
+                    <div class="dropdown ms-auto">
+                        <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-cog me-2"></i> Config. Columnas
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu">
+                        </ul>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <table class="display nowrap" id="grdClientes" style="width:100%">
                         <thead>
@@ -193,5 +201,5 @@
 <script src="~/Scripts/xlsx.full.min.js.js"></script>
 
 @section scripts{
-    <script src="~/JavaScript/Clientes.js"></script>
+    <script src="~/JavaScript/Clientes.js?v=1.2"></script>
 }

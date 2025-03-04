@@ -406,27 +406,30 @@ namespace Sistema_David.Models
                             var producto = StockModel.BuscarStockUser((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto);
 
                             if (producto != null)
-                            {
-                                StockModel.SumarStock((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto, (int)stockPendiente.Cantidad);
-                            }
+                                if (stockPendiente.Tipo == "ELIMINAR" || stockPendiente.Tipo == "RESTAR")
+                                {
+                                    StockModel.RestarStock(producto.Id, (int)stockPendiente.Cantidad, (int)stockPendiente.IdUsuario);
+                                }
+                                else
+                                {
+                                    StockModel.SumarStock((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto, (int)stockPendiente.Cantidad);
+                                }
                             else
                             {
                                 StockModel.Agregar(stockPendiente);
                             }
                         }
-                        else
-                        {
-                            return false;
-                        }
 
                         db.Entry(stockPendiente).State = System.Data.Entity.EntityState.Modified;
+
+                        db.SaveChanges();
+
                     }
-
-                    db.SaveChanges();
-
-                    return true;
                 }
+
+                return true;
             }
+
             catch (Exception e)
             {
                 return false;

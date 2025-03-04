@@ -8,7 +8,7 @@
     justify-content: center;
     text-align: center !important;
     color: #05056C;
-    font-size: 1vw;
+    /*font-size: 1vw;*/
 }
 
 .lblusuario {
@@ -150,7 +150,7 @@
     margin-bottom: 20px;
     color: black;
     text-align: center;
-    font-size: 1.3vw;
+    font-size:1.3vw;
     max-width: 500px !important;
     color: black !important;
 }
@@ -280,7 +280,7 @@
     width: 70%;
     position: relative;
     left: 17%;
-    font-size: 1.3vw;
+    /*font-size: 1.3vw;*/
     margin-bottom: 20px;
     color: black;
     text-align: center;
@@ -291,7 +291,7 @@
 /* Estilo del texto dentro del Select2 */
 .select2-container--default .select2-selection--single .select2-selection__rendered {
     text-align: center;
-    font-size: 1.3vw;
+    /*font-size: 1.3vw;*/
     color: black !important;
 }
 
@@ -303,4 +303,18 @@
 /* Ajusta la alineación de las opciones */
 .select2-results__option {
     text-align: center;
+}
+
+
+@media (max-width: 750px) {
+
+
+    .input-nuevomodif {
+        font-size: 4vw !important;
+    }
+
+    .lblNombreInput {
+        font-size: 4vw !important;
+    }
+
 }
