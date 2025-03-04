@@ -202,15 +202,11 @@ namespace Sistema_David.Controllers
 
                 var result = ClientesModel.Nuevo(model);
 
-                if (result)
-                    return Json(new { Status = true });
-
-                else
-                    return Json(new { Status = false });
+                    return Json(new { Status = result });
             }
             catch (Exception ex)
             {
-                return Json(new { Status = false });
+                return Json(new { Status = 1 });
             }
 
         }

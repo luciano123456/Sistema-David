@@ -1108,7 +1108,7 @@ async function enviarWhatssap(id) {
                 table.ajax.reload();
 
                 mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro y el vendedor no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
-                if (data.IdRol != 2) {
+                if (userSession.IdRol != 2) {
                     CantidadClientesAusentes();
                 }
 

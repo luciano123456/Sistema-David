@@ -14,6 +14,7 @@
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.9); /* Brillo blanco */
     color: white !important; /* Asegura que el texto sea blanco */
     transition: all 0.3s ease-in-out; /* Transición suave */
+    cursor: pointer;
 }
 
 .navbar-brand:hover {
@@ -35,7 +36,7 @@
     padding-bottom: .5rem;
    
     position: relative; /* O absolute/fixed, según necesites */
-    z-index: 99999;
+
 }
 
 .menuUsuario {

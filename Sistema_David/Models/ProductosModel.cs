@@ -302,13 +302,13 @@ namespace Sistema_David.Models
                     producto.Id = result.Id;
                     producto.Codigo = result.Codigo;
                     producto.Nombre = result.Nombre;
-                    producto.Imagen = result.Imagen;
                     producto.idCategoria = result.idCategoria;
                     producto.Stock = result.Stock;
                     producto.PrecioCompra = result.PrecioCompra;
                     producto.PrecioVenta = result.PrecioVenta;
                     producto.PorcVenta = result.PorcVenta;
                     producto.Activo = (int)result.Activo; 
+                    producto.Imagen = result.Imagen;
                     return producto;
                 }
 

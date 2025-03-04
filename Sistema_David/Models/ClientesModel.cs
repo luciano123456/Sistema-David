@@ -121,7 +121,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static bool Nuevo(Cliente model)
+        public static int Nuevo(Cliente model)
         {
 
             try
@@ -130,6 +130,13 @@ namespace Sistema_David.Models.Modelo
                 {
 
                     Clientes result = new Clientes();
+
+                    Clientes client = db.Clientes.Where(x=> x.Dni.Trim() == model.Dni.Trim()).FirstOrDefault();
+
+                    if(client  != null)
+                    {
+                        return 2;
+                    }
 
                     if (model != null)
                     {
@@ -147,19 +154,18 @@ namespace Sistema_David.Models.Modelo
                         result.FechaenCero = DateTime.Now;
                         result.IdVendedorAsignado = 0;
 
-
                         db.Clientes.Add(result);
                         db.SaveChanges();
 
-                        return true;
+                        return 0;
                     }
                 }
 
-                return false;
+                return 1;
             }
             catch (Exception e)
             {
-                return false;
+                return 1;
             }
         }
 

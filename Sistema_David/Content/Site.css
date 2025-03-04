@@ -48,7 +48,7 @@ option {
     justify-content: center;
     text-align: center !important;
     color: #05056C;
-    font-size: 1.3vw;
+/*    font-size: 1.3vw;*/
 }
 /* Set width on the form input elements since they're 100% wide by default */
 input,

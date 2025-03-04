@@ -148,7 +148,7 @@ const eliminarProducto = async id => {
             if (result.Status) {
                 alert('Producto eliminado correctamente.');
                 $('.datos-error').removeClass('d-none');
-                document.location.href = "../Index/";
+                document.location.href = "../../Index/";
             } else {
                 $('.datos-error').text('Ha ocurrido un error en los datos.')
                 $('.datos-error').removeClass('d-none')

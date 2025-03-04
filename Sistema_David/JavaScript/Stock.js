@@ -432,14 +432,20 @@ async function cargarProductosAll() {
 
 
 
-const Productos = document.querySelector("#Productos");
-Productos.addEventListener("change", (e) => {
-    var x = document.getElementById("Productos").selectedIndex;
-    var y = document.getElementById("Productos").options;
-    $("#precioTotal").text(formatNumber(precioVenta[y[x].index] * cantidad.value));
+$("#Productos").on("change", function () {
+    let selectedValue = $(this).prop('selectedIndex'); // Obtiene el valor seleccionado
+    let cantidadInput = document.getElementById("Cantidad"); // Busca el input de cantidad
 
+    if (!cantidadInput) {
+        console.error("El campo cantidad no se encontró en el DOM.");
+        return; // Salimos de la función si no existe
+    }
+
+    let cantidad = cantidadInput.value || 1; // Asignar un valor por defecto si está vacío
+    let precio = precioVenta[selectedValue] || 0; // Obtener el precio según el producto seleccionado
+
+    $("#precioTotal").text(formatNumber(precio * cantidad)); // Actualizar el precio total
 });
-
 
 const cantidad = document.querySelector("#Cantidad");
 

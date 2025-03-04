@@ -38,17 +38,14 @@ async function MakeAjaxFormData(options) {
 
 
 
+
+
 function formatNumber(number) {
     if (typeof number !== 'number' || isNaN(number)) {
-        return "$0.00"; // Devuelve un valor predeterminado si 'number' no es válido
+        return "$0"; // Devuelve un valor predeterminado si 'number' no es válido
     }
 
-    // Asegúrate de que el número tenga dos decimales
-    const parts = number.toFixed(2).split(".");
-
-    // Formatea la parte entera con puntos como separadores de miles
+    const parts = number.toFixed(0).toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-
-    // Combina la parte entera y la parte decimal
     return "$" + parts.join(",");
 }
