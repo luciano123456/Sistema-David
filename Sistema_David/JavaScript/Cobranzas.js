@@ -54,6 +54,7 @@ $(document).ready(async function () {
         $("#FechaCobroHasta").removeAttr("hidden");
         $("#lblfechacobrodesde").removeAttr("hidden");
         $("#lblfechacobrohasta").removeAttr("hidden");
+        document.getElementById("btnCuentaBancaria").style.display = "block";
     }
 
     if (userSession.IdRol == 3) { //ROL COBRADOR
@@ -71,6 +72,7 @@ $(document).ready(async function () {
     if (userSession.IdRol == 4) {
         fechaCobroDesde = moment().format('YYYY-MM-DD');
         fechaCobroHasta = moment().format('YYYY-MM-DD');
+        document.getElementById("btnCuentaBancaria").style.display = "block";
     }
 
     document.getElementById("FechaCobroDesde").value = fechaCobroDesde;
