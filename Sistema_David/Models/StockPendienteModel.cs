@@ -231,13 +231,13 @@ namespace Sistema_David.Models
         }
 
 
-        public static List<StockPendientes> ListarStockPendiente(int idUser, string Estado, DateTime? Fecha, string Asignacion)
+        public static List<VMStockPendiente> ListarStockPendiente(int idUser, string Estado, DateTime? Fecha, string Asignacion)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
                 var result = (from d in db.StocksPendientes
                             .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Cantidad, sp.Estado, sp.Tipo, p.Nombre, u.Nombre, sp.Asignacion from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
-                              select new StockPendientes
+                              select new VMStockPendiente
                               {
                                   Id = d.Id,
                                   IdProducto = d.IdProducto,
@@ -264,14 +264,14 @@ namespace Sistema_David.Models
         }
 
 
-        public static List<StockPendientes> ListarStockPendienteId(int idUser, string Estado)
+        public static List<VMStockPendiente> ListarStockPendienteId(int idUser, string Estado)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var result = (from d in db.StocksPendientes
                           .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Tipo, sp.Cantidad, sp.Estado, p.Nombre, u.Nombre, sp.Asignacion from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
-                              select new StockPendientes
+                              select new VMStockPendiente
                               {
                                   Id = d.Id,
                                   IdProducto = d.IdProducto,
@@ -310,7 +310,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static StockPendientes BuscarStockPendiente(int idStock)
+        public static VMStockPendiente BuscarStockPendiente(int idStock)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -319,7 +319,7 @@ namespace Sistema_David.Models
                               join u in db.Usuarios on sp.IdUsuarioAsignado equals u.Id into usuarios
                               from u in usuarios.DefaultIfEmpty() // To handle cases where there is no assigned user
                               where sp.Id == idStock
-                              select new StockPendientes
+                              select new VMStockPendiente
                               {
                                   Id = sp.Id,
                                   IdProducto = sp.IdProducto,

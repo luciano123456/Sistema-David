@@ -16,12 +16,12 @@ namespace Sistema_David.Models
     public class RendimientosModel
     {
 
-        public static List<Rendimiento> ListaUsuarios()
+        public static List<VMRendimiento> ListaUsuarios()
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
-                var resultList = db.Database.SqlQuery<Rendimiento>(@"SELECT u.Id, CONCAT(u.Nombre, ' ', u.Apellido) AS Nombre, SUM(v.Entrega + v.Restante) AS Total FROM Usuarios u LEFT JOIN Ventas v ON v.idVendedor = u.Id GROUP BY u.Id, u.Nombre, u.Apellido").ToList();
+                var resultList = db.Database.SqlQuery<VMRendimiento>(@"SELECT u.Id, CONCAT(u.Nombre, ' ', u.Apellido) AS Nombre, SUM(v.Entrega + v.Restante) AS Total FROM Usuarios u LEFT JOIN Ventas v ON v.idVendedor = u.Id GROUP BY u.Id, u.Nombre, u.Apellido").ToList();
 
                 return resultList;
             }
@@ -30,7 +30,7 @@ namespace Sistema_David.Models
 
 
 
-        public static List<RendimientoGeneral> MostrarRendimientoGeneral(DateTime fechaDesde, DateTime fechaHasta)
+        public static List<VMRendimientoGeneral> MostrarRendimientoGeneral(DateTime fechaDesde, DateTime fechaHasta)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -66,7 +66,7 @@ namespace Sistema_David.Models
                             .Where(iv => iv.Fecha?.Date == fecha && (iv.Descripcion.Contains("Cobranza")))
                             .Sum(x => x.Descripcion.Contains("Cobranza") ? x.Entrega : 0);
 
-                        return new RendimientoGeneral
+                        return new VMRendimientoGeneral
                         {
                             Fecha = fecha.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),  // Formato español
                             Ventas = (decimal)ventasDelDia,
@@ -91,7 +91,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static List<InformacionVenta> MostrarClientesAusentes(DateTime fechaDesde, DateTime fechaHasta)
+        public static List<VMInformacionVenta> MostrarClientesAusentes(DateTime fechaDesde, DateTime fechaHasta)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -99,7 +99,7 @@ namespace Sistema_David.Models
 
                 var informacionVenta = db.InformacionVentas
                     .Where(iv => iv.ClienteAusente == 1 && iv.Fecha >= fechaDesde.Date && iv.Fecha < fechaHastaFin)
-                    .Select(iv => new InformacionVenta
+                    .Select(iv => new VMInformacionVenta
                     {
                         Id = iv.Id,
                         IdVenta = iv.IdVenta,
@@ -146,7 +146,7 @@ namespace Sistema_David.Models
 
 
 
-        public static List<Rendimiento> MostrarRendimiento(int idVendedor, int ventas, int cobranzas, DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria)
+        public static List<VMRendimiento> MostrarRendimiento(int idVendedor, int ventas, int cobranzas, DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -162,7 +162,7 @@ namespace Sistema_David.Models
                 var metodoPagoParam = new SqlParameter("@metodoPago", SqlDbType.VarChar, 50) { Value = metodoPago };
                 var cuentabancariaParam = new SqlParameter("@IdCuentaBancaria", SqlDbType.Int) { Value = IdCuentaBancaria };
 
-                var resultList = db.Database.SqlQuery<Rendimiento>(
+                var resultList = db.Database.SqlQuery<VMRendimiento>(
                     "EXEC sp_MostrarRendimiento @idVendedor, @ventas, @cobranzas, @fechadesde, @fechahasta, @Idtiponegocio, @metodoPago, @IdCuentaBancaria",
                     idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam, metodoPagoParam, cuentabancariaParam
                 ).ToList();
@@ -185,7 +185,7 @@ namespace Sistema_David.Models
         }
 
 
-        public static List<RendimientoCobrado> MostrarCobrado(DateTime fechadesde, DateTime fechahasta)
+        public static List<VMRendimientoCobrado> MostrarCobrado(DateTime fechadesde, DateTime fechahasta)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -217,7 +217,7 @@ namespace Sistema_David.Models
                 var fechahastaParam = new SqlParameter("@fechahasta", SqlDbType.DateTime);
                 fechahastaParam.Value = fechahasta.Date.AddDays(1).AddSeconds(-1); // Establecer la hora a las 23:59:59 del día seleccionado
 
-                var resultList = db.Database.SqlQuery<RendimientoCobrado>(query, fechadesdeParam, fechahastaParam).ToList();
+                var resultList = db.Database.SqlQuery<VMRendimientoCobrado>(query, fechadesdeParam, fechahastaParam).ToList();
 
                
 

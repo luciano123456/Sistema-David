@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.ViewModels
 {
-    public partial class InformacionClienteAsignado
+    public partial class VMInformacionClienteAsignado
     {
         public int Id { get; set; }
         public Nullable<int> IdCliente { get; set; }

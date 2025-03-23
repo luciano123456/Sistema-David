@@ -427,8 +427,15 @@
                     <input type="text" class="form-control text-black" style="max-width: 500px" id="accountCBU" disabled>
                 </div>
 
+                <div class="d-flex justify-content-end mt-3">
+                    <div class="form-check form-switch d-flex align-items-center" style="margin-right:15px">
+                        <label class="form-check-label text-black" style="margin-right:4rem" for="CuentaPropia">Cuenta Propia</label>
+                        <input class="form-check-input" type="checkbox" id="CuentaPropia" disabled>
+                    </div>
+                </div>
+
                 <!-- Botones Añadir y Eliminar -->
-                <div class="d-flex justify-content-end">
+                <div class="d-flex justify-content-end mt-4">
 
                     <button id="anadirCuenta" type="button" class="btn btn-success" onclick="anadirCuenta()">
                         <i class="fa fa-plus"></i> Añadir
@@ -438,7 +445,7 @@
                         <i class="fa fa-close"></i> Cancelar
                     </button>
 
-                    <button  type="button" id="addAccount" class="btn btn-primary" hidden>
+                    <button type="button" id="addAccount" class="btn btn-primary" hidden>
                         <i class="fa fa-check"></i> Registrar
                     </button>
 
@@ -463,5 +470,5 @@
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=1.3"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=1.5"></script>
 }

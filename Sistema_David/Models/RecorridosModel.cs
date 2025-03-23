@@ -342,7 +342,7 @@ namespace Sistema_David.Models
 
 
 
-        public static bool ArmarRecorrido(List<Venta> ventas)
+        public static bool ArmarRecorrido(List<VMVenta> ventas)
         {
             try
             {
@@ -360,7 +360,7 @@ namespace Sistema_David.Models
                     db.Recorridos.Add(recorrido);
                     db.SaveChanges();
 
-                    foreach (Venta venta in ventas)
+                    foreach (VMVenta venta in ventas)
                     {
                         RecorridosCobranzas recorridoCobranza = new RecorridosCobranzas();
                         orden++;

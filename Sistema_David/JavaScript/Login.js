@@ -57,7 +57,7 @@ $(document).ready(function () {
                     }
 
                     // Redirigir a la página principal
-                    sessionStorage.setItem("usuario", JSON.stringify(data.Data));
+                    localStorage.setItem("usuario", JSON.stringify(data.Data));
                     document.location.href = "../Ventas/Index";
                 } else {
                     // Mostrar el mensaje de error

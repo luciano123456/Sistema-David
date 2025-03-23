@@ -63,8 +63,8 @@ namespace Sistema_David.Controllers
         {
             try
             {
-                Venta venta = VentasModel.BuscarVenta(id);
-                List<ProductosVenta> productos = VentasModel.ListaProductosVenta(id);
+                VMVenta venta = VentasModel.BuscarVenta(id);
+                List<VMProductoVenta> productos = VentasModel.ListaProductosVenta(id);
 
                 var result = new Dictionary<string, object>();
                 result.Add("Venta", venta);
@@ -83,7 +83,7 @@ namespace Sistema_David.Controllers
 
         public ActionResult Listar(int idVendedor, DateTime FechaDesde, DateTime FechaHasta, int Finalizadas, int TipoNegocio)
         {
-            List<Venta> result;
+            List<VMVenta> result;
 
             if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 2 || SessionHelper.GetUsuarioSesion().IdRol == 3) //ROL VENDEDOR
             {
@@ -100,7 +100,7 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListarTodas()
         {
-            List<Venta> result;
+            List<VMVenta> result;
 
 
             result = VentasModel.ListaVentasTodas();
@@ -130,7 +130,7 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListarVentasPendientes()
         {
-            List<Venta> result;
+            List<VMVenta> result;
 
 
             result = VentasModel.ListaVentasPendientes();
@@ -143,7 +143,7 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListarVendedores()
         {
-            List<User> usuarios;
+            List<VMUser> usuarios;
 
             if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 1 || SessionHelper.GetUsuarioSesion().IdRol == 4) //ROL ADMIN, COMPROBANTES TRAE TODOS, SI ES VENDEDOR, SOLO SU USER
             {
@@ -272,9 +272,9 @@ namespace Sistema_David.Controllers
 
                 if (devolverStock == 1)
                 {
-                    foreach (ProductosVenta producto in productosVenta)
+                    foreach (VMProductoVenta producto in productosVenta)
                     {
-                        StockUsuarios HayStock = StockModel.BuscarStockUser(venta.idVendedor, producto.IdProducto);
+                        VMStockUsuario HayStock = StockModel.BuscarStockUser(venta.idVendedor, producto.IdProducto);
 
                         if (HayStock != null)
                         {
@@ -282,7 +282,7 @@ namespace Sistema_David.Controllers
                         }
                         else
                         {
-                            StockUsuarios stock = new StockUsuarios();
+                            VMStockUsuario stock = new VMStockUsuario();
 
                             stock.IdProducto = producto.IdProducto;
                             stock.Cantidad = producto.Cantidad;
@@ -453,7 +453,7 @@ namespace Sistema_David.Controllers
 
 
         [HttpPost]
-        public ActionResult GenerarExcel(List<Venta> data)
+        public ActionResult GenerarExcel(List<VMVenta> data)
         {
 
 

@@ -18,7 +18,7 @@ namespace Sistema_David.Models.Modelo
     public class ClientesCeroModel
     {
 
-        public static List<Cliente> ListaClientes(int idVendedor, string Nombre, string Apellido, string Dni, int idZona, int idVendedorAsignado)
+        public static List<VMCliente> ListaClientes(int idVendedor, string Nombre, string Apellido, string Dni, int idZona, int idVendedorAsignado)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -35,7 +35,7 @@ namespace Sistema_David.Models.Modelo
 
                 var saldoPermitido = LimitesModel.BuscarValorLimite("ClientesSaldo");
 
-                var result = db.Database.SqlQuery<Cliente>(query)
+                var result = db.Database.SqlQuery<VMCliente>(query)
                     .Where(x =>
                         (idVendedor == -1 || x.IdVendedor == idVendedor) &&
                         (idZona == -1 || x.IdZona == idZona) &&
@@ -51,7 +51,7 @@ namespace Sistema_David.Models.Modelo
         }
 
 
-        public static List<InformacionClienteAsignado> ListaInformacion(int idCliente)
+        public static List<VMInformacionClienteAsignado> ListaInformacion(int idCliente)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -59,7 +59,7 @@ namespace Sistema_David.Models.Modelo
                               join c in db.Clientes on iv.IdCliente equals c.Id
                               join u in db.Usuarios on iv.idVendedor equals u.Id
                               where iv.IdCliente == idCliente 
-                              select new InformacionClienteAsignado
+                              select new VMInformacionClienteAsignado
                               {
                                   Id = iv.Id,
                                   Fecha = iv.Fecha,
@@ -73,7 +73,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static bool AgregarInformacionCliente(InformacionClienteAsignado model)
+        public static bool AgregarInformacionCliente(VMInformacionClienteAsignado model)
         {
             try
             {

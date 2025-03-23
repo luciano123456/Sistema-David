@@ -1,7 +1,7 @@
 ﻿
 $(document).ready(function () {
 
-    userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    userSession = JSON.parse(localStorage.getItem('usuario'));
 
     if (localStorage.getItem("EdicionCobranza") == 1) {
         $("#btnCobranzas").css("background", "#2E4053")

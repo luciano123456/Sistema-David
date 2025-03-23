@@ -4,7 +4,7 @@ $(document).ready(function () {
     configurarDataTable();
     $("#btnVentas").css("background", "#2E4053")
 
-    userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    userSession = JSON.parse(localStorage.getItem('usuario'));
 
     if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
         $("#lblfechacobro").removeAttr("hidden");
@@ -20,7 +20,7 @@ async function InformacionVenta() {
     try {
         var url = "/Ventas/EditarVenta";
 
-        var data = JSON.parse(sessionStorage.getItem('usuario'));
+        var data = JSON.parse(localStorage.getItem('usuario'));
 
    
         let value =  JSON.stringify({

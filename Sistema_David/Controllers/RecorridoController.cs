@@ -125,7 +125,7 @@ namespace Sistema_David.Controllers
 
         public ActionResult ArmarRecorrido(int idVendedor, int idCobrador, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, string clientes)
         {
-            List<Venta> resultCobros;
+            List<VMVenta> resultCobros;
 
             var existeRecorrido = RecorridosModel.BuscarRecorridoUser(SessionHelper.GetUsuarioSesion().Id);
 

@@ -11,7 +11,7 @@ $(document).ready(function () {
 
 
 
-    userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    userSession = JSON.parse(localStorage.getItem('usuario'));
 
     if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
         $("#Filtros").removeAttr("hidden");

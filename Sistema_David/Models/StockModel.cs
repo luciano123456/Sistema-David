@@ -14,14 +14,14 @@ namespace Sistema_David.Models
 
 
 
-        public static List<StockUsuarios> BuscarStock(int id)
+        public static List<VMStockUsuario> BuscarStock(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var result = (from d in db.StockUsuarios
                          .SqlQuery("select s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.Estado,  s.IdCategoria from StockUsuarios s inner join Usuarios u on u.Id = s.IdUsuario inner join Productos p on p.Id = s.IdProducto")
-                              select new StockUsuarios
+                              select new VMStockUsuario
                               {
                                   Id = d.Id,
                                   IdProducto = d.IdProducto,
@@ -31,7 +31,7 @@ namespace Sistema_David.Models
                                   Producto = d.Productos.Nombre,
                                   PrecioVenta = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta : 0,
                                   Total = d.Productos.PrecioVenta != null ?  (decimal)d.Productos.PrecioVenta * d.Cantidad : 0,
-                                   Estado = d.Estado,
+                                  Estado = d.Estado,
                               }).Where(x => x.IdUsuario == id)
                                 .OrderBy(x => x.Producto)
                                 .ToList();
@@ -40,7 +40,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static StockUsuarios BuscarStockId(int id)
+        public static VMStockUsuario BuscarStockId(int id)
         {
             using (var db = new Sistema_DavidEntities())
             {
@@ -61,7 +61,7 @@ namespace Sistema_David.Models
                                   Total = (decimal)p.PrecioVenta * s.Cantidad
                               })
                               .AsEnumerable() // Materializa la consulta en memoria
-                              .Select(x => new StockUsuarios
+                              .Select(x => new VMStockUsuario
                               {
                                   Id = x.Id,
                                   IdProducto = x.IdProducto,
@@ -78,11 +78,11 @@ namespace Sistema_David.Models
             }
         }
 
-        public static List<StockUsuario> BuscarStockProducto(string producto)
+        public static List<VMStockUsuario> BuscarStockProducto(string producto)
         {
             if (string.IsNullOrEmpty(producto) || producto.Length < 3)
             {
-                return new List<StockUsuario>(); // Retorna vacío si el producto tiene menos de 3 letras
+                return new List<VMStockUsuario>(); // Retorna vacío si el producto tiene menos de 3 letras
             }
 
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
@@ -108,7 +108,7 @@ namespace Sistema_David.Models
                              .ToList(); // Se ejecuta la consulta aquí
 
                 // Mapeo manual a StockUsuarios después de la consulta
-                var result = query.Select(x => new StockUsuario
+                var result = query.Select(x => new VMStockUsuario
                 {
                     Id = x.Id,
                     IdProducto = x.IdProducto,
@@ -129,7 +129,7 @@ namespace Sistema_David.Models
 
 
 
-        public static StockUsuarios EditarInfo(int id)
+        public static VMStockUsuario EditarInfo(int id)
         {
             using (var db = new Sistema_DavidEntities())
             {
@@ -148,7 +148,7 @@ namespace Sistema_David.Models
                                   Total = (decimal)p.PrecioVenta * s.Cantidad
                               })
                               .AsEnumerable() // Trae los datos a memoria antes de convertir a StockUsuarios
-                              .Select(x => new StockUsuarios
+                              .Select(x => new VMStockUsuario
                               {
                                   Id = x.Id,
                                   IdProducto = x.IdProducto,
@@ -165,7 +165,7 @@ namespace Sistema_David.Models
         }
 
 
-        public static StockUsuarios BuscarStockUser(int idUser, int idProducto)
+        public static VMStockUsuario BuscarStockUser(int idUser, int idProducto)
         {
             using (var db = new Sistema_DavidEntities())
             {
@@ -184,7 +184,7 @@ namespace Sistema_David.Models
                                   Total = (decimal)p.PrecioVenta * s.Cantidad
                               })
                               .AsEnumerable() // Materializa la consulta en memoria
-                              .Select(x => new StockUsuarios
+                              .Select(x => new VMStockUsuario
                               {
                                   Id = x.Id,
                                   IdProducto = x.IdProducto,
@@ -268,7 +268,7 @@ namespace Sistema_David.Models
             }
 
         }
-        public static bool AgregarStockEliminarVenta(StockUsuarios model)
+        public static bool AgregarStockEliminarVenta(VMStockUsuario model)
         {
 
             try
@@ -298,7 +298,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static bool Editar(StockUsuarios model)
+        public static bool Editar(VMStockUsuario model)
         {
 
             try

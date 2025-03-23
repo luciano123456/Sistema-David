@@ -3,7 +3,7 @@ using Sistema_David.Models.DB;
 using System;
 namespace Sistema_David.Models.Modelo
 {
-    public class InformacionVenta
+    public class VMInformacionVenta
     {
         public int Id { get; set; }
         public int IdVenta { get; set; }

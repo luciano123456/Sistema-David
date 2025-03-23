@@ -24,3 +24,37 @@
 #bankAccountsModal .form-control:disabled {
     background-color: rgb(128, 128, 128,0.3);
 }
+
+
+.form-check-input:checked {
+    background-color: #28a745; /* Verde */
+    border-color: #28a745;
+}
+
+
+/* Cambia el color del fondo del switch cuando está apagado */
+#CuentaPropia.form-check-input {
+    background-color: white !important;
+    border-color: black !important;
+    width: 2rem; /* Ajuste de tamaño */
+    height: 1rem;
+    transform: scale(1.5); /* Escalado */
+}
+
+    /* Cambia el color de fondo cuando está activado */
+    #CuentaPropia.form-check-input:checked {
+        background-color: #28a745 !important; /* Verde */
+        border-color: #28a745 !important;
+    }
+
+        /* Cambia la bolita del switch cuando está activado */
+        #CuentaPropia.form-check-input:checked::after {
+            background-color: red !important; /* Rojo */
+        }
+
+    /* Cambia la bolita del switch cuando está deshabilitado */
+    #CuentaPropia.form-check-input:disabled::after {
+        background-color: rgb(128, 128, 128,0.7) !important; /* Gris */
+    }
+
+  

@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
 
-    var userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    var userSession = JSON.parse(localStorage.getItem('usuario'));
 
     if (userSession != null) {
         $('#nombre').text(userSession.Nombre);

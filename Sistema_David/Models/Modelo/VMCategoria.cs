@@ -6,14 +6,10 @@ using System.Web;
 
 namespace Sistema_David.Models.Modelo
 {
-    public class CuentaBancaria
+    public class VMCategoria
     {
         public int Id { get; set; }
-        
-
-        public string CBU { get; set; }
         public string Nombre { get; set; }
        
-
     }
 }

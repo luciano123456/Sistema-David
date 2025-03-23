@@ -6,7 +6,7 @@ $(document).ready(function () {
 
 
     $("#IdInformacionVenta").text(localStorage.getItem("informacionVenta"));
-    userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    userSession = JSON.parse(localStorage.getItem('usuario'));
     configurarDataTable();
 
     $("#btnVentas").css("background", "#2E4053");

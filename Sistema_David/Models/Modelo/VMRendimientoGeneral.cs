@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.ViewModels
 {
-    public partial class RendimientoGeneral
+    public partial class VMRendimientoGeneral
     {
         public string Fecha { get; set; }
         public decimal CapitalInicial { get; set; }

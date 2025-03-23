@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.Modelo
 {
-    public class Pedido
+    public class VMPedido
     {
         public int Id { get; set; }
         public System.DateTime Fecha { get; set; }

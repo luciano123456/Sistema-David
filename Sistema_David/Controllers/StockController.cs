@@ -143,7 +143,7 @@ namespace Sistema_David.Controllers
             try
             {
 
-                StockUsuarios stock = StockModel.BuscarStockId(id);
+                VMStockUsuario stock = StockModel.BuscarStockId(id);
 
                 StocksPendientes stockPendiente = new StocksPendientes();
 
@@ -173,7 +173,7 @@ namespace Sistema_David.Controllers
             try
             {
 
-                StockUsuarios stock = StockModel.BuscarStockId(id);
+                VMStockUsuario   stock = StockModel.BuscarStockId(id);
 
                 StocksPendientes stockPendiente = new StocksPendientes();
 
@@ -203,7 +203,7 @@ namespace Sistema_David.Controllers
             try
             {
 
-                StockUsuarios stock = StockModel.BuscarStockId(id);
+                VMStockUsuario stock = StockModel.BuscarStockId(id);
 
                 StocksPendientes stockPendiente = new StocksPendientes();
 
@@ -232,7 +232,7 @@ namespace Sistema_David.Controllers
 
 
 
-        public ActionResult Editar(StockUsuarios model)
+        public ActionResult Editar(VMStockUsuario model)
         {
             try
             {
