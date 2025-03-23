@@ -67,9 +67,6 @@ $(document).ready(async function () {
 
 
 }).on('init.dt', function () {
-    if (data.Restante <= 0) {
-        var cobranzaId = "Cobranza(" + data.Id + ")"
-    }
     verificarCobranzas();
 
 

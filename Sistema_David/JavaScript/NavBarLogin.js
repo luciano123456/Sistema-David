@@ -75,17 +75,7 @@ document.querySelectorAll('.nav-item.dropdown').forEach(dropdown => {
     });
 });
 
-// Configurar el dropdown para que funcione con un solo clic (si aún no funciona)
-document.querySelectorAll('.nav-item.dropdown a').forEach(dropdownLink => {
-    dropdownLink.addEventListener('click', function (event) {
-        const dropdownMenu = this.nextElementSibling; // Obtener el menú desplegable
-        if (dropdownMenu.classList.contains('show')) {
-            dropdownMenu.classList.remove('show');
-        } else {
-            dropdownMenu.classList.add('show');
-        }
-    });
-});
+
 
 async function CantidadClientesAusentes() {
 

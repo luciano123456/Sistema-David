@@ -35,9 +35,7 @@ $(document).ready(async function () {
         $('#divSeleccionarTodos').fadeIn();  // Con animación
         $('#divSeleccionarTodos').removeClass('d-none');  // Desoculta el div
         $('#selectAllCheckbox').prop('checked', false);   // Desmarca el checkbox
-        document.getElementById("divStock").removeAttribute("hidden");
-        document.getElementById("btnAgregar").removeAttribute("hidden");
-
+     
     } else {
         cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value, "Todos");
         $("#btnStock").css("background", "#2E4053");
@@ -191,10 +189,11 @@ async function cargarStock(idUsuario, Estado, Fecha, Asignacion) {
                     ${userSession.IdRol === 1 && result.data[i].Estado === "Pendiente" && (result.data[i].Asignacion == "USUARIO") ? `
                         <input type="checkbox" class="form-check-input checkbox position-absolute top-0 end-0 me-2" id="checkbox-${cardId}" onclick="toggleCheckbox(${cardId})">
                         <label for="checkbox-${cardId}" class="form-check-label position-absolute top-0 end-0"></label>
-                        <div class="icons-container position-absolute top-30 end-0 translate-middle-y me-2">
+                       
+                        <div class="icons-container position-absolute top-45 end-0 translate-middle-y" style="margin-right: 35px !important">
                             <i class="fa fa-pencil-square-o text-yellow edit-icon" aria-hidden="true" onclick="editarStock(${cardId})" style="font-size: 1.2em; color: yellow; cursor: pointer;"></i>
                         </div>
-                        <div class="icons-containereliminar position-absolute top-45 end-0 translate-middle-y me-2">
+                        <div class="icons-containereliminar position-absolute top-45 end-0 translate-middle-y me-2" style="margin-top: -17px !important">
                             <i class="fa fa-times text-red delete-icon" aria-hidden="true" onclick="eliminarStock(${cardId})" style="font-size: 1.2em; color: red; cursor: pointer;"></i>
                         </div>` : ''}
                 </div>
@@ -638,7 +637,6 @@ $('#selectAllCheckbox').on('click', function () {
         }
     });
 
-    console.log(cardsSeleccionadas)
 
     // Mostrar u ocultar botones basados en el estado de selectedCheckboxes
     toggleCheckboxAll();

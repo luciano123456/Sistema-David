@@ -83,7 +83,6 @@ $(document).ready(async function () {
     await buscarRecorridos()
 
     configurarDataTable(-1, -1, fechaCobroDesde, fechaCobroHasta, document.getElementById("Dni").value, -1, "Todos", -1);
-    aplicarFiltros()
 
 
 }).on('init.dt', function () {
