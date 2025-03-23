@@ -12,7 +12,7 @@ namespace Sistema_David.Models
 {
     public class ProductosModel
     {
-        public static List<Producto> ListaProductos()
+        public static List<VMProducto> ListaProductos()
         {
             using (var db = new Sistema_DavidEntities())
             {
@@ -33,7 +33,7 @@ namespace Sistema_David.Models
                                   p.Activo,
                               })
                               .AsEnumerable() // Materializa antes de mapear a Producto
-                              .Select(x => new Producto
+                              .Select(x => new VMProducto
                               {
                                   Id = x.Id,
                                   Codigo = x.Codigo,
@@ -74,7 +74,7 @@ namespace Sistema_David.Models
 
 
 
-        public static List<Producto> ListaProductosActivos()
+        public static List<VMProducto> ListaProductosActivos()
         {
             using (var db = new Sistema_DavidEntities())
             {
@@ -97,7 +97,7 @@ namespace Sistema_David.Models
                                   p.Activo
                               })
                               .AsEnumerable() // Materializa antes de mapear a Producto
-                              .Select(x => new Producto
+                              .Select(x => new VMProducto
                               {
                                   Id = x.Id,
                                   Codigo = x.Codigo,
@@ -117,13 +117,13 @@ namespace Sistema_David.Models
             }
         }
 
-        public static List<Categoria> ListaCategorias()
+        public static List<VMCategoria> ListaCategorias()
         {
             using (var db = new Sistema_DavidEntities())
             {
                 return db.Categorias
                          .OrderBy(c => c.Nombre)
-                         .Select(c => new Categoria
+                         .Select(c => new VMCategoria
                          {
                              Id = c.Id,
                              Nombre = c.Nombre
@@ -190,7 +190,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static bool Nuevo(Producto model)
+        public static bool Nuevo(VMProducto model)
         {
 
             try
@@ -226,7 +226,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static bool Editar(Producto model)
+        public static bool Editar(VMProducto model)
         {
 
             try
@@ -287,7 +287,7 @@ namespace Sistema_David.Models
 
         }
 
-        public static Producto BuscarProducto(int id)
+        public static VMProducto BuscarProducto(int id)
         {
 
             try
@@ -297,7 +297,7 @@ namespace Sistema_David.Models
 
                     var result = db.Productos.Find(id);
 
-                    var producto = new Producto();
+                    var producto = new VMProducto();
 
                     producto.Id = result.Id;
                     producto.Codigo = result.Codigo;

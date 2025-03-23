@@ -96,7 +96,7 @@ namespace Sistema_David.Controllers
         }
         public ActionResult ListarCobradores()
         {
-            List<User> cobradores;
+            List<VMUser> cobradores;
 
             if(SessionHelper.GetUsuarioSesion() != null && (SessionHelper.GetUsuarioSesion().IdRol == 1 || SessionHelper.GetUsuarioSesion().IdRol == 4))
             {
@@ -174,7 +174,7 @@ namespace Sistema_David.Controllers
         }
 
         [HttpPost]
-        public ActionResult Nuevo(User model)
+        public ActionResult Nuevo(VMUser model)
         {
             try
             {
@@ -233,7 +233,7 @@ namespace Sistema_David.Controllers
 
 
         [HttpPost]
-        public ActionResult Modificar(User model)
+        public ActionResult Modificar(VMUser model)
         {
 
             try

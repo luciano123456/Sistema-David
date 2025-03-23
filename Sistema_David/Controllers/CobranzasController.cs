@@ -51,7 +51,7 @@ namespace Sistema_David.Controllers
 
         public ActionResult Listar(int idVendedor, int idCobrador, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, string Turno, int TipoNegocio)
         {
-            List<Venta> result;
+            List<VMVenta> result;
 
             if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 2) //ROL VENDEDOR
             {
@@ -111,7 +111,7 @@ namespace Sistema_David.Controllers
 
         }
 
-        public ActionResult NuevaCuentaBancaria(CuentaBancaria cuentabancaria)
+        public ActionResult NuevaCuentaBancaria(VMCuentaBancaria cuentabancaria)
         {
             try
             {
@@ -129,7 +129,7 @@ namespace Sistema_David.Controllers
         }
 
         [HttpPost]
-        public ActionResult EditarCuentaBancaria(CuentaBancaria cuentabancaria)
+        public ActionResult EditarCuentaBancaria(VMCuentaBancaria cuentabancaria)
         {
             try
             {
@@ -163,11 +163,11 @@ namespace Sistema_David.Controllers
 
         }
 
-        public ActionResult ListaCuentasBancarias()
+        public ActionResult ListaCuentasBancarias(string metodopago)
         {
             try
             {
-                var result = CuentasBancariasModel.Lista();
+                var result = CuentasBancariasModel.Lista(metodopago);
 
                 return Json(result);
             }
@@ -252,11 +252,11 @@ namespace Sistema_David.Controllers
             }
         }
 
-        public ActionResult Cobranza(Venta model)
+        public ActionResult Cobranza(VMVenta model)
         {
             try
             {
-                Venta venta = VentasModel.BuscarVenta(model.Id);
+                VMVenta venta = VentasModel.BuscarVenta(model.Id);
 
 
                 if ((venta != null && venta.Restante < model.Entrega) || venta == null)

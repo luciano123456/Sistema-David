@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.ViewModels
 {
-    public partial class Rendimiento
+    public partial class VMRendimiento
     {
         public int Id { get; set; }
         public int IdVenta { get; set; }

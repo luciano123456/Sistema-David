@@ -17,7 +17,7 @@ namespace Sistema_David.Models.Modelo
 
 
 
-        public static List<Venta> ListaCobranzas(int idVendedor, int idCobradorF, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, string Turno, int TipoNegocio)
+        public static List<VMVenta> ListaCobranzas(int idVendedor, int idCobradorF, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, string Turno, int TipoNegocio)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -49,7 +49,7 @@ namespace Sistema_David.Models.Modelo
                                      (d.IdTipoNegocio == TipoNegocio || TipoNegocio == -1)
 
                               )
-                              select new Venta
+                              select new VMVenta
                               {
                                   Id = d.Id,
                                   idCliente = d.idCliente,
@@ -101,11 +101,11 @@ namespace Sistema_David.Models.Modelo
         }
 
 
-        public static List<Venta> ListaCobranzas(int idVendedor, int idCobradorF, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, List<int> clientes)
+        public static List<VMVenta> ListaCobranzas(int idVendedor, int idCobradorF, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, List<int> clientes)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                List<Venta> result = new List<Venta>();
+                List<VMVenta> result = new List<VMVenta>();
 
                 foreach (int clienteId in clientes)
                 {
@@ -131,7 +131,7 @@ namespace Sistema_David.Models.Modelo
                                             d.Restante > 0) &&
                                             (d.Estado == "" || d.Estado == null)
                                         )
-                                     select new Venta
+                                     select new VMVenta
                                      {
                                          Id = d.Id,
                                          idCliente = d.idCliente,
@@ -281,7 +281,7 @@ namespace Sistema_David.Models.Modelo
                     if (model == null)
                         return false;
 
-                    Venta modelVenta = VentasModel.BuscarVenta(model.IdVenta);
+                    VMVenta modelVenta = VentasModel.BuscarVenta(model.IdVenta);
 
                     model.Fecha = DateTime.Now;
                     model.Entrega = model.Entrega;
@@ -429,7 +429,7 @@ namespace Sistema_David.Models.Modelo
 
         
 
-        public static int Cobranza(Venta model)
+        public static int Cobranza(VMVenta model)
         {
 
             try

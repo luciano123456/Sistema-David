@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.Modelo
 {
-    public class Cliente
+    public class VMCliente
     {
         public int Id { get; set; }
         public string Nombre { get; set; }
@@ -33,7 +33,7 @@ namespace Sistema_David.Models.Modelo
 
         public virtual EstadosClientes EstadosClientes { get; set; }
 
-        public virtual Venta Ventas { get; set; }
+        public virtual VMVenta Ventas { get; set; }
 
     }
 }

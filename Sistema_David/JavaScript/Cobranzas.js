@@ -9,7 +9,7 @@ let lastCobranzaTime = 0;
 $(document).ready(async function () {
 
 
-    userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    userSession = JSON.parse(localStorage.getItem('usuario'));
 
 
     document.getElementById("btnAsignarCobrador").style.display = "none";
@@ -276,7 +276,7 @@ const estadoHome = async () => {
 async function cobranzaVenta(id) {
 
     var table = $("#grdCobranzas").DataTable()
-    await cargarCuentas();
+    
 
 
     document.getElementById("lblFechaCobro").removeAttribute("hidden");
@@ -572,10 +572,12 @@ function validarCobranza() {
     }
 }
 
-function habilitarCuentas() {
+async function habilitarCuentas() {
     var formaPagoSelect = document.getElementById("MetodoPago");
     var cuenta = document.getElementById("CuentaPago");
     var cuentaLbl = document.getElementById("lblCuentaPago");
+
+    await cargarCuentas();
 
     if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" || formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
         cuenta.hidden = false;
@@ -1712,6 +1714,7 @@ async function cargarCuentas() {
         var url = "/Cobranzas/ListaCuentasBancarias";
 
         let value = JSON.stringify({
+            metodopago: document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text
         });
 
         let options = {
@@ -2396,6 +2399,7 @@ function selectAccount(account, item) {
     
     document.getElementById("accountName").value = account.Nombre;
     document.getElementById("accountCBU").value = account.CBU;
+    document.getElementById("CuentaPropia").checked = account.CuentaPropia;
 }
 
 // Función para editar una cuenta
@@ -2405,8 +2409,10 @@ function editAccount(id) {
         // Pre-cargar los valores de la cuenta en los campos de texto
         document.getElementById("accountName").value = account.Nombre;
         document.getElementById("accountCBU").value = account.CBU;
+        document.getElementById("CuentaPropia").checked = account.CuentaPropia;
         document.getElementById("accountName").removeAttribute("disabled");
         document.getElementById("accountCBU").removeAttribute("disabled");
+        document.getElementById("CuentaPropia").removeAttribute("disabled");
         document.getElementById("editarCuenta").removeAttribute("hidden");
         document.getElementById("anadirCuenta").setAttribute("hidden", "hidden");
         document.getElementById("addAccount").setAttribute("hidden", "hidden");
@@ -2420,7 +2426,8 @@ function editarCuenta() {
         const updatedAccount = {
             Id: selectedAccount.Id,  // Suponiendo que el objeto 'selectedAccount' tiene un Id
             Nombre: document.getElementById("accountName").value.trim(),
-            CBU: document.getElementById("accountCBU").value.trim()
+            CBU: document.getElementById("accountCBU").value.trim(),
+            CuentaPropia: document.getElementById("CuentaPropia").checked
         };
 
         fetch('/Cobranzas/EditarCuentaBancaria', {
@@ -2461,6 +2468,7 @@ function deleteAccount(id) {
                     selectedAccount = null;
                     document.getElementById("accountName").value = "";
                     document.getElementById("accountCBU").value = "";
+                    document.getElementById("CuentaPropia").checked = false;
                 } else {
                     alert("Error al eliminar la cuenta.");
                 }
@@ -2473,8 +2481,10 @@ function anadirCuenta() {
     selectedAccount = null;
     document.getElementById("accountName").value = "";
     document.getElementById("accountCBU").value = "";
+    document.getElementById("CuentaPropia").checked = false;
     document.getElementById("accountName").removeAttribute("disabled");
     document.getElementById("accountCBU").removeAttribute("disabled");
+    document.getElementById("CuentaPropia").removeAttribute("disabled");
     document.getElementById("anadirCuenta").setAttribute("hidden", "hidden");
     document.getElementById("addAccount").removeAttribute("hidden");
     document.getElementById("canceladdAccount").removeAttribute("hidden");
@@ -2505,6 +2515,7 @@ document.getElementById("addAccount").addEventListener("click", () => {
                 alert("Cuenta añadida con éxito");
                 document.getElementById("accountName").value = "";
                 document.getElementById("accountCBU").value = "";
+                document.getElementById("CuentaPropia").checked = false;
                 loadCuentasBancarias();
             } else {
                 alert("Error al añadir la cuenta.");
@@ -2516,8 +2527,10 @@ document.getElementById("addAccount").addEventListener("click", () => {
 async function cancelarNuevaCuenta() {
     document.getElementById("accountName").value = "";
     document.getElementById("accountCBU").value = "";
+    document.getElementById("CuentaPropia").checked = false;
     document.getElementById("accountName").setAttribute("disabled", "disabled");
     document.getElementById("accountCBU").setAttribute("disabled", "disabled");
+    document.getElementById("CuentaPropia").setAttribute("disabled", "disabled");
     document.getElementById("canceladdAccount").setAttribute("hidden", "hidden");
     document.getElementById("anadirCuenta").removeAttribute("hidden");
     document.getElementById("addAccount").setAttribute("hidden", "hidden");

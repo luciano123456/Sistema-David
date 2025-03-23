@@ -5,7 +5,7 @@ let gridProductos;
 $(document).ready(function () {
     configurarDataTable();
     $("#btnProductos").css("background", "#2E4053")
-    userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    userSession = JSON.parse(localStorage.getItem('usuario'));
 
     if (userSession.IdRol == 1) {
         document.getElementById("btnImportarDatos").removeAttribute("hidden");

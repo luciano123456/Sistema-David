@@ -39,7 +39,7 @@ namespace Sistema_David.Controllers
         }
 
 
-        public ActionResult Editar(Limite model)
+        public ActionResult Editar(VMLimite model)
         {
             var result = LimitesModel.Editar(model);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);

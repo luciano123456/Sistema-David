@@ -9,7 +9,7 @@ $(document).ready(function () {
 
     $("#btnClientes").css("background", "#2E4053")
 
-    userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    userSession = JSON.parse(localStorage.getItem('usuario'));
 
     if (userSession.IdRol == 1) { //ROL ADMIN
         $("#exportacionExcel").removeAttr("hidden");

@@ -16,7 +16,7 @@ namespace Sistema_David.Models.Modelo
     public class ClientesModel
     {
 
-        public static List<Cliente> ListaClientes()
+        public static List<VMCliente> ListaClientes()
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -30,13 +30,13 @@ namespace Sistema_David.Models.Modelo
                         FROM Ventas GROUP BY idCliente
                       ) s ON s.idCliente = c.Id";
 
-                var result = db.Database.SqlQuery<Cliente>(query).ToList();
+                var result = db.Database.SqlQuery<VMCliente>(query).ToList();
 
                 return result;
             }
         }
 
-        public static List<Cliente> ListaClientes(int idVendedor, string Nombre, string Apellido, string Dni, int idZona)
+        public static List<VMCliente> ListaClientes(int idVendedor, string Nombre, string Apellido, string Dni, int idZona)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -50,7 +50,7 @@ namespace Sistema_David.Models.Modelo
                         FROM Ventas GROUP BY idCliente
                       ) s ON s.idCliente = c.Id";
 
-                var result = db.Database.SqlQuery<Cliente>(query)
+                var result = db.Database.SqlQuery<VMCliente>(query)
                     .Where(x => (x.IdVendedor == idVendedor || idVendedor == -1) &&
                                 (x.IdZona == idZona || idZona == -1) &&
                                 (x.Nombre != null && x.Nombre.ToUpper().Contains(Nombre.ToUpper()) || string.IsNullOrEmpty(Nombre)) &&
@@ -63,7 +63,7 @@ namespace Sistema_David.Models.Modelo
         }
 
 
-        public static Cliente InformacionCliente(int idCliente)
+        public static VMCliente InformacionCliente(int idCliente)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -77,7 +77,7 @@ namespace Sistema_David.Models.Modelo
                         FROM Ventas GROUP BY idCliente
                       ) s ON s.idCliente = c.Id";
 
-                var result = db.Database.SqlQuery<Cliente>(query)
+                var result = db.Database.SqlQuery<VMCliente>(query)
                     .Where(x => (x.Id == idCliente))
                     .FirstOrDefault();
 
@@ -121,7 +121,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static int Nuevo(Cliente model)
+        public static int Nuevo(VMCliente model)
         {
 
             try
@@ -169,7 +169,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static bool Editar(Cliente model)
+        public static bool Editar(VMCliente model)
         {
 
             try
@@ -373,7 +373,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static Cliente BuscarCliente(int id)
+        public static VMCliente BuscarCliente(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -387,7 +387,7 @@ namespace Sistema_David.Models.Modelo
                         FROM Ventas GROUP BY idCliente
                       ) s ON s.idCliente = c.Id";
 
-                var result = db.Database.SqlQuery<Cliente>(query)
+                var result = db.Database.SqlQuery<VMCliente>(query)
                      .Where(x => x.Id == id).FirstOrDefault();
 
 
@@ -397,14 +397,14 @@ namespace Sistema_David.Models.Modelo
 
 
 
-        public static Cliente BuscarCliente(string documento)
+        public static VMCliente BuscarCliente(string documento)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var user = (from d in db.Clientes
                          .SqlQuery("select c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.IdEstado,  c.IdZona, c.Longitud, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, ec.Nombre, c.IdVendedor, u.Nombre as Vendedor from Clientes c inner join EstadosClientes ec on c.IdEstado = ec.Id inner join Usuarios u on c.IdVendedor  = u.Id")
-                            select new Cliente
+                            select new VMCliente
                             {
                                 Id = d.Id,
                                 Nombre = d.Nombre,
@@ -427,7 +427,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static (List<Venta> Ventas  , decimal TotalRestante) RestanteVentasCliente(int idCliente)
+        public static (List<VMVenta> Ventas  , decimal TotalRestante) RestanteVentasCliente(int idCliente)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -437,7 +437,7 @@ namespace Sistema_David.Models.Modelo
                               join u in db.Usuarios on v.idVendedor equals u.Id
                               join t in db.TipoNegocio on v.IdTipoNegocio equals t.Id
                               where v.idCliente == idCliente
-                              select new Venta
+                              select new VMVenta
                               {
                                   Id = v.Id,
                                   idCliente = v.idCliente,
@@ -487,7 +487,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static Cliente EnviarWhatssap(int id, string mensaje)
+        public static VMCliente EnviarWhatssap(int id, string mensaje)
         {
 
             try

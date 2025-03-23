@@ -115,7 +115,7 @@ namespace Sistema_David.Controllers
             }
         }
 
-        public ActionResult Nuevo(Producto model)
+        public ActionResult Nuevo(VMProducto model)
         {
             try
             {
@@ -201,7 +201,7 @@ namespace Sistema_David.Controllers
 
 
 
-        public ActionResult Editar(Producto model)
+        public ActionResult Editar(VMProducto model)
         {
             try
             {

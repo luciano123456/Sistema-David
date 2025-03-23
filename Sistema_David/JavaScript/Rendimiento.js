@@ -7,7 +7,7 @@ $(document).ready(async function () {
 
     moment.locale('es');
 
-    userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    userSession = JSON.parse(localStorage.getItem('usuario'));
 
     if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
         $("#exportacionExcel").removeAttr("hidden");
@@ -18,8 +18,8 @@ $(document).ready(async function () {
         $("#Filtros").removeAttr("hidden");
     }
 
-    await cargarTiposDeNegocio();
     await cargarCuentas();
+    await cargarTiposDeNegocio();
     configurarDataDiario();
 
 
@@ -331,6 +331,7 @@ function alternarColorIcono(icono) {
 
     const estadoVentas = iconoVentas && iconoVentas.classList.contains("text-success") ? 1 : 0;
     const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
+    var idcuenta = document.getElementById("CuentaPago").value;
 
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
     // Llamar a la función para actualizar la DataTable con los nuevos estados
@@ -341,7 +342,8 @@ function alternarColorIcono(icono) {
         document.getElementById("FechaDesde").value,
         document.getElementById("FechaHasta").value,
         document.getElementById("TipoNegocio").value,
-        metodoPago
+        metodoPago,
+        idcuenta
     );
 }
 
@@ -411,6 +413,7 @@ function seleccionarRendimiento(elemento, idVendedor) {
     const estadoVentas = iconoVentas && iconoVentas.classList.contains("text-success") ? 1 : 0;
     const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
+    var idcuenta = document.getElementById("CuentaPago").value;
 
     // Limpiar y reconfigurar la DataTable
     $('#grdRendimiento').DataTable().clear().draw();
@@ -422,7 +425,8 @@ function seleccionarRendimiento(elemento, idVendedor) {
         document.getElementById("FechaDesde").value,
         document.getElementById("FechaHasta").value,
         document.getElementById("TipoNegocio").value,
-        metodoPago
+        metodoPago,
+        idcuenta
     );
 
     obtenerDatosRendimiento(
@@ -1419,6 +1423,7 @@ async function cargarCuentas() {
         var url = "/Cobranzas/ListaCuentasBancarias";
 
         let value = JSON.stringify({
+            metodopago: document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text
         });
 
         let options = {
@@ -1458,10 +1463,12 @@ async function cargarCuentas() {
 }
 
 
-function habilitarCuentas() {
+async function habilitarCuentas() {
     var formaPagoSelect = document.getElementById("MetodoPago");
     var cuenta = document.getElementById("CuentaPago");
     var cuentaLbl = document.getElementById("lblCuentaPago");
+
+    await cargarCuentas();
 
     if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" || formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
         cuenta.hidden = false;

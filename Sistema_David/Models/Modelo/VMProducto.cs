@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.Modelo
 {
-    public class Producto
+    public class VMProducto
     {
         public int Id { get; set; }
         public string Codigo { get; set; }
@@ -24,10 +24,10 @@ namespace Sistema_David.Models.Modelo
 
         public virtual Categorias Categorias { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<StockUsuario> Stock1 { get; set; }
+        public virtual ICollection<VMStockUsuario> Stock1 { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<StockUsuario> Stock2 { get; set; }
+        public virtual ICollection<VMStockUsuario> Stock2 { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Venta> Ventas { get; set; }
+        public virtual ICollection<VMVenta> Ventas { get; set; }
     }
 }

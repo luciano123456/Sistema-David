@@ -114,9 +114,9 @@ namespace Sistema_David.Controllers
         public ActionResult Listar(int idVendedor, string Nombre, string Apellido, string Dni, int idZona)
         {
 
-            List<Cliente> result;
-            List<Cliente> resultSaldo = new List<Cliente>();
-            List<Venta> ventasUser;
+            List<VMCliente> result;
+            List<VMCliente> resultSaldo = new List<VMCliente>();
+            List<VMVenta> ventasUser;
 
             if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 2) //ROL VENDEDOR
             {
@@ -166,7 +166,7 @@ namespace Sistema_David.Controllers
         {
             try
             {
-                List<User> usuarios;
+                List<VMUser> usuarios;
 
                 if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 1) //ROL ADMIN, ADMIN TRAE TODOS, SI ES VENDEDOR, SOLO SU USER
                 {
@@ -195,7 +195,7 @@ namespace Sistema_David.Controllers
         }
 
 
-        public ActionResult Nuevo(Cliente model)
+        public ActionResult Nuevo(VMCliente model)
         {
             try
             {
@@ -297,7 +297,7 @@ namespace Sistema_David.Controllers
 
         }
 
-        public ActionResult EditarCliente(Cliente model)
+        public ActionResult EditarCliente(VMCliente model)
         {
             try
             {
@@ -318,7 +318,7 @@ namespace Sistema_David.Controllers
         }
 
         [HttpPost]
-        public ActionResult GenerarExcel(List<Cliente> data)
+        public ActionResult GenerarExcel(List<VMCliente> data)
         {
 
 

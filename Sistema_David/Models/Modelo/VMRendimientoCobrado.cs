@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.ViewModels
 {
-    public partial class RendimientoCobrado
+    public partial class VMRendimientoCobrado
     {
 
         public int idVendedor { get; set; }

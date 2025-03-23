@@ -38,7 +38,7 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListarStockPendiente(int id, string Estado, DateTime Fecha, string Asignacion)
         {
-            List<StockPendientes> stockPendiente;
+            List<VMStockPendiente> stockPendiente;
 
             // Si el estado es 'pendiente', no se filtra por fecha (se pasa null)
             DateTime? fechaFiltro = Estado == "Pendiente" ? (DateTime?)null : Fecha;
@@ -60,7 +60,7 @@ namespace Sistema_David.Controllers
 
         public ActionResult AceptarStock(int id)
         {
-            StockPendientes stock = StockPendienteModel.BuscarStockPendiente(id);
+            VMStockPendiente stock = StockPendienteModel.BuscarStockPendiente(id);
 
                 if (stock.Estado.ToUpper() == "PENDIENTE") { 
                 var result = StockPendienteModel.AceptarStock(id);
@@ -71,7 +71,7 @@ namespace Sistema_David.Controllers
 
         public ActionResult RechazarStock(int id)
         {
-            StockPendientes stock = StockPendienteModel.BuscarStockPendiente(id);
+            VMStockPendiente stock = StockPendienteModel.BuscarStockPendiente(id);
 
             if (stock.Estado.ToUpper() == "PENDIENTE")
             {
@@ -86,7 +86,7 @@ namespace Sistema_David.Controllers
                     }
                     else
                     {
-                        var config = new MapperConfiguration(cfg => cfg.CreateMap<StockPendientes, StocksPendientes>());
+                        var config = new MapperConfiguration(cfg => cfg.CreateMap<VMStockPendiente, StocksPendientes>());
                         var mapper = config.CreateMapper();
                         StocksPendientes stockNuevo = mapper.Map<StocksPendientes>(stock);
 

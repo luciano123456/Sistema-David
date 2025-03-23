@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.ViewModels
 {
-    public partial class User
+    public partial class VMUser
     {
         public int Id { get; set; }
         public string Usuario { get; set; }

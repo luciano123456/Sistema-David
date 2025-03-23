@@ -12,7 +12,7 @@ public class CheckBloqueoSistemaAttribute : ActionFilterAttribute
         // Obtener el usuario actual desde la sesión o autenticación
         var usuario = SessionHelper.GetUsuarioSesion();
 
-        User userdb = null;
+        VMUser userdb = null;
 
         if (usuario != null)
         {

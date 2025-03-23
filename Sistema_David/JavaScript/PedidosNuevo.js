@@ -137,7 +137,7 @@ function abrirmodal() {
 async function cargarProductos() {
     try {
         var url = "/Productos/ListarActivos";
-        var data = JSON.parse(sessionStorage.getItem('usuario'));
+        var data = JSON.parse(localStorage.getItem('usuario'));
 
         let value = JSON.stringify({
             Id: data.Id
@@ -305,7 +305,7 @@ const editarProducto = async id => {
 
             $("#nuevoProductoModal").modal("show");
 
-            var data = JSON.parse(sessionStorage.getItem('usuario'));
+            var data = JSON.parse(localStorage.getItem('usuario'));
 
             let value = JSON.stringify({
                 idUsuario: data.Id,
@@ -481,7 +481,7 @@ async function registrarPedidoAjax() {
     try {
         var url = "/Pedidos/NuevoPedido";
 
-        var data = JSON.parse(sessionStorage.getItem('usuario'));
+        var data = JSON.parse(localStorage.getItem('usuario'));
 
         actualizarPrecio(); //ACTUALIZAMOS LOS PRECIOS POR UN TEMA DE SEGURIDAD
 

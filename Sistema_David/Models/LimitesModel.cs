@@ -35,7 +35,7 @@ namespace Sistema_David.Models.Modelo
         }
 
 
-        public static bool Editar(Limite model)
+        public static bool Editar(VMLimite model)
         {
             try
             {
@@ -63,14 +63,14 @@ namespace Sistema_David.Models.Modelo
 
 
 
-        public static Limite BuscarValorLimite(string nombre)
+        public static VMLimite BuscarValorLimite(string nombre)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var limite = (from d in db.Limites
                          .SqlQuery("select l.Id, l.Nombre, l.Valor from Limites l")
-                            select new Limite
+                            select new VMLimite
                             {
                                 Id = d.Id,
                                 Nombre = d.Nombre,

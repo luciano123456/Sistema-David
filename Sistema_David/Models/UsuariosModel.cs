@@ -11,14 +11,14 @@ namespace Sistema_David.Models
 {
     public class UsuariosModel
     {
-        public static List<User> ListaUsuarios()
+        public static List<VMUser> ListaUsuarios()
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var listUser = (from d in db.Usuarios
                             .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
-                                select new User
+                                select new VMUser
                                 {
                                     Id = d.Id,
                                     Usuario = d.Usuario,
@@ -84,14 +84,14 @@ namespace Sistema_David.Models
             }
         }
 
-        public static List<User> ListaUsuariosActivos(int TipoNegocio)
+        public static List<VMUser> ListaUsuariosActivos(int TipoNegocio)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var listUser = (from d in db.Usuarios
                             .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by  u.IdRol, u.IdEstado")
-                                select new User
+                                select new VMUser
                                 {
                                     Id = d.Id,
                                     Usuario = d.Usuario,
@@ -120,14 +120,14 @@ namespace Sistema_David.Models
         }
 
 
-        public static List<User> ListaActivos()
+        public static List<VMUser> ListaActivos()
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var listUser = (from d in db.Usuarios
                             .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by  u.IdRol, u.IdEstado")
-                                select new User
+                                select new VMUser
                                 {
                                     Id = d.Id,
                                     Usuario = d.Usuario,
@@ -155,12 +155,12 @@ namespace Sistema_David.Models
             }
         }
 
-       public static List<User> ListaUsuariosConAsignacionActivos()
+       public static List<VMUser> ListaUsuariosConAsignacionActivos()
 {
     using (Sistema_DavidEntities db = new Sistema_DavidEntities())
     {
         // Optimizar consulta SQL para contar TotalAsignados directamente en la consulta
-        var usuariosActivos = db.Database.SqlQuery<User>(
+        var usuariosActivos = db.Database.SqlQuery<VMUser>(
             @"
                 SELECT u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, 
                        u.IdEstado, u.IdTipoNegocio, u.BloqueoSistema, u.ClientesCero, r.Nombre AS Rol, u.UltimaExportacion, 
@@ -180,7 +180,7 @@ namespace Sistema_David.Models
 
 
 
-        public static List<User> ListaCobradores()
+        public static List<VMUser> ListaCobradores()
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -196,7 +196,7 @@ namespace Sistema_David.Models
                         Estado = ur_eu.Estado,
                         TotalCobranzas = ventas.Count() // Cuenta la cantidad de ventas del usuario
                     })
-                    .Select(res => new User
+                    .Select(res => new VMUser
                     {
                         Id = res.Usuario.Id,
                         Usuario = res.Usuario.Usuario,
@@ -225,14 +225,14 @@ namespace Sistema_David.Models
         }
 
 
-        public static List<User> ListaCobradoresId(int id)
+        public static List<VMUser> ListaCobradoresId(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var listUser = (from d in db.Usuarios
                             .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
-                                select new User
+                                select new VMUser
                                 {
                                     Id = d.Id,
                                     Usuario = d.Usuario,
@@ -260,14 +260,14 @@ namespace Sistema_David.Models
             }
         }
 
-        public static List<User> ListaUsuariosId(int id)
+        public static List<VMUser> ListaUsuariosId(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var listUser = (from d in db.Usuarios
                             .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
-                                select new User
+                                select new VMUser
                                 {
                                     Id = d.Id,
                                     Usuario = d.Usuario,
@@ -346,7 +346,7 @@ namespace Sistema_David.Models
 
 
 
-        public static User BuscarUsuario(int id)
+        public static VMUser BuscarUsuario(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -355,7 +355,7 @@ namespace Sistema_David.Models
                             .Where(u => u.Id == id)
                             .Join(db.Roles, u => u.IdRol, r => r.Id, (u, r) => new { u, r })
                             .Join(db.EstadosUsuarios, ur => ur.u.IdEstado, eu => eu.Id, (ur, eu) => new { ur.u, ur.r, eu })
-                            .Join(db.TipoNegocio, ure => ure.u.IdTipoNegocio, tn => tn.Id, (ure, tn) => new User
+                            .Join(db.TipoNegocio, ure => ure.u.IdTipoNegocio, tn => tn.Id, (ure, tn) => new VMUser
                             {
                                 Id = ure.u.Id,
                                 Usuario = ure.u.Usuario,
@@ -384,13 +384,13 @@ namespace Sistema_David.Models
         }
 
 
-        public static User BuscarUsuario(string nombre)
+        public static VMUser BuscarUsuario(string nombre)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
                 var user = (from d in db.Usuarios
-                            select new User
+                            select new VMUser
                             {
                                 Id = d.Id,
                                 Usuario = d.Usuario,
@@ -512,7 +512,7 @@ namespace Sistema_David.Models
 
 
 
-        public static bool Nuevo(User model)
+        public static bool Nuevo(VMUser model)
         {
 
             try
@@ -581,7 +581,7 @@ namespace Sistema_David.Models
 
         }
 
-        public static bool Editar(User model)
+        public static bool Editar(VMUser model)
         {
 
             try

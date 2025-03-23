@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.Modelo
 {
-    public class StockUsuario
+    public class VMStockUsuario
     {
         public int Id { get; set; }
         public int IdProducto { get; set; }
@@ -25,6 +25,6 @@ namespace Sistema_David.Models.Modelo
         public virtual Productos Productos { get; set; }
         public virtual Productos Productos1 { get; set; }
         public virtual Usuarios Usuarios { get; set; }
-
+        public string Estado { get; internal set; }
     }
 }

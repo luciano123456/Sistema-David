@@ -5,7 +5,7 @@ let lastActionTime = 0;
 
 $(document).ready(async function () {
 
-    userSession = JSON.parse(sessionStorage.getItem('usuario'));
+    userSession = JSON.parse(localStorage.getItem('usuario'));
 
     $('.datos-error').text('')
 
@@ -150,9 +150,9 @@ async function cargarCliente() {
             $("#idcliente").text("");
 
 
-            const userSession = JSON.parse(sessionStorage.getItem('usuario'));
+            const userSession = JSON.parse(localStorage.getItem('usuario'));
 
-            if (JSON.parse(sessionStorage.getItem('usuario')).Id != result.data.IdVendedor && userSession.IdRol != 1) {
+            if (JSON.parse(localStorage.getItem('usuario')).Id != result.data.IdVendedor && userSession.IdRol != 1) {
                 alert("El cliente pertenece a otro vendedor, la venta se pondra en estado de aprobacion")
             }
 
@@ -266,7 +266,7 @@ function abrirmodal() {
 async function cargarProductos() {
     try {
         var url = "/Stock/BuscarStock";
-        var data = JSON.parse(sessionStorage.getItem('usuario'));
+        var data = JSON.parse(localStorage.getItem('usuario'));
 
         let value = JSON.stringify({
             Id: data.Id
@@ -471,7 +471,7 @@ const editarProducto = async id => {
 
             $("#nuevoProductoModal").modal("show");
 
-            var data = JSON.parse(sessionStorage.getItem('usuario'));
+            var data = JSON.parse(localStorage.getItem('usuario'));
 
             let value = JSON.stringify({
                 idUsuario: data.Id,
@@ -747,7 +747,7 @@ async function registrarVentaAjax() {
     try {
         var url = "/Ventas/NuevaVenta";
 
-        var data = JSON.parse(sessionStorage.getItem('usuario'));
+        var data = JSON.parse(localStorage.getItem('usuario'));
 
 
 

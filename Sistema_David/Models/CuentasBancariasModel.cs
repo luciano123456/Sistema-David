@@ -19,23 +19,29 @@ namespace Sistema_David.Models.Modelo
 
 
 
-        public static List<CuentasBancarias> Lista()
+        public static List<VMCuentaBancaria> Lista(string metodopago)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            try
             {
-
-                var result = (from d in db.CuentasBancarias
-                          .SqlQuery("select * from CuentasBancarias")
-                              select new CuentasBancarias
-                              {
-                                  Id = d.Id,
-                                  Nombre = d.Nombre,
-                                  CBU = d.CBU
-                              }).ToList();
-
-                return result;
+                using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+                {
+                    return db.CuentasBancarias
+                             .Select(d => new VMCuentaBancaria
+                             {
+                                 Id = d.Id,
+                                 Nombre = d.Nombre,
+                                 CBU = d.CBU,
+                                 CuentaPropia = (int)d.CuentaPropia
+                             })
+                             .Where(x => (metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA PROPIA" && x.CuentaPropia == 1) || (metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA A TERCEROS" && x.CuentaPropia == 0) || (string.IsNullOrEmpty(metodopago)))
+                             .ToList();
+                }
+            } catch(Exception ex)
+            {
+                return null;
             }
         }
+
 
         public static CuentasBancarias EditarInfo(int id)
         {
@@ -48,7 +54,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static int Nuevo(CuentaBancaria model)
+        public static int Nuevo(VMCuentaBancaria model)
         {
 
             try
@@ -61,6 +67,7 @@ namespace Sistema_David.Models.Modelo
                     cuenta.Id = model.Id;
                     cuenta.CBU = model.CBU;
                     cuenta.Nombre = model.Nombre;
+                    cuenta.CuentaPropia = model.CuentaPropia;
 
                     db.CuentasBancarias.Add(cuenta);
                     db.SaveChanges();
@@ -76,7 +83,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static bool Editar(CuentaBancaria model)
+        public static bool Editar(VMCuentaBancaria model)
         {
 
             try
@@ -90,6 +97,7 @@ namespace Sistema_David.Models.Modelo
 
                         result.Nombre = model.Nombre;
                         result.CBU = model.CBU;
+                        result.CuentaPropia = model.CuentaPropia;
 
                         db.Entry(result).State = System.Data.Entity.EntityState.Modified;
                         db.SaveChanges();
