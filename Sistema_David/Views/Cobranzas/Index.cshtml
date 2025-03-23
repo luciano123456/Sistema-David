@@ -25,50 +25,50 @@
 
         @*<div class="row mt-4 table-bordered table-borderless datatablepersonalizado">*@
 
-    <div id="Filtros" class="divFiltros">
+        <div id="Filtros" class="divFiltros">
 
 
-        <label class="lblcliente" id="lblvendedor">Vendedor</label>
-        <select id="Vendedores" name="select" class="input-nuevo">
-            <option value="" selected>Vendedor</option>
-        </select>
+            <label class="lblcliente" id="lblvendedor">Vendedor</label>
+            <select id="Vendedores" name="select" class="input-nuevo">
+                <option value="" selected>Vendedor</option>
+            </select>
 
-        <label class="lblcliente" id="lblcobrador">Cobrador</label>
-        <select id="CobradorFiltro" name="select" class="input-nuevo">
-            <option value="" selected>Cobrador</option>
-        </select>
+            <label class="lblcliente" id="lblcobrador">Cobrador</label>
+            <select id="CobradorFiltro" name="select" class="input-nuevo">
+                <option value="" selected>Cobrador</option>
+            </select>
 
-        <label class="lblcliente">Zona</label>
-        <select id="Zonas" name="select" class="input-nuevo">
-            <option value="" selected>Zona</option>
-        </select>
+            <label class="lblcliente">Zona</label>
+            <select id="Zonas" name="select" class="input-nuevo">
+                <option value="" selected>Zona</option>
+            </select>
 
-        <br />
+            <br />
 
-        <label id="lblfechacobrodesde" class="m-lg-2 lblcliente" hidden>Fecha Cobro Desde:</label>
-        <input type="date" placeholder="" value="" id="FechaCobroDesde" class="input-nuevo" hidden />
+            <label id="lblfechacobrodesde" class="m-lg-2 lblcliente" hidden>Fecha Cobro Desde:</label>
+            <input type="date" placeholder="" value="" id="FechaCobroDesde" class="input-nuevo" hidden />
 
-        <label id="lblfechacobrohasta" class="m-lg-2 lblcliente" hidden>Fecha Cobro Hasta:</label>
-        <input type="date" placeholder="" value="" id="FechaCobroHasta" class="input-nuevo" hidden />
+            <label id="lblfechacobrohasta" class="m-lg-2 lblcliente" hidden>Fecha Cobro Hasta:</label>
+            <input type="date" placeholder="" value="" id="FechaCobroHasta" class="input-nuevo" hidden />
 
-        <label class="m-lg-2 lblcliente" id="lbldninombre">DNI O NOMBRE:</label>
-        <input type="text" placeholder="" value="" id="Dni" class="input-nuevo" />
+            <label class="m-lg-2 lblcliente" id="lbldninombre">DNI O NOMBRE:</label>
+            <input type="text" placeholder="" value="" id="Dni" class="input-nuevo" />
 
-        <br />
-        <label class="lblcliente" id="lblcobrador">Turno</label>
-        <select id="TurnoFiltro" name="select" class="input-nuevo">
-            <option value="" selected>Turno</option>
-        </select>
+            <br />
+            <label class="lblcliente" id="lblcobrador">Turno</label>
+            <select id="TurnoFiltro" name="select" class="input-nuevo">
+                <option value="" selected>Turno</option>
+            </select>
 
-        <label class="lblcliente" id="lblcobrador">Tipo de Negocio</label>
-        <select id="TipoNegocio" name="select" class="input-nuevo">
-            <option value="" selected>Tipo de Negocio</option>
-        </select>
+            <label class="lblcliente" id="lblcobrador">Tipo de Negocio</label>
+            <select id="TipoNegocio" name="select" class="input-nuevo">
+                <option value="" selected>Tipo de Negocio</option>
+            </select>
 
-        <div class="vw-75 d-flex float-lg-end mt-2">
-            <a class="btn btn-success" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
+            <div class="vw-75 d-flex float-lg-end mt-2">
+                <a class="btn btn-success" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
+            </div>
         </div>
-    </div>
 
         <div>
 
@@ -128,6 +128,9 @@
 
 
                 <div class="d-flexv flex-wrap justify-content-end mt-2 mb-4">
+                    <div id="btnCuentaBancaria" class="me-2 mb-2">
+                        <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirModalCuentasBancarias()">Cuentas Bancarias</a>
+                    </div>
                     <div id="btnAsignarTurno" class="me-2 mb-2" style="display: none;">
                         <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalTurno()">Asignar Turno</a>
                     </div>
@@ -144,6 +147,7 @@
                             <i class="fa fa-map-marker"></i> Armar Recorrido
                         </a>
                     </div>
+
                 </div>
 
 
@@ -283,15 +287,17 @@
                     <input type="number" placeholder="Interes" value="0" id="ValorInteres" class="input-nuevomodif" />
 
                     <label class="lblNombreInput">Metodo de pago</label>
-                    <select id="MetodoPago" name="select" class="input-nuevomodif select-modal-personalizado mt-3" onchange="habilitarCBU()" required>
+                    <select id="MetodoPago" name="select" class="input-nuevomodif select-modal-personalizado mt-3" onchange="habilitarCuentas()" required>
                         <option value="">Seleccionar</option>
                         <option value="Efectivo">Efectivo</option>
                         <option value="Transferencia Propia">Transferencia Propia</option>
                         <option value="Transferencia a Terceros">Transferencia a Terceros</option>
                     </select>
 
-                    <label class="lblNombreInput" id="lblCBU" hidden> CBU: </label>
-                    <input type="number" placeholder="0000003100091738152325" value="0000003100091738152325" id="CBU" class="input-nuevomodif fs-5" hidden disabled />
+                    <label class="lblNombreInput" id="lblCuentaPago" hidden >Cuenta</label>
+                    <select id="CuentaPago" name="select" class="input-nuevomodif select-modal-personalizado mt-3" required hidden>
+                        <option value="">Seleccionar</option>
+                    </select>
 
                     <label class="lblNombreInput" id="lblFechaCobro">Nueva Fecha de Cobro</label>
                     <input type="date" placeholder="1" value="1" id="FechaCobro" class="input-nuevomodif" />
@@ -366,6 +372,10 @@
     </div>
 
 
+
+
+
+
 </body>
 
 <div class="modal fade centered-modal-importar" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
@@ -392,6 +402,53 @@
     </div>
 </div>
 
+<!-- Modal de Cuentas Bancarias -->
+<div class="modal fade" id="bankAccountsModal" tabindex="-1" aria-labelledby="bankAccountsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bankAccountsModalLabel">Cuentas Bancarias</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Lista de cuentas bancarias -->
+                <ul id="accountList" class="list-group" style="max-height: 300px; overflow-y: scroll;"></ul>
+
+                <!-- Inputs de Nombre y CBU -->
+                <div class="mb-3">
+                    <label for="accountName" class="form-label text-success">Nombre de la Cuenta</label>
+                    <input type="text" class="form-control text-black" style="max-width: 500px" id="accountName" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="accountCBU" class="form-label text-success">CBU</label>
+                    <input type="text" class="form-control text-black" style="max-width: 500px" id="accountCBU" disabled>
+                </div>
+
+                <!-- Botones Añadir y Eliminar -->
+                <div class="d-flex justify-content-end">
+
+                    <button id="anadirCuenta" type="button" class="btn btn-success" onclick="anadirCuenta()">
+                        <i class="fa fa-plus"></i> Añadir
+                    </button>
+
+                    <button id="canceladdAccount" class="btn btn-danger me-2" onclick="cancelarNuevaCuenta()" hidden>
+                        <i class="fa fa-close"></i> Cancelar
+                    </button>
+
+                    <button  type="button" id="addAccount" class="btn btn-primary" hidden>
+                        <i class="fa fa-check"></i> Registrar
+                    </button>
+
+
+                    <button id="editarCuenta" type="button" class="btn btn-warning me-2" onclick="editarCuenta()" hidden>
+                        <i class="fa fa-edit"></i> Editar
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 

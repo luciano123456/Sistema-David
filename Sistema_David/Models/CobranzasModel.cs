@@ -429,7 +429,7 @@ namespace Sistema_David.Models.Modelo
 
         
 
-        public static int Cobranza(Ventas model)
+        public static int Cobranza(Venta model)
         {
 
             try
@@ -512,6 +512,7 @@ namespace Sistema_David.Models.Modelo
                         infoventa.Imagen = model.Imagen;
                         infoventa.IdTipoNegocio = venta.IdTipoNegocio;
                         infoventa.TipoNegocio = UsuariosModel.BuscarTipoNegocio((int)venta.IdTipoNegocio).Nombre;
+                        infoventa.IdCuentaBancaria = model.MetodoPago.ToUpper() != "EFECTIVO" ? model.IdCuenta : 0 ;
 
                         VentasModel.AgregarInformacionVenta(infoventa);
 

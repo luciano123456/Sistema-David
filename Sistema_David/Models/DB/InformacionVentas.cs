@@ -33,7 +33,9 @@ namespace Sistema_David.Models.DB
         public string Imagen { get; set; }
         public Nullable<int> IdTipoNegocio { get; set; }
         public string TipoNegocio { get; set; }
+        public Nullable<int> IdCuentaBancaria { get; set; }
     
         public virtual Ventas Ventas { get; set; }
+        public virtual CuentasBancarias CuentasBancarias { get; set; }
     }
 }

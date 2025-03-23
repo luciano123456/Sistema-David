@@ -6,3 +6,21 @@
     max-height: 65vh; /* Ajusta la altura máxima del contenido del modal */
     overflow-y: auto; /* Habilita el scroll vertical en el contenido del modal */
 }
+
+
+#accountList {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+    #accountList .list-group-item.active {
+        background-color: #007bff;
+        color: white;
+    }
+
+
+
+
+#bankAccountsModal .form-control:disabled {
+    background-color: rgb(128, 128, 128,0.3);
+}

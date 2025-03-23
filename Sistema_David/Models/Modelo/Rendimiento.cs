@@ -26,5 +26,6 @@ namespace Sistema_David.Models.ViewModels
         public string MetodoPago { get; set; }
         public string Imagen { get; set; }
         public string TipoNegocio { get; set; }
+        public string CuentaBancaria { get; set; }
     }
 }

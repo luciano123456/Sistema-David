@@ -219,4 +219,13 @@
     max-width: 200px !important;
     background: #1B2631 !important;
     color: white !important;
-    
+}
+
+@media (max-width: 750px) {
+
+
+    .input-nuevo {
+        font-size: 4.3vw !important;
+    }
+
+}

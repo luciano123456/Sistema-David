@@ -40,11 +40,16 @@
             <br />
 
             <label class="lblcliente" id="lblcobrador">Metodo de Pago</label>
-            <select id="MetodoPago" name="select" class="input-nuevo">
+            <select id="MetodoPago" name="select" class="input-nuevo" onchange="habilitarCuentas()">
                 <option value="" selected>Todos</option>
                 <option value="Efectivo">Efectivo</option>
                 <option value="Transferencia Propia">Transferencia Propia</option>
                 <option value="Transferencia a Terceros">Transferencia a Terceros</option>
+            </select>
+
+            <label class="lblcliente" id="lblCuentaPago" hidden>Cuenta Bancaria</label>
+            <select id="CuentaPago" name="select" class="input-nuevo" hidden>
+                <option value="" selected>Todos</option>
             </select>
 
             @*<label class="lblcliente" id="lblmetodopago">Metodo de pago</label>
@@ -254,6 +259,7 @@
                                                 <th>Interes</th>
                                                 <th>Capital Final</th>
                                                 <th>Metodo Pago</th>
+                                                <th>Cuenta Bancaria</th>
                                                 <th>Proximo Cobro</th>
                                                 <th>Vencimiento</th>
                                                 <th>Descripcion</th>
