@@ -44,5 +44,6 @@ namespace Sistema_David.Models.DB
         public virtual DbSet<InformacionClientesAsignados> InformacionClientesAsignados { get; set; }
         public virtual DbSet<InformacionVentas> InformacionVentas { get; set; }
         public virtual DbSet<TipoNegocio> TipoNegocio { get; set; }
+        public virtual DbSet<CuentasBancarias> CuentasBancarias { get; set; }
     }
 }

@@ -146,70 +146,31 @@ namespace Sistema_David.Models
 
 
 
-        public static List<Rendimiento> MostrarRendimiento(int idVendedor, int ventas, int cobranzas, DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago)
+        public static List<Rendimiento> MostrarRendimiento(int idVendedor, int ventas, int cobranzas, DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                string query = @"
-                                SELECT 
-                                    IV.Id, IV.IdVendedor, 
-                                    C.Nombre + ' ' + C.Apellido as Cliente, 
-                                    IV.IdVenta, 
-                                    ISNULL(SUM(IV.Entrega + IV.Restante), 0) AS CapitalInicial, 
-                                    CASE WHEN IV.Descripcion LIKE '%venta%' THEN ISNULL(SUM(IV.Entrega + IV.Restante), 0) ELSE 0 END AS Venta,
-                                    ISNULL(IV.Entrega, 0) AS Cobro, 
-                                    ISNULL(V.EstadoCobro, 0) AS EstadoCobro, 
-                                    ISNULL(V.Restante, 0) AS Restante, 
-                                    V.FechaLimite,
-                                    ISNULL(IV.Restante, 0) AS CapitalFinal, 
-                                    ISNULL(IV.Interes, 0) AS Interes, 
-                                    IV.Fecha, IV.ProximoCobro, IV.Descripcion, IV.whatssap, IV.MetodoPago, IV.TipoNegocio,
-                                    CASE WHEN IV.Imagen IS NOT NULL THEN SUBSTRING(IV.Imagen, 1, 5) ELSE '' END AS Imagen
-                                FROM 
-                                    InformacionVentas IV
-                                    INNER JOIN Ventas V ON IV.IdVenta = V.Id
-                                    INNER JOIN CLIENTES C ON V.idCliente = C.Id
-                                WHERE 
-                                    (IV.IdVendedor = @idVendedor OR @idVendedor = -1)
-                                    AND (IV.IdTipoNegocio = @tiponegocio or @tiponegocio = -1)
-                                    AND (IV.MetodoPago = @metodoPago or @metodoPago = 'Todos')
-                                    AND ((@ventas = 1 AND IV.Descripcion LIKE '%venta%') OR (@cobranzas = 1 AND IV.Descripcion LIKE '%cobranza%' or IV.Descripcion LIKE '%interes%'))
-                                    AND IV.Fecha >= @fechadesde AND IV.Fecha <= @fechahasta
-                                GROUP BY 
-                                    IV.Id, IV.IdVenta, IV.Fecha, IV.ProximoCobro, C.Nombre + ' ' + C.Apellido, IV.Descripcion, IV.Restante, IV.Entrega, IV.Interes, IV.IdVendedor, IV.whatssap , IV.TipoNegocio ,  V.Restante, V.EstadoCobro, V.FechaLimite, IV.MetodoPago, IV.Imagen
-                                ORDER BY 
-                                    IV.Fecha ASC
-                            ";
 
 
+                var idVendedorParam = new SqlParameter("@idVendedor", SqlDbType.Int) { Value = idVendedor };
+                var ventasParam = new SqlParameter("@ventas", SqlDbType.Int) { Value = ventas };
+                var cobranzasParam = new SqlParameter("@cobranzas", SqlDbType.Int) { Value = cobranzas };
+                var fechadesdeParam = new SqlParameter("@fechadesde", SqlDbType.DateTime) { Value = fechadesde };
+                var fechahastaParam = new SqlParameter("@fechahasta", SqlDbType.DateTime) { Value = fechahasta };
+                var tiponegocioParam = new SqlParameter("@Idtiponegocio", SqlDbType.Int) { Value = tiponegocio };
+                
+                var metodoPagoParam = new SqlParameter("@metodoPago", SqlDbType.VarChar, 50) { Value = metodoPago };
+                var cuentabancariaParam = new SqlParameter("@IdCuentaBancaria", SqlDbType.Int) { Value = IdCuentaBancaria };
 
-                var idVendedorParam = new SqlParameter("@idVendedor", SqlDbType.Int);
-                idVendedorParam.Value = idVendedor;
-
-                var ventasParam = new SqlParameter("@ventas", SqlDbType.Int);
-                ventasParam.Value = ventas;
-
-                var cobranzasParam = new SqlParameter("@cobranzas", SqlDbType.Int);
-                cobranzasParam.Value = cobranzas;
-
-                var fechadesdeParam = new SqlParameter("@fechadesde", SqlDbType.DateTime);
-                fechadesdeParam.Value = fechadesde.Date; // Establecer la hora a las 00:00:00
-
-                var fechahastaParam = new SqlParameter("@fechahasta", SqlDbType.DateTime);
-                //fechahastaParam.Value = fechahasta.Date.AddHours(23).AddMinutes(59).AddSeconds(59); // Establecer la hora a las 23:59:59
-                fechahastaParam.Value = fechahasta.Date.AddDays(1).AddSeconds(-1); // Establecer la hora a las 23:59:59 del día seleccionado
-
-                var tiponegocioParam = new SqlParameter("@tiponegocio", SqlDbType.Int);
-                tiponegocioParam.Value = tiponegocio;
-
-                var metodoPagoParam = new SqlParameter("@metodoPago", SqlDbType.VarChar);
-                metodoPagoParam.Value = metodoPago;
-
-                var resultList = db.Database.SqlQuery<Rendimiento>(query, idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam, metodoPagoParam).ToList();
+                var resultList = db.Database.SqlQuery<Rendimiento>(
+                    "EXEC sp_MostrarRendimiento @idVendedor, @ventas, @cobranzas, @fechadesde, @fechahasta, @Idtiponegocio, @metodoPago, @IdCuentaBancaria",
+                    idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam, metodoPagoParam, cuentabancariaParam
+                ).ToList();
 
                 return resultList;
             }
         }
+
 
         public static string ObtenerImagen(int idVenta)
         {

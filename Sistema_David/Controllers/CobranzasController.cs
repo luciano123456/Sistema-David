@@ -111,6 +111,90 @@ namespace Sistema_David.Controllers
 
         }
 
+        public ActionResult NuevaCuentaBancaria(CuentaBancaria cuentabancaria)
+        {
+            try
+            {
+                var result = CuentasBancariasModel.Nuevo(cuentabancaria);
+
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(null);
+            }
+
+
+        }
+
+        [HttpPost]
+        public ActionResult EditarCuentaBancaria(CuentaBancaria cuentabancaria)
+        {
+            try
+            {
+                var result = CuentasBancariasModel.Editar(cuentabancaria);
+
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(null);
+            }
+
+
+        }
+
+        public ActionResult EliminarCuentaBancaria(int id)
+        {
+            try
+            {
+                var result = CuentasBancariasModel.Eliminar(id);
+
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(null);
+            }
+
+
+        }
+
+        public ActionResult ListaCuentasBancarias()
+        {
+            try
+            {
+                var result = CuentasBancariasModel.Lista();
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(null);
+            }
+
+        }
+
+        public ActionResult InfoCuentaBancaria(int id)
+        {
+            try
+            {
+                var result = CuentasBancariasModel.EditarInfo(id);
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(null);
+            }
+
+        }
+
+
+
 
         public ActionResult ColumnDown(int id)
         {
@@ -168,7 +252,7 @@ namespace Sistema_David.Controllers
             }
         }
 
-        public ActionResult Cobranza(Ventas model)
+        public ActionResult Cobranza(Venta model)
         {
             try
             {

@@ -271,10 +271,10 @@ const estadoHome = async () => {
     }
 }
 
-function cobranzaVenta(id) {
+async function cobranzaVenta(id) {
 
     var table = $("#grdCobranzas").DataTable()
-
+    await cargarCuentas();
 
 
     document.getElementById("lblFechaCobro").removeAttribute("hidden");
@@ -308,6 +308,8 @@ function cobranzaVenta(id) {
     $("#imgProducto").attr("hidden", "hidden");
 
     document.getElementById("imgProd").value = ""
+
+    
 
 
     table.rows().eq(0).each(function (index) {
@@ -452,6 +454,7 @@ async function hacerCobranza() {
                     FranjaHoraria: document.getElementById("FranjaHorariaCobro").value,
                     Turno: document.querySelector('#TurnoCobro option:checked').textContent,
                     EstadoCobro: document.getElementById("estadoCobro").value,
+                    IdCuenta: document.getElementById("CuentaPago").value,
                     Imagen: document.getElementById("imgProd").value,
                 });
 
@@ -502,6 +505,7 @@ async function hacerCobranza() {
 
         } else {
             alert("Tienes que esperar al menos 6 segundos antes de volver a realizar esta acción.");
+            return;
         }
 
 
@@ -566,19 +570,18 @@ function validarCobranza() {
     }
 }
 
-function habilitarCBU() {
+function habilitarCuentas() {
     var formaPagoSelect = document.getElementById("MetodoPago");
-    var cbuInput = document.getElementById("CBU");
-    var cbuLbl = document.getElementById("lblCBU");
+    var cuenta = document.getElementById("CuentaPago");
+    var cuentaLbl = document.getElementById("lblCuentaPago");
 
     if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" || formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
-        cbuInput.hidden = false;
-        cbuLbl.hidden = false;
+        cuenta.hidden = false;
+        cuentaLbl.hidden = false;
+
     } else {
-        cbuInput.hidden = true;
-        cbuLbl.hidden = true;
-        // También puedes limpiar el valor del input si está deshabilitado
-        cbuInput.value = "";
+        cuenta.hidden = true;
+        cuentaLbl.hidden = true;
     }
 }
 
@@ -1718,6 +1721,45 @@ async function cargarTurnosFiltro() {
 
 }
 
+
+async function cargarCuentas() {
+    try {
+        var url = "/Cobranzas/ListaCuentasBancarias";
+
+        let value = JSON.stringify({
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result != null) {
+            select = document.getElementById("CuentaPago");
+
+            $('#CuentaPago option').remove();
+
+            for (i = 0; i < result.length; i++) {
+                option = document.createElement("option");
+                option.value = result[i].Id;
+                option.text = result[i].Nombre;
+                select.appendChild(option);
+            }
+
+
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
 async function cargarCobradores() {
     try {
         var url = "/usuarios/ListarCobradores";
@@ -2312,4 +2354,211 @@ function configurarOpcionesColumnas() {
         localStorage.setItem(storageKey, JSON.stringify(savedConfig));
         grid.column(columnIdx).visible(isChecked);
     });
+}
+
+
+let accounts = [];
+
+
+let selectedAccount = null;
+
+// Renderizar la lista de cuentas
+function renderAccounts() {
+    const accountList = document.getElementById("accountList");
+    accountList.innerHTML = ""; // Limpiar lista
+
+    accounts.forEach(account => {
+        const li = document.createElement("li");
+        li.classList.add("list-group-item");
+        li.classList.add("d-flex");
+        li.classList.add("justify-content-between");
+        li.classList.add("align-items-center");
+        li.setAttribute("data-id", account.Id);
+
+        // Agregar nombre y CBU a la cuenta
+        li.innerHTML = `
+            <span class="account-name">${account.Nombre}</span>
+            <div>
+                <button class="btn btn-warning btn-sm edit-btn" onclick="editAccount(${account.Id})">
+                    <i class="fa fa-pencil"></i>
+                </button>
+                <button class="btn btn-danger btn-sm delete-btn" onclick="deleteAccount(${account.Id})">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        `;
+
+        // Añadir evento para seleccionar la cuenta
+        li.addEventListener("click", () => selectAccount(account, li));
+
+        accountList.appendChild(li);
+    });
+}
+
+// Función para seleccionar una cuenta y mostrar sus datos en los inputs
+function selectAccount(account, item) {
+
+    // Remover la clase 'active' de cualquier otra cuenta seleccionada
+    const allAccounts = document.querySelectorAll("#accountList .list-group-item");
+    allAccounts.forEach(item => item.classList.remove("active"));
+
+    // Añadir la clase 'active' al item seleccionado
+
+   
+    item.classList.add("active");
+
+    selectedAccount = account;
+    
+    document.getElementById("accountName").value = account.Nombre;
+    document.getElementById("accountCBU").value = account.CBU;
+}
+
+// Función para editar una cuenta
+function editAccount(id) {
+    const account = accounts.find(a => a.Id === id);
+    if (account) {
+        // Pre-cargar los valores de la cuenta en los campos de texto
+        document.getElementById("accountName").value = account.Nombre;
+        document.getElementById("accountCBU").value = account.CBU;
+        document.getElementById("accountName").removeAttribute("disabled");
+        document.getElementById("accountCBU").removeAttribute("disabled");
+        document.getElementById("editarCuenta").removeAttribute("hidden");
+        document.getElementById("anadirCuenta").setAttribute("hidden", "hidden");
+        document.getElementById("addAccount").setAttribute("hidden", "hidden");
+        document.getElementById("canceladdAccount").removeAttribute("hidden");
+        selectedAccount = account;
+    }
+}
+// Función para editar una cuenta
+function editarCuenta() {
+    if (selectedAccount != null) {
+        const updatedAccount = {
+            Id: selectedAccount.Id,  // Suponiendo que el objeto 'selectedAccount' tiene un Id
+            Nombre: document.getElementById("accountName").value.trim(),
+            CBU: document.getElementById("accountCBU").value.trim()
+        };
+
+        fetch('/Cobranzas/EditarCuentaBancaria', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedAccount)  // Enviamos el objeto actualizado
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result) {
+                    alert("Cuenta modificada con éxito");
+                    cancelarNuevaCuenta();
+                    loadCuentasBancarias();
+                } else {
+                    alert("Error al modificar la cuenta.");
+                }
+            })
+            .catch(error => console.error('Error updating account:', error));
+    }
+}
+
+
+
+// Función para eliminar una cuenta
+function deleteAccount(id) {
+    if (confirm("¿Estás seguro de que quieres eliminar esta cuenta?")) {
+        fetch('/Cobranzas/EliminarCuentaBancaria', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result) {
+                    loadCuentasBancarias();
+                    selectedAccount = null;
+                    document.getElementById("accountName").value = "";
+                    document.getElementById("accountCBU").value = "";
+                } else {
+                    alert("Error al eliminar la cuenta.");
+                }
+            })
+            .catch(error => console.error('Error deleting account:', error));
+    }
+}
+
+function anadirCuenta() {
+    selectedAccount = null;
+    document.getElementById("accountName").value = "";
+    document.getElementById("accountCBU").value = "";
+    document.getElementById("accountName").removeAttribute("disabled");
+    document.getElementById("accountCBU").removeAttribute("disabled");
+    document.getElementById("anadirCuenta").setAttribute("hidden", "hidden");
+    document.getElementById("addAccount").removeAttribute("hidden");
+    document.getElementById("canceladdAccount").removeAttribute("hidden");
+
+}
+
+// Añadir nueva cuenta
+document.getElementById("addAccount").addEventListener("click", () => {
+    const Nombre = document.getElementById("accountName").value.trim();
+    const cbu = document.getElementById("accountCBU").value.trim();
+    if (!Nombre || !cbu) {
+        alert("Debes completar ambos campos.");
+        return;
+    }
+
+    const newAccount = { Nombre, cbu };
+
+    fetch('/Cobranzas/NuevaCuentaBancaria', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newAccount)
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result == 0) {
+                alert("Cuenta añadida con éxito");
+                document.getElementById("accountName").value = "";
+                document.getElementById("accountCBU").value = "";
+                loadCuentasBancarias();
+            } else {
+                alert("Error al añadir la cuenta.");
+            }
+        })
+        .catch(error => console.error('Error adding account:', error));
+});
+
+async function cancelarNuevaCuenta() {
+    document.getElementById("accountName").value = "";
+    document.getElementById("accountCBU").value = "";
+    document.getElementById("accountName").setAttribute("disabled", "disabled");
+    document.getElementById("accountCBU").setAttribute("disabled", "disabled");
+    document.getElementById("canceladdAccount").setAttribute("hidden", "hidden");
+    document.getElementById("anadirCuenta").removeAttribute("hidden");
+    document.getElementById("addAccount").setAttribute("hidden", "hidden");
+    document.getElementById("editarCuenta").setAttribute("hidden", "hidden");
+}
+
+// Cargar cuentas bancarias desde el servidor
+async function loadCuentasBancarias() {
+    var url = "/Cobranzas/ListaCuentasBancarias";
+    let value = JSON.stringify({});
+    let options = {
+        type: "POST",
+        url: url,
+        async: true,
+        data: value,
+        contentType: "application/json",
+        dataType: "json"
+    };
+
+    let result = await MakeAjax(options);
+    accounts = result;
+    renderAccounts();
+}
+
+// Abrir el modal de cuentas bancarias
+async function abrirModalCuentasBancarias() {
+    await loadCuentasBancarias();
+    $("#bankAccountsModal").modal('show');
 }

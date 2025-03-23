@@ -310,11 +310,16 @@
 
 
     .input-nuevomodif {
-        font-size: 4vw !important;
+        font-size: 4.3vw !important;
     }
 
+    .input-nuevomodifCantidadNueva {
+        font-size: 4.3vw !important;
+    }
+
+
     .lblNombreInput {
-        font-size: 4vw !important;
+        font-size: 4.3vw !important;
     }
 
 }

@@ -19,6 +19,7 @@ $(document).ready(async function () {
     }
 
     await cargarTiposDeNegocio();
+    await cargarCuentas();
     configurarDataDiario();
 
 
@@ -77,6 +78,7 @@ async function configurarDataDiario() {
     document.getElementById("FechaHasta").value = FechaHasta;
 
     var tiponegocio = document.getElementById("TipoNegocio").value;
+    var idcuenta = document.getElementById("CuentaPago").value;
     var metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
 
 
@@ -92,7 +94,7 @@ async function configurarDataDiario() {
     }
 
     await cargarUsuarios()
-    configurarDataTable(-1, 1, 1, FechaDesde, FechaHasta, tiponegocio, metodoPago);
+    configurarDataTable(-1, 1, 1, FechaDesde, FechaHasta, tiponegocio, metodoPago, idcuenta);
     configurarDataTableClientesAusentes(FechaDesde, FechaHasta);
     cargarVentas(-1);
 
@@ -482,7 +484,7 @@ function aplicarFiltros() {
     const fechaHasta = document.getElementById("FechaHasta").value;
     const tipoNegocio = document.getElementById("TipoNegocio").value;
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
-
+    var idcuenta = document.getElementById("CuentaPago").value;
 
 
     // Convertir las fechas a objetos Date
@@ -518,16 +520,16 @@ function aplicarFiltros() {
         const idVendedor = usuarioSeleccionado.getAttribute("data-id");
         const estadoVentas = usuarioSeleccionado.querySelector(".fa-check[title='Ventas']").classList.contains("text-success") ? 1 : 0;
         const estadoCobranzas = usuarioSeleccionado.querySelector(".fa-check[title='Cobranzas']").classList.contains("text-success") ? 1 : 0;
-
+        
 
         localStorage.setItem("FechaDesdeRendimiento", document.getElementById("FechaDesde").value);
         localStorage.setItem("FechaHastaRendimiento", document.getElementById("FechaHasta").value);
 
         $('#grdRendimiento').DataTable().clear().draw();
-        configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta, tipoNegocio, metodoPago);
+        configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta, tipoNegocio, metodoPago, idcuenta);
 
     } else {
-        configurarDataTable(-1, 1, 1, fechaDesde, fechaHasta, -1, "Todos");
+        configurarDataTable(-1, 1, 1, fechaDesde, fechaHasta, -1, "Todos", -1);
     }
 
     //$('#grdRendimientoGeneral').DataTable().clear().draw();
@@ -539,7 +541,7 @@ function aplicarFiltros() {
 
 
 
-const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio, metodoPago) => {
+const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio, metodoPago, idcuenta) => {
 
     let totVenta = 0;
     let totCobro = 0;
@@ -554,7 +556,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
         // Si la tabla no existe, crearla
         gridRendimiento = $('#grdRendimiento').DataTable({
             "ajax": {
-                "url": `/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}`,
+                "url": `/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}`,
                 "type": "GET",
                 "dataType": "json"
             },
@@ -596,6 +598,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         return metodoPago + ' ' + icon; // Retorna el método de pago seguido del ícono si existe la imagen
                     }
                 },
+                { "data": "CuentaBancaria" },
                 {
                     "data": "ProximoCobro",
                     "render": function (data) {
@@ -688,7 +691,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
        
 
-        table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}`).load(function () {
+        table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}`).load(function () {
             // Recorrer los datos de la tabla después de que se hayan cargado
             table.data().each(async function (rowData) {
 
@@ -1408,4 +1411,64 @@ function configurarOpcionesColumnas() {
         localStorage.setItem(storageKey, JSON.stringify(savedConfig));
         grid.column(columnIdx).visible(isChecked);
     });
+}
+
+
+async function cargarCuentas() {
+    try {
+        var url = "/Cobranzas/ListaCuentasBancarias";
+
+        let value = JSON.stringify({
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result != null) {
+            select = document.getElementById("CuentaPago");
+
+            $('#CuentaPago option').remove();
+
+            option = document.createElement("option");
+            option.value = -1;
+            option.text = "Todos";
+            select.appendChild(option);
+
+            for (i = 0; i < result.length; i++) {
+                option = document.createElement("option");
+                option.value = result[i].Id;
+                option.text = result[i].Nombre;
+                select.appendChild(option);
+            }
+
+
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+
+function habilitarCuentas() {
+    var formaPagoSelect = document.getElementById("MetodoPago");
+    var cuenta = document.getElementById("CuentaPago");
+    var cuentaLbl = document.getElementById("lblCuentaPago");
+
+    if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" || formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
+        cuenta.hidden = false;
+        cuentaLbl.hidden = false;
+    } else {
+        cuenta.value = -1;
+        cuenta.hidden = true;
+        cuentaLbl.hidden = true;
+    }
 }

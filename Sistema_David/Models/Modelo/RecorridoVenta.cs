@@ -20,6 +20,7 @@ namespace Sistema_David.Models.Modelo
         public int idZona { get; set; }
         public int idEstado { get; set; }
         public string Observacion { get; set; }
+        public string MetodoPago { get; set; }
         public string Cliente { get; set; }
         public string Direccion { get; set; }
         public string Vendedor { get; set; }
@@ -33,6 +34,7 @@ namespace Sistema_David.Models.Modelo
         public string Longitud { get; set; }
         public int Importante { get; set; }
         public int Orden { get; set; }
+        public int IdCuenta { get; set; }
         public int Comprobante { get; set; }
         public int IdRecorrido { get; set; }
         public int OrdenRecorrido { get; set; }
@@ -54,6 +56,6 @@ namespace Sistema_David.Models.Modelo
         public decimal P_ValorCuota { get; set; }
         public virtual Clientes Clientes { get; set; }
         public virtual Zonas Zonas { get; set; }
-        
+        public string Imagen { get; internal set; }
     }
 }

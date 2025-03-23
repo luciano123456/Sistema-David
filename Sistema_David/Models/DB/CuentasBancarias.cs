@@ -12,17 +12,19 @@ namespace Sistema_David.Models.DB
     using System;
     using System.Collections.Generic;
     
-    public partial class ProductosVenta
+    public partial class CuentasBancarias
     {
-        public int Id { get; set; }
-        public int IdProducto { get; set; }
-        public int IdVenta { get; set; }
-        public int Cantidad { get; set; }
-        public Nullable<decimal> PrecioUnitario { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public CuentasBancarias()
+        {
+            this.InformacionVentas = new HashSet<InformacionVentas>();
+        }
     
-        public virtual Productos Productos { get; set; }
-        public virtual Ventas Ventas { get; set; }
-        public decimal PrecioTotal { get; internal set; }
-        public string Producto { get; internal set; }
+        public int Id { get; set; }
+        public string Nombre { get; set; }
+        public string CBU { get; set; }
+    
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<InformacionVentas> InformacionVentas { get; set; }
     }
 }

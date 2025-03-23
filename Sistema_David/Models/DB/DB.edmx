@@ -31,6 +31,14 @@
           <Property Name="FechaenCero" Type="datetime" />
           <Property Name="IdVendedorAsignado" Type="int" />
         </EntityType>
+        <EntityType Name="CuentasBancarias">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Nombre" Type="varchar" MaxLength="150" />
+          <Property Name="CBU" Type="varchar" MaxLength="50" />
+        </EntityType>
         <EntityType Name="EstadosClientes">
           <Key>
             <PropertyRef Name="Id" />
@@ -78,6 +86,7 @@
           <Property Name="Imagen" Type="varchar(max)" />
           <Property Name="IdTipoNegocio" Type="int" />
           <Property Name="TipoNegocio" Type="varchar" MaxLength="255" />
+          <Property Name="IdCuentaBancaria" Type="int" />
         </EntityType>
         <EntityType Name="Limites">
           <Key>
@@ -251,14 +260,14 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_InformacionVentas_Ventas">
-          <End Role="Ventas" Type="Self.Ventas" Multiplicity="1" />
+          <End Role="CuentasBancarias" Type="Self.CuentasBancarias" Multiplicity="0..1" />
           <End Role="InformacionVentas" Type="Self.InformacionVentas" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="Ventas">
+            <Principal Role="CuentasBancarias">
               <PropertyRef Name="Id" />
             </Principal>
             <Dependent Role="InformacionVentas">
-              <PropertyRef Name="IdVenta" />
+              <PropertyRef Name="IdCuentaBancaria" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -483,6 +492,7 @@
         <EntityContainer Name="Sistema_DavidModelStoreContainer">
           <EntitySet Name="Categorias" EntityType="Self.Categorias" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Clientes" EntityType="Self.Clientes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CuentasBancarias" EntityType="Self.CuentasBancarias" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EstadosClientes" EntityType="Self.EstadosClientes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EstadosUsuarios" EntityType="Self.EstadosUsuarios" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="InformacionClientesAsignados" EntityType="Self.InformacionClientesAsignados" Schema="dbo" store:Type="Tables" />
@@ -505,7 +515,7 @@
             <End Role="Clientes" EntitySet="Clientes" />
           </AssociationSet>
           <AssociationSet Name="FK_InformacionVentas_Ventas" Association="Self.FK_InformacionVentas_Ventas">
-            <End Role="Ventas" EntitySet="Ventas" />
+            <End Role="CuentasBancarias" EntitySet="CuentasBancarias" />
             <End Role="InformacionVentas" EntitySet="InformacionVentas" />
           </AssociationSet>
           <AssociationSet Name="FK_Productos_Categorias" Association="Self.FK_Productos_Categorias">
@@ -809,6 +819,11 @@
           <EntitySet Name="TipoNegocio" EntityType="Sistema_DavidModel.TipoNegocio" />
           <AssociationSet Name="FK_InformacionVentas_Ventas" Association="Sistema_DavidModel.FK_InformacionVentas_Ventas">
             <End Role="Ventas" EntitySet="Ventas" />
+            <End Role="InformacionVentas" EntitySet="InformacionVentas" />
+          </AssociationSet>
+          <EntitySet Name="CuentasBancarias" EntityType="Sistema_DavidModel.CuentasBancarias" />
+          <AssociationSet Name="FK_InformacionVentas_Ventas1" Association="Sistema_DavidModel.FK_InformacionVentas_Ventas1">
+            <End Role="CuentasBancarias" EntitySet="CuentasBancarias" />
             <End Role="InformacionVentas" EntitySet="InformacionVentas" />
           </AssociationSet>
           </EntityContainer>
@@ -1216,6 +1231,8 @@
           <Property Name="IdTipoNegocio" Type="Int32" />
           <Property Name="TipoNegocio" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas" FromRole="InformacionVentas" ToRole="Ventas" />
+          <Property Name="IdCuentaBancaria" Type="Int32" />
+          <NavigationProperty Name="CuentasBancarias" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas1" FromRole="InformacionVentas" ToRole="CuentasBancarias" />
         </EntityType>
         <EntityType Name="TipoNegocio">
           <Key>
@@ -1234,6 +1251,27 @@
             </Principal>
             <Dependent Role="InformacionVentas">
               <PropertyRef Name="IdVenta" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="CuentasBancarias">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Nombre" Type="String" MaxLength="150" FixedLength="false" Unicode="false" />
+          <Property Name="CBU" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="InformacionVentas" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas1" FromRole="CuentasBancarias" ToRole="InformacionVentas" />
+        </EntityType>
+        <Association Name="FK_InformacionVentas_Ventas1">
+          <End Type="Sistema_DavidModel.CuentasBancarias" Role="CuentasBancarias" Multiplicity="0..1" />
+          <End Type="Sistema_DavidModel.InformacionVentas" Role="InformacionVentas" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CuentasBancarias">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="InformacionVentas">
+              <PropertyRef Name="IdCuentaBancaria" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1464,6 +1502,7 @@
           <EntitySetMapping Name="InformacionVentas">
             <EntityTypeMapping TypeName="Sistema_DavidModel.InformacionVentas">
               <MappingFragment StoreEntitySet="InformacionVentas">
+                <ScalarProperty Name="IdCuentaBancaria" ColumnName="IdCuentaBancaria" />
                 <ScalarProperty Name="TipoNegocio" ColumnName="TipoNegocio" />
                 <ScalarProperty Name="IdTipoNegocio" ColumnName="IdTipoNegocio" />
                 <ScalarProperty Name="Imagen" ColumnName="Imagen" />
@@ -1490,6 +1529,15 @@
             <EntityTypeMapping TypeName="Sistema_DavidModel.TipoNegocio">
               <MappingFragment StoreEntitySet="TipoNegocio">
                 <ScalarProperty Name="DiasVencimiento" ColumnName="DiasVencimiento" />
+                <ScalarProperty Name="Nombre" ColumnName="Nombre" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CuentasBancarias">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.CuentasBancarias">
+              <MappingFragment StoreEntitySet="CuentasBancarias">
+                <ScalarProperty Name="CBU" ColumnName="CBU" />
                 <ScalarProperty Name="Nombre" ColumnName="Nombre" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>

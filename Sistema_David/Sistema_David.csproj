@@ -385,6 +385,10 @@
     <Compile Include="Helpers\SessionHelper.cs" />
     <Compile Include="Models\CheckBloqueoSistema.cs" />
     <Compile Include="Models\ClientesCeroModel.cs" />
+    <Compile Include="Models\CuentasBancariasModel.cs" />
+    <Compile Include="Models\DB\CuentasBancarias.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\DB\InformacionClientesAsignados.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
@@ -467,6 +471,7 @@
     <Compile Include="Models\Modelo\RendimientoGeneral.cs" />
     <Compile Include="Models\Modelo\Limite.cs" />
     <Compile Include="Models\Modelo\StocksPendientes.cs" />
+    <Compile Include="Models\Modelo\CuentaBancaria.cs" />
     <Compile Include="Models\Modelo\StockUsuario.cs" />
     <Compile Include="Models\Modelo\FileInput.cs" />
     <Compile Include="Models\Modelo\Categoria.cs" />
