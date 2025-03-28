@@ -414,8 +414,12 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <button id="toggleBloqueadas" class="btn btn-light">
+                    <i class="fa fa-eye text-danger"></i> Ver cuentas inactivas
+                </button>
                 <!-- Lista de cuentas bancarias -->
-                <ul id="accountList" class="list-group" style="max-height: 300px; overflow-y: scroll;"></ul>
+                <ul id="accountList" class="list-group mt-3 mb-2" style="max-height: 300px; overflow-y: scroll;"></ul>
+
 
                 <!-- Inputs de Nombre y CBU -->
                 <div class="mb-3">
@@ -427,12 +431,19 @@
                     <input type="text" class="form-control text-black" style="max-width: 500px" id="accountCBU" disabled>
                 </div>
 
-                <div class="d-flex justify-content-end mt-3">
+                <div class="d-flex justify-content-between  mt-3">
                     <div class="form-check form-switch d-flex align-items-center" style="margin-right:15px">
                         <label class="form-check-label text-black" style="margin-right:4rem" for="CuentaPropia">Cuenta Propia</label>
                         <input class="form-check-input" type="checkbox" id="CuentaPropia" disabled>
                     </div>
+                    <div class="form-check form-switch d-flex align-items-center" style="margin-right:15px">
+                        <label class="form-check-label text-black" style="margin-right:4rem" for="Activo">Activo</label>
+                        <input class="form-check-input" type="checkbox" id="Activo" disabled>
+                    </div>
                 </div>
+
+
+
 
                 <!-- Botones Añadir y Eliminar -->
                 <div class="d-flex justify-content-end mt-4">
@@ -470,5 +481,5 @@
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=1.5"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=1.6"></script>
 }

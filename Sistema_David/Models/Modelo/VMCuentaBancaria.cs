@@ -14,6 +14,7 @@ namespace Sistema_David.Models.Modelo
         public string CBU { get; set; }
         public string Nombre { get; set; }
         public int CuentaPropia { get; set; }
+        public int Activo { get; set; }
 
 
     }

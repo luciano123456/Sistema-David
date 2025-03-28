@@ -252,8 +252,17 @@ const editarUsuario = async id => {
 }
 
 async function registrarusuario() {
+
+    var IdTipoNegocio = document.getElementById("TipoNegocio").value;
+
+
     if (userSession.IdRol == 2) { //ROL VENDEDOR
         alert("No tienes permisos para realizar esta accion.")
+        return false;
+    }
+
+    if (IdTipoNegocio == -1) {
+        alert("El tipo de negocio es erroneo.")
         return false;
     }
     try {
@@ -268,7 +277,7 @@ async function registrarusuario() {
             Direccion: document.getElementById("Direccion").value,
             IdRol: document.getElementById("Rol").value,
             Contrasena: document.getElementById("Contrasena").value,
-            IdTipoNegocio: document.getElementById("TipoNegocio").value
+            IdTipoNegocio: IdTipoNegocio
         });
 
         let options = {

@@ -580,13 +580,6 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         return moment(data).format("DD/MM/YYYY");
                     }
                 },
-                { "data": "TipoNegocio" },
-                { "data": "Cliente" },
-                { "data": "CapitalInicial" },
-                { "data": "Venta" },
-                { "data": "Cobro" },
-                { "data": "Interes" },
-                { "data": "CapitalFinal" },
                 {
                     "data": "MetodoPago",
                     "render": function (data, type, row) {
@@ -602,7 +595,16 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         return metodoPago + ' ' + icon; // Retorna el método de pago seguido del ícono si existe la imagen
                     }
                 },
+                
+                
                 { "data": "CuentaBancaria" },
+                { "data": "Cliente" },
+                { "data": "CapitalInicial" },
+                { "data": "Venta" },
+                { "data": "Cobro" },
+                { "data": "Interes" },
+                { "data": "CapitalFinal" },
+                
                 {
                     "data": "ProximoCobro",
                     "render": function (data) {
@@ -615,6 +617,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         return moment(data).format("DD/MM/YYYY");
                     }
                 },
+                { "data": "TipoNegocio" },
                 { "data": "Descripcion" },
                 {
                     "data": "Id",
@@ -634,7 +637,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                     "render": function (data, type, row) {
                         return formatNumber(data); // Formatear número en la columna
                     },
-                    "targets": [3, 4, 5, 6, 7] // Columnas Venta, Cobro, Capital Final
+                    "targets": [4, 5, 6, 7, 8] // Columnas Venta, Cobro, Capital Final
                 }
             ],
 
@@ -1284,7 +1287,7 @@ async function cargarTiposDeNegocio() {
 
             $('#TipoNegocio option').remove();
 
-            if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
+            if (userSession.IdRol == 1 || userSession.IdRol == 4) { //ROL ADMINISTRADOR Y COMPROBANTES
                 option = document.createElement("option");
                 option.value = -1;
                 option.text = "Todos";

@@ -26,7 +26,7 @@ namespace Sistema_David.Controllers
 
             ViewBag.ErrorPermisos = null;
 
-            if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol != 1) //ROL  VENDEDOR
+            if (SessionHelper.GetUsuarioSesion() != null && (SessionHelper.GetUsuarioSesion().IdRol != 1) && SessionHelper.GetUsuarioSesion().IdRol != 4) //ROL  VENDEDOR
             {
                 ViewBag.ErrorPermisos = "No puedes acceder a esta pantalla";
             }

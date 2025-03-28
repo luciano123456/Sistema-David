@@ -5,6 +5,7 @@ let gridClientes;
 let userSession;
 var selectedCheckboxes = [];
 let lastCobranzaTime = 0;
+let activoCuentasBancarias = 1
 
 $(document).ready(async function () {
 
@@ -14,6 +15,9 @@ $(document).ready(async function () {
 
     document.getElementById("btnAsignarCobrador").style.display = "none";
     document.getElementById("btnAsignarTurno").style.display = "none";
+
+    $(".bloqueado").hide();
+
 
     cargarUsuarios();
     cargarZonas();
@@ -287,6 +291,8 @@ async function cobranzaVenta(id) {
     document.getElementById("lblProximoTurno").removeAttribute("hidden", "hidden");
     document.getElementById("lblFranjaHoraria").removeAttribute("hidden", "hidden");
     document.getElementById("FranjaHorariaCobro").removeAttribute("hidden", "hidden");
+    document.getElementById("CuentaPago").setAttribute("hidden", "hidden");
+    document.getElementById("lblCuentaPago").setAttribute("hidden", "hidden");
 
     document.getElementById("Entrega").value = 0;
     document.getElementById("Observacion").value = "";
@@ -526,6 +532,7 @@ function validarCobranza() {
     const Turno = document.querySelector("#TurnoCobro").value;
     const EstadoCobro = document.querySelector("#estadoCobro").value;
     const interes = document.querySelector("#ValorInteres").value;
+    const cuentapago = document.querySelector("#CuentaPago").value;
 
 
     var nuevaFecha = moment(document.getElementById("FechaCobro").value, "YYYY-MM-DD");
@@ -541,6 +548,9 @@ function validarCobranza() {
         return false;
     } else if (importeCobranza > 0 && MetodoPago == "") {
         alert("Debes poner un Metodo de Pago");
+        return false;
+    } else if ((MetodoPago.toUpperCase() == "TRANSFERENCIA PROPIA" || MetodoPago.toUpperCase() == "TRANSFERENCIA A TERCEROS") && cuentapago == "") {
+        alert("Debes poner una cuenta");
         return false;
     } else if (importeCobranza < saldoRestante && Turno == "") {
         alert("Debes poner un Turno");
@@ -2355,12 +2365,20 @@ function renderAccounts() {
     const accountList = document.getElementById("accountList");
     accountList.innerHTML = ""; // Limpiar lista
 
+    if (accounts.length === 0) return; // Evitar errores si no hay cuentas
+
     accounts.forEach(account => {
         const li = document.createElement("li");
         li.classList.add("list-group-item");
         li.classList.add("d-flex");
         li.classList.add("justify-content-between");
         li.classList.add("align-items-center");
+
+        if (account.Activo == 0) {
+            li.style.backgroundColor = "rgba(194,14,2,0.7)";
+            li.classList.add("text-white");
+        }
+
         li.setAttribute("data-id", account.Id);
 
         // Agregar nombre y CBU a la cuenta
@@ -2381,6 +2399,10 @@ function renderAccounts() {
 
         accountList.appendChild(li);
     });
+
+    if (accounts.length > 0) {
+        selectAccount(accounts[0], accountList.firstChild);
+    }
 }
 
 // Función para seleccionar una cuenta y mostrar sus datos en los inputs
@@ -2400,6 +2422,7 @@ function selectAccount(account, item) {
     document.getElementById("accountName").value = account.Nombre;
     document.getElementById("accountCBU").value = account.CBU;
     document.getElementById("CuentaPropia").checked = account.CuentaPropia;
+    document.getElementById("Activo").checked = account.Activo;
 }
 
 // Función para editar una cuenta
@@ -2410,9 +2433,11 @@ function editAccount(id) {
         document.getElementById("accountName").value = account.Nombre;
         document.getElementById("accountCBU").value = account.CBU;
         document.getElementById("CuentaPropia").checked = account.CuentaPropia;
+        document.getElementById("Activo").checked = account.Activo;
         document.getElementById("accountName").removeAttribute("disabled");
         document.getElementById("accountCBU").removeAttribute("disabled");
         document.getElementById("CuentaPropia").removeAttribute("disabled");
+        document.getElementById("Activo").removeAttribute("disabled");
         document.getElementById("editarCuenta").removeAttribute("hidden");
         document.getElementById("anadirCuenta").setAttribute("hidden", "hidden");
         document.getElementById("addAccount").setAttribute("hidden", "hidden");
@@ -2427,7 +2452,8 @@ function editarCuenta() {
             Id: selectedAccount.Id,  // Suponiendo que el objeto 'selectedAccount' tiene un Id
             Nombre: document.getElementById("accountName").value.trim(),
             CBU: document.getElementById("accountCBU").value.trim(),
-            CuentaPropia: document.getElementById("CuentaPropia").checked
+            CuentaPropia: document.getElementById("CuentaPropia").checked,
+            Activo: document.getElementById("Activo").checked
         };
 
         fetch('/Cobranzas/EditarCuentaBancaria', {
@@ -2442,7 +2468,7 @@ function editarCuenta() {
                 if (result) {
                     alert("Cuenta modificada con éxito");
                     cancelarNuevaCuenta();
-                    loadCuentasBancarias();
+                    loadCuentasBancarias(activoCuentasBancarias);
                 } else {
                     alert("Error al modificar la cuenta.");
                 }
@@ -2464,11 +2490,12 @@ function deleteAccount(id) {
             .then(response => response.json())
             .then(result => {
                 if (result) {
-                    loadCuentasBancarias();
+                    loadCuentasBancarias(activoCuentasBancarias);
                     selectedAccount = null;
                     document.getElementById("accountName").value = "";
                     document.getElementById("accountCBU").value = "";
                     document.getElementById("CuentaPropia").checked = false;
+                    document.getElementById("Activo").checked = true;
                 } else {
                     alert("Error al eliminar la cuenta.");
                 }
@@ -2482,9 +2509,11 @@ function anadirCuenta() {
     document.getElementById("accountName").value = "";
     document.getElementById("accountCBU").value = "";
     document.getElementById("CuentaPropia").checked = false;
+    document.getElementById("Activo").checked = true;
     document.getElementById("accountName").removeAttribute("disabled");
     document.getElementById("accountCBU").removeAttribute("disabled");
     document.getElementById("CuentaPropia").removeAttribute("disabled");
+    document.getElementById("Activo").removeAttribute("disabled");
     document.getElementById("anadirCuenta").setAttribute("hidden", "hidden");
     document.getElementById("addAccount").removeAttribute("hidden");
     document.getElementById("canceladdAccount").removeAttribute("hidden");
@@ -2495,12 +2524,14 @@ function anadirCuenta() {
 document.getElementById("addAccount").addEventListener("click", () => {
     const Nombre = document.getElementById("accountName").value.trim();
     const cbu = document.getElementById("accountCBU").value.trim();
+    const CuentaPropia = document.getElementById("CuentaPropia").checked;
+    const Activo = document.getElementById("Activo").checked;
     if (!Nombre || !cbu) {
         alert("Debes completar ambos campos.");
         return;
     }
 
-    const newAccount = { Nombre, cbu };
+    const newAccount = { Nombre, cbu, CuentaPropia, Activo, };
 
     fetch('/Cobranzas/NuevaCuentaBancaria', {
         method: 'POST',
@@ -2516,7 +2547,8 @@ document.getElementById("addAccount").addEventListener("click", () => {
                 document.getElementById("accountName").value = "";
                 document.getElementById("accountCBU").value = "";
                 document.getElementById("CuentaPropia").checked = false;
-                loadCuentasBancarias();
+                document.getElementById("Activo").checked = true;
+                loadCuentasBancarias(activoCuentasBancarias);
             } else {
                 alert("Error al añadir la cuenta.");
             }
@@ -2528,9 +2560,11 @@ async function cancelarNuevaCuenta() {
     document.getElementById("accountName").value = "";
     document.getElementById("accountCBU").value = "";
     document.getElementById("CuentaPropia").checked = false;
+    document.getElementById("Activo").checked = true;
     document.getElementById("accountName").setAttribute("disabled", "disabled");
     document.getElementById("accountCBU").setAttribute("disabled", "disabled");
     document.getElementById("CuentaPropia").setAttribute("disabled", "disabled");
+    document.getElementById("Activo").setAttribute("disabled", "disabled");
     document.getElementById("canceladdAccount").setAttribute("hidden", "hidden");
     document.getElementById("anadirCuenta").removeAttribute("hidden");
     document.getElementById("addAccount").setAttribute("hidden", "hidden");
@@ -2538,9 +2572,9 @@ async function cancelarNuevaCuenta() {
 }
 
 // Cargar cuentas bancarias desde el servidor
-async function loadCuentasBancarias() {
+async function loadCuentasBancarias(activo) {
     var url = "/Cobranzas/ListaCuentasBancarias";
-    let value = JSON.stringify({});
+    let value = JSON.stringify({Activo: activo});
     let options = {
         type: "POST",
         url: url,
@@ -2557,6 +2591,36 @@ async function loadCuentasBancarias() {
 
 // Abrir el modal de cuentas bancarias
 async function abrirModalCuentasBancarias() {
-    await loadCuentasBancarias();
+    let toggleButton = $("#toggleBloqueadas");
+
+    // Resetear el botón al estado inicial
+    toggleButton.html('<i class="fa fa-eye text-danger"></i> Ver cuentas inactivas');
+    toggleButton.find("i").removeClass("text-success").addClass("text-danger");
+
+    // Ocultar cuentas bloqueadas por defecto
+    $(".bloqueado").hide();
+    cancelarNuevaCuenta()
+    await loadCuentasBancarias(1);
     $("#bankAccountsModal").modal('show');
 }
+
+
+$("#toggleBloqueadas").click(async function () {
+    let icon = $(this).find("i");
+
+    if (icon.hasClass("text-danger")) {
+        icon.removeClass("text-danger").addClass("text-success");
+        $(this).html('<i class="fa fa-eye text-success"></i> Ocultar cuentas inactivas');
+        await loadCuentasBancarias(-1);
+        activoCuentasBancarias = -1
+        $(".bloqueado").show();
+    } else {
+        icon.removeClass("text-success").addClass("text-danger");
+        $(this).html('<i class="fa fa-eye text-danger"></i> Ver cuentas inactivas');
+        activoCuentasBancarias = 1
+        await loadCuentasBancarias(1);
+        $(".bloqueado").hide();
+    }
+});
+
+

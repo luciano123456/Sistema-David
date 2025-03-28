@@ -163,11 +163,11 @@ namespace Sistema_David.Controllers
 
         }
 
-        public ActionResult ListaCuentasBancarias(string metodopago)
+        public ActionResult ListaCuentasBancarias(string metodopago, int activo = 1)
         {
             try
             {
-                var result = CuentasBancariasModel.Lista(metodopago);
+                var result = CuentasBancariasModel.Lista(metodopago, activo);
 
                 return Json(result);
             }

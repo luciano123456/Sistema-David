@@ -623,7 +623,8 @@ namespace Sistema_David.Models.Modelo
                                 whatssap = 0,
                                 ProximoCobro = model.FechaCobro,
                                 IdTipoNegocio = usuario.IdTipoNegocio,
-                                TipoNegocio = UsuariosModel.BuscarTipoNegocio((int)usuario.IdTipoNegocio).Nombre
+                                TipoNegocio = UsuariosModel.BuscarTipoNegocio((int)usuario.IdTipoNegocio).Nombre,
+                                IdCuentaBancaria = null
                             };
                             var addInfoVentaResult = AgregarInformacionVenta(infoVenta);
                             if (!addInfoVentaResult)
@@ -823,41 +824,33 @@ namespace Sistema_David.Models.Modelo
             try
             {
                 if (model == null || !model.Any())
-                    throw new ArgumentNullException("model", "El modelo de productos es nulo o vacío.");
+                    throw new ArgumentNullException(nameof(model), "El modelo de productos es nulo o vacío.");
 
                 foreach (ProductosVenta producto in model)
                 {
+                    // Buscar stock del usuario
                     VMStockUsuario stockUsuario = StockModel.BuscarStockUser(idVendedor, producto.IdProducto);
+                    if (stockUsuario == null)
+                        throw new InvalidOperationException("No se encontró el stock para el producto.");
 
-                    StockUsuarios stock = new StockUsuarios
-                    {
-                        Cantidad = stockUsuario.Cantidad,
-                        IdCategoria = stockUsuario.IdCategoria,
-                        Id = stockUsuario.Id,
-                        IdUsuario = stockUsuario.IdUsuario,
-                        IdProducto = stockUsuario.IdProducto,
-                    };
+                    // Obtener la entidad rastreada desde la base de datos
+                    StockUsuarios stock = db.StockUsuarios.FirstOrDefault(s => s.Id == stockUsuario.Id);
+                    if (stock == null)
+                        throw new InvalidOperationException("No se encontró el stock en la base de datos.");
 
-                    if (stockUsuario != null)
+                    // Restar o eliminar según corresponda
+                    if (stock.Cantidad == producto.Cantidad)
                     {
-                        if (stockUsuario.Cantidad == producto.Cantidad)
-                        {
-                            db.StockUsuarios.Attach(stock); // Adjuntar la entidad si no está rastreada
-                            db.StockUsuarios.Remove(stock);
-                        }
-                        else if (stockUsuario.Cantidad > producto.Cantidad)
-                        {
-                            stockUsuario.Cantidad -= producto.Cantidad;
-                            db.Entry(stockUsuario).State = EntityState.Modified;
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException("La cantidad del stock es menor que la cantidad del producto a restar.");
-                        }
+                        db.StockUsuarios.Remove(stock);
+                    }
+                    else if (stock.Cantidad > producto.Cantidad)
+                    {
+                        stock.Cantidad -= producto.Cantidad;
+                        db.Entry(stock).State = EntityState.Modified;
                     }
                     else
                     {
-                        throw new InvalidOperationException("No se encontró el stock para el producto.");
+                        throw new InvalidOperationException("La cantidad del stock es menor que la cantidad del producto a restar.");
                     }
                 }
 
@@ -870,6 +863,7 @@ namespace Sistema_David.Models.Modelo
                 return false;
             }
         }
+
 
 
 

@@ -30,7 +30,7 @@ namespace Sistema_David.Models
                                   Usuario = d.Usuarios.Nombre,
                                   Producto = d.Productos.Nombre,
                                   PrecioVenta = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta : 0,
-                                  Total = d.Productos.PrecioVenta != null ?  (decimal)d.Productos.PrecioVenta * d.Cantidad : 0,
+                                  Total = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta * d.Cantidad : 0,
                                   Estado = d.Estado,
                               }).Where(x => x.IdUsuario == id)
                                 .OrderBy(x => x.Producto)
@@ -334,19 +334,38 @@ namespace Sistema_David.Models
                 using (Sistema_DavidEntities db = new Sistema_DavidEntities())
                 {
 
-                    var result = StockModel.BuscarStockUser(idUsuario, idProducto);
+                    var model = StockModel.BuscarStockUser(idUsuario, idProducto);
 
-
-                    if (result != null)
+                    if (model != null)
                     {
-                        result.Cantidad += CantidadStock;
+                        StockUsuarios stock = new StockUsuarios()
+                        {
+                            Cantidad = model.Cantidad,
+                            Estado = model.Estado,
+                            Id = model.Id,
+                            IdCategoria = model.IdCategoria,
+                            IdProducto = model.IdProducto,
+                            IdUsuario = model.IdUsuario,
 
-                        db.Entry(result).State = System.Data.Entity.EntityState.Modified;
-                        db.SaveChanges();
+                        };
 
-                        return true;
+
+
+                        if (stock != null)
+                        {
+                            stock.Cantidad += CantidadStock;
+
+                            db.Entry(stock).State = System.Data.Entity.EntityState.Modified;
+                            db.SaveChanges();
+
+                            return true;
+                        }
+                        return false;
                     }
-                    return false;
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
             catch (Exception e)
