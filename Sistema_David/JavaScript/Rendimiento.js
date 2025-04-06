@@ -11,9 +11,13 @@ $(document).ready(async function () {
 
     if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
         $("#exportacionExcel").removeAttr("hidden");
+        $("#divComprobantesEnviados").attr("style", "display: none !important;");
+
         $("#Filtros").removeAttr("hidden");
     } else if (userSession.IdRol == 4) { //ROL COMPROBANTES
         $("#divCliente").attr("hidden", "hidden");
+        $("#divComprobantesEnviados").attr("style", "display: flex !important;");
+
         $("#btnRendMensual").attr("hidden", "hidden");
         $("#Filtros").removeAttr("hidden");
     }
@@ -80,6 +84,8 @@ async function configurarDataDiario() {
     var tiponegocio = document.getElementById("TipoNegocio").value;
     var idcuenta = document.getElementById("CuentaPago").value;
     var metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
+    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? 1 : 0;
+
 
 
     const fechaActual = new Date();
@@ -94,7 +100,7 @@ async function configurarDataDiario() {
     }
 
     await cargarUsuarios()
-    configurarDataTable(-1, 1, 1, FechaDesde, FechaHasta, tiponegocio, metodoPago, idcuenta);
+    configurarDataTable(-1, userSession.IdRol == 1 ? 1 : 0, 1, FechaDesde, FechaHasta, tiponegocio, metodoPago, idcuenta, comprobantesEnviados);
     configurarDataTableClientesAusentes(FechaDesde, FechaHasta);
     cargarVentas(-1);
 
@@ -179,7 +185,17 @@ async function cargarUsuarios() {
                 // Div de acciones
                 const accionesDiv = document.createElement("div");
                 accionesDiv.appendChild(createBloqueoButton(usuario));
-                accionesDiv.appendChild(createIconoVentas(usuario));
+
+
+                if (userSession.IdRol == 1) {
+                    accionesDiv.appendChild(createIconoVentas(usuario));
+                    document.getElementById("divVentas").removeAttribute("hidden", "hidden");
+                } else {
+                    document.getElementById("divVentas").setAttribute("hidden", "hidden");
+
+                }
+
+
                 accionesDiv.appendChild(createIconoCobranzas(usuario));
 
                 listItem.appendChild(accionesDiv);
@@ -193,6 +209,7 @@ async function cargarUsuarios() {
                 IdRol: ""  // Puedes dejarlo vacío o asignarle un valor especial si lo necesitas
             };
 
+
             // Usamos createUsuarioNombre con el objeto "generalUsuario"
             const generalItem = document.createElement("li");
             generalItem.className = "list-group-item d-flex justify-content-between align-items-center selected-user";
@@ -205,7 +222,9 @@ async function cargarUsuarios() {
 
             // Div de acciones para el ítem "GENERAL"
             const accionesDivGeneral = document.createElement("div");
-            accionesDivGeneral.appendChild(createIconoVentasGeneral());
+            if (userSession.IdRol == 1) {
+                accionesDivGeneral.appendChild(createIconoVentasGeneral());
+            }
             accionesDivGeneral.appendChild(createIconoCobranzasGeneral());
 
             generalItem.appendChild(nombreGeneral);
@@ -332,6 +351,7 @@ function alternarColorIcono(icono) {
     const estadoVentas = iconoVentas && iconoVentas.classList.contains("text-success") ? 1 : 0;
     const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
     var idcuenta = document.getElementById("CuentaPago").value;
+    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? 1 : 0;
 
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
     // Llamar a la función para actualizar la DataTable con los nuevos estados
@@ -343,7 +363,8 @@ function alternarColorIcono(icono) {
         document.getElementById("FechaHasta").value,
         document.getElementById("TipoNegocio").value,
         metodoPago,
-        idcuenta
+        idcuenta,
+        comprobantesEnviados
     );
 }
 
@@ -400,10 +421,12 @@ function seleccionarRendimiento(elemento, idVendedor) {
         });
     }
 
+    if (userSession.idRol == 1) {
     // Alternar los íconos cuando se haga clic
     iconoVentas.addEventListener("click", function () {
         alternarColorIcono(iconoVentas);
     });
+    }
 
     iconoCobranzas.addEventListener("click", function () {
         alternarColorIcono(iconoCobranzas);
@@ -414,6 +437,7 @@ function seleccionarRendimiento(elemento, idVendedor) {
     const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
     var idcuenta = document.getElementById("CuentaPago").value;
+    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? 1 : 0;
 
     // Limpiar y reconfigurar la DataTable
     $('#grdRendimiento').DataTable().clear().draw();
@@ -426,7 +450,8 @@ function seleccionarRendimiento(elemento, idVendedor) {
         document.getElementById("FechaHasta").value,
         document.getElementById("TipoNegocio").value,
         metodoPago,
-        idcuenta
+        idcuenta,
+        comprobantesEnviados
     );
 
     obtenerDatosRendimiento(
@@ -489,6 +514,7 @@ function aplicarFiltros() {
     const tipoNegocio = document.getElementById("TipoNegocio").value;
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
     var idcuenta = document.getElementById("CuentaPago").value;
+    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? 1 : 0;
 
 
     // Convertir las fechas a objetos Date
@@ -522,7 +548,16 @@ function aplicarFiltros() {
     const usuarioSeleccionado = document.querySelector(".selected-user");
     if (usuarioSeleccionado) {
         const idVendedor = usuarioSeleccionado.getAttribute("data-id");
-        const estadoVentas = usuarioSeleccionado.querySelector(".fa-check[title='Ventas']").classList.contains("text-success") ? 1 : 0;
+
+        let estadoVentas = 0;
+
+        if (userSession.IdRol == 1) {
+            estadoVentas = usuarioSeleccionado.querySelector(".fa-check[title='Ventas']").classList.contains("text-success") ? 1 : 0;
+        } else {
+            estadoVentas = 0
+        }
+
+
         const estadoCobranzas = usuarioSeleccionado.querySelector(".fa-check[title='Cobranzas']").classList.contains("text-success") ? 1 : 0;
         
 
@@ -530,10 +565,10 @@ function aplicarFiltros() {
         localStorage.setItem("FechaHastaRendimiento", document.getElementById("FechaHasta").value);
 
         $('#grdRendimiento').DataTable().clear().draw();
-        configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta, tipoNegocio, metodoPago, idcuenta);
+        configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta, tipoNegocio, metodoPago, idcuenta, comprobantesEnviados);
 
     } else {
-        configurarDataTable(-1, 1, 1, fechaDesde, fechaHasta, -1, "Todos", -1);
+        configurarDataTable(-1, 1, 1, fechaDesde, fechaHasta, -1, "Todos", -1, comprobantesEnviados);
     }
 
     //$('#grdRendimientoGeneral').DataTable().clear().draw();
@@ -545,7 +580,7 @@ function aplicarFiltros() {
 
 
 
-const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio, metodoPago, idcuenta) => {
+const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio, metodoPago, idcuenta, comprobantesEnviados) => {
 
     let totVenta = 0;
     let totCobro = 0;
@@ -560,7 +595,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
         // Si la tabla no existe, crearla
         gridRendimiento = $('#grdRendimiento').DataTable({
             "ajax": {
-                "url": `/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}`,
+                "url": `/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}&ComprobantesEnviados=${comprobantesEnviados}`,
                 "type": "GET",
                 "dataType": "json"
             },
@@ -698,7 +733,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
        
 
-        table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}`).load(function () {
+        table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}&ComprobantesEnviados=${comprobantesEnviados}`).load(function () {
             // Recorrer los datos de la tabla después de que se hayan cargado
             table.data().each(async function (rowData) {
 

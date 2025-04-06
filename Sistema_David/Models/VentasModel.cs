@@ -463,7 +463,7 @@ namespace Sistema_David.Models.Modelo
                         Observacion = iv.Observacion,
                         MetodoPago = iv.MetodoPago,
                         idCobrador = (int)iv.idCobrador,
-                        Deuda = (decimal)iv.Deuda,
+                        Deuda = (decimal)iv.Deuda != null ? (decimal)iv.Deuda : 0 ,
                         ClienteAusente = iv.ClienteAusente != null ? (int)iv.ClienteAusente : 0,
                     })
                     .FirstOrDefault();

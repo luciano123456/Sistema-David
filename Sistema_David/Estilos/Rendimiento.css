@@ -300,7 +300,6 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
 
     .input-nuevo {
         width: 100% !important;
-        display: block !important;
         max-width: 1500px !important;
         font-size: 4vw !important;
     }
@@ -491,4 +490,37 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
     width: 100%;
     max-width: 1200px;
     max-height: 750px;
+}
+
+
+/* Cambia el color del fondo del switch cuando está apagado */
+#ComprobantesEnviados.form-check-input {
+    background-color: white !important;
+    border-color: black !important;
+    width: 2rem; /* Ajuste de tamaño */
+    height: 1rem;
+    transform: scale(1.5); /* Escalado */
+    padding-left: 0px !important;
+}
+
+    /* Cambia el color de fondo cuando está activado */
+#ComprobantesEnviados.form-check-input:checked {
+    background-color: #28a745 !important; /* Verde */
+    border-color: #28a745 !important;
+}
+
+        /* Cambia la bolita del switch cuando está activado */
+#ComprobantesEnviados.form-check-input:checked::after {
+    background-color: red !important; /* Rojo */
+}
+
+    /* Cambia la bolita del switch cuando está deshabilitado */
+#ComprobantesEnviados.form-check-input:disabled::after {
+    background-color: rgb(128, 128, 128,0.7) !important; /* Gris */
+}
+
+
+
+.form-switch {
+    padding-left: 0px !important
 }
