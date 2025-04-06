@@ -19,7 +19,7 @@ namespace Sistema_David.Models.Modelo
 
 
 
-        public static List<VMCuentaBancaria> Lista(string metodopago)
+        public static List<VMCuentaBancaria> Lista(string metodopago, int activo)
         {
             try
             {
@@ -31,12 +31,19 @@ namespace Sistema_David.Models.Modelo
                                  Id = d.Id,
                                  Nombre = d.Nombre,
                                  CBU = d.CBU,
-                                 CuentaPropia = (int)d.CuentaPropia
+                                 CuentaPropia = (int)d.CuentaPropia,
+                                 Activo = (int)d.Activo
                              })
-                             .Where(x => (metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA PROPIA" && x.CuentaPropia == 1) || (metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA A TERCEROS" && x.CuentaPropia == 0) || (string.IsNullOrEmpty(metodopago)))
+                             .Where(x =>
+                                ((metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA PROPIA" && x.CuentaPropia == 1) ||
+                                 (metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA A TERCEROS" && x.CuentaPropia == 0) ||
+                                 string.IsNullOrEmpty(metodopago))
+                                && (x.Activo == activo || activo == -1))
+                             .OrderByDescending(x => x.Activo)
                              .ToList();
                 }
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return null;
             }
@@ -68,6 +75,7 @@ namespace Sistema_David.Models.Modelo
                     cuenta.CBU = model.CBU;
                     cuenta.Nombre = model.Nombre;
                     cuenta.CuentaPropia = model.CuentaPropia;
+                    cuenta.Activo = model.Activo;
 
                     db.CuentasBancarias.Add(cuenta);
                     db.SaveChanges();
@@ -98,6 +106,7 @@ namespace Sistema_David.Models.Modelo
                         result.Nombre = model.Nombre;
                         result.CBU = model.CBU;
                         result.CuentaPropia = model.CuentaPropia;
+                        result.Activo = model.Activo;
 
                         db.Entry(result).State = System.Data.Entity.EntityState.Modified;
                         db.SaveChanges();

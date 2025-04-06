@@ -24,6 +24,7 @@ namespace Sistema_David.Models.DB
         public string Nombre { get; set; }
         public string CBU { get; set; }
         public Nullable<int> CuentaPropia { get; set; }
+        public int Activo { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<InformacionVentas> InformacionVentas { get; set; }

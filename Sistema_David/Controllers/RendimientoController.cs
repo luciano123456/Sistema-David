@@ -26,7 +26,7 @@ namespace Sistema_David.Controllers
 
             ViewBag.ErrorPermisos = null;
 
-            if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol != 1) //ROL  VENDEDOR
+            if (SessionHelper.GetUsuarioSesion() != null && (SessionHelper.GetUsuarioSesion().IdRol != 1) && SessionHelper.GetUsuarioSesion().IdRol != 4) //ROL  VENDEDOR
             {
                 ViewBag.ErrorPermisos = "No puedes acceder a esta pantalla";
             }
@@ -42,11 +42,11 @@ namespace Sistema_David.Controllers
 
 
         [HttpGet]
-        public ActionResult MostrarRendimiento(int id, int ventas, int cobranzas,DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria)
+        public ActionResult MostrarRendimiento(int id, int ventas, int cobranzas,DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria, int ComprobantesEnviados)
         {
 
 
-            var result = RendimientosModel.MostrarRendimiento(id, ventas, cobranzas, fechadesde, fechahasta, tiponegocio, metodoPago, IdCuentaBancaria);
+            var result = RendimientosModel.MostrarRendimiento(id, ventas, cobranzas, fechadesde, fechahasta, tiponegocio, metodoPago, IdCuentaBancaria, ComprobantesEnviados);
 
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }

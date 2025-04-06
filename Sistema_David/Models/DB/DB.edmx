@@ -39,6 +39,7 @@
           <Property Name="Nombre" Type="varchar" MaxLength="150" />
           <Property Name="CBU" Type="varchar" MaxLength="50" />
           <Property Name="CuentaPropia" Type="int" />
+          <Property Name="Activo" Type="int" Nullable="false" />
         </EntityType>
         <EntityType Name="EstadosClientes">
           <Key>
@@ -1264,6 +1265,7 @@
           <Property Name="CBU" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="InformacionVentas" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas1" FromRole="CuentasBancarias" ToRole="InformacionVentas" />
           <Property Name="CuentaPropia" Type="Int32" />
+          <Property Name="Activo" Type="Int32" Nullable="false" />
         </EntityType>
         <Association Name="FK_InformacionVentas_Ventas1">
           <End Type="Sistema_DavidModel.CuentasBancarias" Role="CuentasBancarias" Multiplicity="0..1" />
@@ -1539,6 +1541,7 @@
           <EntitySetMapping Name="CuentasBancarias">
             <EntityTypeMapping TypeName="Sistema_DavidModel.CuentasBancarias">
               <MappingFragment StoreEntitySet="CuentasBancarias">
+                <ScalarProperty Name="Activo" ColumnName="Activo" />
                 <ScalarProperty Name="CuentaPropia" ColumnName="CuentaPropia" />
                 <ScalarProperty Name="CBU" ColumnName="CBU" />
                 <ScalarProperty Name="Nombre" ColumnName="Nombre" />

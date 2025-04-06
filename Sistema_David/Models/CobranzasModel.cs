@@ -427,107 +427,106 @@ namespace Sistema_David.Models.Modelo
         }
 
 
-        
+
 
         public static int Cobranza(VMVenta model)
         {
-
             try
             {
                 using (Sistema_DavidEntities db = new Sistema_DavidEntities())
                 {
-
-
-
-                    if (model != null)
+                    using (var transaction = db.Database.BeginTransaction()) // Inicia la transacción
                     {
-                        var venta = db.Ventas.Find(model.Id);
-
-                        //Si tiene un recorrido, le hacemos la suma automaticamente
-
-                        var recorrido = RecorridosModel.BuscarRecorridoUser(SessionHelper.GetUsuarioSesion().Id);
-
-                        if (recorrido != null)
+                        try
                         {
-                            var recorridoCobranzaVenta = RecorridosModel.BuscarRecorridoVenta(recorrido.IdUsuario, venta.Id);
-                            var resp = RecorridosModel.ColumnDownPendiente(recorrido.Id, venta.Id);
+                            if (model != null)
+                            {
+                                var venta = db.Ventas.Find(model.Id);
 
+                                // Si tiene un recorrido, le hacemos la suma automáticamente
+                                var recorrido = RecorridosModel.BuscarRecorridoUser(SessionHelper.GetUsuarioSesion().Id);
+
+                                if (recorrido != null)
+                                {
+                                    var recorridoCobranzaVenta = RecorridosModel.BuscarRecorridoVenta(recorrido.IdUsuario, venta.Id);
+                                    var resp = RecorridosModel.ColumnDownPendiente(recorrido.Id, venta.Id);
+                                }
+
+                                venta.FechaCobro = model.FechaCobro;
+                                venta.Restante -= model.Entrega;
+                                venta.Entrega = model.Entrega;
+                                venta.ValorCuota = model.ValorCuota;
+                                venta.Importante = 0;
+                                venta.Orden = 999;
+                                venta.Interes += model.Interes;
+                                venta.Restante += model.Interes;
+                                venta.idCobrador = 0;
+                                venta.Turno = model.Turno.ToUpper();
+                                venta.FranjaHoraria = model.FranjaHoraria;
+                                venta.EstadoCobro = model.EstadoCobro;
+
+                                var cliente = ClientesModel.InformacionCliente(venta.idCliente);
+                                var saldo = cliente.Saldo - model.Entrega;
+
+                                if (saldo <= 0)
+                                {
+                                    ClientesModel.SetearClienteEnCero(venta.idCliente);
+                                }
+
+                                db.Entry(venta).State = System.Data.Entity.EntityState.Modified;
+
+                                InformacionVentas infoventa = new InformacionVentas();
+
+                                if (model.Interes == 0)
+                                {
+                                    infoventa.Interes = 0;
+                                    infoventa.Descripcion = "Cobranza a " + venta.Clientes.Nombre + " de " + model.Entrega + " pesos.";
+                                }
+                                else
+                                {
+                                    infoventa.Interes = model.Interes;
+                                    infoventa.Descripcion = "Interes a " + venta.Clientes.Nombre + " de " + model.Interes + " pesos.";
+                                }
+
+                                infoventa.IdVenta = model.Id;
+                                infoventa.Entrega = model.Entrega;
+                                infoventa.ValorCuota = venta.ValorCuota;
+                                infoventa.Restante = venta.Restante;
+                                infoventa.Observacion = model.Observacion;
+                                infoventa.ValorCuota = model.ValorCuota;
+                                infoventa.MetodoPago = model.MetodoPago != null ? model.MetodoPago.ToUpper() : "";
+                                infoventa.idCobrador = SessionHelper.GetUsuarioSesion().Id;
+                                infoventa.whatssap = 0;
+                                infoventa.ClienteAusente = int.Parse(model.EstadoCobro);
+                                infoventa.ProximoCobro = model.FechaCobro;
+                                infoventa.Deuda = (ClientesModel.BuscarCliente(venta.idCliente).Saldo + model.Interes) - model.Entrega;
+                                infoventa.Imagen = model.Imagen;
+                                infoventa.IdTipoNegocio = venta.IdTipoNegocio;
+                                infoventa.TipoNegocio = UsuariosModel.BuscarTipoNegocio((int)venta.IdTipoNegocio).Nombre;
+                                infoventa.IdCuentaBancaria = model.MetodoPago != null && model.MetodoPago.ToUpper() != "EFECTIVO" ? (int?)model.IdCuenta : null;
+
+                                VentasModel.AgregarInformacionVenta(infoventa);
+
+                                db.SaveChanges();
+                                transaction.Commit(); // Confirma la transacción si todo salió bien
+                                return 1;
+                            }
+                            return 3;
                         }
-
-
-
-                        venta.FechaCobro = model.FechaCobro;
-                        venta.Restante -= model.Entrega;
-                        venta.Entrega = model.Entrega;
-                        venta.ValorCuota = model.ValorCuota;
-                        venta.Importante = 0;
-                        venta.Orden = 999;
-                        venta.Interes += model.Interes;
-                        venta.Restante += model.Interes;
-                        venta.idCobrador = 0;
-                        venta.Turno = model.Turno.ToUpper();
-                        venta.FranjaHoraria = model.FranjaHoraria;
-                        venta.EstadoCobro = model.EstadoCobro;
-                        
-
-
-                        var cliente = ClientesModel.InformacionCliente(venta.idCliente);
-
-                        var saldo = cliente.Saldo - model.Entrega;
-
-                        if(saldo <= 0)
+                        catch (Exception)
                         {
-
-                            ClientesModel.SetearClienteEnCero(venta.idCliente);
+                            transaction.Rollback(); // Revierte los cambios si hay un error
+                            return 3;
                         }
-
-                        db.Entry(venta).State = System.Data.Entity.EntityState.Modified;
-
-                        InformacionVentas infoventa = new InformacionVentas();
-
-                        if (model.Interes == 0)
-                        {
-                            infoventa.Interes = 0;
-                            infoventa.Descripcion = "Cobranza a " + venta.Clientes.Nombre + " de " + model.Entrega + " pesos.";
-                        }
-                        else
-                        {
-                            infoventa.Interes = model.Interes;
-                            infoventa.Descripcion = "Interes a " + venta.Clientes.Nombre + " de " + model.Interes + " pesos.";
-
-                        }
-
-                        infoventa.IdVenta = model.Id;
-                        infoventa.Entrega = model.Entrega;
-                        infoventa.ValorCuota = venta.ValorCuota;
-                        infoventa.Restante = venta.Restante;
-                        infoventa.Observacion = model.Observacion;
-                        infoventa.ValorCuota = model.ValorCuota;
-                        infoventa.MetodoPago = model.MetodoPago != null ? model.MetodoPago.ToUpper() : "";
-                        infoventa.idCobrador = SessionHelper.GetUsuarioSesion().Id;
-                        infoventa.whatssap = 0;
-                        infoventa.ClienteAusente = int.Parse(model.EstadoCobro); ;
-                        infoventa.ProximoCobro = model.FechaCobro;
-                        infoventa.Deuda = (ClientesModel.BuscarCliente(venta.idCliente).Saldo + model.Interes) - model.Entrega;
-                        infoventa.Imagen = model.Imagen;
-                        infoventa.IdTipoNegocio = venta.IdTipoNegocio;
-                        infoventa.TipoNegocio = UsuariosModel.BuscarTipoNegocio((int)venta.IdTipoNegocio).Nombre;
-                        infoventa.IdCuentaBancaria = model.MetodoPago.ToUpper() != "EFECTIVO" ? model.IdCuenta : 0 ;
-
-                        VentasModel.AgregarInformacionVenta(infoventa);
-
-                        db.SaveChanges();
-
-                        return 1;
                     }
-                    return 3;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return 3;
             }
         }
+
 
 
     }

@@ -47,6 +47,11 @@ namespace Sistema_David.Controllers
 
                 var result = LoginModel.LoginUsuario(usuario, contrasena);
 
+                if (result != null && result.BloqueoSistema == 1) //BLOQUEADO
+                {
+                    return Json(new { Status = false, Mensaje = "Tu usuario se encuentra bloqueado en este momento." });
+                }
+
                 if (result != null && result.IdEstado != 4) //SI NO ESTA BLOQUEADO
                 {
                     FormsAuthentication.SetAuthCookie(usuario, false);
@@ -57,7 +62,7 @@ namespace Sistema_David.Controllers
                 }
                 else if (result != null &&  result.IdEstado == 4) //BLOQUEADO
                 {
-                    return Json(new { Status = false, Mensaje = "Tu usuario se encuentra bloqueado" });
+                    return Json(new { Status = false, Mensaje = "Tu usuario se encuentra bloqueado permanentemente." });
                 }
                 else
                 { 

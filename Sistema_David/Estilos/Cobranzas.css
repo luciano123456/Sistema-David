@@ -33,28 +33,37 @@
 
 
 /* Cambia el color del fondo del switch cuando está apagado */
-#CuentaPropia.form-check-input {
+#CuentaPropia.form-check-input ,
+#Activo.form-check-input {
     background-color: white !important;
     border-color: black !important;
     width: 2rem; /* Ajuste de tamaño */
     height: 1rem;
     transform: scale(1.5); /* Escalado */
+    padding-left: 0px !important;
 }
 
     /* Cambia el color de fondo cuando está activado */
-    #CuentaPropia.form-check-input:checked {
+    #CuentaPropia.form-check-input:checked ,
+    #Activo.form-check-input:checked {
         background-color: #28a745 !important; /* Verde */
         border-color: #28a745 !important;
     }
 
         /* Cambia la bolita del switch cuando está activado */
-        #CuentaPropia.form-check-input:checked::after {
+        #CuentaPropia.form-check-input:checked::after,
+        #Activo.form-check-input:checked::after {
             background-color: red !important; /* Rojo */
         }
 
     /* Cambia la bolita del switch cuando está deshabilitado */
-    #CuentaPropia.form-check-input:disabled::after {
+    #CuentaPropia.form-check-input:disabled::after,
+    #Activo.form-check-input:disabled::after {
         background-color: rgb(128, 128, 128,0.7) !important; /* Gris */
     }
 
-  
+
+
+.form-switch {
+     padding-left: 0px !important
+}

@@ -203,11 +203,6 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
     }
 
 
-.estilowpp {
-    max-width: 800px !important;
-    min-width: 800px !important;
-    width: 70% !important;
-}
 
 
 .estilolimite {

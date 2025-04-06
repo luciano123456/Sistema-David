@@ -56,6 +56,6 @@ namespace Sistema_David.Models.Modelo
         public decimal P_ValorCuota { get; set; }
         public virtual Clientes Clientes { get; set; }
         public virtual Zonas Zonas { get; set; }
-        public string Imagen { get; internal set; }
+        public string Imagen { get; set; }
     }
 }

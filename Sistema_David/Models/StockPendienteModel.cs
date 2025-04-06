@@ -403,20 +403,23 @@ namespace Sistema_David.Models
                         {
                             stockPendiente.Estado = estado;
 
-                            var producto = StockModel.BuscarStockUser((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto);
+                            if (estado.ToUpper() != "RECHAZADO")
+                            {
+                                var producto = StockModel.BuscarStockUser((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto);
 
-                            if (producto != null)
-                                if (stockPendiente.Tipo == "ELIMINAR" || stockPendiente.Tipo == "RESTAR")
-                                {
-                                    StockModel.RestarStock(producto.Id, (int)stockPendiente.Cantidad, (int)stockPendiente.IdUsuario);
-                                }
+                                if (producto != null)
+                                    if (stockPendiente.Tipo == "ELIMINAR" || stockPendiente.Tipo == "RESTAR")
+                                    {
+                                        StockModel.RestarStock(producto.Id, (int)stockPendiente.Cantidad, (int)stockPendiente.IdUsuario);
+                                    }
+                                    else
+                                    {
+                                        StockModel.SumarStock((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto, (int)stockPendiente.Cantidad);
+                                    }
                                 else
                                 {
-                                    StockModel.SumarStock((int)stockPendiente.IdUsuario, (int)stockPendiente.IdProducto, (int)stockPendiente.Cantidad);
+                                    StockModel.Agregar(stockPendiente);
                                 }
-                            else
-                            {
-                                StockModel.Agregar(stockPendiente);
                             }
                         }
 
