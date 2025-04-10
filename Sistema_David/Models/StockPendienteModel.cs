@@ -28,8 +28,11 @@ namespace Sistema_David.Models
                     var stockExistente = db.StocksPendientes
                         .FirstOrDefault(s => s.IdProducto == model.IdProducto && s.IdUsuario == model.IdUsuario && s.Estado == "Pendiente");
 
+                   
+
                     if (stockExistente != null && stockExistente.Tipo == "SUMAR")
                     {
+
                         // Si existe y es de quitar, sumarle la cantidad
                         stockExistente.Cantidad += model.Cantidad;
                     }
@@ -164,14 +167,21 @@ namespace Sistema_David.Models
             }
         }
 
-        public static bool Agregar(StocksPendientes model)
+        public static int Agregar(StocksPendientes model)
         {
             try
             {
                 using (var db = new Sistema_DavidEntities())
                 {
                     if (model == null)
-                        return false;
+                        return 0;
+
+                    var stockProducto = ProductosModel.BuscarProducto((int)model.IdProducto);
+
+                    if(stockProducto.Stock < model.Cantidad)
+                    {
+                        return 2;
+                    }
 
                     int idUsuarioSesion = SessionHelper.GetUsuarioSesion().Id;
 
@@ -203,12 +213,12 @@ namespace Sistema_David.Models
                     }
 
                     db.SaveChanges();
-                    return true;
+                    return 1;
                 }
             }
             catch (Exception)
             {
-                return false;
+                return 0;
             }
         }
 
