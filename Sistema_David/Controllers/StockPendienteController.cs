@@ -18,7 +18,7 @@ namespace Sistema_David.Controllers
     [CheckBloqueoSistema]
 
 
-    
+
     public class StockPendienteController : Controller
     {
 
@@ -62,10 +62,11 @@ namespace Sistema_David.Controllers
         {
             VMStockPendiente stock = StockPendienteModel.BuscarStockPendiente(id);
 
-                if (stock.Estado.ToUpper() == "PENDIENTE") { 
+            if (stock.Estado.ToUpper() == "PENDIENTE")
+            {
                 var result = StockPendienteModel.AceptarStock(id);
-            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
-        }
+                return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+            }
             return Json(new { data = "" }, JsonRequestBehavior.AllowGet);
         }
 
@@ -162,13 +163,10 @@ namespace Sistema_David.Controllers
             try
             {
 
-
                 var result = StockPendienteModel.Agregar(model);
-                if (result)
-                    return Json(new { Status = 1 });
 
-                else
-                    return Json(new { Status = 0 });
+                return Json(new { Status = result }, JsonRequestBehavior.AllowGet);
+
             }
             catch (Exception ex)
             {

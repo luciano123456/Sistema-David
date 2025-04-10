@@ -56,8 +56,9 @@ async function configurarDataTable() {
                     var estadoInverso = full.Activo ? 0 : 1;
                     var iconEditar = userSession.IdRol == 1 ?
                         "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarProducto(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" : "";
-
-                    return "<button class='btn btn-sm btn-" + color + " btnacciones' type='button' onclick='cambiarEstadoProducto(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white' aria-hidden='true'></i></button>" + iconEditar;
+                    var iconStock = userSession.IdRol == 1 ?
+                        "<button class='btn btn-sm btneditar btnacciones ms-2' type='button' onclick='editarStock(" + data + ")' title='Editar Stock'><i class='fa fa fa-arrows-v fa-lg text-white' aria-hidden='true'></i></button>" : "";
+                    return "<button class='btn btn-sm btn-" + color + " btnacciones' type='button' onclick='cambiarEstadoProducto(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white' aria-hidden='true'></i></button>"  + iconStock + iconEditar;
                 },
                 "orderable": true,
                 "searchable": true
@@ -85,6 +86,28 @@ async function configurarDataTable() {
 
           
         }
+    });
+
+    $('#grdProductos').DataTable().on("draw", function () {
+        actualizarTotalStock();
+    });
+
+    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
+    $('#grdProductos tbody').on('click', 'tr', function () {
+        // Remover la clase de la fila anteriormente seleccionada
+        if (filaSeleccionada) {
+            $(filaSeleccionada).removeClass('seleccionada');
+            $('td', filaSeleccionada).removeClass('seleccionada');
+
+        }
+
+        // Obtener la fila actual
+        filaSeleccionada = $(this);
+
+        // Agregar la clase a la fila actual
+        $(filaSeleccionada).addClass('seleccionada');
+        $('td', filaSeleccionada).addClass('seleccionada');
+
     });
 }
 
@@ -589,4 +612,146 @@ function configurarOpcionesColumnas() {
         localStorage.setItem(storageKey, JSON.stringify(savedConfig));
         grid.column(columnIdx).visible(isChecked);
     });
+}
+
+const editarStock = async id => {
+
+    try {
+        var url = "/Productos/EditarInfo";
+
+        let value = JSON.stringify({
+            Id: id
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+
+
+        if (result != null) {
+
+            // Ocultar los campos y botones adicionales (Cantidad Nueva, Quitar, Agregar)
+            $("#CantidadNuevaStock").show();
+            $("#btnQuitar").show();
+            $("#btnAgregar").show();
+            $("#lblAgregarQuitar").show();
+            $("#CantidadStock").prop('disabled', true);
+
+            document.getElementById("nuevoStockModalLabel").textContent = "Editar Stock"
+
+           
+            $("#nuevoStockModal").modal("show");
+            $("#btnRegistrarModificar").text("Editar");
+
+
+            $("#ProductoStock").val(result.Producto.Nombre);
+            $("#IdProductoStock").val(id);
+
+
+
+            $("#CantidadStock").val(result.Producto.Stock);
+
+
+            
+
+        } else {
+            alert("Ha ocurrido un error en los datos");
+        }
+    } catch (error) {
+        alert("Ha ocurrido un error en los datos");
+    }
+}
+
+async function agregarStockCantidad() {
+    try {
+        var url = "/Productos/AgregarStockCantidad";
+
+        let value = JSON.stringify({
+            Cantidad: document.getElementById("CantidadNuevaStock").value,
+            Id: document.getElementById("IdProductoStock").value
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result.Status) {
+            alert('Stock agregado correctamente.');
+            $('.datos-error').removeClass('d-none');
+            document.location.href = "../../Productos/Index/";
+        } else {
+            alert("Ha ocurrido un error al restar el stock.")
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+async function restarStockCantidad() {
+    try {
+        var url = "/Productos/RestarStockCantidad";
+
+        let value = JSON.stringify({
+            Cantidad: document.getElementById("CantidadNuevaStock").value,
+            Id: document.getElementById("IdProductoStock").value
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result.Status) {
+            alert('Stock restado correctamente.');
+            $('.datos-error').removeClass('d-none');
+            document.location.href = "../../Productos/Index/";
+        } else {
+            alert("Ha ocurrido un error al agregar el stock.")
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+
+function actualizarTotalStock() {
+
+    let total = 0;
+    var table = $('#grdProductos').DataTable();
+    table.rows().eq(0).each(function (index) {
+        var row = table.row(index);
+
+
+        let producto = row.data();
+
+        total += producto.Total
+
+    });
+
+    $("#precioventa").text(formatNumber(total));
+
+
 }

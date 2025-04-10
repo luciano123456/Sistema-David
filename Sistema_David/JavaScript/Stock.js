@@ -1,4 +1,5 @@
 ﻿const precioVenta = [];
+const stock = [];
 const productos = [];
 let userSession;
 let idUserStock = 0;
@@ -327,6 +328,7 @@ async function cargarProductos() {
                 option.text = result.data[i].Nombre;
                 /*precioVenta[result.data[i].Id] = result.data[i].PrecioVenta;*/
                 precioVenta[i] = result.data[i].PrecioVenta;
+                stock[i] = result.data[i].Stock;
 
                 productoNombres[result.data[i].Id] = result.data[i].Nombre;
 
@@ -337,6 +339,7 @@ async function cargarProductos() {
             selectProductosPrecio = document.getElementById("ProductosPrecio");
 
             $("#precioTotal").text(formatNumber(precioVenta[0]));
+            $("#stock").text(stock[0]);
 
         }
     } catch (error) {
@@ -412,6 +415,7 @@ async function cargarProductosAll() {
                 option.text = result.data[i].Nombre;
                 /*precioVenta[result.data[i].Id] = result.data[i].PrecioVenta;*/
                 precioVenta[i] = result.data[i].PrecioVenta;
+                stock[i] = result.data[i].Stock;
 
                 productoNombres[result.data[i].Id] = result.data[i].Nombre;
 
@@ -422,6 +426,7 @@ async function cargarProductosAll() {
             selectProductosPrecio = document.getElementById("ProductosPrecio");
 
             $("#precioTotal").text(formatNumber(precioVenta[0]));
+            $("#stock").text(stock[0]);
 
         }
     } catch (error) {
@@ -443,8 +448,10 @@ $("#Productos").on("change", function () {
 
     let cantidad = cantidadInput.value || 1; // Asignar un valor por defecto si está vacío
     let precio = precioVenta[selectedValue] || 0; // Obtener el precio según el producto seleccionado
+    let stockX = stock[selectedValue] || 0; // Obtener el precio según el producto seleccionado
 
     $("#precioTotal").text(formatNumber(precio * cantidad)); // Actualizar el precio total
+    $("#stock").text(stockX);
 });
 
 const cantidad = document.querySelector("#Cantidad");
@@ -621,7 +628,7 @@ async function agregarStockUser() {
 
         } else if (result.Status == 2) {
 
-            $('.datos-error').text('El usuario ya tiene ese producto.')
+            $('.datos-error').text('Stock insuficiente.')
             $('.datos-error').removeClass('d-none');
 
         } else {

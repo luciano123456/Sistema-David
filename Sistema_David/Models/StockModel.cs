@@ -202,30 +202,43 @@ namespace Sistema_David.Models
 
         public static bool Agregar(StocksPendientes model)
         {
-
             try
             {
                 using (var db = new Sistema_DavidEntities())
+                using (var transaction = db.Database.BeginTransaction()) // Inicia transacción
                 {
-
-                    StockUsuarios result = new StockUsuarios();
-
                     if (model != null)
                     {
-                        result.IdProducto = (int)model.IdProducto;
-                        result.IdUsuario = (int)model.IdUsuario;
-                        result.Cantidad = (int)model.Cantidad;
+                        var result = new StockUsuarios
+                        {
+                            IdProducto = (int)model.IdProducto,
+                            IdUsuario = (int)model.IdUsuario,
+                            Cantidad = (int)model.Cantidad
+                        };
+
+                        var stockGeneral = db.Productos
+                            .Where(x => x.Id == model.IdProducto)
+                            .FirstOrDefault();
+
+                        if (stockGeneral == null)
+                            return false;
+
+                        stockGeneral.Stock -= model.Cantidad;
+                        db.Entry(stockGeneral).State = System.Data.Entity.EntityState.Modified;
+
                         db.StockUsuarios.Add(result);
                         db.SaveChanges();
 
+                        transaction.Commit(); // Confirma los cambios
                         return true;
                     }
-                }
 
-                return false;
+                    return false;
+                }
             }
             catch (Exception e)
             {
+                // Podés loguear el error acá si querés
                 return false;
             }
         }
@@ -233,70 +246,99 @@ namespace Sistema_David.Models
 
         public static bool RestarStock(int idStock, int Cantidad, int idUsuario)
         {
-
             try
             {
                 using (var db = new Sistema_DavidEntities())
+                using (var transaction = db.Database.BeginTransaction()) // Inicia la transacción
                 {
+                    var stock = db.StockUsuarios
+                        .Where(x => x.Id == idStock && x.IdUsuario == idUsuario)
+                        .FirstOrDefault();
 
-                    StockUsuarios result = new StockUsuarios();
-
-                    var stock = db.StockUsuarios.Where(x => x.Id == idStock && x.IdUsuario == idUsuario).FirstOrDefault();
+                    if (stock == null)
+                        return false;
 
                     var cantidadTotal = stock.Cantidad - Cantidad;
+
+                    var stockGeneral = db.Productos
+                        .Where(x => x.Id == stock.IdProducto)
+                        .FirstOrDefault();
+
+                    if (stockGeneral == null)
+                        return false;
 
                     if (cantidadTotal > 0)
                     {
                         stock.Cantidad -= Cantidad;
-                        db.Entry(stock).State = System.Data.Entity.EntityState.Modified;
+                        stockGeneral.Stock += Cantidad;
+                       
 
+                        db.Entry(stock).State = System.Data.Entity.EntityState.Modified;
+                        db.Entry(stockGeneral).State = System.Data.Entity.EntityState.Modified;
                     }
                     else
                     {
+                        stockGeneral.Stock += stock.Cantidad;
+                        db.Entry(stockGeneral).State = System.Data.Entity.EntityState.Modified;
                         db.StockUsuarios.Remove(stock);
                     }
 
                     db.SaveChanges();
-
+                    transaction.Commit(); // Confirma los cambios
                 }
 
                 return true;
             }
             catch (Exception e)
             {
+                // Log del error si querés
                 return false;
             }
-
         }
+
+
         public static bool AgregarStockEliminarVenta(VMStockUsuario model)
         {
-
             try
             {
                 using (var db = new Sistema_DavidEntities())
+                using (var transaction = db.Database.BeginTransaction()) // Inicia transacción
                 {
-
-                    StockUsuarios result = new StockUsuarios();
-
                     if (model != null)
                     {
-                        result.IdProducto = (int)model.IdProducto;
-                        result.IdUsuario = (int)model.IdUsuario;
-                        result.Cantidad = (int)model.Cantidad;
+                        var result = new StockUsuarios
+                        {
+                            IdProducto = (int)model.IdProducto,
+                            IdUsuario = (int)model.IdUsuario,
+                            Cantidad = (int)model.Cantidad
+                        };
+
+                        var stockGeneral = db.Productos
+                            .Where(x => x.Id == model.IdProducto)
+                            .FirstOrDefault();
+                        if (stockGeneral != null)
+                        {
+                            stockGeneral.Stock += model.Cantidad;
+                            db.Entry(stockGeneral).State = System.Data.Entity.EntityState.Modified;
+                        }
+
                         db.StockUsuarios.Add(result);
                         db.SaveChanges();
 
+                        transaction.Commit(); // Confirmar cambios
                         return true;
                     }
-                }
 
-                return false;
+                    return false;
+                }
             }
             catch (Exception e)
             {
+                // Podés registrar el error con e.Message si querés
                 return false;
             }
         }
+
 
         public static bool Editar(VMStockUsuario model)
         {
@@ -313,6 +355,8 @@ namespace Sistema_David.Models
                         result.Cantidad = model.Cantidad;
 
                         db.Entry(result).State = System.Data.Entity.EntityState.Modified;
+
+
                         db.SaveChanges();
 
                         return true;
@@ -328,12 +372,11 @@ namespace Sistema_David.Models
 
         public static bool SumarStock(int idUsuario, int idProducto, int CantidadStock)
         {
-
             try
             {
                 using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+                using (var transaction = db.Database.BeginTransaction()) // Inicia transacción
                 {
-
                     var model = StockModel.BuscarStockUser(idUsuario, idProducto);
 
                     if (model != null)
@@ -345,34 +388,48 @@ namespace Sistema_David.Models
                             Id = model.Id,
                             IdCategoria = model.IdCategoria,
                             IdProducto = model.IdProducto,
-                            IdUsuario = model.IdUsuario,
-
+                            IdUsuario = model.IdUsuario
                         };
-
-
 
                         if (stock != null)
                         {
                             stock.Cantidad += CantidadStock;
 
+                            var stockGeneral = db.Productos
+                                .Where(x => x.Id == stock.IdProducto)
+                                .FirstOrDefault();
+
+                            if (stockGeneral != null)
+                            {
+                                stockGeneral.Stock -= CantidadStock;
+                                db.Entry(stockGeneral).State = System.Data.Entity.EntityState.Modified;
+                            }
+
+                           
+
+                           
                             db.Entry(stock).State = System.Data.Entity.EntityState.Modified;
+
                             db.SaveChanges();
+                            transaction.Commit(); // Confirmar los cambios
 
                             return true;
                         }
+
+                        transaction.Rollback();
                         return false;
                     }
-                    else
-                    {
-                        return false;
-                    }
+
+                    return false;
                 }
             }
             catch (Exception e)
             {
+                // Se puede loguear el error si se desea: e.Message
                 return false;
             }
         }
+
 
         public static bool Eliminar(int id)
         {
@@ -384,9 +441,22 @@ namespace Sistema_David.Models
 
                     var result = db.StockUsuarios.Find(id);
 
+
                     if (result != null)
                     {
+
+                        var stockGeneral = db.Productos
+                           .Where(x => x.Id == result.IdProducto)
+                           .FirstOrDefault();
+                        if (stockGeneral != null)
+                        {
+                            stockGeneral.Stock += result.Cantidad;
+                            db.Entry(stockGeneral).State = System.Data.Entity.EntityState.Modified;
+                        }
+
                         db.StockUsuarios.Remove(result);
+
+
                         db.SaveChanges();
 
                         return true;

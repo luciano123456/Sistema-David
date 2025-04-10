@@ -70,6 +70,41 @@ namespace Sistema_David.Controllers
             }
         }
 
+        public ActionResult AgregarStockCantidad(int id, int cantidad)
+        {
+            try
+            {
+
+               
+                var result = ProductosModel.SumarStock(id, cantidad);
+
+                return Json(new { Status = result });
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false });
+            }
+
+        }
+
+        public ActionResult RestarStockCantidad(int id, int cantidad)
+        {
+            try
+            {
+
+
+                var result = ProductosModel.RestarStock(id, cantidad);
+
+                return Json(new { Status = result });
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false });
+            }
+
+        }
 
         public ActionResult ListarActivos()
         {

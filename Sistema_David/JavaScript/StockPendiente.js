@@ -32,8 +32,6 @@ $(document).ready(async function () {
     if (userSession.IdRol == 1) { //Administrador
         await cargarStock(-1, "Pendiente", document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
         $("#btnUsuarios").css("background", "#2E4053");
-        $('#divSeleccionarTodos').fadeIn();  // Con animación
-        $('#divSeleccionarTodos').removeClass('d-none');  // Desoculta el div
         $('#selectAllCheckbox').prop('checked', false);   // Desmarca el checkbox
      
     } else {
@@ -196,6 +194,11 @@ async function cargarStock(idUsuario, Estado, Fecha, Asignacion) {
                         <div class="icons-containereliminar position-absolute top-45 end-0 translate-middle-y me-2" style="margin-top: -17px !important">
                             <i class="fa fa-times text-red delete-icon" aria-hidden="true" onclick="eliminarStock(${cardId})" style="font-size: 1.2em; color: red; cursor: pointer;"></i>
                         </div>` : ''}
+                           ${userSession.IdRol != 1 && result.data[i].Estado === "Pendiente" && (result.data[i].Asignacion != "USUARIO")  ? `
+                        <input type="checkbox" class="form-check-input checkbox position-absolute top-0 end-0 me-2" id="checkbox-${cardId}" onclick="toggleCheckbox(${cardId})">
+                        <label for="checkbox-${cardId}" class="form-check-label position-absolute top-0 end-0"></label>
+                       
+                       ` : ''}
                 </div>
                 <div class="half-white">
                     <div class="mt-1 text-center">

@@ -43,7 +43,7 @@ namespace Sistema_David.Models
                                   Stock = x.Stock,
                                   PrecioCompra = x.PrecioCompra,
                                   PrecioVenta = x.PrecioVenta,
-                                  Total = x.Total,
+                                  Total = x.PrecioVenta * x.Stock,
                                   Activo = x.Activo ?? 0, // Maneja nulos si Activo es nullable
                               })
                               .ToList();
@@ -184,6 +184,70 @@ namespace Sistema_David.Models
                 }
             }
 
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+
+        public static bool SumarStock(int id, int cantidad)
+        {
+
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                {
+
+                    Productos prod = db.Productos.Where(x => x.Id == id).FirstOrDefault();
+
+
+                    
+
+                    if (prod != null)
+                    {
+                        prod.Stock += cantidad;
+
+                        db.Entry(prod).State = System.Data.Entity.EntityState.Modified;
+                        db.SaveChanges();
+
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+
+        public static bool RestarStock(int id, int cantidad)
+        {
+
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                {
+
+                    Productos prod = db.Productos.Where(x => x.Id == id).FirstOrDefault();
+
+
+
+
+                    if (prod != null)
+                    {
+                        prod.Stock -= cantidad;
+
+                        db.Entry(prod).State = System.Data.Entity.EntityState.Modified;
+                        db.SaveChanges();
+
+                        return true;
+                    }
+                }
+
+                return false;
+            }
             catch (Exception e)
             {
                 return false;
