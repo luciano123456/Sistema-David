@@ -14,6 +14,21 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light" style="background-color: rgba(112, 112, 112, 0.1);">
         <div class="container-fluid">
+
+
+            <div class="d-flex align-items-center me-2" >
+                <div id="divNotificacionComprobante" hidden>
+                    <i class="fa fa-print text-danger"></i>
+                    <span id="notificacionComprobante" class="badge bg-danger ms-1"></span>
+                </div>
+
+                <div id="divNotificacionHome" hidden>
+                    <i class="fa fa-home text-danger ms-2" ></i>
+                    <span id="notificationHome" class="badge bg-danger ms-1"></span>
+                </div>
+            </div>
+
+
             <a class="navbar-brand">Indumentaria DG</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -24,34 +39,32 @@
 
 
                     <li class="nav-item" id="seccionUsuarios" hidden>
-                        <a class="nav-link" id="btnUsuarios"  onclick="document.location.href='@Url.Content("~/Usuarios/Index/")'">
+                        <a class="nav-link" id="btnUsuarios" onclick="document.location.href='@Url.Content("~/Usuarios/Index/")'">
                             Usuarios <i id="notificationStock" class="fa fa-check text-danger" style="display:none;"></i>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionRendimiento" hidden>
-                        <a class="nav-link" id="btnRendimiento"  onclick="document.location.href='@Url.Content("~/Rendimiento/Index/")'">
-                            Rendimiento <i id="notificationHome" class="fa fa-home text-danger" style="display:none;"></i>
-                        </a>
+                        <a class="nav-link" id="btnRendimiento" onclick="document.location.href='@Url.Content("~/Rendimiento/Index/")'">Rendimiento</a>
                     </li>
 
                     <li class="nav-item" id="seccionProductos" hidden>
                         <a class="nav-link" id="btnProductos" onclick="document.location.href='@Url.Content("~/Productos/Index/")'">Productos</a>
                     </li>
                     <li class="nav-item" id="seccionCobranzas" hidden>
-                        <a class="nav-link" id="btnCobranzas"  onclick="document.location.href='@Url.Content("~/Cobranzas/Index/")'">Cobranzas</a>
+                        <a class="nav-link" id="btnCobranzas" onclick="document.location.href='@Url.Content("~/Cobranzas/Index/")'">Cobranzas</a>
                     </li>
                     <li class="nav-item" id="seccionVentas">
-                        <a class="nav-link" id="btnVentas"  onclick="document.location.href='@Url.Content("~/Ventas/Index/")'">Ventas</a>
+                        <a class="nav-link" id="btnVentas" onclick="document.location.href='@Url.Content("~/Ventas/Index/")'">Ventas</a>
                     </li>
                     <li class="nav-item" id="seccionStock" hidden>
-                        <a class="nav-link" id="btnProductos"  onclick="document.location.href='@Url.Content("~/Stock/Index/")'">Stock</a>
+                        <a class="nav-link" id="btnProductos" onclick="document.location.href='@Url.Content("~/Stock/Index/")'">Stock</a>
                     </li>
                     <li class="nav-item" id="seccionClientes" hidden>
-                        <a class="nav-link" id="btnClientes"  onclick="document.location.href='@Url.Content("~/Clientes/Index/")'">Clientes</a>
+                        <a class="nav-link" id="btnClientes" onclick="document.location.href='@Url.Content("~/Clientes/Index/")'">Clientes</a>
                     </li>
                     <li class="nav-item" id="seccionClientesCero" hidden>
-                        <a class="nav-link" id="btnClientesCero"  onclick="document.location.href='@Url.Content("~/ClientesCero/Index/")'">
+                        <a class="nav-link" id="btnClientesCero" onclick="document.location.href='@Url.Content("~/ClientesCero/Index/")'">
                             Clientes <i id="notificationIcon" class="fa fa-bell text-danger" style="display:none;"></i>
                         </a>
                     </li>
@@ -79,11 +92,12 @@
 
                 </ul>
 
+
                 <!-- Usuario Dropdown -->
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                           <span id="userName"></span>
+                            <span id="userName"></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" onclick="cerrarSession();">Cerrar Sesión</a></li>
@@ -91,6 +105,7 @@
                     </li>
 
                 </ul>
+
             </div>
         </div>
     </nav>
@@ -102,5 +117,5 @@
     <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
 
-    <script src="~/JavaScript/NavBarLogin.js?v=1.4"></script>
+    <script src="~/JavaScript/NavBarLogin.js?v=1.5"></script>
 </body>

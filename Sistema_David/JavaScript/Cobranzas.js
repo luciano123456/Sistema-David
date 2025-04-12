@@ -534,7 +534,10 @@ function validarCobranza() {
     const interes = document.querySelector("#ValorInteres").value;
     const cuentapago = document.querySelector("#CuentaPago").value;
 
+    const imgComprobante = document.getElementById("imgProd").value;
 
+  
+ 
     var nuevaFecha = moment(document.getElementById("FechaCobro").value, "YYYY-MM-DD");
     var fechaHoy = moment();
     var fechaLimite = moment().add(30, 'days');
@@ -580,22 +583,31 @@ function validarCobranza() {
     } else {
         return true;
     }
+
+    if ((MetodoPago.toUpperCase() == "TRANSFERENCIA PROPIA" || MetodoPago.toUpperCase() == "TRANSFERENCIA A TERCEROS") && imgComprobante == "") {
+        alert("Debes poner una imagen de comprobante");
+        return;
+    }
+   
 }
 
 async function habilitarCuentas() {
     var formaPagoSelect = document.getElementById("MetodoPago");
     var cuenta = document.getElementById("CuentaPago");
     var cuentaLbl = document.getElementById("lblCuentaPago");
+    var imagen = document.getElementById("divImagen"); // ahora sí existe
 
     await cargarCuentas();
 
-    if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" || formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
+    if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" ||
+        formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
         cuenta.hidden = false;
         cuentaLbl.hidden = false;
-
+        imagen.hidden = false;
     } else {
         cuenta.hidden = true;
         cuentaLbl.hidden = true;
+        imagen.hidden = true;
     }
 }
 

@@ -621,7 +621,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         let metodoPago = data || ''; // Mostrar el texto del método de pago si existe
                         let icon = '';
 
-                        if (row.Imagen !== null && row.Imagen != "") {
+                        if (row.Imagen !== null && row.Imagen != "" && row.MetodoPago.toUpperCase() != "EFECTIVO") {
                             icon = `<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='verComprobante(${row.Id})' title='Ver Comprobante'>
                         <i class='fa fa-eye fa-lg text-primary' aria-hidden='true'></i>
                     </button>`;
@@ -658,7 +658,12 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                     "data": "Id",
                     "render": function (data, type, row) {
                         let iconColorClass = row.whatssap === 1 ? 'text-success' : 'text-danger';
-                        return "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>";
+                        var iconColor = userSession.IdRol == 2 ? "red" : "white"; // Color del icono basado en el rol
+                        var disabled = userSession.IdRol == 2 ? "disabled" : ""; // Desactivar el botón basado en el rol
+                        var iconWhatssap = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>" 
+                        var iconEliminar = row.Descripcion && !row.Descripcion.includes("Venta") ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarInformacion(" + data + ")' title='Eliminar' style='color: " + iconColor + ";' " + disabled + "><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>" : '';
+                        return iconWhatssap + iconEliminar;
+                            
                     },
                 }
 
@@ -1515,5 +1520,47 @@ async function habilitarCuentas() {
         cuenta.value = -1;
         cuenta.hidden = true;
         cuentaLbl.hidden = true;
+    }
+}
+
+
+const eliminarInformacion = async id => {
+
+    if (userSession.IdRol != 1) { //ROL VENDEDOR
+        alert("No tienes permisos para realizar esta accion.")
+        return false;
+    }
+
+    try {
+        if (confirm("¿Está seguro que desea eliminar esta informacion?")) {
+            var url = "/Ventas/EliminarInformacionVenta";
+
+            let value = JSON.stringify({
+                Id: id
+            });
+
+            let options = {
+                type: "POST",
+                url: url,
+                async: true,
+                data: value,
+                contentType: "application/json",
+                dataType: "json"
+            };
+
+            let result = await MakeAjax(options);
+
+            if (result.data) {
+                alert('Informacion eliminada correctamente.');
+                $('.datos-error').removeClass('d-none');
+                gridRendimiento.ajax.reload();
+            } else {
+                //$('.datos-error').text('Ha ocurrido un error en los datos.')
+                //$('.datos-error').removeClass('d-none')
+            }
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
     }
 }

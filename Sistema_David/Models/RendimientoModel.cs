@@ -143,6 +143,25 @@ namespace Sistema_David.Models
             }
         }
 
+        public static int MostrarCantidadComprobantes()
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                // Fecha actual
+                DateTime fechaFinal = DateTime.Today;
+                // Fecha hace 6 días atrás (hoy incluido serán 7 días)
+                DateTime fechaInicio = fechaFinal.AddDays(-6);
+
+                // Contamos los registros en los últimos 7 días
+                int cantidadClientesAusentes = db.Ventas
+                    .Where(iv => iv.Comprobante == 0
+                                 && DbFunctions.TruncateTime(iv.Fecha) >= fechaInicio
+                                 && DbFunctions.TruncateTime(iv.Fecha) <= fechaFinal)
+                    .Count();
+
+                return cantidadClientesAusentes;
+            }
+        }
 
 
 

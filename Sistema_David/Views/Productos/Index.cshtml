@@ -14,7 +14,7 @@
     @if (@ViewData["ErrorPermisos"] == null)
     {
 
-        <div class="divStock" id="divStock">
+        <div class="divStock" id="divStock" hidden>
             <label class="" id="">Dinero en stock: </label>
             <label class="" id="precioventa">0</label>
         </div>
@@ -219,5 +219,5 @@
 
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Productos.js?v=1.4"></script>
+    <script src="~/JavaScript/Productos.js?v=1.5"></script>
 }

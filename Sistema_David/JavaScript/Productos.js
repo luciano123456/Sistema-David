@@ -9,6 +9,7 @@ $(document).ready(function () {
 
     if (userSession.IdRol == 1) {
         document.getElementById("btnImportarDatos").removeAttribute("hidden");
+        document.getElementById("divStock").removeAttribute("hidden");
         document.getElementById("btnNuevo").removeAttribute("hidden");
     }
 });
