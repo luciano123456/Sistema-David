@@ -331,12 +331,11 @@
                         <span id="iconoPrincipal" class="fa fa-home fa-3x text-dark cursor-pointer" style="position: relative;" onclick="toggleIcon()"></span>
                     </div>
 
-                    <div class="divImagen">
+                    <div id="divImagen" class="divImagen" hidden>
                         <h5>Comprobante</h5>
                         <img id="imgProducto" class="mb-3" style="width: 50px; height: 50px;" src="" />
                         <input id="Imagen" class="input-imagen" type="file" placeholder="Imagen" name="adjunto" accept=".pdf,.jpg,.png" multiple />
                         <p id="imgProd" class="" hidden></p>
-
                     </div>
 
                 </div>
@@ -481,5 +480,5 @@
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=1.6"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=1.7"></script>
 }

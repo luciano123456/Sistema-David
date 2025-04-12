@@ -77,6 +77,11 @@ namespace Sistema_David.Controllers
             return Json(new { cantidad = cantidad }, JsonRequestBehavior.AllowGet);
         }
 
+        public ActionResult MostrarCantidadComprobantes()
+        {
+            int cantidad = RendimientosModel.MostrarCantidadComprobantes();
+            return Json(new { cantidad = cantidad }, JsonRequestBehavior.AllowGet);
+        }
 
 
 

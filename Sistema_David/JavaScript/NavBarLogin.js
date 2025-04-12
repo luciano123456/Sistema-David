@@ -10,8 +10,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (userSession != null) {
         $('#nombre').text(userSession.Nombre);
         if (userSession.IdRol != 2) {
-
+            document.getElementById("divNotificacionComprobante").removeAttribute("hidden");
+            document.getElementById("divNotificacionHome").removeAttribute("hidden") ;
             CantidadClientesAusentes();
+            CantidadComprobantes();
             CantidadStocksPendientes();
         }
     }
@@ -76,6 +78,34 @@ document.querySelectorAll('.nav-item.dropdown').forEach(dropdown => {
 });
 
 
+async function CantidadComprobantes() {
+
+    var url = "/Rendimiento/MostrarCantidadComprobantes";
+
+    let value = JSON.stringify({
+
+    });
+
+    let options = {
+        type: "POST",
+        url: url,
+        async: true,
+        data: value,
+        contentType: "application/json",
+        dataType: "json"
+    };
+
+    let result = await MakeAjax(options);
+
+    if (result != null) {
+        document.getElementById("notificacionComprobante").textContent = ` (${result.cantidad})`;
+    } else {
+        document.getElementById("notificacionComprobante").textContent = ` (${0})`;
+    }
+
+}
+
+
 
 async function CantidadClientesAusentes() {
 
@@ -97,11 +127,11 @@ async function CantidadClientesAusentes() {
     let result = await MakeAjax(options);
 
     if (result != null) {
-        document.getElementById("notificationHome").style.display = "inline";
         document.getElementById("notificationHome").textContent = ` (${result.cantidad})`;
     } else {
-        document.getElementById("notificationIcon").style.display = "block";
+        document.getElementById("notificationHome").textContent = ` (${0})`;
     }
+
 
 }
 
