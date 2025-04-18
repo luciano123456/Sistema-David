@@ -317,6 +317,9 @@ async function cobranzaVenta(id) {
 
     document.getElementById("imgProd").value = ""
 
+    var divImagen = document.getElementById("divImagen");
+    divImagen.hidden = true;
+
     
 
 
@@ -337,6 +340,7 @@ async function cobranzaVenta(id) {
             document.getElementById("estadoCobro").value = "";
              
             document.getElementById("checkValorCuota").checked = false;
+            document.getElementById("progressBarContainerCobro").setAttribute("hidden", "hidden");
 
             $("#cobranzaModal").modal("show");
 
@@ -543,6 +547,11 @@ function validarCobranza() {
     var fechaLimite = moment().add(30, 'days');
 
 
+    if ((MetodoPago.toUpperCase() == "TRANSFERENCIA PROPIA" || MetodoPago.toUpperCase() == "TRANSFERENCIA A TERCEROS") && imgComprobante == "") {
+        alert("Debes poner una imagen de comprobante");
+        return;
+    }
+
     if (importeCobranza > saldoRestante) {
         alert("El valor supera el restante de la venta");
         return false;
@@ -584,10 +593,7 @@ function validarCobranza() {
         return true;
     }
 
-    if ((MetodoPago.toUpperCase() == "TRANSFERENCIA PROPIA" || MetodoPago.toUpperCase() == "TRANSFERENCIA A TERCEROS") && imgComprobante == "") {
-        alert("Debes poner una imagen de comprobante");
-        return;
-    }
+  
    
 }
 
@@ -595,21 +601,57 @@ async function habilitarCuentas() {
     var formaPagoSelect = document.getElementById("MetodoPago");
     var cuenta = document.getElementById("CuentaPago");
     var cuentaLbl = document.getElementById("lblCuentaPago");
-    var imagen = document.getElementById("divImagen"); // ahora sí existe
+    var progressBarContainer = document.getElementById("progressBarContainerCobro");
+    var divImagen = document.getElementById("divImagen");
 
+    // Esperamos a cargar las cuentas
     await cargarCuentas();
 
     if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" ||
         formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
         cuenta.hidden = false;
         cuentaLbl.hidden = false;
-        imagen.hidden = false;
+        progressBarContainer.hidden = false;
+        divImagen.hidden = false;
+
+        // Si el rol no es vendedor, mostramos los labels "Restante" y "Monto a entregar"
+        if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+            document.getElementById("restante-labelCobro").hidden = false;
+            document.getElementById("total-labelCobro").hidden = false;
+            document.getElementById("entregas-labelCobro").hidden = false;
+        } else {
+            document.getElementById("restante-labelCobro").hidden = true;
+            document.getElementById("total-labelCobro").hidden = true;
+            document.getElementById("entregas-labelCobro").hidden = true;
+        }
+
+        // Seleccionar la primera cuenta automáticamente
+        if (cuenta.options.length > 0) {
+            cuenta.selectedIndex = 0;  // Selecciona la primera opción (ignora la opción vacía)
+            var selectedAccountId = cuenta.value;
+            var accountData = cuentasData.find(account => account.Id === parseInt(selectedAccountId));
+            if (accountData) {
+                // Actualizamos la barra de progreso para la cuenta seleccionada
+                actualizarBarraProgresoCobro(accountData);
+            }
+        }
     } else {
         cuenta.hidden = true;
+        divImagen.hidden = true;
         cuentaLbl.hidden = true;
-        imagen.hidden = true;
+        progressBarContainer.hidden = true;
     }
+
+    // Cargar la barra de progreso cuando se selecciona una cuenta
+    cuenta.addEventListener("change", function () {
+        var selectedAccountId = cuenta.value;
+        var accountData = cuentasData.find(account => account.Id === parseInt(selectedAccountId));
+        if (accountData) {
+            actualizarBarraProgresoCobro(accountData);
+        }
+    });
 }
+
 
 async function enviarWhatssapId(id, interes) {
 
@@ -1731,9 +1773,11 @@ async function cargarTurnosFiltro() {
 }
 
 
+let cuentasData = []; // Array global para guardar la información de las cuentas
+
 async function cargarCuentas() {
     try {
-        var url = "/Cobranzas/ListaCuentasBancarias";
+        var url = "/Cobranzas/ListaCuentasBancariasTotales";
 
         let value = JSON.stringify({
             metodopago: document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text
@@ -1752,17 +1796,21 @@ async function cargarCuentas() {
 
         if (result != null) {
             select = document.getElementById("CuentaPago");
-
             $('#CuentaPago option').remove();
 
-            for (i = 0; i < result.length; i++) {
-                option = document.createElement("option");
+            cuentasData = result.map(account => ({
+                Id: account.Id,
+                Nombre: account.Nombre,
+                MontoPagar: account.MontoPagar, // Asumiendo que tienes MontoPagar en la cuenta
+                Entrega: account.Entrega // Asumiendo que tienes Entrega en la cuenta
+            }));
+
+            for (let i = 0; i < result.length; i++) {
+                let option = document.createElement("option");
                 option.value = result[i].Id;
                 option.text = result[i].Nombre;
                 select.appendChild(option);
             }
-
-
         }
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.')
@@ -2194,39 +2242,44 @@ function cambiarColor(color) {
 const fileInputImg = document.getElementById("Imagen");
 
 
-// listen for the change event so we can capture the file
 fileInputImg.addEventListener("change", (e) => {
-    var files = e.target.files
+    var files = e.target.files;
     let base64String = "";
-    let baseTotal = "";
 
-    // get a reference to the file
-    const file = e.target.files[0];
+    // obtener la referencia del archivo
+    const file = files[0];
 
+    // validar que no sea PDF
+    if (file.type === "application/pdf") {
+        alert("No se permite subir archivos PDF. Solo se permiten imágenes.");
+        fileInputImg.value = ""; // resetea el input
+        return;
+    }
 
+    // validar que sea una imagen
+    if (!file.type.startsWith("image/")) {
+        alert("El archivo seleccionado no es una imagen válida.");
+        fileInputImg.value = ""; // resetea el input
+        return;
+    }
 
-    // encode the file using the FileReader API
+    // leer el archivo como base64
     const reader = new FileReader();
     reader.onloadend = () => {
-        // use a regex to remove data url part
-
         base64String = reader.result
             .replace("data:", "")
             .replace(/^.+,/, "");
-
 
         var inputImg = document.getElementById("imgProd");
         inputImg.value = base64String;
 
         $("#imgProducto").removeAttr('hidden');
         $("#imgProducto").attr("src", "data:image/png;base64," + base64String);
-
     };
 
     reader.readAsDataURL(file);
+});
 
-}
-);
 
 
 $('#selectAllCheckbox').on('click', function () {
@@ -2372,19 +2425,15 @@ let accounts = [];
 
 let selectedAccount = null;
 
-// Renderizar la lista de cuentas
 function renderAccounts() {
     const accountList = document.getElementById("accountList");
-    accountList.innerHTML = ""; // Limpiar lista
+    accountList.innerHTML = "";
 
-    if (accounts.length === 0) return; // Evitar errores si no hay cuentas
+    if (accounts.length === 0) return;
 
     accounts.forEach(account => {
         const li = document.createElement("li");
-        li.classList.add("list-group-item");
-        li.classList.add("d-flex");
-        li.classList.add("justify-content-between");
-        li.classList.add("align-items-center");
+        li.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
 
         if (account.Activo == 0) {
             li.style.backgroundColor = "rgba(194,14,2,0.7)";
@@ -2393,20 +2442,88 @@ function renderAccounts() {
 
         li.setAttribute("data-id", account.Id);
 
-        // Agregar nombre y CBU a la cuenta
-        li.innerHTML = `
-            <span class="account-name">${account.Nombre}</span>
-            <div>
-                <button class="btn btn-warning btn-sm edit-btn" onclick="editAccount(${account.Id})">
-                    <i class="fa fa-pencil"></i>
-                </button>
-                <button class="btn btn-danger btn-sm delete-btn" onclick="deleteAccount(${account.Id})">
-                    <i class="fa fa-trash"></i>
-                </button>
-            </div>
-        `;
+        // Contenedor principal del contenido izquierdo (nombre + barra)
+        const contentContainer = document.createElement("div");
+        contentContainer.classList.add("d-flex", "align-items-center", "gap-2");
 
-        // Añadir evento para seleccionar la cuenta
+        // Nombre de la cuenta
+        const accountName = document.createElement("span");
+        accountName.textContent = account.Nombre;
+        contentContainer.appendChild(accountName);
+
+        // Si tiene monto a pagar, agregar barra de progreso
+        if (account.MontoPagar > 0) {
+            const porcentaje = (account.Entrega / account.MontoPagar) * 100;
+
+            // Wrapper con posición relativa para centrar el porcentaje
+            const progressWrapper = document.createElement("div");
+            progressWrapper.classList.add("position-relative");
+            progressWrapper.style.width = "80px";
+            progressWrapper.style.height = "10px";
+
+            // Contenedor de la barra
+            const progressBarContainer = document.createElement("div");
+            progressBarContainer.classList.add("progress");
+            progressBarContainer.style.width = "100%";
+            progressBarContainer.style.height = "100%";
+
+            // Barra
+            const progressBar = document.createElement("div");
+            progressBar.classList.add("progress-bar");
+            progressBar.style.width = `${porcentaje}%`;
+            progressBar.style.transition = "width 0.5s";
+
+            // Asignar clase según porcentaje
+            progressBar.classList.remove("low", "medium", "high", "full");
+            if (porcentaje < 10) {
+                progressBar.classList.add("low");
+            } else if (porcentaje < 60) {
+                progressBar.classList.add("medium");
+            } else if (porcentaje < 90) {
+                progressBar.classList.add("high");
+            } else {
+                progressBar.classList.add("full");
+            }
+
+            // Porcentaje centrado encima de la barra
+
+            const percentageText = document.createElement("span");
+            percentageText.id = "progress-percentage-textCobro";
+            if (porcentaje >= 100) {
+                percentageText.textContent = "Completado"; // Mostrar "✔ Completado" cuando se llega al 100%
+            } else {
+                percentageText.textContent = `${Math.round(porcentaje)}%`; // Mostrar el porcentaje normal
+            }
+            percentageText.style.position = "absolute";
+            percentageText.style.left = "50%";
+            percentageText.style.top = "50%";
+            percentageText.style.transform = "translate(-50%, -50%)";
+            percentageText.style.color = "#fff";
+            percentageText.style.fontSize = "10px";
+            percentageText.style.fontWeight = "700";
+            percentageText.style.textShadow = "0 0 2px #000";
+
+            progressBarContainer.appendChild(progressBar);
+            progressWrapper.appendChild(progressBarContainer);
+            progressWrapper.appendChild(percentageText);
+            contentContainer.appendChild(progressWrapper);
+        }
+
+        li.appendChild(contentContainer);
+
+        // Botones
+        const buttonContainer = document.createElement("div");
+        buttonContainer.innerHTML = `
+            <button class="btn btn-warning btn-sm edit-btn" onclick="editAccount(${account.Id})">
+                <i class="fa fa-pencil"></i>
+            </button>
+            <button class="btn btn-danger btn-sm delete-btn" onclick="deleteAccount(${account.Id})">
+                <i class="fa fa-trash"></i>
+            </button>
+        `;
+        li.appendChild(buttonContainer);
+
+        // Click para seleccionar
         li.addEventListener("click", () => selectAccount(account, li));
 
         accountList.appendChild(li);
@@ -2433,8 +2550,10 @@ function selectAccount(account, item) {
     
     document.getElementById("accountName").value = account.Nombre;
     document.getElementById("accountCBU").value = account.CBU;
+    document.getElementById("accountMonto").value = account.MontoPagar;
     document.getElementById("CuentaPropia").checked = account.CuentaPropia;
     document.getElementById("Activo").checked = account.Activo;
+    actualizarBarraProgreso(account.MontoPagar,account.Entrega);
 }
 
 // Función para editar una cuenta
@@ -2443,11 +2562,13 @@ function editAccount(id) {
     if (account) {
         // Pre-cargar los valores de la cuenta en los campos de texto
         document.getElementById("accountName").value = account.Nombre;
+        document.getElementById("accountMonto").value = account.MontoPagar;
         document.getElementById("accountCBU").value = account.CBU;
         document.getElementById("CuentaPropia").checked = account.CuentaPropia;
         document.getElementById("Activo").checked = account.Activo;
         document.getElementById("accountName").removeAttribute("disabled");
         document.getElementById("accountCBU").removeAttribute("disabled");
+        document.getElementById("accountMonto").removeAttribute("disabled");
         document.getElementById("CuentaPropia").removeAttribute("disabled");
         document.getElementById("Activo").removeAttribute("disabled");
         document.getElementById("editarCuenta").removeAttribute("hidden");
@@ -2465,7 +2586,8 @@ function editarCuenta() {
             Nombre: document.getElementById("accountName").value.trim(),
             CBU: document.getElementById("accountCBU").value.trim(),
             CuentaPropia: document.getElementById("CuentaPropia").checked,
-            Activo: document.getElementById("Activo").checked
+            Activo: document.getElementById("Activo").checked,
+            MontoPagar: document.getElementById("accountMonto").value
         };
 
         fetch('/Cobranzas/EditarCuentaBancaria', {
@@ -2506,6 +2628,7 @@ function deleteAccount(id) {
                     selectedAccount = null;
                     document.getElementById("accountName").value = "";
                     document.getElementById("accountCBU").value = "";
+                    document.getElementById("accountMonto").value = "";
                     document.getElementById("CuentaPropia").checked = false;
                     document.getElementById("Activo").checked = true;
                 } else {
@@ -2520,10 +2643,12 @@ function anadirCuenta() {
     selectedAccount = null;
     document.getElementById("accountName").value = "";
     document.getElementById("accountCBU").value = "";
+    document.getElementById("accountMonto").value = "";
     document.getElementById("CuentaPropia").checked = false;
     document.getElementById("Activo").checked = true;
     document.getElementById("accountName").removeAttribute("disabled");
     document.getElementById("accountCBU").removeAttribute("disabled");
+    document.getElementById("accountMonto").removeAttribute("disabled");
     document.getElementById("CuentaPropia").removeAttribute("disabled");
     document.getElementById("Activo").removeAttribute("disabled");
     document.getElementById("anadirCuenta").setAttribute("hidden", "hidden");
@@ -2558,6 +2683,7 @@ document.getElementById("addAccount").addEventListener("click", () => {
                 alert("Cuenta añadida con éxito");
                 document.getElementById("accountName").value = "";
                 document.getElementById("accountCBU").value = "";
+                document.getElementById("accountMonto").value = "";
                 document.getElementById("CuentaPropia").checked = false;
                 document.getElementById("Activo").checked = true;
                 loadCuentasBancarias(activoCuentasBancarias);
@@ -2571,10 +2697,12 @@ document.getElementById("addAccount").addEventListener("click", () => {
 async function cancelarNuevaCuenta() {
     document.getElementById("accountName").value = "";
     document.getElementById("accountCBU").value = "";
+    document.getElementById("accountMonto").value = "";
     document.getElementById("CuentaPropia").checked = false;
     document.getElementById("Activo").checked = true;
     document.getElementById("accountName").setAttribute("disabled", "disabled");
     document.getElementById("accountCBU").setAttribute("disabled", "disabled");
+    document.getElementById("accountMonto").setAttribute("disabled", "disabled");
     document.getElementById("CuentaPropia").setAttribute("disabled", "disabled");
     document.getElementById("Activo").setAttribute("disabled", "disabled");
     document.getElementById("canceladdAccount").setAttribute("hidden", "hidden");
@@ -2585,8 +2713,8 @@ async function cancelarNuevaCuenta() {
 
 // Cargar cuentas bancarias desde el servidor
 async function loadCuentasBancarias(activo) {
-    var url = "/Cobranzas/ListaCuentasBancarias";
-    let value = JSON.stringify({Activo: activo});
+    var url = "/Cobranzas/ListaCuentasBancariasTotalesConInformacion";
+    let value = JSON.stringify({ Activo: activo });
     let options = {
         type: "POST",
         url: url,
@@ -2596,10 +2724,15 @@ async function loadCuentasBancarias(activo) {
         dataType: "json"
     };
 
+    // Hacer la solicitud AJAX para obtener las cuentas bancarias
     let result = await MakeAjax(options);
-    accounts = result;
-    renderAccounts();
+
+    // Filtrar las cuentas que ya fueron obtenidas
+    accounts = result; // Suponiendo que 'CuentasBancarias' es la propiedad del resultado
+    renderAccounts(); // Llamar a la función que renderiza las cuentas
 }
+
+
 
 // Abrir el modal de cuentas bancarias
 async function abrirModalCuentasBancarias() {
@@ -2635,4 +2768,432 @@ $("#toggleBloqueadas").click(async function () {
     }
 });
 
+function actualizarBarraProgresoCobro(accountData) {
+    const progressBar = document.getElementById("progressBarCobro");
+    const progressPercentage = document.getElementById("progressPercentageCobro");
+    const totalLabel = document.getElementById("total-labelCobro");
+    const restanteLabel = document.getElementById("restante-labelCobro");
+    const progressBarContainer = document.getElementById("progressBarContainerCobro"); // El contenedor de la barra
 
+    // Obtener los valores de la cuenta seleccionada
+    const montoPagar = accountData.MontoPagar;
+    const entrega = accountData.Entrega;
+
+    // Mostrar u ocultar la barra de progreso según el monto a pagar
+    if (montoPagar > 0) {
+        progressBarContainer.hidden = false; // Mostrar la barra
+    } else {
+        progressBarContainer.hidden = true; // Ocultar la barra
+        return; // Si no hay monto a pagar, salimos de la función
+    }
+
+    // Calcular el porcentaje
+    const porcentaje = montoPagar === 0 ? 0 : (entrega / montoPagar) * 100;
+
+    // Actualizamos la barra de progreso y el texto del porcentaje
+    progressBar.style.width = `${porcentaje}%`;
+
+    // Limpiar el texto de porcentaje anterior
+    progressPercentage.textContent = '';
+
+    const entregaLabel = document.getElementById("entregas-labelCobro");
+
+
+    const restante = montoPagar - entrega;
+
+    // Actualizamos los valores de Total y Restante
+    totalLabel.textContent = `Total: $${montoPagar.toLocaleString()}`;
+    restanteLabel.textContent = `Restante: $${(montoPagar - entrega).toLocaleString()}`;
+    
+    entregaLabel.textContent = `Entregas: $${entrega.toLocaleString()}`;
+    // Limpiar clases anteriores de color
+    progressBar.classList.remove("low", "medium", "high", "full");
+
+    // Cambiar clases para el color de la barra de progreso según el porcentaje
+    if (porcentaje < 10) {
+        progressBar.classList.add("low");
+    } else if (porcentaje < 60) {
+        progressBar.classList.add("medium");
+    } else if (porcentaje < 90) {
+        progressBar.classList.add("high");
+    } else {
+        progressBar.classList.add("full");
+    }
+
+    // Eliminar el texto de porcentaje anterior sobre la barra si existe
+    const textoPrevio = document.getElementById("progress-percentage-textCobro");
+    if (textoPrevio) textoPrevio.remove();
+
+    // Crear el texto centrado sobre la barra de progreso
+    const percentageText = document.createElement("span");
+    percentageText.id = "progress-percentage-textCobro";
+    if (porcentaje >= 100) {
+        percentageText.textContent = "✔ Completado"; // Mostrar "✔ Completado" cuando se llega al 100%
+    } else {
+        percentageText.textContent = `${Math.round(porcentaje)}%`; // Mostrar el porcentaje normal
+    }
+
+    percentageText.style.position = "absolute";
+    percentageText.style.left = "50%";
+    percentageText.style.top = "50%";
+    percentageText.style.transform = "translate(-50%, -50%)";
+    percentageText.style.color = "#fff";
+    percentageText.style.fontSize = "14px"; // Ajusté el tamaño para que se vea bien
+    percentageText.style.fontWeight = "700";
+    percentageText.style.textShadow = "0 0 2px #000";
+
+    // Asegurar que el contenedor de la barra tenga posición relativa para posicionar el texto correctamente
+    const progressWrapper = progressBar.parentElement; // El contenedor de la barra de progreso
+    if (progressWrapper) {
+        progressWrapper.style.position = "relative"; // Aseguramos que sea relativo para que el texto esté centrado
+        progressWrapper.appendChild(percentageText); // Añadir el texto centrado sobre la barra
+    }
+}
+
+function actualizarBarraProgreso(montoTotal, montoPagado) {
+    montoTotal = parseFloat(montoTotal) || 0;
+    montoPagado = parseFloat(montoPagado) || 0;
+
+    const divBarra = document.getElementById("divProgressBarBanco");
+
+    if (montoTotal === 0) {
+        divBarra.style.display = "none";
+        return;
+    } else {
+        divBarra.style.display = "block";
+    }
+
+    const barra = document.getElementById("progress-bar");
+    barra.style.display = "block";
+
+    const restante = montoTotal - montoPagado;
+    const porcentaje = Math.min((montoPagado / montoTotal) * 100, 100);
+
+    
+    const restanteLabel = document.getElementById("restante-label");
+    const totalLabel = document.getElementById("total-label");
+
+    const entregaLabel = document.getElementById("entregas-label");
+
+    entregaLabel.textContent = `Entregas: $${montoPagado.toLocaleString()}`;
+
+
+    barra.style.width = `${porcentaje}%`;
+
+    
+    restanteLabel.textContent = `Restante: $${restante.toLocaleString()}`;
+    totalLabel.textContent = `Total: $${montoTotal.toLocaleString()}`;
+
+    // Limpiar clases anteriores
+    barra.classList.remove("low", "medium", "high", "full");
+
+    if (porcentaje < 10) {
+        barra.classList.add("low");
+    } else if (porcentaje < 60) {
+        barra.classList.add("medium");
+    } else if (porcentaje < 90) {
+        barra.classList.add("high");
+    } else {
+        barra.classList.add("full");
+    }
+
+    // Eliminar texto anterior si existe
+    const textoPrevio = document.getElementById("progress-percentage-text");
+    if (textoPrevio) textoPrevio.remove();
+
+    // Crear el texto centrado sobre la barra completa
+    const percentageText = document.createElement("span");
+    percentageText.id = "progress-percentage-text";
+    percentageText.textContent = porcentaje >= 100 ? "✔ Completado" : `${Math.round(porcentaje)}%`;
+    percentageText.style.position = "absolute";
+    percentageText.style.left = "50%";
+    percentageText.style.top = "50%";
+    percentageText.style.transform = "translate(-50%, -50%)";
+    percentageText.style.color = "#fff";
+    percentageText.style.fontSize = "12px";
+    percentageText.style.fontWeight = "700";
+    percentageText.style.textShadow = "0 0 2px #000";
+
+    // Asegurar que el contenedor de la barra tenga posición relativa
+    const progressWrapper = divBarra.querySelector(".progress");
+    if (progressWrapper) {
+        progressWrapper.style.position = "relative";
+        progressWrapper.appendChild(percentageText);
+    }
+}
+
+function convertirImagenACanvas(imageData) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+
+            // Convertimos a JPEG para evitar problemas de transparencia o formato
+            const jpgData = canvas.toDataURL("image/jpeg", 0.92); // calidad 92%
+            resolve(jpgData);
+        };
+        img.onerror = reject;
+        img.src = imageData;
+    });
+}
+
+
+function getImageDimensions(imageData) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.onerror = reject;
+        img.src = imageData;
+    });
+}
+
+
+async function exportarPdf() {
+    if (!selectedAccount) {
+        alert("Por favor, seleccioná una cuenta primero.");
+        return;
+    }
+
+    let clientesExportados = [];
+    let y = 0;
+
+    const doc = new jsPDF();
+    const fechaActual = new Date().toLocaleDateString();
+
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+
+    y += 10;
+
+    // Header
+    const colorStart = [30, 87, 153];
+    const colorEnd = [125, 185, 232];
+    const headerX = 10;
+    const headerY = 10;
+    const headerWidth = 190;
+    const headerHeight = 12;
+
+    drawGradientHeader(doc, headerX, headerY, headerWidth, headerHeight, colorStart, colorEnd);
+
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    const titulo = `Cuenta Bancaria: ${selectedAccount.Nombre}`;
+    const textWidth = doc.getTextWidth(titulo);
+    const centerX = (pageWidth - textWidth) / 2;
+    doc.text(titulo, centerX, headerY + 9);
+
+    doc.setTextColor(0, 0, 0);
+    y += 20;
+
+    doc.setFontSize(12);
+    doc.text(`Fecha: ${fechaActual}`, 10, y);
+    if (selectedAccount.MontoPagar > 0) {
+        y += 10;
+        doc.text(`Monto a Cobrar: $${selectedAccount.MontoPagar.toFixed(2)}`, 10, y);
+    }
+
+    y += 10;
+    doc.text(`Entregado: $${selectedAccount.Entrega.toFixed(2)}`, 10, y);
+
+    if (parseInt(selectedAccount.MontoPagar) > 0) {
+        y += 10;
+        doc.text(`Restante: $${(selectedAccount.MontoPagar - selectedAccount.Entrega).toFixed(2)}`, 10, y);
+        y += 10;
+        drawProgressBar(doc, 10, y, 180, 10, (selectedAccount.Entrega / selectedAccount.MontoPagar) * 100);
+    }
+
+    // Comprobantes
+    y += 20;
+    doc.setFontSize(14);
+    doc.setTextColor(0);
+
+
+    doc.text("Comprobantes:", 10, y);
+    y += 10;
+
+    let x = 15;
+    let filaImágenes = 0;
+    const imagenAnchoFijo = 90;
+    const spacing = 10;
+
+    for (const venta of selectedAccount.InformacionVentas) {
+        const image = await ObtenerImagen(venta.Id);
+        if (!image) continue;
+
+        try {
+            const idCliente = venta.idCliente;
+            if (clientesExportados.includes(idCliente)) continue;
+
+            const format = getImageFormat(image);
+            const rawData = `data:image/${format.toLowerCase()};base64,${image}`;
+            const imageData = await convertirImagenACanvas(rawData);
+            const { width: imgWidth, height: imgHeight } = await getImageDimensions(imageData);
+
+            let width = 400; // menos ancho = menos alto
+            let height = (imgHeight / imgWidth) * width;
+
+            // Limitar altura máxima si se pasa
+            const maxHeight = 140;
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = (imgWidth / imgHeight) * height;
+            }
+
+            // Salto de página
+            if (y + height > pageHeight - 20) {
+                doc.addPage();
+                y = 20;
+                x = 15;
+                filaImágenes = 0;
+            }
+
+            // Dibujo
+            doc.setDrawColor(0);
+            doc.setLineWidth(1);
+            doc.rect(x - 2, y - 2, width + 4, height + 4);
+            doc.addImage(imageData, "JPEG", x, y, width, height);
+
+            clientesExportados.push(idCliente);
+            filaImágenes++;
+
+            if (filaImágenes >= 2) {
+                // Nueva fila
+                filaImágenes = 0;
+                x = 15;
+                y += height + spacing;
+            } else {
+                // Segunda columna
+                x += width + spacing;
+            }
+
+        } catch (err) {
+            console.warn("No se pudo cargar una imagen:", err);
+        }
+    }
+
+    doc.save(`Cuenta_${selectedAccount.Nombre}.pdf`);
+}
+
+
+
+function drawGradientHeader(doc, x, y, width, height, colorStart, colorEnd) {
+    const steps = width;
+    for (let i = 0; i < steps; i++) {
+        const alpha = i / steps;
+        const r = Math.floor(colorStart[0] * (1 - alpha) + colorEnd[0] * alpha);
+        const g = Math.floor(colorStart[1] * (1 - alpha) + colorEnd[1] * alpha);
+        const b = Math.floor(colorStart[2] * (1 - alpha) + colorEnd[2] * alpha);
+        doc.setFillColor(r, g, b);
+        doc.rect(x + i, y, 1, height, 'F');
+    }
+}
+
+
+function drawProgressBar(doc, x, y, width, height, porcentaje) {
+    // 1. Contenedor rojo (siempre el mismo)
+
+    var r, g, b, barColor;
+
+
+    if (porcentaje < 10) {
+        r = 255;
+        g = 0;
+        b = 0;
+    } else if (porcentaje < 60) {
+        r = 255;
+        g = 165;
+        b = 0;
+    } else if (porcentaje < 90) {
+        r = 26;
+        g = 247;
+        b = 140;
+    } else {
+        r = 0;
+        g = 128;
+        b = 0;
+    }
+
+    barColor = [r, g, b];
+
+    
+    doc.setDrawColor(r, g, b); // borde
+    doc.setFillColor(194, 14, 2); // rojo oscuro
+    doc.rect(x, y, width, height, 'FD');
+
+
+
+    // 3. Rellenar barra (opcional: simular gradiente con líneas verticales)
+    const barWidth = (porcentaje / 100) * width;
+    const step = 1; // resolución del gradiente simulado
+
+    for (let i = 0; i < barWidth; i += step) {
+        const alpha = i / barWidth; // transparencia simulada
+        const r = barColor[0];
+        const g = barColor[1];
+        const b = barColor[2];
+        doc.setFillColor(
+            Math.floor(r * (0.7 + 0.3 * alpha)),
+            Math.floor(g * (0.7 + 0.3 * alpha)),
+            Math.floor(b * (0.7 + 0.3 * alpha))
+        );
+        doc.rect(x + i, y, step, height, 'F');
+    }
+
+    // 4. Texto centrado (porcentaje)
+    const text = porcentaje >= 100 ? "Completado" : `${Math.round(porcentaje)}%`;
+
+
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255); // blanco
+    const textWidth = doc.getTextWidth(text);
+    const textX = x + (width - textWidth) / 2;
+    const textY = y + height / 2 + 3; // vertical centering
+    doc.text(text, textX, textY - 2);
+}
+
+
+// Función para cargar la imagen asincrónicamente
+function loadImage(imageData) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = imageData;
+    });
+}
+
+
+function getImageFormat(base64) {
+    if (base64.startsWith('/9j/')) return 'JPEG'; // JPEG suele empezar con /9j/
+    if (base64.startsWith('iVBOR')) return 'PNG'; // PNG suele empezar con iVBOR
+    return null;
+}
+
+
+
+
+
+async function ObtenerImagen(idVenta) {
+    let url = `/Rendimiento/ObtenerImagen?idVenta=${idVenta}`;
+
+    let options = {
+        type: "GET",
+        url: url,
+        async: true,
+        contentType: "application/json",
+        dataType: "json"
+    };
+
+    let result = await $.ajax(options);
+
+    if (result != null) {
+        return result.data;
+    } else {
+        return null;
+    }
+}

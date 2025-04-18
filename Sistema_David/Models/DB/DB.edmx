@@ -39,7 +39,9 @@
           <Property Name="Nombre" Type="varchar" MaxLength="150" />
           <Property Name="CBU" Type="varchar" MaxLength="50" />
           <Property Name="CuentaPropia" Type="int" />
-          <Property Name="Activo" Type="int" Nullable="false" />
+          <Property Name="Activo" Type="int" />
+          <Property Name="MontoPagar" Type="decimal" Precision="20" Scale="2" />
+          <Property Name="FechaMontoPagar" Type="datetime" />
         </EntityType>
         <EntityType Name="EstadosClientes">
           <Key>
@@ -89,6 +91,7 @@
           <Property Name="IdTipoNegocio" Type="int" />
           <Property Name="TipoNegocio" Type="varchar" MaxLength="255" />
           <Property Name="IdCuentaBancaria" Type="int" />
+          <Property Name="CobroPendiente" Type="int" />
         </EntityType>
         <EntityType Name="Limites">
           <Key>
@@ -261,7 +264,7 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_InformacionVentas_Ventas">
+        <Association Name="FK_InformacionVentas_CuentasBancarias">
           <End Role="CuentasBancarias" Type="Self.CuentasBancarias" Multiplicity="0..1" />
           <End Role="InformacionVentas" Type="Self.InformacionVentas" Multiplicity="*" />
           <ReferentialConstraint>
@@ -270,6 +273,18 @@
             </Principal>
             <Dependent Role="InformacionVentas">
               <PropertyRef Name="IdCuentaBancaria" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InformacionVentas_Ventas">
+          <End Role="Ventas" Type="Self.Ventas" Multiplicity="1" />
+          <End Role="InformacionVentas" Type="Self.InformacionVentas" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ventas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="InformacionVentas">
+              <PropertyRef Name="IdVenta" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -516,8 +531,12 @@
             <End Role="Usuarios" EntitySet="Usuarios" />
             <End Role="Clientes" EntitySet="Clientes" />
           </AssociationSet>
-          <AssociationSet Name="FK_InformacionVentas_Ventas" Association="Self.FK_InformacionVentas_Ventas">
+          <AssociationSet Name="FK_InformacionVentas_CuentasBancarias" Association="Self.FK_InformacionVentas_CuentasBancarias">
             <End Role="CuentasBancarias" EntitySet="CuentasBancarias" />
+            <End Role="InformacionVentas" EntitySet="InformacionVentas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InformacionVentas_Ventas" Association="Self.FK_InformacionVentas_Ventas">
+            <End Role="Ventas" EntitySet="Ventas" />
             <End Role="InformacionVentas" EntitySet="InformacionVentas" />
           </AssociationSet>
           <AssociationSet Name="FK_Productos_Categorias" Association="Self.FK_Productos_Categorias">
@@ -1235,6 +1254,7 @@
           <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas" FromRole="InformacionVentas" ToRole="Ventas" />
           <Property Name="IdCuentaBancaria" Type="Int32" />
           <NavigationProperty Name="CuentasBancarias" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas1" FromRole="InformacionVentas" ToRole="CuentasBancarias" />
+          <Property Name="CobroPendiente" Type="Int32" />
         </EntityType>
         <EntityType Name="TipoNegocio">
           <Key>
@@ -1265,7 +1285,9 @@
           <Property Name="CBU" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="InformacionVentas" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas1" FromRole="CuentasBancarias" ToRole="InformacionVentas" />
           <Property Name="CuentaPropia" Type="Int32" />
-          <Property Name="Activo" Type="Int32" Nullable="false" />
+          <Property Name="Activo" Type="Int32" />
+          <Property Name="MontoPagar" Type="Decimal" Precision="20" Scale="2" />
+          <Property Name="FechaMontoPagar" Type="DateTime" Precision="3" />
         </EntityType>
         <Association Name="FK_InformacionVentas_Ventas1">
           <End Type="Sistema_DavidModel.CuentasBancarias" Role="CuentasBancarias" Multiplicity="0..1" />
@@ -1506,6 +1528,7 @@
           <EntitySetMapping Name="InformacionVentas">
             <EntityTypeMapping TypeName="Sistema_DavidModel.InformacionVentas">
               <MappingFragment StoreEntitySet="InformacionVentas">
+                <ScalarProperty Name="CobroPendiente" ColumnName="CobroPendiente" />
                 <ScalarProperty Name="IdCuentaBancaria" ColumnName="IdCuentaBancaria" />
                 <ScalarProperty Name="TipoNegocio" ColumnName="TipoNegocio" />
                 <ScalarProperty Name="IdTipoNegocio" ColumnName="IdTipoNegocio" />
@@ -1541,6 +1564,8 @@
           <EntitySetMapping Name="CuentasBancarias">
             <EntityTypeMapping TypeName="Sistema_DavidModel.CuentasBancarias">
               <MappingFragment StoreEntitySet="CuentasBancarias">
+                <ScalarProperty Name="FechaMontoPagar" ColumnName="FechaMontoPagar" />
+                <ScalarProperty Name="MontoPagar" ColumnName="MontoPagar" />
                 <ScalarProperty Name="Activo" ColumnName="Activo" />
                 <ScalarProperty Name="CuentaPropia" ColumnName="CuentaPropia" />
                 <ScalarProperty Name="CBU" ColumnName="CBU" />

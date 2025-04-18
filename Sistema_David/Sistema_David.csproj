@@ -481,6 +481,7 @@
     <Compile Include="Models\ClientesModel.cs" />
     <Compile Include="Models\Modelo\VMProducto.cs" />
     <Compile Include="Models\Modelo\VMRendimiento.cs" />
+    <Compile Include="Models\Modelo\VMCuentaBancariaConVentas.cs" />
     <Compile Include="Models\Modelo\VMUser.cs" />
     <Compile Include="Models\Modelo\VMPedido.cs" />
     <Compile Include="Models\Modelo\VMVenta.cs" />

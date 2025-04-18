@@ -64,6 +64,108 @@
 
 
 
-.form-switch {
-     padding-left: 0px !important
+/* LOW: rojo degradado */
+.progress-bar.low {
+    background: linear-gradient(90deg, #ff6b6b, #dc3545);
+}
+
+/* MEDIUM: amarillo degradado */
+.progress-bar.medium {
+    background: linear-gradient(90deg, #ffe066, #ffc107);
+}
+
+/* HIGH: verde oscuro degradado */
+.progress-bar.high {
+    background: linear-gradient(90deg, #51d88a, #28a745);
+}
+
+.progress {
+    background-color: #ff6b6b !important;
+}
+
+/* FULL: verde brillante degradado + efecto shimmer */
+.progress-bar.full {
+    background: linear-gradient(90deg, #e8fff0, #0b3d0b);
+    background-size: 200% 100%;
+    animation: shimmer 3s infinite linear;
+    box-shadow: 0 0 10px #e8fff0, 0 0 20px #00cc66 inset, 0 0 30px #0b3d0b;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+}
+
+#progressBarContainerCobro {
+    max-width: 70%; /* Ancho por defecto en pantallas grandes */
+    align-content: center;
+    margin: 0 auto; /* Centrado en el contenedor */
+}
+
+#cobrosPendientesCobro {
+    font-size: 14px;
+    color: #333; /* Color de texto */
+}
+
+#restante-labelCobro {
+    font-size: 14px;
+    color: #333;
+}
+
+#cobrosPendientes {
+    font-size: 14px;
+    color: #333; /* Color de texto */
+}
+
+#restante-label {
+    font-size: 14px;
+    color: #333;
+}
+
+#total-label {
+    font-size: 16px;
+    font-weight: bold;
+    
+    color: #333;
+}
+
+
+.progress {
+    margin-bottom: 10px; /* Espaciado debajo de la barra de progreso */
+}
+
+#progressPercentageCobro {
+    font-size: 14px;
+    font-weight: bold;
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    text-align: center;
+    text-shadow: 0 0 2px #000;
+}
+
+
+@keyframes shimmer {
+    0% {
+        background-position: -100px;
+    }
+
+    50% {
+        background-position: 200px;
+    }
+
+    100% {
+        background-position: 450px;
+    }
+}
+
+
+
+
+
+@media (max-width: 1000px) { /* Para pantallas más pequeñas, como dispositivos móviles */
+    #progressBarContainerCobro {
+        max-width: 90%; /* Establecer el 90% de ancho en pantallas pequeñas */
+        margin-left: 25px !important;
+    }
 }

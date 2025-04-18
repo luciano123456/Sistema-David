@@ -178,11 +178,12 @@ namespace Sistema_David.Controllers
 
         }
 
-        public ActionResult InfoCuentaBancaria(int id)
+
+        public ActionResult ListaCuentasBancariasTotales(string metodopago, int activo = 1)
         {
             try
             {
-                var result = CuentasBancariasModel.EditarInfo(id);
+                var result = CuentasBancariasModel.ListaSoloTotales(metodopago, activo);
 
                 return Json(result);
             }
@@ -191,6 +192,34 @@ namespace Sistema_David.Controllers
                 return Json(null);
             }
 
+        }
+
+        public ActionResult ListaCuentasBancariasTotalesConInformacion(string metodopago, int activo = 1)
+        {
+            try
+            {
+                var result = CuentasBancariasModel.ListaConTotalesInformacion(metodopago, activo);
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(null);
+            }
+
+        }
+
+        public ActionResult InfoCuentaBancaria(int id)
+        {
+            try
+            {
+                var result = CuentasBancariasModel.ObtenerInfoCuentaConTotales(id);
+                return Json(result, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(null, JsonRequestBehavior.AllowGet);
+            }
         }
 
 

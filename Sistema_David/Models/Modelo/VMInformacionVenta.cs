@@ -20,10 +20,16 @@ namespace Sistema_David.Models.Modelo
         public int idVendedor { get; set; }
         public int whatssap { get; set; }
         public string Observacion { get; set; }
+        public string Imagen { get; set; }
         public string MetodoPago { get; set; }
         public string FranjaHoraria { get; set; }
         public int idCobrador { get; set; }
+        public int idCliente { get; set; }
         public int ClienteAusente { get; set; }
+        public int CobroPendiente { get; set; }
+        public Nullable<int> IdCuentaBancaria { get; set; }
+
+
 
         public virtual Ventas Ventas { get; set; }
     }
