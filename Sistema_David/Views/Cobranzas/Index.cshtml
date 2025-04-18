@@ -133,7 +133,7 @@
                         <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirModalCuentasBancarias()" style="background-color: #3e0f00; border-color: #4285F4; color: white;">
                             <i class="fa fa-university"></i> Cuentas Bancarias
                         </a>
-                        
+
                     </div>
                     <div id="btnAsignarTurno" class="me-2 mb-2" style="display: none;">
                         <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalTurno()">Asignar Turno</a>
@@ -252,6 +252,250 @@
             </div>
         </div>
     </div>
+
+    <div id="modalImagenAmpliada">
+        <img src="" alt="Imagen ampliada">
+    </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalComprobantes" tabindex="-1" aria-labelledby="modalComprobantesLabel" aria-hidden="true" style="z-index: 999999;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalComprobantesLabel">Agregar Comprobantes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Casillero 1 -->
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="0">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="1">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="2">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                       <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="3">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="4">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="5">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="6">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                       <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="7">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="8">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="9">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="10">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="11">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="btnCancelarModal" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button id="btnGenerarPdf" type="button" class="btn btn-primary">Generar PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="modal fade centered-modal-cobranza" id="cobranzaModal" tabindex="-1" aria-labelledby="cobranzaModallLabel" aria-hidden="true">
         <div class="modal-dialog">
