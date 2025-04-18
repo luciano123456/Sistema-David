@@ -502,6 +502,35 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
+        public static List<VMInformacionVenta> ListarInformacionVentaCuenta(int idCuenta)
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                var informacionVenta = db.InformacionVentas
+                    .Where(iv => iv.IdCuentaBancaria == idCuenta && iv.Descripcion.Contains("Cobranza"))
+                    .Select(iv => new VMInformacionVenta
+                    {
+                        Id = iv.Id,
+                        IdVenta = iv.IdVenta,
+                        Fecha = (DateTime)iv.Fecha,
+                        Entrega = (decimal)iv.Entrega,
+                        Restante = (decimal)iv.Restante,
+                        idVendedor = (int)iv.idVendedor,
+                        Interes = (decimal)iv.Interes,
+                        Descripcion = iv.Descripcion,
+                        whatssap = (int)iv.whatssap,
+                        ValorCuota = (decimal)iv.ValorCuota,
+                        Observacion = iv.Observacion,
+                        MetodoPago = iv.MetodoPago,
+                        idCobrador = (int)iv.idCobrador,
+                        Cobrador = iv.idCobrador == 0 ? "N/A" : db.Usuarios.FirstOrDefault(u => u.Id == iv.idCobrador).Nombre ?? "N/A"
+                    })
+                    .ToList();
+
+                return informacionVenta;
+            }
+        }
+
 
 
         public static VMInformacionVenta UltimaInformacionVenta(int idVenta)

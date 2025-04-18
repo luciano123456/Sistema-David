@@ -1,4 +1,5 @@
 ﻿
+
 @{
     ViewBag.Title = "Index";
 }
@@ -7,7 +8,7 @@
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/Productos.css?v=1.2" rel="stylesheet" />
 <link href="~/Estilos/Ventas.css?v=1.2" rel="stylesheet" />
-<link href="~/Estilos/Cobranzas.css?v=1.2" rel="stylesheet" />
+<link href="~/Estilos/Cobranzas.css?v=1.3" rel="stylesheet" />
 
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 
@@ -297,10 +298,36 @@
                         <option value="Transferencia a Terceros">Transferencia a Terceros</option>
                     </select>
 
-                    <label class="lblNombreInput" id="lblCuentaPago" hidden >Cuenta</label>
+                    <label class="lblNombreInput" id="lblCuentaPago" hidden>Cuenta</label>
                     <select id="CuentaPago" name="select" class="input-nuevomodif select-modal-personalizado mt-3" required hidden>
                         <option value="">Seleccionar</option>
                     </select>
+
+                    <div id="progressBarContainerCobro" class="progress-wrapper mt-3" hidden>
+                        <!-- Contenedor superior con el Total y el texto Cobros Pendientes -->
+                        <div class="d-flex justify-content-between mb-2">
+                            <span id="total-labelCobro" hidden class="text-black" style="font-weight: bold;">Cobros: $50,000</span>
+                            <span id="cobrosPendientesCobro" class="text-warning" hidden style="font-weight: bold;">Pendientes; $50,000</span>
+                        </div>
+
+                        <!-- Barra de progreso -->
+                        <div class="progress" style="height: 20px; background-color: #f1f1f1; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                            <div id="progressBarCobro" class="progress-bar" style="width: 0%; transition: width 0.5s; border-radius: 10px;"></div>
+                        </div>
+
+                        <!-- Contenedor inferior con el Restante -->
+                        <div class="d-flex justify-content-between mb-2">
+                            <span id="entregas-labelCobro" hidden class="text-black" style="font-weight: bold;">Entregas: $50,000</span>
+                            <span id="restante-labelCobro" hidden class="text-black" style="font-weight: bold;">Restante: $50,000</span>
+                        </div>
+
+                        <!-- Texto del porcentaje de progreso centrado -->
+                        <span id="progressPercentageCobro" class="text-center"
+                              style="position: absolute; width: 100%; top: 50%; transform: translateY(-50%); color: white; font-weight: bold; font-size: 14px;">
+                        </span>
+                    </div>
+
+
 
                     <label class="lblNombreInput" id="lblFechaCobro">Nueva Fecha de Cobro</label>
                     <input type="date" placeholder="1" value="1" id="FechaCobro" class="input-nuevomodif" />
@@ -429,6 +456,30 @@
                     <label for="accountCBU" class="form-label text-success">CBU</label>
                     <input type="text" class="form-control text-black" style="max-width: 500px" id="accountCBU" disabled>
                 </div>
+                <div class="mb-3">
+                    <label for="accountMonto" class="form-label text-success">Monto a Cobrar</label>
+                    <input type="text" class="form-control text-black" style="max-width: 500px" id="accountMonto" disabled>
+                </div>
+
+                <div class="progress-wrapper mt-2" id="divProgressBarBanco">
+
+                    <div class="d-flex justify-content-between">
+                        <span id="total-label" class="text-black">Cobros: $50.000</span>
+                        <span id="pendientes-label" hidden class="text-warning">Pendientes: $50.000</span>
+                    </div>
+
+                    <div class="progress" style="height: 20px; background-color: #e0e0e0; position: relative;">
+                        <div id="progress-bar" class="progress-bar" style="width: 0%; transition: width 0.5s;"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <span id="entregas-label" class="text-black">Entregas: $50.000</span>
+                        <span id="restante-label" class="text-black">Restante: $50.000</span>
+                    </div>
+
+                </div>
+
+
 
                 <div class="d-flex justify-content-between  mt-3">
                     <div class="form-check form-switch d-flex align-items-center" style="margin-right:15px">
@@ -439,13 +490,20 @@
                         <label class="form-check-label text-black" style="margin-right:4rem" for="Activo">Activo</label>
                         <input class="form-check-input" type="checkbox" id="Activo" disabled>
                     </div>
+
                 </div>
 
-
+                <div id="detalleVentas">
+                    <!-- Aquí se agregan dinámicamente las ventas con imágenes -->
+                </div>
 
 
                 <!-- Botones Añadir y Eliminar -->
                 <div class="d-flex justify-content-end mt-4">
+
+                    <button id="btnStockPendiente" type="button" class="btn btn-danger me-2" onclick="exportarPdf()">
+                        <i class="fa fa-file-pdf-o"></i> Exportar PDF
+                    </button>
 
                     <button id="anadirCuenta" type="button" class="btn btn-success" onclick="anadirCuenta()">
                         <i class="fa fa-plus"></i> Añadir
@@ -477,8 +535,9 @@
 <script src="~/Scripts/xlsx.full.min.js.js"></script>
 <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.5.4/css/colReorder.dataTables.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=1.7"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=2.2"></script>
 }

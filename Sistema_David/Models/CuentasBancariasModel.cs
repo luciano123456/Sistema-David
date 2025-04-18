@@ -1,4 +1,5 @@
 ﻿using Sistema_David.Models.DB;
+using Sistema_David.Models.ViewModels;
 using SpreadsheetLight;
 using System;
 using System.Collections.Generic;
@@ -15,8 +16,6 @@ namespace Sistema_David.Models.Modelo
 {
     public class CuentasBancariasModel
     {
-
-
 
 
         public static List<VMCuentaBancaria> Lista(string metodopago, int activo)
@@ -49,6 +48,163 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
+        public static List<VMCuentaBancariaConVentas> ListaConTotalesInformacion(string metodopago, int activo)
+        {
+            try
+            {
+                using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+                {
+                    var fechaDesde = DateTime.Today;              // hoy a las 00:00
+                    var fechaHasta = fechaDesde.AddDays(1);       // mañana a las 00:00
+
+                    // 1. Traer cuentas bancarias sin inicializar la lista
+                    var cuentasBancarias = db.CuentasBancarias
+                        .Where(x =>
+                            ((metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA PROPIA" && x.CuentaPropia == 1) ||
+                             (metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA A TERCEROS" && x.CuentaPropia == 0) ||
+                             string.IsNullOrEmpty(metodopago))
+                            && (x.Activo == activo || activo == -1))
+                        .ToList()
+                        .Select(x => new VMCuentaBancariaConVentas
+                        {
+                            Id = x.Id,
+                            Nombre = x.Nombre,
+                            CBU = x.CBU,
+                            CuentaPropia = (int)x.CuentaPropia,
+                            Activo = (int)x.Activo,
+                            MontoPagar = (decimal)x.MontoPagar,
+                            // InformacionVentas y Entrega se llenan después
+                        })
+                        .ToList();
+
+                    var informacionVentas = (from iv in db.InformacionVentas
+                                             join v in db.Ventas on iv.IdVenta equals v.Id
+                                             where iv.Descripcion.Contains("Cobranza")
+                                                   && iv.IdCuentaBancaria != null
+                                                   && iv.Fecha >= fechaDesde && iv.Fecha < fechaHasta
+                                             select new
+                                             {
+                                                 iv.Fecha,
+                                                 iv.Entrega,
+                                                 iv.IdCuentaBancaria,
+                                                 IdCliente = v.idCliente,
+                                                 iv.Id,
+                                             }).ToList();
+
+                    // 3. Asignar ventas y entregas a cada cuenta
+                    foreach (var cuenta in cuentasBancarias)
+                    {
+                        var ventas = informacionVentas
+                            .Where(iv => iv.IdCuentaBancaria == cuenta.Id)
+                            .Select(iv => new VMInformacionVenta
+                            {
+                                Id = iv.Id,
+                                Fecha = iv.Fecha,
+                                Entrega = (decimal)iv.Entrega,
+                                idCliente = iv.IdCliente
+                            })
+                            .ToList();
+
+                        cuenta.InformacionVentas = ventas;
+                        cuenta.Entrega = ventas.Sum(v => v.Entrega);
+                    }
+
+                    return cuentasBancarias;
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
+
+
+        public static List<VMCuentaBancariaConVentas> ListaSoloTotales(string metodopago, int activo)
+        {
+            try
+            {
+                using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+                {
+                    var fechaDesde = DateTime.Today;              // hoy a las 00:00
+                    var fechaHasta = fechaDesde.AddDays(1);       // mañana a las 00:00
+
+                    // 1. Traer cuentas bancarias
+                    var cuentasBancarias = db.CuentasBancarias
+                        .Where(x =>
+                            ((metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA PROPIA" && x.CuentaPropia == 1) ||
+                             (metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA A TERCEROS" && x.CuentaPropia == 0) ||
+                             string.IsNullOrEmpty(metodopago))
+                            && (x.Activo == activo || activo == -1))
+                        .ToList()
+                        .Select(x => new VMCuentaBancariaConVentas
+                        {
+                            Id = x.Id,
+                            Nombre = x.Nombre,
+                            CBU = x.CBU,
+                            CuentaPropia = (int)x.CuentaPropia,
+                            Activo = (int)x.Activo,
+                            MontoPagar = (decimal)x.MontoPagar,
+                            Entrega = 0 // Se calcula después
+                        })
+                        .ToList();
+
+                    // 2. Traer solo ventas para calcular entrega
+                    var informacionVentas = db.InformacionVentas
+                        .Where(iv => iv.Descripcion.Contains("Cobranza")
+                                     && iv.IdCuentaBancaria != null
+                                      && iv.Fecha >= fechaDesde && iv.Fecha < fechaHasta)
+                        .ToList();
+
+                    // 3. Calcular solo el total de entregas por cuenta
+                    foreach (var cuenta in cuentasBancarias)
+                    {
+                        cuenta.Entrega = informacionVentas
+                            .Where(iv => iv.IdCuentaBancaria == cuenta.Id)
+                            .Sum(iv => (decimal?)iv.Entrega) ?? 0;
+                    }
+
+                    return cuentasBancarias;
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
+
+
+
+
+
+
+
+        public static VMCuentaBancariaConVentas ObtenerInfoCuentaConTotales(int idCuenta)
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                var informacionVenta = db.InformacionVentas
+                    .Where(iv => iv.IdCuentaBancaria == idCuenta && iv.Descripcion.Contains("Cobranza"))
+                    .Select(iv => new VMInformacionVenta
+                    {
+                        Id = iv.Id,
+                        Fecha = (DateTime)iv.Fecha,
+                        Entrega = (decimal)iv.Entrega,
+                    })
+                    .ToList();
+
+                var totalEntregado = informacionVenta.Sum(x => x.Entrega);
+
+                return new VMCuentaBancariaConVentas
+                {
+                    InformacionVentas = informacionVenta,
+                    Entrega = totalEntregado
+                };
+            }
+        }
 
         public static CuentasBancarias EditarInfo(int id)
         {
@@ -76,6 +232,7 @@ namespace Sistema_David.Models.Modelo
                     cuenta.Nombre = model.Nombre;
                     cuenta.CuentaPropia = model.CuentaPropia;
                     cuenta.Activo = model.Activo;
+                    cuenta.MontoPagar = model.MontoPagar;
 
                     db.CuentasBancarias.Add(cuenta);
                     db.SaveChanges();
@@ -107,6 +264,7 @@ namespace Sistema_David.Models.Modelo
                         result.CBU = model.CBU;
                         result.CuentaPropia = model.CuentaPropia;
                         result.Activo = model.Activo;
+                        result.MontoPagar = model.MontoPagar;
 
                         db.Entry(result).State = System.Data.Entity.EntityState.Modified;
                         db.SaveChanges();
