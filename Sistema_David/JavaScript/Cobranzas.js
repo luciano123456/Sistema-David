@@ -494,11 +494,16 @@ async function hacerCobranza() {
                     };
 
                     if (result.Status == 1) {
-                        const confirmacion = confirm('Cobranza realizada con éxito. ¿Deseas enviar el comprobante al cliente vía WhatsApp?');
 
-                        if (confirmacion) {
-                            // El usuario ha confirmado, llamar a enviarWhatssap
-                            enviarWhatssapId(document.getElementById("IdVenta").innerText, document.getElementById("ValorInteres").value);
+                        if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+                            const confirmacion = confirm('Cobranza realizada con éxito. ¿Deseas enviar el comprobante al cliente vía WhatsApp?');
+
+                            if (confirmacion) {
+                                // El usuario ha confirmado, llamar a enviarWhatssap
+                                enviarWhatssapId(document.getElementById("IdVenta").innerText, document.getElementById("ValorInteres").value);
+                            }
+                        } else {
+                            alert("Cobranza realizada con éxito.")
                         }
 
                         buscarRecorridos();

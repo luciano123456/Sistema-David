@@ -147,21 +147,19 @@ namespace Sistema_David.Models
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                // Fecha actual
-                DateTime fechaFinal = DateTime.Today;
-                // Fecha hace 6 días atrás (hoy incluido serán 7 días)
-                DateTime fechaInicio = fechaFinal.AddDays(-6);
+                DateTime fechaHasta = DateTime.Today.AddDays(1).AddTicks(-1); // 18/04 23:59:59.9999999
+                DateTime fechaDesde = DateTime.Today.AddDays(-5);             // 13/04 00:00:00
 
-                // Contamos los registros en los últimos 7 días
                 int cantidadClientesAusentes = db.Ventas
                     .Where(iv => iv.Comprobante == 0
-                                 && DbFunctions.TruncateTime(iv.Fecha) >= fechaInicio
-                                 && DbFunctions.TruncateTime(iv.Fecha) <= fechaFinal)
+                                 && DbFunctions.TruncateTime(iv.Fecha) >= fechaDesde
+                                 && DbFunctions.TruncateTime(iv.Fecha) <= fechaHasta)
                     .Count();
 
                 return cantidadClientesAusentes;
             }
         }
+
 
 
 
