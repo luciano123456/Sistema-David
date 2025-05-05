@@ -661,7 +661,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         var iconColor = userSession.IdRol == 2 ? "red" : "white"; // Color del icono basado en el rol
                         var disabled = userSession.IdRol == 2 ? "disabled" : ""; // Desactivar el botón basado en el rol
                         var iconWhatssap = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>" 
-                        var iconEliminar = row.Descripcion && !row.Descripcion.includes("Venta") ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarInformacion(" + data + ")' title='Eliminar' style='color: " + iconColor + ";' " + disabled + "><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>" : '';
+                        var iconEliminar = row.Descripcion && userSession.IdRol == 1 && !row.Descripcion.includes("Venta") ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarInformacion(" + data + ")' title='Eliminar' style='color: " + iconColor + ";' " + disabled + "><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>" : '';
                         return iconWhatssap + iconEliminar;
                             
                     },

@@ -494,11 +494,16 @@ async function hacerCobranza() {
                     };
 
                     if (result.Status == 1) {
-                        const confirmacion = confirm('Cobranza realizada con éxito. ¿Deseas enviar el comprobante al cliente vía WhatsApp?');
 
-                        if (confirmacion) {
-                            // El usuario ha confirmado, llamar a enviarWhatssap
-                            enviarWhatssapId(document.getElementById("IdVenta").innerText, document.getElementById("ValorInteres").value);
+                        if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+                            const confirmacion = confirm('Cobranza realizada con éxito. ¿Deseas enviar el comprobante al cliente vía WhatsApp?');
+
+                            if (confirmacion) {
+                                // El usuario ha confirmado, llamar a enviarWhatssap
+                                enviarWhatssapId(document.getElementById("IdVenta").innerText, document.getElementById("ValorInteres").value);
+                            }
+                        } else {
+                            alert("Cobranza realizada con éxito.")
                         }
 
                         buscarRecorridos();
@@ -2376,6 +2381,7 @@ async function cargarTiposDeNegocio() {
     }
 }
 
+
 function configurarOpcionesColumnas() {
     const grid = $('#grdCobranzas').DataTable(); // Accede al objeto DataTable utilizando el id de la tabla
     const columnas = grid.settings().init().columns; // Obtiene la configuración de columnas
@@ -2442,38 +2448,43 @@ function renderAccounts() {
 
         li.setAttribute("data-id", account.Id);
 
-        // Contenedor principal del contenido izquierdo (nombre + barra)
         const contentContainer = document.createElement("div");
         contentContainer.classList.add("d-flex", "align-items-center", "gap-2");
 
-        // Nombre de la cuenta
-        const accountName = document.createElement("span");
-        accountName.textContent = account.Nombre;
+        const accountName = document.createElement("div");
+        accountName.classList.add("account-name-scroll");
+
+        const spanScroll = document.createElement("span");
+        spanScroll.classList.add("scroll-inner");
+        spanScroll.textContent = account.Nombre;
+
+        accountName.appendChild(spanScroll);
         contentContainer.appendChild(accountName);
 
-        // Si tiene monto a pagar, agregar barra de progreso
+        // Activar scroll con click (toggle)
+        accountName.addEventListener("click", (e) => {
+            e.stopPropagation(); // evitar que dispare el click de selección
+            spanScroll.classList.toggle("scrolling");
+        });
+
         if (account.MontoPagar > 0) {
             const porcentaje = (account.Entrega / account.MontoPagar) * 100;
 
-            // Wrapper con posición relativa para centrar el porcentaje
             const progressWrapper = document.createElement("div");
             progressWrapper.classList.add("position-relative");
             progressWrapper.style.width = "80px";
             progressWrapper.style.height = "10px";
 
-            // Contenedor de la barra
             const progressBarContainer = document.createElement("div");
             progressBarContainer.classList.add("progress");
             progressBarContainer.style.width = "100%";
             progressBarContainer.style.height = "100%";
 
-            // Barra
             const progressBar = document.createElement("div");
             progressBar.classList.add("progress-bar");
             progressBar.style.width = `${porcentaje}%`;
             progressBar.style.transition = "width 0.5s";
 
-            // Asignar clase según porcentaje
             progressBar.classList.remove("low", "medium", "high", "full");
             if (porcentaje < 10) {
                 progressBar.classList.add("low");
@@ -2485,15 +2496,9 @@ function renderAccounts() {
                 progressBar.classList.add("full");
             }
 
-            // Porcentaje centrado encima de la barra
-
             const percentageText = document.createElement("span");
             percentageText.id = "progress-percentage-textCobro";
-            if (porcentaje >= 100) {
-                percentageText.textContent = "Completado"; // Mostrar "✔ Completado" cuando se llega al 100%
-            } else {
-                percentageText.textContent = `${Math.round(porcentaje)}%`; // Mostrar el porcentaje normal
-            }
+            percentageText.textContent = porcentaje >= 100 ? "Completado" : `${Math.round(porcentaje)}%`;
             percentageText.style.position = "absolute";
             percentageText.style.left = "50%";
             percentageText.style.top = "50%";
@@ -2511,19 +2516,20 @@ function renderAccounts() {
 
         li.appendChild(contentContainer);
 
-        // Botones
         const buttonContainer = document.createElement("div");
         buttonContainer.innerHTML = `
-            <button class="btn btn-warning btn-sm edit-btn" onclick="editAccount(${account.Id})">
+         <button class="btn btn-secondary btn-sm delete-btn" onclick="anadirComprobantes(${account.Id})" title="Adjuntar Imagenes">
+                <i class="fa fa-file-image-o"></i>
+            </button>
+            <button class="btn btn-warning btn-sm edit-btn" onclick="editAccount(${account.Id})" title="Editar">
                 <i class="fa fa-pencil"></i>
             </button>
-            <button class="btn btn-danger btn-sm delete-btn" onclick="deleteAccount(${account.Id})">
+            <button class="btn btn-danger btn-sm delete-btn" onclick="deleteAccount(${account.Id})" title="Eliminar">
                 <i class="fa fa-trash"></i>
             </button>
         `;
         li.appendChild(buttonContainer);
 
-        // Click para seleccionar
         li.addEventListener("click", () => selectAccount(account, li));
 
         accountList.appendChild(li);
@@ -2959,68 +2965,174 @@ async function exportarPdf() {
         return;
     }
 
+    await generarPdfFinal(); // lógica que ya tenías, movida a una función aparte
+}
+
+
+async function anadirComprobantes(id) {
+    const modal = new bootstrap.Modal(document.getElementById("modalComprobantes"));
+   
+
+    // Limpiar todos los slots
+    const previews = document.querySelectorAll(".vista-previa");
+    const inputs = document.querySelectorAll(".extra-comprobante");
+    const btns = document.querySelectorAll(".btn-cancelar-imagen");
+
+    previews.forEach(img => {
+        img.style.display = "none";
+        img.src = "";
+    });
+
+    inputs.forEach(input => {
+        input.value = "";
+    });
+
+    btns.forEach(btn => btn.style.display = "none");
+
+    document.getElementById("idaccount").value = id;
+
+    // Cargar imágenes desde backend
+    const response = await fetch(`/Cobranzas/ObtenerComprobantes?idCuenta=${id}`);
+    const data = await response.json();
+
+    for (let i = 0; i < data.length && i < previews.length; i++) {
+        const img = previews[i];
+        img.src = `data:image/png;base64,${data[i].Imagen}`;
+        img.style.display = "block";
+
+        btns[i].style.display = "inline-block";
+    }
+
+    modal.show();
+}
+
+
+async function guardarComprobantes() {
+    const idCuenta = parseInt(document.getElementById("idaccount").value);
+    const fileInputs = document.querySelectorAll(".extra-comprobante");
+    const imgPreviews = document.querySelectorAll(".vista-previa");
+
+    let comprobantes = [];
+
+    for (let i = 0; i < 12; i++) {
+        const input = fileInputs[i];
+        const img = imgPreviews[i];
+
+        let base64 = null;
+
+        if (!img || img.style.display === "none") {
+            base64 = null;
+        } else if (input?.files?.[0]) {
+            base64 = (await toBase64(input.files[0])).split(',')[1];
+        } else if (img.src?.startsWith("data:image")) {
+            base64 = img.src.split(',')[1];
+        }
+
+        comprobantes.push({
+            IdCuenta: idCuenta,
+            Fecha: new Date().toISOString(),
+            Imagen: base64 // puede ser null
+        });
+    }
+
+    const response = await fetch('/Cobranzas/GuardarComprobantes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(comprobantes)
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        alert("Comprobantes guardados correctamente");
+
+        document.querySelectorAll(".vista-previa").forEach(img => {
+            img.src = "";
+            img.style.display = "none";
+        });
+
+        fileInputs.forEach(input => input.value = "");
+
+        document.querySelectorAll(".btn-cancelar-imagen").forEach(btn => {
+            btn.style.display = "none";
+        });
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById("modalComprobantes"));
+        if (modal) modal.hide();
+    } else {
+        alert("Error al guardar: " + (result.error || "desconocido"));
+    }
+}
+
+function getImageBase64FromURL(url) {
+    return new Promise((resolve, reject) => {
+        fetch(url)
+            .then(res => res.blob())
+            .then(blob => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            })
+            .catch(reject);
+    });
+}
+
+function toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+
+async function generarPdfFinal() {
     let clientesExportados = [];
-    let y = 0;
+    let posicion = { x: 15, y: 10 };
 
     const doc = new jsPDF();
     const fechaActual = new Date().toLocaleDateString();
-
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
-
-    y += 10;
 
     // Header
     const colorStart = [30, 87, 153];
     const colorEnd = [125, 185, 232];
-    const headerX = 10;
-    const headerY = 10;
-    const headerWidth = 190;
-    const headerHeight = 12;
-
+    const headerX = 10, headerY = 10, headerWidth = 190, headerHeight = 12;
     drawGradientHeader(doc, headerX, headerY, headerWidth, headerHeight, colorStart, colorEnd);
 
     doc.setFontSize(16);
     doc.setTextColor(255, 255, 255);
     const titulo = `Cuenta Bancaria: ${selectedAccount.Nombre}`;
-    const textWidth = doc.getTextWidth(titulo);
-    const centerX = (pageWidth - textWidth) / 2;
+    const centerX = (pageWidth - doc.getTextWidth(titulo)) / 2;
     doc.text(titulo, centerX, headerY + 9);
 
     doc.setTextColor(0, 0, 0);
-    y += 20;
-
+    posicion.y += 20;
     doc.setFontSize(12);
-    doc.text(`Fecha: ${fechaActual}`, 10, y);
+    doc.text(`Fecha: ${fechaActual}`, 10, posicion.y);
     if (selectedAccount.MontoPagar > 0) {
-        y += 10;
-        doc.text(`Monto a Cobrar: $${selectedAccount.MontoPagar.toFixed(2)}`, 10, y);
+        posicion.y += 10;
+        doc.text(`Monto a Cobrar: $${selectedAccount.MontoPagar.toFixed(2)}`, 10, posicion.y);
     }
-
-    y += 10;
-    doc.text(`Entregado: $${selectedAccount.Entrega.toFixed(2)}`, 10, y);
-
+    posicion.y += 10;
+    doc.text(`Entregado: $${selectedAccount.Entrega.toFixed(2)}`, 10, posicion.y);
     if (parseInt(selectedAccount.MontoPagar) > 0) {
-        y += 10;
-        doc.text(`Restante: $${(selectedAccount.MontoPagar - selectedAccount.Entrega).toFixed(2)}`, 10, y);
-        y += 10;
-        drawProgressBar(doc, 10, y, 180, 10, (selectedAccount.Entrega / selectedAccount.MontoPagar) * 100);
+        posicion.y += 10;
+        doc.text(`Restante: $${(selectedAccount.MontoPagar - selectedAccount.Entrega).toFixed(2)}`, 10, posicion.y);
+        posicion.y += 10;
+        drawProgressBar(doc, 10, posicion.y, 180, 10, (selectedAccount.Entrega / selectedAccount.MontoPagar) * 100);
     }
 
-    // Comprobantes
-    y += 20;
+    posicion.y += 20;
     doc.setFontSize(14);
     doc.setTextColor(0);
+    doc.text("Comprobantes:", 10, posicion.y);
+    posicion.y += 10;
 
-
-    doc.text("Comprobantes:", 10, y);
-    y += 10;
-
-    let x = 15;
-    let filaImágenes = 0;
-    const imagenAnchoFijo = 90;
-    const spacing = 10;
-
+    // 1. Comprobantes existentes de ventas
     for (const venta of selectedAccount.InformacionVentas) {
         const image = await ObtenerImagen(venta.Id);
         if (!image) continue;
@@ -3029,56 +3141,154 @@ async function exportarPdf() {
             const idCliente = venta.idCliente;
             if (clientesExportados.includes(idCliente)) continue;
 
-            const format = getImageFormat(image);
-            const rawData = `data:image/${format.toLowerCase()};base64,${image}`;
-            const imageData = await convertirImagenACanvas(rawData);
-            const { width: imgWidth, height: imgHeight } = await getImageDimensions(imageData);
-
-            let width = 400; // menos ancho = menos alto
-            let height = (imgHeight / imgWidth) * width;
-
-            // Limitar altura máxima si se pasa
-            const maxHeight = 140;
-            if (height > maxHeight) {
-                height = maxHeight;
-                width = (imgWidth / imgHeight) * height;
-            }
-
-            // Salto de página
-            if (y + height > pageHeight - 20) {
-                doc.addPage();
-                y = 20;
-                x = 15;
-                filaImágenes = 0;
-            }
-
-            // Dibujo
-            doc.setDrawColor(0);
-            doc.setLineWidth(1);
-            doc.rect(x - 2, y - 2, width + 4, height + 4);
-            doc.addImage(imageData, "JPEG", x, y, width, height);
-
-            clientesExportados.push(idCliente);
-            filaImágenes++;
-
-            if (filaImágenes >= 2) {
-                // Nueva fila
-                filaImágenes = 0;
-                x = 15;
-                y += height + spacing;
-            } else {
-                // Segunda columna
-                x += width + spacing;
-            }
-
+            await agregarImagenADoc(doc, image, posicion, pageHeight, clientesExportados, idCliente);
         } catch (err) {
-            console.warn("No se pudo cargar una imagen:", err);
+            console.warn("No se pudo cargar imagen de venta:", err);
         }
     }
 
+    // 2. Comprobantes guardados en la base para la cuenta
+    try {
+        const resp = await fetch(`/Cobranzas/ObtenerComprobantes?idCuenta=${selectedAccount.Id}`);
+        const comprobantesBase = await resp.json();
+
+        for (const comprobante of comprobantesBase) {
+            if (comprobante.Imagen) {
+                await agregarImagenADoc(doc, comprobante.Imagen, posicion, pageHeight);
+            }
+        }
+    } catch (err) {
+        console.warn("Error cargando comprobantes desde base:", err);
+    }
+
+    // 3. Comprobantes nuevos del modal (input.files)
+    const inputs = Array.from(document.querySelectorAll(".extra-comprobante"))
+        .filter(input => input && input.files && input.files.length > 0);
+
+    for (const input of inputs) {
+        const file = input.files[0];
+        const base64 = await leerArchivoComoBase64(file);
+        await agregarImagenADoc(doc, base64.split(',')[1], posicion, pageHeight);
+    }
+
+    limpiarComprobantes();
     doc.save(`Cuenta_${selectedAccount.Nombre}.pdf`);
 }
 
+async function agregarImagenADoc(doc, image, posicion, pageHeight, clientesExportados, idCliente = null) {
+    const format = getImageFormat(image);
+    const rawData = `data:image/${format.toLowerCase()};base64,${image}`;
+    const imageData = await convertirImagenACanvas(rawData);
+
+    // Tamaño fijo
+    const imageWidth = 85;
+    const imageHeight = 110;
+    const margin = 15;
+    const spacing = 10;
+    const pageWidth = doc.internal.pageSize.width;
+
+    // Si no entra horizontalmente, saltar a nueva fila
+    if (posicion.x + imageWidth > pageWidth - margin) {
+        posicion.x = margin;
+        posicion.y += imageHeight + spacing;
+    }
+
+    // Si no entra verticalmente, agregar nueva página
+    if (posicion.y + imageHeight > pageHeight - margin) {
+        doc.addPage();
+        posicion.x = margin;
+        posicion.y = 20;
+    }
+
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.5);
+    doc.rect(posicion.x - 2, posicion.y - 2, imageWidth + 4, imageHeight + 4);
+    doc.addImage(imageData, "JPEG", posicion.x, posicion.y, imageWidth, imageHeight);
+
+    if (idCliente !== null) clientesExportados.push(idCliente);
+
+    // Actualizar X para la siguiente imagen
+    posicion.x += imageWidth + spacing;
+}
+
+function leerArchivoComoBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = e => reject(e);
+        reader.readAsDataURL(file);
+    });
+}
+
+document.querySelectorAll('.vista-previa').forEach(img => {
+    img.addEventListener('click', function () {
+        const modal = document.getElementById("modalImagenAmpliada");
+        const modalImg = modal.querySelector("img");
+        modalImg.src = this.src;
+        modal.style.display = "flex"; // ahora usa flexbox
+    });
+});
+
+document.getElementById("modalImagenAmpliada").addEventListener("click", function () {
+    this.style.display = "none";
+});
+
+
+function limpiarComprobantes() {
+    document.querySelectorAll('.extra-comprobante').forEach(input => {
+        input.value = '';
+    });
+
+    document.querySelectorAll('.vista-previa').forEach(img => {
+        img.src = '';
+        img.style.display = 'none';
+    });
+
+    document.querySelectorAll('.btn-cancelar-imagen').forEach(btn => {
+        btn.style.display = 'none';
+    });
+}
+
+
+document.querySelectorAll('.extra-comprobante').forEach(input => {
+    input.addEventListener('change', function () {
+        const file = this.files[0];
+        const container = this.closest('.comprobante-card, .border');
+        const vistaPreviaContainer = container.querySelector('.vista-previa-container');
+        const img = container.querySelector('.vista-previa');
+        const btnCancelar = container.querySelector('.btn-cancelar-imagen');
+
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                img.src = e.target.result;
+                img.style.display = 'block'; // mostrar imagen
+                btnCancelar.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            img.src = '';
+            img.style.display = 'none'; // ocultar si no hay imagen válida
+            btnCancelar.style.display = 'none';
+        }
+    });
+});
+
+document.querySelectorAll('.btn-cancelar-imagen').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const container = this.closest('.comprobante-card, .border');
+        const input = container.querySelector('.extra-comprobante');
+        const img = container.querySelector('.vista-previa');
+
+        input.value = '';
+        input.setAttribute("data-vacio", "1");
+
+        img.removeAttribute("src"); // 🔁 ESTO ES LO QUE TE FALTABA
+        img.style.display = 'none';
+
+        this.style.display = 'none';
+    });
+});
 
 
 function drawGradientHeader(doc, x, y, width, height, colorStart, colorEnd) {

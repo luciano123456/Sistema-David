@@ -169,3 +169,125 @@
         margin-left: 25px !important;
     }
 }
+
+
+.comprobante-card {
+    background-color: #f8f9fa;
+    border: 2px solid #000;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.comprobante-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #999;
+    margin-bottom: 5px;
+}
+
+.vista-previa-container {
+    height: 220px;
+    border: 2px solid #007bff; /* azul Bootstrap */
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3); /* sombra azul */
+    transition: all 0.3s ease-in-out;
+}
+
+.vista-previa {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+    cursor: pointer;
+    display: none; /* por defecto no mostrar */
+}
+
+
+
+.btn-cancelar-imagen {
+    display: block;
+    margin: 0 auto;
+    margin-top: 4px;
+    font-size: 0.8rem;
+}
+
+
+#modalImagenAmpliada {
+    display: none;
+    position: fixed;
+    z-index: 9999999;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.85);
+   
+    justify-content: center;
+    align-items: center;
+    cursor: zoom-out;
+}
+
+    #modalImagenAmpliada img {
+        max-width: 90vw;
+        max-height: 90vh;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+
+    #modalImagenAmpliada::after {
+        content: "✕";
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        font-size: 36px;
+        color: white;
+        cursor: pointer;
+    }
+
+    .account-name-scroll {
+    max-width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+}
+
+
+.account-name-scroll {
+    max-width: 120px;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    cursor: pointer;
+}
+
+.scroll-inner {
+    display: inline-block;
+    white-space: nowrap;
+    padding-left: 0;
+    transition: transform 0.3s ease;
+}
+
+    .scroll-inner.scrolling {
+        animation: marquee-click 6s linear infinite;
+    }
+
+@keyframes marquee-click {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}

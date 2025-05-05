@@ -31,6 +31,15 @@
           <Property Name="FechaenCero" Type="datetime" />
           <Property Name="IdVendedorAsignado" Type="int" />
         </EntityType>
+        <EntityType Name="ComprobantesImagenes">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Fecha" Type="datetime" />
+          <Property Name="Imagen" Type="varchar(max)" />
+          <Property Name="IdCuenta" Type="int" />
+        </EntityType>
         <EntityType Name="CuentasBancarias">
           <Key>
             <PropertyRef Name="Id" />
@@ -261,6 +270,18 @@
             </Principal>
             <Dependent Role="Clientes">
               <PropertyRef Name="IdVendedor" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ComprobantesImagenes_CuentasBancarias">
+          <End Role="CuentasBancarias" Type="Self.CuentasBancarias" Multiplicity="0..1" />
+          <End Role="ComprobantesImagenes" Type="Self.ComprobantesImagenes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CuentasBancarias">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ComprobantesImagenes">
+              <PropertyRef Name="IdCuenta" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -509,6 +530,7 @@
         <EntityContainer Name="Sistema_DavidModelStoreContainer">
           <EntitySet Name="Categorias" EntityType="Self.Categorias" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Clientes" EntityType="Self.Clientes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ComprobantesImagenes" EntityType="Self.ComprobantesImagenes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="CuentasBancarias" EntityType="Self.CuentasBancarias" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EstadosClientes" EntityType="Self.EstadosClientes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EstadosUsuarios" EntityType="Self.EstadosUsuarios" Schema="dbo" store:Type="Tables" />
@@ -530,6 +552,10 @@
           <AssociationSet Name="FK_Clientes_Usuarios" Association="Self.FK_Clientes_Usuarios">
             <End Role="Usuarios" EntitySet="Usuarios" />
             <End Role="Clientes" EntitySet="Clientes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ComprobantesImagenes_CuentasBancarias" Association="Self.FK_ComprobantesImagenes_CuentasBancarias">
+            <End Role="CuentasBancarias" EntitySet="CuentasBancarias" />
+            <End Role="ComprobantesImagenes" EntitySet="ComprobantesImagenes" />
           </AssociationSet>
           <AssociationSet Name="FK_InformacionVentas_CuentasBancarias" Association="Self.FK_InformacionVentas_CuentasBancarias">
             <End Role="CuentasBancarias" EntitySet="CuentasBancarias" />
@@ -846,6 +872,11 @@
           <AssociationSet Name="FK_InformacionVentas_Ventas1" Association="Sistema_DavidModel.FK_InformacionVentas_Ventas1">
             <End Role="CuentasBancarias" EntitySet="CuentasBancarias" />
             <End Role="InformacionVentas" EntitySet="InformacionVentas" />
+          </AssociationSet>
+          <EntitySet Name="ComprobantesImagenes" EntityType="Sistema_DavidModel.ComprobantesImagenes" />
+          <AssociationSet Name="FK_ComprobantesImagenes_CuentasBancarias" Association="Sistema_DavidModel.FK_ComprobantesImagenes_CuentasBancarias">
+            <End Role="CuentasBancarias" EntitySet="CuentasBancarias" />
+            <End Role="ComprobantesImagenes" EntitySet="ComprobantesImagenes" />
           </AssociationSet>
           </EntityContainer>
         <EntityType Name="Zonas">
@@ -1288,6 +1319,7 @@
           <Property Name="Activo" Type="Int32" />
           <Property Name="MontoPagar" Type="Decimal" Precision="20" Scale="2" />
           <Property Name="FechaMontoPagar" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="ComprobantesImagenes" Relationship="Sistema_DavidModel.FK_ComprobantesImagenes_CuentasBancarias" FromRole="CuentasBancarias" ToRole="ComprobantesImagenes" />
         </EntityType>
         <Association Name="FK_InformacionVentas_Ventas1">
           <End Type="Sistema_DavidModel.CuentasBancarias" Role="CuentasBancarias" Multiplicity="0..1" />
@@ -1298,6 +1330,28 @@
             </Principal>
             <Dependent Role="InformacionVentas">
               <PropertyRef Name="IdCuentaBancaria" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="ComprobantesImagenes">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Fecha" Type="DateTime" Precision="3" />
+          <Property Name="Imagen" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="IdCuenta" Type="Int32" />
+          <NavigationProperty Name="CuentasBancarias" Relationship="Sistema_DavidModel.FK_ComprobantesImagenes_CuentasBancarias" FromRole="ComprobantesImagenes" ToRole="CuentasBancarias" />
+        </EntityType>
+        <Association Name="FK_ComprobantesImagenes_CuentasBancarias">
+          <End Type="Sistema_DavidModel.CuentasBancarias" Role="CuentasBancarias" Multiplicity="0..1" />
+          <End Type="Sistema_DavidModel.ComprobantesImagenes" Role="ComprobantesImagenes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CuentasBancarias">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ComprobantesImagenes">
+              <PropertyRef Name="IdCuenta" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1570,6 +1624,16 @@
                 <ScalarProperty Name="CuentaPropia" ColumnName="CuentaPropia" />
                 <ScalarProperty Name="CBU" ColumnName="CBU" />
                 <ScalarProperty Name="Nombre" ColumnName="Nombre" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ComprobantesImagenes">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.ComprobantesImagenes">
+              <MappingFragment StoreEntitySet="ComprobantesImagenes">
+                <ScalarProperty Name="IdCuenta" ColumnName="IdCuenta" />
+                <ScalarProperty Name="Imagen" ColumnName="Imagen" />
+                <ScalarProperty Name="Fecha" ColumnName="Fecha" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>

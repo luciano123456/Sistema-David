@@ -48,6 +48,8 @@
         <AssociationConnector Association="Sistema_DavidModel.FK_InformacionVentas_Ventas" />
         <EntityTypeShape EntityType="Sistema_DavidModel.CuentasBancarias" Width="1.5" PointX="13.375" PointY="8.875" />
         <AssociationConnector Association="Sistema_DavidModel.FK_InformacionVentas_Ventas1" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.ComprobantesImagenes" Width="1.5" PointX="0.75" PointY="14.75" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_ComprobantesImagenes_CuentasBancarias" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

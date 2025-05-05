@@ -386,6 +386,9 @@
     <Compile Include="Models\CheckBloqueoSistema.cs" />
     <Compile Include="Models\ClientesCeroModel.cs" />
     <Compile Include="Models\CuentasBancariasModel.cs" />
+    <Compile Include="Models\DB\ComprobantesImagenes.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\DB\CuentasBancarias.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
@@ -465,6 +468,7 @@
     <Compile Include="Models\LoginModel.cs" />
     <Compile Include="Models\Manager\VentasManager.cs" />
     <Compile Include="Models\Modelo\VMInformacionClienteAsignado.cs" />
+    <Compile Include="Models\Modelo\VMComprobantesImagenes.cs" />
     <Compile Include="Models\Modelo\VMInformacionVenta.cs" />
     <Compile Include="Models\Modelo\ModeloApi.cs" />
     <Compile Include="Models\Modelo\VMRendimientoCobrado.cs" />

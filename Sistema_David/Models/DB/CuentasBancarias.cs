@@ -18,6 +18,7 @@ namespace Sistema_David.Models.DB
         public CuentasBancarias()
         {
             this.InformacionVentas = new HashSet<InformacionVentas>();
+            this.ComprobantesImagenes = new HashSet<ComprobantesImagenes>();
         }
     
         public int Id { get; set; }
@@ -30,5 +31,7 @@ namespace Sistema_David.Models.DB
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<InformacionVentas> InformacionVentas { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ComprobantesImagenes> ComprobantesImagenes { get; set; }
     }
 }
