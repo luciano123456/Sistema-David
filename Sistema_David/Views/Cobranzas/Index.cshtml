@@ -260,9 +260,11 @@
 
     <!-- Modal -->
     <div class="modal fade" id="modalComprobantes" tabindex="-1" aria-labelledby="modalComprobantesLabel" aria-hidden="true" style="z-index: 999999;">
+            <input type="text" id="idaccount" class="extra-comprobante d-none">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
+                
                     <h5 class="modal-title" id="modalComprobantesLabel">Agregar Comprobantes</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
@@ -272,6 +274,7 @@
                         <div class="col-6 col-md-3">
                             <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
                                 <h6 class="mb-2 text-black">Comprobante</h6>
+                                
                                 <div class="vista-previa-container">
                                     <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
                                 </div>
@@ -451,6 +454,9 @@
 
                         <div class="col-6 col-md-3">
                             <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+
+                               
+
                                 <h6 class="mb-2 text-black">Comprobante</h6>
                                 <div class="vista-previa-container">
                                     <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
@@ -490,7 +496,7 @@
 
                 <div class="modal-footer">
                     <button id="btnCancelarModal" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button id="btnGenerarPdf" type="button" class="btn btn-primary">Generar PDF</button>
+                    <button id="btnGuardarComprobantes" onclick="guardarComprobantes()" type="button" class="btn btn-primary">Guardar</button>
                 </div>
             </div>
         </div>

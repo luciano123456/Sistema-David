@@ -3,12 +3,14 @@ using Sistema_David.Models.ViewModels;
 using SpreadsheetLight;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.DynamicData;
+using System.Web.Mvc;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 
@@ -47,6 +49,8 @@ namespace Sistema_David.Models.Modelo
                 return null;
             }
         }
+
+
 
         public static List<VMCuentaBancariaConVentas> ListaConTotalesInformacion(string metodopago, int activo)
         {
@@ -175,10 +179,60 @@ namespace Sistema_David.Models.Modelo
         }
 
 
+        public static List<VMComprobantesImagenes> ObtenerComprobantes(int idCuenta)
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                var hoy = DateTime.Today;
+                var comprobantes = db.ComprobantesImagenes
+                    .Where(c => c.IdCuenta == idCuenta && DbFunctions.TruncateTime(c.Fecha) == hoy)
+                    .Select(c => new VMComprobantesImagenes
+                    {
+                        Id = c.Id,
+                        Imagen = c.Imagen,
+                    })
+                    .ToList();
 
+                return comprobantes;
+            }
+        }
 
+        public static bool GuardarComprobantes(List<VMComprobantesImagenes> comprobantes)
+        {
+            if (comprobantes == null || comprobantes.Count == 0)
+                return false;
 
+            int idCuenta = comprobantes.First().IdCuenta ?? 0;
+            var hoy = DateTime.Today;
 
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                // 1. Eliminar comprobantes existentes del día y la cuenta
+                var existentes = db.ComprobantesImagenes
+                    .Where(c => c.IdCuenta == idCuenta && DbFunctions.TruncateTime(c.Fecha) == hoy)
+                    .ToList();
+
+                db.ComprobantesImagenes.RemoveRange(existentes);
+                db.SaveChanges();
+
+                // 2. Insertar solo los que tengan Imagen no vacía
+                foreach (var comp in comprobantes)
+                {
+                    if (!string.IsNullOrWhiteSpace(comp.Imagen))
+                    {
+                        db.ComprobantesImagenes.Add(new ComprobantesImagenes
+                        {
+                            Fecha = DateTime.Now,
+                            Imagen = comp.Imagen,
+                            IdCuenta = comp.IdCuenta.Value
+                        });
+                    }
+                }
+
+                db.SaveChanges();
+                return true;
+            }
+        }
 
 
 

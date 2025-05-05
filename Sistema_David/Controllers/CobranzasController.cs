@@ -178,6 +178,36 @@ namespace Sistema_David.Controllers
 
         }
 
+        public ActionResult ObtenerComprobantes(int idCuenta)
+        {
+            try
+            {
+                var result = CuentasBancariasModel.ObtenerComprobantes(idCuenta);
+
+                return Json(result, JsonRequestBehavior.AllowGet); // <-- IMPORTANTE para GET en MVC
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<VMComprobantesImagenes>(), JsonRequestBehavior.AllowGet); // <-- devolver array vacío si falla
+            }
+        }
+
+
+        [HttpPost]
+        public ActionResult GuardarComprobantes(List<VMComprobantesImagenes> model)
+        {
+            try
+            {
+                var resultado = CuentasBancariasModel.GuardarComprobantes(model);
+                return Json(new { success = resultado });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+
 
         public ActionResult ListaCuentasBancariasTotales(string metodopago, int activo = 1)
         {

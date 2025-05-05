@@ -2381,6 +2381,7 @@ async function cargarTiposDeNegocio() {
     }
 }
 
+
 function configurarOpcionesColumnas() {
     const grid = $('#grdCobranzas').DataTable(); // Accede al objeto DataTable utilizando el id de la tabla
     const columnas = grid.settings().init().columns; // Obtiene la configuración de columnas
@@ -2517,10 +2518,13 @@ function renderAccounts() {
 
         const buttonContainer = document.createElement("div");
         buttonContainer.innerHTML = `
-            <button class="btn btn-warning btn-sm edit-btn" onclick="editAccount(${account.Id})">
+         <button class="btn btn-secondary btn-sm delete-btn" onclick="anadirComprobantes(${account.Id})" title="Adjuntar Imagenes">
+                <i class="fa fa-file-image-o"></i>
+            </button>
+            <button class="btn btn-warning btn-sm edit-btn" onclick="editAccount(${account.Id})" title="Editar">
                 <i class="fa fa-pencil"></i>
             </button>
-            <button class="btn btn-danger btn-sm delete-btn" onclick="deleteAccount(${account.Id})">
+            <button class="btn btn-danger btn-sm delete-btn" onclick="deleteAccount(${account.Id})" title="Eliminar">
                 <i class="fa fa-trash"></i>
             </button>
         `;
@@ -2961,57 +2965,160 @@ async function exportarPdf() {
         return;
     }
 
-    const deseaAgregar = confirm("¿Deseás agregar más comprobantes antes de generar el PDF?");
-    if (deseaAgregar) {
-        const modal = new bootstrap.Modal(document.getElementById("modalComprobantes"));
-        modal.show();
-        return;
+    await generarPdfFinal(); // lógica que ya tenías, movida a una función aparte
+}
+
+
+async function anadirComprobantes(id) {
+    const modal = new bootstrap.Modal(document.getElementById("modalComprobantes"));
+   
+
+    // Limpiar todos los slots
+    const previews = document.querySelectorAll(".vista-previa");
+    const inputs = document.querySelectorAll(".extra-comprobante");
+    const btns = document.querySelectorAll(".btn-cancelar-imagen");
+
+    previews.forEach(img => {
+        img.style.display = "none";
+        img.src = "";
+    });
+
+    inputs.forEach(input => {
+        input.value = "";
+    });
+
+    btns.forEach(btn => btn.style.display = "none");
+
+    document.getElementById("idaccount").value = id;
+
+    // Cargar imágenes desde backend
+    const response = await fetch(`/Cobranzas/ObtenerComprobantes?idCuenta=${id}`);
+    const data = await response.json();
+
+    for (let i = 0; i < data.length && i < previews.length; i++) {
+        const img = previews[i];
+        img.src = `data:image/png;base64,${data[i].Imagen}`;
+        img.style.display = "block";
+
+        btns[i].style.display = "inline-block";
     }
 
-    await generarPdfFinal(); // lógica que ya tenías, movida a una función aparte
+    modal.show();
+}
+
+
+async function guardarComprobantes() {
+    const idCuenta = parseInt(document.getElementById("idaccount").value);
+    const fileInputs = document.querySelectorAll(".extra-comprobante");
+    const imgPreviews = document.querySelectorAll(".vista-previa");
+
+    let comprobantes = [];
+
+    for (let i = 0; i < 12; i++) {
+        const input = fileInputs[i];
+        const img = imgPreviews[i];
+
+        let base64 = null;
+
+        if (!img || img.style.display === "none") {
+            base64 = null;
+        } else if (input?.files?.[0]) {
+            base64 = (await toBase64(input.files[0])).split(',')[1];
+        } else if (img.src?.startsWith("data:image")) {
+            base64 = img.src.split(',')[1];
+        }
+
+        comprobantes.push({
+            IdCuenta: idCuenta,
+            Fecha: new Date().toISOString(),
+            Imagen: base64 // puede ser null
+        });
+    }
+
+    const response = await fetch('/Cobranzas/GuardarComprobantes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(comprobantes)
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        alert("Comprobantes guardados correctamente");
+
+        document.querySelectorAll(".vista-previa").forEach(img => {
+            img.src = "";
+            img.style.display = "none";
+        });
+
+        fileInputs.forEach(input => input.value = "");
+
+        document.querySelectorAll(".btn-cancelar-imagen").forEach(btn => {
+            btn.style.display = "none";
+        });
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById("modalComprobantes"));
+        if (modal) modal.hide();
+    } else {
+        alert("Error al guardar: " + (result.error || "desconocido"));
+    }
+}
+
+function getImageBase64FromURL(url) {
+    return new Promise((resolve, reject) => {
+        fetch(url)
+            .then(res => res.blob())
+            .then(blob => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            })
+            .catch(reject);
+    });
+}
+
+function toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 
 async function generarPdfFinal() {
     let clientesExportados = [];
-    let posicion = { x: 15, y: 10 }; // posición inicial compartida
+    let posicion = { x: 15, y: 10 };
 
     const doc = new jsPDF();
     const fechaActual = new Date().toLocaleDateString();
-
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
     // Header
     const colorStart = [30, 87, 153];
     const colorEnd = [125, 185, 232];
-    const headerX = 10;
-    const headerY = 10;
-    const headerWidth = 190;
-    const headerHeight = 12;
-
+    const headerX = 10, headerY = 10, headerWidth = 190, headerHeight = 12;
     drawGradientHeader(doc, headerX, headerY, headerWidth, headerHeight, colorStart, colorEnd);
 
     doc.setFontSize(16);
     doc.setTextColor(255, 255, 255);
     const titulo = `Cuenta Bancaria: ${selectedAccount.Nombre}`;
-    const textWidth = doc.getTextWidth(titulo);
-    const centerX = (pageWidth - textWidth) / 2;
+    const centerX = (pageWidth - doc.getTextWidth(titulo)) / 2;
     doc.text(titulo, centerX, headerY + 9);
 
     doc.setTextColor(0, 0, 0);
     posicion.y += 20;
-
     doc.setFontSize(12);
     doc.text(`Fecha: ${fechaActual}`, 10, posicion.y);
     if (selectedAccount.MontoPagar > 0) {
         posicion.y += 10;
         doc.text(`Monto a Cobrar: $${selectedAccount.MontoPagar.toFixed(2)}`, 10, posicion.y);
     }
-
     posicion.y += 10;
     doc.text(`Entregado: $${selectedAccount.Entrega.toFixed(2)}`, 10, posicion.y);
-
     if (parseInt(selectedAccount.MontoPagar) > 0) {
         posicion.y += 10;
         doc.text(`Restante: $${(selectedAccount.MontoPagar - selectedAccount.Entrega).toFixed(2)}`, 10, posicion.y);
@@ -3025,7 +3132,7 @@ async function generarPdfFinal() {
     doc.text("Comprobantes:", 10, posicion.y);
     posicion.y += 10;
 
-    // 1. Comprobantes existentes
+    // 1. Comprobantes existentes de ventas
     for (const venta of selectedAccount.InformacionVentas) {
         const image = await ObtenerImagen(venta.Id);
         if (!image) continue;
@@ -3036,18 +3143,32 @@ async function generarPdfFinal() {
 
             await agregarImagenADoc(doc, image, posicion, pageHeight, clientesExportados, idCliente);
         } catch (err) {
-            console.warn("No se pudo cargar una imagen:", err);
+            console.warn("No se pudo cargar imagen de venta:", err);
         }
     }
 
-    // 2. Comprobantes extra del modal
-    const inputs = document.querySelectorAll(".extra-comprobante");
-    for (const input of inputs) {
-        if (input.files.length > 0) {
-            const file = input.files[0];
-            const base64 = await leerArchivoComoBase64(file);
-            await agregarImagenADoc(doc, base64.split(',')[1], posicion, pageHeight, clientesExportados);
+    // 2. Comprobantes guardados en la base para la cuenta
+    try {
+        const resp = await fetch(`/Cobranzas/ObtenerComprobantes?idCuenta=${selectedAccount.Id}`);
+        const comprobantesBase = await resp.json();
+
+        for (const comprobante of comprobantesBase) {
+            if (comprobante.Imagen) {
+                await agregarImagenADoc(doc, comprobante.Imagen, posicion, pageHeight);
+            }
         }
+    } catch (err) {
+        console.warn("Error cargando comprobantes desde base:", err);
+    }
+
+    // 3. Comprobantes nuevos del modal (input.files)
+    const inputs = Array.from(document.querySelectorAll(".extra-comprobante"))
+        .filter(input => input && input.files && input.files.length > 0);
+
+    for (const input of inputs) {
+        const file = input.files[0];
+        const base64 = await leerArchivoComoBase64(file);
+        await agregarImagenADoc(doc, base64.split(',')[1], posicion, pageHeight);
     }
 
     limpiarComprobantes();
@@ -3160,18 +3281,15 @@ document.querySelectorAll('.btn-cancelar-imagen').forEach(btn => {
         const img = container.querySelector('.vista-previa');
 
         input.value = '';
-        img.src = '';
+        input.setAttribute("data-vacio", "1");
+
+        img.removeAttribute("src"); // 🔁 ESTO ES LO QUE TE FALTABA
         img.style.display = 'none';
+
         this.style.display = 'none';
     });
 });
 
-
-document.getElementById("btnGenerarPdf").addEventListener("click", () => {
-    const modal = bootstrap.Modal.getInstance(document.getElementById("modalComprobantes"));
-    modal.hide();
-    generarPdfFinal();
-});
 
 function drawGradientHeader(doc, x, y, width, height, colorStart, colorEnd) {
     const steps = width;
