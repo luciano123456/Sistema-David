@@ -184,8 +184,10 @@ async function cargarUsuarios() {
 
                 // Div de acciones
                 const accionesDiv = document.createElement("div");
-                accionesDiv.appendChild(createBloqueoButton(usuario));
 
+                if (usuario.IdRol != 1) {
+                    accionesDiv.appendChild(createBloqueoButton(usuario));
+                }
 
                 if (userSession.IdRol == 1) {
                     accionesDiv.appendChild(createIconoVentas(usuario));
@@ -276,6 +278,7 @@ function createUsuarioNombre(usuario, rol) {
 }
 
 function createBloqueoButton(usuario) {
+    
     const color = usuario.BloqueoSistema ? "danger" : "success";
     const titulo = usuario.BloqueoSistema ? "Desbloquear" : "Bloquear";
     const estadoInverso = usuario.BloqueoSistema ? 0 : 1;
@@ -290,7 +293,8 @@ function createBloqueoButton(usuario) {
         bloqueoSistema(usuario.Id, estadoInverso);
     });
 
-    return botonBloqueo;
+        return botonBloqueo;
+   
 }
 
 function createIconoVentas(usuario) {
@@ -1157,7 +1161,7 @@ async function enviarWhatssap(id) {
                 const table = $('#grdClientesAusentes').DataTable();
                 table.ajax.reload();
 
-                mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro y el vendedor no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
+                mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro y el cobrador no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
                 if (userSession.IdRol != 2) {
                     CantidadClientesAusentes();
                 }
@@ -1166,7 +1170,7 @@ async function enviarWhatssap(id) {
             }
 
             if (result.InformacionVenta.ClienteAusente == 1 && result.InformacionVenta.Descripcion != null && result.InformacionVenta.Descripcion.includes("Cobranza")) {
-                mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} hemos visitado su casa para realizar un cobro y el vendedor no pudo encontrarlo en su domicilio. Su nueva fecha de cobro es ${fechaCobro}`;
+                mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} hemos visitado su casa para realizar un cobro y el cobrador no pudo encontrarlo en su domicilio. Su nueva fecha de cobro es ${fechaCobro}`;
             }
             if (result.InformacionVenta.ClienteAusente == 0 && result.InformacionVenta.Entrega == 0 && result.InformacionVenta.Descripcion != null && result.InformacionVenta.Descripcion.includes("Cobranza")) {
                 mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} hemos hecho un cambio de fecha de cobro en su venta. Su nueva fecha de cobro es ${fechaCobro}`;

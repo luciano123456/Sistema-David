@@ -92,7 +92,7 @@ namespace Sistema_David.Models.Modelo
                             join u in db.Usuarios on v.idVendedor equals u.Id
                             join t in db.TipoNegocio on v.IdTipoNegocio equals t.Id
                             where (v.idVendedor == idVendedor || idVendedor == -1)
-                               && (v.Fecha >= FechaDesde && v.Fecha <= FechaHasta)
+                               && ((v.Fecha >= FechaDesde && v.Fecha <= FechaHasta) || (v.Estado == "APROBAR"))
                                && ((Finalizadas == 1 && v.Restante == 0) || (Finalizadas == 0 && v.Restante > 0 || Finalizadas == 2 && v.Restante >= 0))
                                && ((idVendedor == -1 && v.Estado == string.Empty || v.Estado == null) || idVendedor > 0)
                                && ((TipoNegocio == -1 || v.IdTipoNegocio == TipoNegocio))
@@ -128,7 +128,8 @@ namespace Sistema_David.Models.Modelo
 
                             };
 
-                return query.ToList();
+                return query.OrderByDescending(x => x.Estado).ToList();
+
             }
         }
 
@@ -617,7 +618,7 @@ namespace Sistema_David.Models.Modelo
                                 P_FechaCobro = model.FechaCobro,
                                 P_ValorCuota = model.ValorCuota,
                                 Comprobante = 0,
-                                Estado = estadoVenta,
+                                Estado = "Aprobar",
                                 EstadoCobro = "0",
                                 Turno = model.Turno != null ? model.Turno.ToUpper() : model.Turno,
                                 FranjaHoraria = model.FranjaHoraria,
