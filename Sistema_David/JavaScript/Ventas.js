@@ -61,7 +61,7 @@ $(document).ready(async function () {
 
     configurarDataTable(-1, FechaDesde, FechaHasta, VentaFinalizada, -1);
 
-    if (userSession.IdRol == 1) listarVentasPendientes();
+    if (userSession.IdRol == 1 || userSession.IdRol == 4) listarVentasPendientes();
 
     $("#btnVentas").css("background", "#2E4053");
 
@@ -365,9 +365,15 @@ async function configurarDataTablePendientes(data) {
                 },
                 {
                     "data": "Id",
-                    "render": function (data) {
+                    "render": function (data, type, row) {
+                        var visualizarVenta = "<button class='btn btn-sm btneditar btnacciones' type = 'button' onclick = 'editarVenta(" + data + ")' title = 'Visualizar Venta' > <i class='fa fa-eye fa-lg text-warning' aria-hidden='true'></i></button>";
+                        var comprobanteIconColor = row.Comprobante === 1 ? "green" : "red";
+                        var rechazarVenta = row.IdRol == 1 ? "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='eliminarVenta(" + data + ")' title='Rechazar Venta'><i class='fa fa-ban fa-lg text-danger' aria-hidden='true'></i></button>" : "";
                         return "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='aceptarVenta(" + data + ")' title='Aceptar Venta'><i class='fa fa-check fa-lg text-green' aria-hidden='true'></i></button>" +
-                            "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='eliminarVenta(" + data + ")' title='Rechazar Venta'><i class='fa fa-ban fa-lg text-danger' aria-hidden='true'></i></button>";
+                            rechazarVenta +
+                            visualizarVenta +
+                            "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg text-white' aria-hidden='true'></i></button>" +
+                            "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='imprimirComprobante(" + data + ")' title='Imprimir Comprobante' ><i class='fa fa-print fa-lg' style='color: " + comprobanteIconColor + ";' aria-hidden='true'></i></button>";
                     },
                     width: "200px",
                     "orderable": true,
@@ -575,6 +581,8 @@ const enviarComprobante = async id => {
         if (result.Status) {
             const table = $('#grdVentas').DataTable();
             table.ajax.reload();
+
+            listarVentasPendientes()
         } else {
             $('.datos-error').text('Ha ocurrido un error en los datos.')
             $('.datos-error').removeClass('d-none')
