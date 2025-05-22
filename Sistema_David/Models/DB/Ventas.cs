@@ -44,6 +44,7 @@ namespace Sistema_David.Models.DB
         public string FranjaHoraria { get; set; }
         public string EstadoCobro { get; set; }
         public Nullable<int> IdTipoNegocio { get; set; }
+        public Nullable<int> CobroPendiente { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ProductosVenta> ProductosVenta { get; set; }

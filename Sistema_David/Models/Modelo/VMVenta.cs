@@ -51,6 +51,7 @@ namespace Sistema_David.Models.Modelo
         public decimal ValorCuota { get; set; }
         public decimal SaldoCliente { get; set; }
         public decimal Interes { get; set; }
+        public int CobroPendiente { get; set; }
         public DateTime FechaCliente { get; set; }
         public DateTime P_FechaCobro { get; set; }
         public decimal P_ValorCuota { get; set; }

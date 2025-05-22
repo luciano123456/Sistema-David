@@ -49,21 +49,28 @@ namespace Sistema_David.Controllers
 
         }
 
-        public ActionResult Listar(int idVendedor, int idCobrador, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, string Turno, int TipoNegocio)
+        public ActionResult ListarPendientes()
+        {
+            List<VMVenta> result;
+                result = CobranzasModel.ListaCobranzasPendientes();
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult Listar(int idVendedor, int idCobrador, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, string Turno, int TipoNegocio, int CobrosPendientes)
         {
             List<VMVenta> result;
 
             if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 2) //ROL VENDEDOR
             {
-                result = CobranzasModel.ListaCobranzas(SessionHelper.GetUsuarioSesion().Id, SessionHelper.GetUsuarioSesion().Id, FechaCobroDesde, FechaCobroHasta, DNI, idZona, Turno, TipoNegocio);
+                result = CobranzasModel.ListaCobranzas(SessionHelper.GetUsuarioSesion().Id, SessionHelper.GetUsuarioSesion().Id, FechaCobroDesde, FechaCobroHasta, DNI, idZona, Turno, TipoNegocio, CobrosPendientes);
             }
             else if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 3) //ROL COBRADOR)
             {
-                result = CobranzasModel.ListaCobranzas(-1, SessionHelper.GetUsuarioSesion().Id, FechaCobroDesde, FechaCobroHasta, DNI, idZona, Turno, TipoNegocio);
+                result = CobranzasModel.ListaCobranzas(-1, SessionHelper.GetUsuarioSesion().Id, FechaCobroDesde, FechaCobroHasta, DNI, idZona, Turno, TipoNegocio, CobrosPendientes);
             }
             else
             {
-                result = CobranzasModel.ListaCobranzas(idVendedor, idCobrador, FechaCobroDesde, FechaCobroHasta, DNI, idZona, Turno, TipoNegocio);
+                result = CobranzasModel.ListaCobranzas(idVendedor, idCobrador, FechaCobroDesde, FechaCobroHasta, DNI, idZona, Turno, TipoNegocio, CobrosPendientes);
             }
 
 
