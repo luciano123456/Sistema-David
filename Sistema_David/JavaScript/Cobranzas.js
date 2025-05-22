@@ -6,6 +6,7 @@ let userSession;
 var selectedCheckboxes = [];
 let lastCobranzaTime = 0;
 let activoCuentasBancarias = 1
+let gridCobranzas, gridCobranzasPendientes;
 
 $(document).ready(async function () {
 
@@ -28,6 +29,10 @@ $(document).ready(async function () {
     var fechaCobroDesde;
     var fechaCobroHasta;
     var dni;
+
+    if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+        document.getElementById("grdCobranzasPendientesDiv").removeAttribute("hidden")
+    }
 
     if (localStorage.getItem("FechaCobroDesde") == null) {
         fechaCobroDesde = moment().add(-210, 'days').format('YYYY-MM-DD');
@@ -88,7 +93,8 @@ $(document).ready(async function () {
 
     await buscarRecorridos()
 
-    configurarDataTable(-1, -1, fechaCobroDesde, fechaCobroHasta, document.getElementById("Dni").value, -1, "Todos", -1);
+    configurarDataTable(-1, -1, fechaCobroDesde, fechaCobroHasta, document.getElementById("Dni").value, -1, "Todos", -1, 0);
+    configurarDataTableCobrosPendientes();
 
 
 }).on('init.dt', function () {
@@ -226,11 +232,13 @@ function aplicarFiltros() {
     }
 
 
+
+    
     document.getElementById("btnAsignarCobrador").style.display = "none";
     document.getElementById("btnAsignarTurno").style.display = "none";
     document.getElementById("selectAllCheckbox").checked = false;
 
-    configurarDataTable(idVendedor, idCobrador, document.getElementById("FechaCobroDesde").value, document.getElementById("FechaCobroHasta").value, document.getElementById("Dni").value, idZona, Turno, tipoNegocio);
+    configurarDataTable(idVendedor, idCobrador, document.getElementById("FechaCobroDesde").value, document.getElementById("FechaCobroHasta").value, document.getElementById("Dni").value, idZona, Turno, tipoNegocio, 0);
 
 
 
@@ -277,9 +285,9 @@ const estadoHome = async () => {
     }
 }
 
-async function cobranzaVenta(id) {
+async function cobranzaVenta(id, tabla) {
 
-    var table = $("#grdCobranzas").DataTable()
+    var table = $(`#${tabla}`).DataTable()
     
 
 
@@ -307,6 +315,8 @@ async function cobranzaVenta(id) {
     iconoPrincipal.className = 'fa fa-home fa-3x text-dark cursor-pointer';
 
     const importeCobranza = parseInt(document.querySelector("#Entrega").value);
+
+    document.querySelector('#chkCobroPendiente').checked = false;
 
     document.getElementById("ValorInteres").value = 0;
     document.getElementById("lblValorInteres").removeAttribute("hidden", "hidden");
@@ -468,6 +478,7 @@ async function hacerCobranza() {
                     EstadoCobro: document.getElementById("estadoCobro").value,
                     IdCuenta: document.getElementById("CuentaPago").value,
                     Imagen: document.getElementById("imgProd").value,
+                    CobroPendiente: document.querySelector('#chkCobroPendiente').checked,
                 });
 
 
@@ -509,6 +520,7 @@ async function hacerCobranza() {
                         buscarRecorridos();
                         $("#cobranzaModal").modal("hide");
                         gridCobranzas.ajax.reload();
+                        gridCobranzasPendientes.ajax.reload();
 
                         localStorage.setItem("lastCobranzaTime", now);
 
@@ -743,11 +755,389 @@ async function enviarWhatssapId(id, interes) {
     }
 }
 
+const configurarDataTableCobrosPendientes = async () => {
+    gridCobranzasPendientes = $('#grdCobranzasPendientes').DataTable({
+        "ajax": {
+            "url": `/Cobranzas/ListarPendientes`,
+            "type": "GET",
+            "dataType": "json"
+        },
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+        },
 
-const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fechaCobroHasta, DNI, idZona, Turno, tipoNegocio) => {
+        scrollX: true,
+
+        rowReorder: true,
+        "colReorder": true, // Habilita la extensión ColReorder
+        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        "columns": [
+
+            {
+                "data": "Orden",
+                "render": function (data, type, row) {
+                    var ventaId = row.Id; // Obtener el ID de la venta de la fila
+                    var recorridoId = row.IdRecorrido; // Obtener el ID de la venta de la fila
+                    var enRecorrido = row.EnRecorrido && userSession.Id == row.IdUsuarioRecorrido;
+                    var idCliente = row.idCliente;
+
+                    // Usar el orden del recorrido si está en recorrido, de lo contrario usar el orden de la cobranza
+                    var ordenMostrar = enRecorrido ? row.OrdenRecorridoCobro : data;
+
+                    if (type === "display") {
+                        if (enRecorrido) {
+                            // Mostrar solo el orden sin acciones si está en recorrido
+                            if (row.OrdenRecorrido == row.OrdenRecorridoCobro) {
+                                return '<span style="margin-left: 5px; margin-right: 5px; cursor: pointer;">' +
+                                    '<i class="fa fa-arrow-up" style="font-size: 14px; color: green; cursor: pointer;" onclick="columnUpRecorrido(' + recorridoId + ')"></i> ' +
+                                    '<label id="ordenLabel_' + ventaId + '" style="margin-left: 5px; margin-right: 5px; cursor: pointer;">' +
+                                    '<span>' + ordenMostrar + '</span>' +
+                                    '</label>' +
+                                    '<i class="fa fa-arrow-down" style="font-size: 14px; color: red; cursor: pointer;" onclick="columnDownRecorrido(' + recorridoId + ', ' + row.Id + ')"></i>' +
+                                    '<i class="fa fa-trash" title="Eliminar" style="font-size: 16px; color: red; cursor: pointer; margin-left: 5px;" onclick="deleteRecorrido(' + recorridoId + ', ' + idCliente + ')"></i>'
+
+                            } else {
+                                return '<span style="margin-left: 5px; margin-right: 5px;">' + ordenMostrar + '</span>' +
+                                    '<i class="fa fa-trash" title="Eliminar" style="font-size: 16px; color: red; cursor: pointer; margin-left: 5px;" onclick="deleteRecorrido(' + recorridoId + ', ' + idCliente + ')"></i>';
+
+
+                            }
+                        } else {
+                            if (ordenMostrar === 999) {
+                                // Si el orden es 999, mostrar "-" y permitir la edición al hacer clic
+                                return '<span style="margin-left: 5px; margin-right: 5px; cursor: pointer;" ' +
+                                    'onclick="makeEditable(' + ventaId + ')">' +
+                                    '<label id="ordenLabel_' + ventaId + '" style="cursor: pointer;">-</label>' +
+                                    '</span>';
+                            } else {
+                                // Mostrar el número y permitir la edición al hacer clic en el ordenLabel
+                                return '<span style="margin-left: 5px; margin-right: 5px; cursor: pointer;">' +
+                                    '<i class="fa fa-arrow-up" style="font-size: 14px; color: green; cursor: pointer;" onclick="columnUp(' + ventaId + ')"></i> ' +
+                                    '<label id="ordenLabel_' + ventaId + '" style="margin-left: 5px; margin-right: 5px; cursor: pointer;" ' +
+                                    'onclick="makeEditable(' + ventaId + ')">' +
+                                    '<span>' + ordenMostrar + '</span>' +
+                                    '</label>' +
+                                    '<i class="fa fa-arrow-down" style="font-size: 14px; color: red; cursor: pointer;" onclick="columnDown(' + ventaId + ')"></i>' +
+                                    '</span>';
+                            }
+                        }
+                    } else {
+                        return ordenMostrar;
+                    }
+                },
+            },
+
+
+
+
+            {
+                "data": "Cliente",
+                "render": function (data, type, row) {
+                    // Crear el HTML para el cliente con el ícono de edición y el checkbox
+                    const isChecked = false;
+                    const checkboxClass = isChecked ? 'fa-check-square-o' : 'fa-square-o';
+                    const checkbox = `<span class="custom-checkbox" data-id="${row.Id}">
+                        <i class="fa ${checkboxClass} checkbox"></i>
+                        </span>`;
+
+                    return `${checkbox} <span class="cliente-tooltip" data-toggle="tooltip" data-placement="bottom" data-trigger="hover touch" title="${data}">
+                        <a href="javascript:void(0);" class="cliente-link-no-style">${data}</a> 
+                        <i class="fa fa-pencil fa-1x text-primary" title="Editar cliente" 
+                        style="cursor: pointer;" 
+                        onclick="editarCliente(${row.idCliente})"></i>
+                        </span>`;
+                }
+            },
+
+
+            {
+                data: function (row) {
+
+                    var direccionCorta = row.Direccion != null && row.Direccion.length > 20 ? row.Direccion.substring(0, 20) + '...' : row.Direccion;
+                    if (row.Direccion && row.Direccion.trim() !== "" && row.Latitud && row.Longitud) {
+                        var direccionCompleta = row.Direccion;
+                        var latDestino = row.Latitud;
+                        var lonDestino = row.Longitud;
+                        var mapaUrl = 'https://www.google.com/maps/search/?api=1&query=' + latDestino + ',' + lonDestino + '&zoom=20&basemap=satellite';
+
+                        return '<div class="location-cell">' +
+                            '<i title="Ir a Google Maps" class="fa fa-map-marker fa-2x text-warning location-icon" onclick="obtenerUbicacionYMostrarRecorrido(\'' + direccionCompleta + '\', ' + latDestino + ', ' + lonDestino + ')"></i> ' +
+                            '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + direccionCompleta + '\', ' + latDestino + ', ' + lonDestino + ')" class="direccion-link">' + direccionCorta + '</a>' +
+                            '</div>';
+                    }
+
+                    // Si no hay coordenadas, solo muestra la dirección
+                    return '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + row.Direccion + '\', 0, 0)" class="direccion-link">' + direccionCorta + '</a>';
+                }
+            },
+
+            { "data": "ValorCuota" },
+            { "data": "Entrega" },
+
+            { "data": "Restante" },
+            { "data": "FechaCobro" },
+            { "data": "FechaLimite" },
+
+
+
+
+            {
+                "data": "Vendedor",
+
+                "render": function (data, type, row) {
+                    var primeraLetra = data != "" ? data.substring(0, 3) + "..." : "";
+                    return primeraLetra;
+                },
+
+            },
+
+
+
+
+            {
+                "data": "Cobrador",
+
+                "render": function (data, type, row) {
+                    var primeraLetra = data != "" ? data.substring(0, 3) + "..." : "";
+                    return primeraLetra;
+                },
+
+            },
+
+            {
+                "data": "EnRecorrido",
+                "visible": false // Esta columna será oculta
+            },
+
+            {
+                "data": "Turno",
+
+                "render": function (data, type, row) {
+                    var primeraLetra = data.charAt(0)
+                    return primeraLetra;
+                },
+            },
+
+
+            {
+                "data": "FranjaHoraria",
+                "render": function (data, type) {
+                    if (type === 'sort') {
+                        // Extraer la hora de inicio para la ordenación
+                        let startHour = data.split('-')[0];
+                        // Asegurarse de que el formato es adecuado para ordenar
+                        let hour = parseInt(startHour.split(':')[0], 10);
+                        return hour;
+                    }
+                    // Formato de visualización (ajusta esto según tus necesidades)
+                    return data;
+                }
+            },
+
+            { "data": "Zona" },
+
+            {
+                "data": "Id",
+                "render": function (data, type, row) {
+
+                    const isChecked = false;
+
+
+                    const checkboxClass = isChecked ? 'fa-check-square-o' : 'fa-square-o';
+                    const checkboxColor = isChecked ? 'green' : 'red';
+                    var comprobanteIconColor = row.Comprobante === 1 ? "green" : "red";
+                    var modifiedButton = userSession.IdRol === 1 || userSession.IdRol === 4 || userSession.IdRol === 3 ? "<button class='btn btn-sm btneditar btnacciones' type = 'button' onclick = 'editarVenta(" + data + ")' title = 'Visualizar Venta' > <i class='fa fa-eye fa-lg text-warning' aria-hidden='true'></i></button>" : "";
+                    var estadoCobroIconColor = row.EstadoCobro === "1" ? "red" : "white";
+
+
+                    const telefono = `+54 9${row.TelefonoCliente}`;
+                    iconoCobrador = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalHome(" + data + ")' title='Estado de Cobro' ><i class='fa fa-home fa-lg' style='color: " + estadoCobroIconColor + ";' aria-hidden='true'></i></button>" +
+                        modifiedButton +
+                        `<button class='btn btn-sm btnacciones' type='button' id='Cobranza(${data})' onclick='cobranzaVenta(${data}, "grdCobranzasPendientes")' title='Cobranza'><i class='fa fa-money fa-lg text-white'></i></button>`
+                    iconosAdmin = `<button class='btn btn-sm btnacciones' type = 'button' id = 'infoVenta(${data})' onclick = 'informacionVenta(${data})' title = 'Informacion de la Venta' > <i class='fa fa-info-circle fa-lg text-white'></i></button >` +
+                        "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='imprimirComprobante(" + data + ")' title='Imprimir Comprobante' ><i class='fa fa-print fa-lg' style='color: " + comprobanteIconColor + ";' aria-hidden='true'></i></button>" +
+                        `<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalWhatssap(${data})' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg text-white' aria-hidden='true'></i></button>
+                            <a class='btn btn-sm btnacciones' href='tel:${telefono}' title='Llamar ${telefono}'><i class='fa fa-phone text-white'></i></a>`
+
+
+
+                    if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+                        return iconoCobrador + iconosAdmin
+                    } else if (userSession.IdRol == 3) {
+                        return iconoCobrador
+                    }
+
+                },
+                width: "200px",
+                "orderable": true,
+                "searchable": true,
+            },
+        ],
+
+        "rowReorder": {
+            "selector": 'td:not(:first-child)', // Permite arrastrar filas excepto la primera columna
+            "snapX": true, // Hace que las filas se ajusten a la posición del mouse horizontalmente
+            "update": true, // Actualiza automáticamente el orden en los datos del DataTable
+            "dataSrc": '' // Utiliza el índice de la fila como valor de datos para actualizar
+        },
+
+        "order": [
+
+
+            [11, 'asc'],
+            [12, 'desc'],
+            [0, 'asc']
+        ],
+
+        "fnRowCallback": function (nRow, data, row) {
+            var fechaHoy = moment().startOf('day'); // Obtener la fecha de hoy sin la hora
+            var fechaCobro = moment(data.FechaCobro).startOf('day'); // Obtener la fecha de cobro sin la hora
+            var fechaLimite = moment(data.FechaLimite).startOf('day'); // Obtener la fecha límite sin la hora
+
+            if (fechaHoy.isSame(fechaLimite)) {
+                if (userSession.IdRol == 1)
+                    $('td:eq(7)', nRow).css('background-color', '#871D11'); // Cambiar color de la celda del cliente en rojo
+                else {
+                    $('td:eq(6)', nRow).css('background-color', '#871D11'); // Cambiar color de la celda del cliente en rojo
+                }
+            }
+            if (data.EstadoCliente == "Inhabilitado") {
+                $('td', nRow).css('color', '#871D11'); // Cambiar color de la celda del cliente en rojo
+                $('td:eq(3) a', nRow).css('color', '#871D11'); // Cambiar color de la celda del cliente en rojo
+            } else if (data.EstadoCliente == "Regular") {
+                $('td', nRow).css('color', '#EC9B1F'); // Cambiar color de la celda del cliente en verde
+                $('td:eq(3) a', nRow).css('color', '#EC9B1F');
+            }
+
+            if (data.EnRecorrido == true && userSession.Id == data.IdUsuarioRecorrido) {
+                //if (data.OrdenRecorridoCobro < data.OrdenRecorrido) {
+                //    $('td', nRow).css('background-color', ' #2B25E9');
+                if (data.OrdenRecorridoCobro == data.OrdenRecorrido) {
+                    $('td', nRow).css('background-color', '#A2A183');
+                } else if (data.OrdenRecorridoCobro > data.OrdenRecorrido) {
+                    $('td', nRow).css('background-color', '#037068');
+                }
+            }
+
+            if (data.Restante <= 0) {
+                var cobranzaId = "Cobranza(" + data.Id + ")";
+                // Puedes ocultar el botón de la siguiente manera:
+                // document.getElementById(cobranzaId).style.display = "none";
+            }
+
+
+
+        },
+
+
+        "columnDefs": [
+            {
+                "render": function (data, type, row) {
+                    return formatNumber(data); // Formatear número en la columna
+                },
+                "targets": [3, 4, 5] // Columnas Venta, Cobro, Capital Final
+            },
+
+            {
+                "targets": [6, 7],
+                "render": function (data) {
+                    return moment(data).format('DD/MM/YYYY'); // Formato de fecha
+                }
+            },
+            {
+                // Asumiendo que las franjas horarias están en estas columnas
+                "targets": [12],
+                "render": function (data) {
+                    let startHour = data.split('-')[0];
+                    let hour = parseInt(startHour.split(':')[0], 10);
+                    return hour; // Convertir a número entero para ordenar
+                }
+            }
+        ],
+
+        "initComplete": function (settings, json) {
+
+            configurarOpcionesColumnas();
+
+            if (![1, 3, 4].includes(userSession.IdRol)) {
+                gridCobranzasPendientes.columns([0, 14]).visible(false);
+            } else {
+                gridCobranzasPendientes.columns([0, 14]).visible(true);
+            }
+
+            gridCobranzasPendientes.columns(10).visible(false);
+        }
+    });
+
+
+
+    $('#grdCobranzasPendientes').on('draw.dt', function () {
+        $(document).off('click', '.custom-checkbox'); // Desvincular el evento para evitar duplicaciones
+        $(document).on('click', '.custom-checkbox', handleCheckboxClick);
+    });
+
+
+
+
+
+    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
+
+    $('#grdCobranzasPendientes tbody').on('click', 'tr', function () {
+        // Remover la clase de la fila anteriormente seleccionada
+        if (filaSeleccionada) {
+            $(filaSeleccionada).removeClass('seleccionada');
+            $('td', filaSeleccionada).removeClass('seleccionada');
+
+        }
+
+        // Obtener la fila actual
+        filaSeleccionada = $(this);
+
+        // Agregar la clase a la fila actual
+        $(filaSeleccionada).addClass('seleccionada');
+        $('td', filaSeleccionada).addClass('seleccionada');
+
+        var rowData = gridCobranzasPendientes.row(filaSeleccionada).data();
+        var saldoCliente = rowData.SaldoCliente;
+        var nombreClienteElement = $(this).find('a.cliente-link-no-style'); // Elemento del nombre del cliente
+
+        var nombreCliente = rowData.Cliente;
+        var saldoLabel = document.getElementById("totsaldo");
+
+        saldoLabel.textContent = `Saldo de ${nombreCliente} : ${formatNumber(saldoCliente)}`;
+        var divSaldo = document.getElementById("divSaldo");
+        divSaldo.removeAttribute("hidden");
+
+    });
+
+
+    $(document).on('click', '.custom-checkbox', function (event) {
+        handleCheckboxClick();
+    });
+
+    // Inicializar los tooltips
+    if ('ontouchstart' in window) {
+        // Dispositivo táctil (móvil)
+        $('.direccion-tooltip').tooltip({
+            container: 'body',
+            placement: 'bottom',
+            trigger: 'hover',
+        });
+    } else {
+        // Otros dispositivos (desktop)
+        $('.direccion-tooltip').tooltip({
+            container: 'body',
+            placement: 'bottom',
+            trigger: 'hover',
+        });
+    }
+}
+
+
+const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fechaCobroHasta, DNI, idZona, Turno, tipoNegocio, cobrosPendientes) => {
     gridCobranzas = $('#grdCobranzas').DataTable({
         "ajax": {
-            "url": `/Cobranzas/Listar?idVendedor=${idVendedor}&IdCobrador=${idCobrador}&FechaCobroDesde=${fechaCobroDesde}&FechaCobroHasta=${fechaCobroHasta}&Dni=${DNI}&idZona=${idZona}&Turno=${Turno}&TipoNegocio=${tipoNegocio}`,
+            "url": `/Cobranzas/Listar?idVendedor=${idVendedor}&IdCobrador=${idCobrador}&FechaCobroDesde=${fechaCobroDesde}&FechaCobroHasta=${fechaCobroHasta}&Dni=${DNI}&idZona=${idZona}&Turno=${Turno}&TipoNegocio=${tipoNegocio}&CobrosPendientes=${cobrosPendientes}`,
             "type": "GET",
             "dataType": "json"
         },
@@ -942,7 +1332,7 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
                     const telefono = `+54 9${row.TelefonoCliente}`;
                     iconoCobrador = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalHome(" + data + ")' title='Estado de Cobro' ><i class='fa fa-home fa-lg' style='color: " + estadoCobroIconColor + ";' aria-hidden='true'></i></button>" + 
                         modifiedButton +
-                        `<button class='btn btn-sm btnacciones' type='button' id='Cobranza(${data})' onclick='cobranzaVenta(${data})' title='Cobranza'><i class='fa fa-money fa-lg text-white'></i></button>`
+                        `<button class='btn btn-sm btnacciones' type='button' id='Cobranza(${data})' onclick='cobranzaVenta(${data}, "grdCobranzas")' title='Cobranza'><i class='fa fa-money fa-lg text-white'></i></button>`
                     iconosAdmin = `<button class='btn btn-sm btnacciones' type = 'button' id = 'infoVenta(${data})' onclick = 'informacionVenta(${data})' title = 'Informacion de la Venta' > <i class='fa fa-info-circle fa-lg text-white'></i></button >` +
                         "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='imprimirComprobante(" + data + ")' title='Imprimir Comprobante' ><i class='fa fa-print fa-lg' style='color: " + comprobanteIconColor + ";' aria-hidden='true'></i></button>" +
                         `<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalWhatssap(${data})' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg text-white' aria-hidden='true'></i></button>

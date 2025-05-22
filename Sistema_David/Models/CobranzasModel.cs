@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using NPOI.SS.Formula.Functions;
 using Sistema_David.Helpers;
 using Sistema_David.Models.DB;
 using Sistema_David.Models.Manager;
@@ -15,9 +16,85 @@ namespace Sistema_David.Models.Modelo
     {
 
 
+        public static List<VMVenta> ListaCobranzasPendientes()
+        {
+            try
+            {
+                using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+                {
+                    int idUsuarioSesion = SessionHelper.GetUsuarioSesion().Id;
 
+                    var result = (from d in db.Ventas
+                                  join c in db.Clientes on d.idCliente equals c.Id
+                                  join z in db.Zonas on c.IdZona equals z.Id
+                                  join u in db.Usuarios on d.idVendedor equals u.Id
+                                  join ec in db.EstadosClientes on c.IdEstado equals ec.Id
+                                  join cob in db.Usuarios on d.idCobrador equals cob.Id into cobradorJoin
+                                  from cob in cobradorJoin.DefaultIfEmpty()
+                                  join rc in db.RecorridosCobranzas on d.Id equals rc.IdVenta into recorridosCobranzasJoin
+                                  from rc in recorridosCobranzasJoin.DefaultIfEmpty()
+                                  join r in db.Recorridos on rc.IdRecorrido equals r.Id into recorridosJoin
+                                  from r in recorridosJoin.DefaultIfEmpty()
+                                  where (
+                                   (d.CobroPendiente == 1)
 
-        public static List<VMVenta> ListaCobranzas(int idVendedor, int idCobradorF, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, string Turno, int TipoNegocio)
+                            )
+                                  select new VMVenta
+                                  {
+                                      Id = d.Id,
+                                      idCliente = d.idCliente,
+                                      Fecha = d.Fecha,
+                                      Entrega = d.Entrega,
+                                      Restante = d.Restante,
+                                      FechaCobro = d.FechaCobro,
+                                      FechaLimite = d.FechaLimite,
+                                      idVendedor = d.idVendedor,
+                                      idZona = (int)c.IdZona,
+                                      Zona = z.Nombre,
+                                      Observacion = d.Observacion,
+                                      Cliente = c.Nombre + " " + c.Apellido,
+                                      Direccion = c.Direccion,
+                                      Vendedor = u.Nombre,
+                                      DniCliente = c.Dni,
+                                      Importante = (int)d.Importante,
+                                      TelefonoCliente = c.Telefono,
+                                      Orden = (int)d.Orden,
+                                      ValorCuota = (decimal)d.ValorCuota,
+                                      idEstado = (int)c.IdEstado,
+                                      EstadoCliente = ec.Nombre,
+                                      idCobrador = (int)d.idCobrador,
+                                      SaldoCliente = (decimal)db.Ventas.Where(v => v.idCliente == c.Id && v.Restante > 0).Sum(v => v.Restante),
+                                      Cobrador = cob != null ? cob.Nombre : string.Empty,
+                                      Comprobante = (int)d.Comprobante,
+                                      Latitud = c.Latitud,
+                                      Longitud = c.Longitud,
+                                      // Campos de RecorridosCobranzas
+                                      IdRecorrido = rc != null ? (int)rc.IdRecorrido : 0,
+                                      EstadoRecorrido = rc != null ? rc.Estado : string.Empty,
+                                      OrdenRecorridoCobro = rc != null ? (int)rc.Orden : 0,
+                                      OrdenRecorrido = r != null ? (int)r.Orden : 0,
+                                      EnRecorrido = rc != null && rc.Estado != "Finalizado",
+                                      Turno = d.Turno != null ? d.Turno : "N/A",
+                                      IdUsuarioRecorrido = r != null ? (int)r.IdUsuario : 0,
+                                      FranjaHoraria = d.FranjaHoraria != null ? d.FranjaHoraria : "",
+                                      EstadoCobro = d.EstadoCobro != null ? d.EstadoCobro : ""
+                                  }).ToList();
+
+                    // Ordenar por si está en un recorrido, luego por el orden del recorrido, y finalmente por otra ordenación que desees
+                    result = result.OrderBy(v => v.EnRecorrido ? 0 : 1)
+                                   .ThenBy(v => v.EnRecorrido ? v.OrdenRecorrido : 0)
+                                   .ThenBy(v => v.Importante)
+                                   .ToList();
+
+                    return result;
+                }
+            } catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        public static List<VMVenta> ListaCobranzas(int idVendedor, int idCobradorF, DateTime FechaCobroDesde, DateTime FechaCobroHasta, string DNI, int idZona, string Turno, int TipoNegocio, int CobrosPendientes)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -41,12 +118,13 @@ namespace Sistema_David.Models.Modelo
                                      (d.idVendedor == idVendedor || idVendedor == -1) &&
                                      (d.idCobrador == idCobradorF || (idCobradorF == -1 && (d.idCobrador == 0 || !string.IsNullOrEmpty(DNI))))  &&
                                      (c.IdZona == idZona || idZona == -1) &&
-                                     ((idCobradorF == d.idCobrador) || (idCobradorF != d.idCobrador && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta) || (rc.Estado == "Pendiente" && r.IdUsuario == idUsuarioSesion)) &&
+                                     ((idCobradorF == d.idCobrador) || (idCobradorF != d.idCobrador && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta) || (rc.Estado == "Pendiente" && r.IdUsuario == idUsuarioSesion) || (d.CobroPendiente == 1 && CobrosPendientes == 1)) &&
                                      d.Restante > 0) &&
                                      (d.Estado == "" || d.Estado == null) &&
                                      (d.Turno == Turno || Turno == "Todos") &&
                                      (r == null || r.IdUsuario == idUsuarioSesion || r != null && r.IdUsuario != idUsuarioSesion) &&
-                                     (d.IdTipoNegocio == TipoNegocio || TipoNegocio == -1)
+                                     (d.IdTipoNegocio == TipoNegocio || TipoNegocio == -1) &&
+                                     (d.CobroPendiente == CobrosPendientes || CobrosPendientes == -1)
 
                               )
                               select new VMVenta
@@ -464,6 +542,7 @@ namespace Sistema_David.Models.Modelo
                                 venta.Turno = model.Turno.ToUpper();
                                 venta.FranjaHoraria = model.FranjaHoraria;
                                 venta.EstadoCobro = model.EstadoCobro;
+                                venta.CobroPendiente = model.CobroPendiente != null ? model.CobroPendiente : 0;
 
                                 var cliente = ClientesModel.InformacionCliente(venta.idCliente);
                                 var saldo = cliente.Saldo - model.Entrega;

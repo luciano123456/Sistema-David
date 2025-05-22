@@ -368,7 +368,7 @@ async function configurarDataTablePendientes(data) {
                     "render": function (data, type, row) {
                         var visualizarVenta = "<button class='btn btn-sm btneditar btnacciones' type = 'button' onclick = 'editarVenta(" + data + ")' title = 'Visualizar Venta' > <i class='fa fa-eye fa-lg text-warning' aria-hidden='true'></i></button>";
                         var comprobanteIconColor = row.Comprobante === 1 ? "green" : "red";
-                        var rechazarVenta = row.IdRol == 1 ? "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='eliminarVenta(" + data + ")' title='Rechazar Venta'><i class='fa fa-ban fa-lg text-danger' aria-hidden='true'></i></button>" : "";
+                        var rechazarVenta = userSession.IdRol == 1 ? "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='eliminarVenta(" + data + ")' title='Rechazar Venta'><i class='fa fa-ban fa-lg text-danger' aria-hidden='true'></i></button>" : "";
                         return "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='aceptarVenta(" + data + ")' title='Aceptar Venta'><i class='fa fa-check fa-lg text-green' aria-hidden='true'></i></button>" +
                             rechazarVenta +
                             visualizarVenta +

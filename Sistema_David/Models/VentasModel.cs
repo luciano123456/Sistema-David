@@ -623,6 +623,7 @@ namespace Sistema_David.Models.Modelo
                                 Turno = model.Turno != null ? model.Turno.ToUpper() : model.Turno,
                                 FranjaHoraria = model.FranjaHoraria,
                                 IdTipoNegocio = usuario.IdTipoNegocio,
+                                CobroPendiente = 0
                             };
 
 

@@ -7,8 +7,8 @@
 
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/Productos.css?v=1.2" rel="stylesheet" />
-<link href="~/Estilos/Ventas.css?v=1.2" rel="stylesheet" />
-<link href="~/Estilos/Cobranzas.css?v=1.3" rel="stylesheet" />
+<link href="~/Estilos/Ventas.css?v=1.3" rel="stylesheet" />
+<link href="~/Estilos/Cobranzas.css?v=1.4" rel="stylesheet" />
 
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 
@@ -82,46 +82,207 @@
         </div>
 
 
-        <div class="col-lg-12">
-            <div class="card cardTablePersonalizado">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    Cobranzas
-                    <div class="dropdown ms-auto">
-                        <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa fa-cog me-2"></i> Config. Columnas
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu">
-                        </ul>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <table class="display nowrap" id="grdCobranzas" style="width:100%">
-                        <thead>
-                        <th class="text-center">
-                            <p>Seleccionar Todos <input type="checkbox" id="selectAllCheckbox"></p>
-                        </th>
-                        <tr>
 
-                            <th class="text-center">Orden</th>
-                            <th class="text-center">Cliente</th>
-                            <th class="text-center">Direccion</th>
-                            <th class="text-center">Cuota</th>
-                            <th class="text-center">Entrega</th>
-                            <th class="text-center">Restante</th>
-                            <th class="text-center">Cobro</th>
-                            <th class="text-center">Vencimiento</th>
-                            <th class="text-center">V</th>
-                            <th class="text-center">C</th>
-                            <th class="text-center">EnRecorrido</th>
-                            <th class="text-center">T</th>
-                            <th class="text-center">F.H </th>
-                            <th class="text-center">Zona</th>
-                            <th class="text-center">Acciones</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Aquí va el contenido de tu datatable -->
-                        </tbody>
+        <div class="container-fluid2">
+            <div class="row">
+              
+
+                <div class="col-lg-12">
+                    <div class="card cardTablePersonalizado">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            Cobranzas
+                            <div class="dropdown ms-auto">
+                                <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-cog me-2"></i> Config. Columnas
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <table class="display nowrap w-100" id="grdCobranzas">
+                                <thead>
+                                <th class="text-center">
+                                    <p>Seleccionar Todos <input type="checkbox" id="selectAllCheckbox"></p>
+                                </th>
+                                <tr>
+                                    <th class="text-center">Orden</th>
+                                    <th class="text-center">Cliente</th>
+                                    <th class="text-center">Direccion</th>
+                                    <th class="text-center">Cuota</th>
+                                    <th class="text-center">Entrega</th>
+                                    <th class="text-center">Restante</th>
+                                    <th class="text-center">Cobro</th>
+                                    <th class="text-center">Vencimiento</th>
+                                    <th class="text-center">V</th>
+                                    <th class="text-center">C</th>
+                                    <th class="text-center">EnRecorrido</th>
+                                    <th class="text-center">T</th>
+                                    <th class="text-center">F.H </th>
+                                    <th class="text-center">Zona</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Aquí va el contenido de tu datatable -->
+                                </tbody>
+                            </table>
+
+
+                        </div>
+
+                        <div class="col-12" id="grdCobranzasPendientesDiv" hidden>
+                            <div class="card cardTablePersonalizadoVentaPendiente">
+                                <div class="card-header">Cobranzas Pendientes</div>
+                                <div class="card-body">
+                                    <table class="display nowrap w-100" id="grdCobranzasPendientes">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-center">Orden</th>
+                                                <th class="text-center">Cliente</th>
+                                                <th class="text-center">Direccion</th>
+                                                <th class="text-center">Cuota</th>
+                                                <th class="text-center">Entrega</th>
+                                                <th class="text-center">Restante</th>
+                                                <th class="text-center">Cobro</th>
+                                                <th class="text-center">Vencimiento</th>
+                                                <th class="text-center">V</th>
+                                                <th class="text-center">C</th>
+                                                <th class="text-center">EnRecorrido</th>
+                                                <th class="text-center">T</th>
+                                                <th class="text-center">F.H </th>
+                                                <th class="text-center">Zona</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Aquí va el contenido de tu datatable -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="d-flexv flex-wrap justify-content-end mt-2 mb-4">
+                            <div id="btnCuentaBancaria" class="me-2 mb-2" style="display: none">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirModalCuentasBancarias()" style="background-color: #3e0f00; border-color: #4285F4; color: white;">
+                                    <i class="fa fa-university"></i> Cuentas Bancarias
+                                </a>
+
+                            </div>
+                            <div id="btnAsignarTurno" class="me-2 mb-2" style="display: none;">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalTurno()">Asignar Turno</a>
+                            </div>
+                            <div id="btnAsignarCobrador" class="me-2 mb-2" style="display: none;">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalCobrador()">Asignar Cobrador</a>
+                            </div>
+                            <div id="btnFinalizarRecorrido" class="me-2 mb-2">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="borrarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
+                                    <i class="fa fa-map-marker"></i> Finalizar Recorrido
+                                </a>
+                            </div>
+                            <div id="btnArmarRecorrido" class="me-2 mb-2">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="armarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
+                                    <i class="fa fa-map-marker"></i> Armar Recorrido
+                                </a>
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!--<div class="col-lg-12">-->
+
+        <!-- NUEVA TABLA: Cobranzas Pendientes -->
+        <!--<div class="card cardTablePersonalizado mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                Cobranzas Pendientes
+                <div class="dropdown ms-auto">
+                    <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnasPendientes" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-cog me-2"></i> Config. Columnas
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownColumnasPendientes" id="configColumnasMenuPendientes">
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="display nowrap" id="grdCobranzasPendientes" style="width:100%">
+                    <thead>
+                    <th class="text-center">
+                        <p>Seleccionar Todos <input type="checkbox" id="selectAllCheckboxPendientes"></p>
+                    </th>
+                    <tr>
+                        <th class="text-center">Orden</th>
+                        <th class="text-center">Cliente</th>
+                        <th class="text-center">Direccion</th>
+                        <th class="text-center">Cuota</th>
+                        <th class="text-center">Entrega</th>
+                        <th class="text-center">Restante</th>
+                        <th class="text-center">Cobro</th>
+                        <th class="text-center">Vencimiento</th>
+                        <th class="text-center">V</th>
+                        <th class="text-center">C</th>
+                        <th class="text-center">EnRecorrido</th>
+                        <th class="text-center">T</th>
+                        <th class="text-center">F.H </th>
+                        <th class="text-center">Zona</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>-->
+        <!-- Aquí va el contenido de la datatable de pendientes -->
+        <!--</tbody>
+                </table>
+            </div>
+        </div>-->
+
+        <!-- TABLA ORIGINAL: Cobranzas -->
+        <!--<div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                Cobranzas
+                <div class="dropdown ms-auto">
+                    <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-cog me-2"></i> Config. Columnas
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu">
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="display nowrap" id="grdCobranzas" style="width:100%">
+                    <thead>
+                    <th class="text-center">
+                        <p>Seleccionar Todos <input type="checkbox" id="selectAllCheckbox"></p>
+                    </th>
+                    <tr>
+                        <th class="text-center">Orden</th>
+                        <th class="text-center">Cliente</th>
+                        <th class="text-center">Direccion</th>
+                        <th class="text-center">Cuota</th>
+                        <th class="text-center">Entrega</th>
+                        <th class="text-center">Restante</th>
+                        <th class="text-center">Cobro</th>
+                        <th class="text-center">Vencimiento</th>
+                        <th class="text-center">V</th>
+                        <th class="text-center">C</th>
+                        <th class="text-center">EnRecorrido</th>
+                        <th class="text-center">T</th>
+                        <th class="text-center">F.H </th>
+                        <th class="text-center">Zona</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>-->
+        <!-- Aquí va el contenido de la datatable -->
+        <!--</tbody>
                     </table>
                 </div>
 
@@ -157,7 +318,7 @@
 
 
             </div>
-        </div>
+        </div>-->
 
 
         @*</div>*@
@@ -260,11 +421,11 @@
 
     <!-- Modal -->
     <div class="modal fade" id="modalComprobantes" tabindex="-1" aria-labelledby="modalComprobantesLabel" aria-hidden="true" style="z-index: 999999;">
-            <input type="text" id="idaccount" class="extra-comprobante d-none">
+        <input type="text" id="idaccount" class="extra-comprobante d-none">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                
+
                     <h5 class="modal-title" id="modalComprobantesLabel">Agregar Comprobantes</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
@@ -274,7 +435,7 @@
                         <div class="col-6 col-md-3">
                             <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
                                 <h6 class="mb-2 text-black">Comprobante</h6>
-                                
+
                                 <div class="vista-previa-container">
                                     <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
                                 </div>
@@ -336,7 +497,7 @@
                                 <div class="mb-2">
                                     <label class="form-label btn btn-outline-primary w-100 mb-1">
                                         <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                       <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="3">
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="3">
                                     </label>
                                 </div>
 
@@ -408,7 +569,7 @@
                                 <div class="mb-2">
                                     <label class="form-label btn btn-outline-primary w-100 mb-1">
                                         <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                       <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="7">
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="7">
                                     </label>
                                 </div>
 
@@ -455,7 +616,7 @@
                         <div class="col-6 col-md-3">
                             <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
 
-                               
+
 
                                 <h6 class="mb-2 text-black">Comprobante</h6>
                                 <div class="vista-previa-container">
@@ -595,8 +756,13 @@
                     </select>
 
 
-                    <label class="lblNombreInput" id="lblImporte"> Observacion: </label>
-                    <input type="Text" placeholder="" value="" id="Observacion" class="input-nuevomodif" />
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <label class="lblNombreInput mb-1 me-2" for="Observacion">Observación:</label>
+                            <input type="checkbox" id="chkCobroPendiente" class="form-check-input input-checkbox" title="Cobro Pendiente" />
+                        </div>
+                        <input type="text" id="Observacion" class="input-nuevomodif" />
+                    </div>
 
                     <!-- Contenedor para el ícono principal y los íconos alternativos -->
                     <div id="iconoCasa" class="d-flex align-items-center justify-content-center mt-12">
@@ -789,5 +955,5 @@
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=2.3"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=2.5"></script>
 }
