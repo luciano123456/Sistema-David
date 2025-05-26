@@ -474,3 +474,15 @@ function AccionBtnCancelar() {
         document.location.href = "../Index/";
     }
 }
+
+function quitarAcentos(texto) {
+    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+document.getElementById("Nombre").addEventListener("input", function () {
+    this.value = quitarAcentos(this.value);
+});
+
+document.getElementById("Apellido").addEventListener("input", function () {
+    this.value = quitarAcentos(this.value);
+});
