@@ -567,12 +567,11 @@ namespace Sistema_David.Models.Modelo
 
         public static int Nuevo(Ventas model)
         {
-            VMCliente cliente = null; // Variable para almacenar el cliente
-            VMUser usuario = null; // Variable para almacenar el cliente
+            VMCliente cliente = null;
+            VMUser usuario = null;
 
             try
             {
-                // Obtener datos del cliente antes de iniciar la transacción principal
                 cliente = ClientesModel.BuscarCliente(model.idCliente);
                 usuario = UsuariosModel.BuscarUsuario(SessionHelper.GetUsuarioSesion().Id);
 
@@ -582,44 +581,32 @@ namespace Sistema_David.Models.Modelo
                     {
                         try
                         {
+                            decimal totalRestanteCliente = db.Ventas
+                                .Where(v => v.idCliente == model.idCliente)
+                                .Sum(v => (decimal?)v.Restante) ?? 0;
 
-                            var totalRestanteCliente = db.Ventas
-                        .Where(v => v.idCliente == model.idCliente)
-                        .Sum(v => (decimal?)v.Restante) ?? 0;
-
-                            var totalConNuevaVenta = totalRestanteCliente + model.Restante;
+                            decimal totalConNuevaVenta = (decimal)(totalRestanteCliente + model.Restante);
 
                             if (cliente.LimiteVentas > 0 && totalConNuevaVenta > cliente.LimiteVentas)
-                            {
-                                return 4; // Código para superar el límite de ventas
-                            } else if(cliente.IdEstado == 2 && cliente.LimiteVentas == 0)
-                            {
-                                var totalLimite = db.Limites.Where(x => x.Nombre == "ClientesRegulares_Venta").FirstOrDefault().Valor;
+                                return 4;
 
-                                if(totalRestanteCliente > totalLimite)
-                                {
+                            if (cliente.IdEstado == 2 && cliente.LimiteVentas == 0)
+                            {
+                                var totalLimite = db.Limites.FirstOrDefault(x => x.Nombre == "ClientesRegulares_Venta").Valor;
+                                if (totalRestanteCliente > totalLimite)
                                     return 4;
-                                }
                             }
-                            // Verificar si el modelo re cibido es nulo
+
                             if (model == null)
-                                return 2; // Código para modelo nulo
+                                return 2;
 
-                            var estadoVenta = "";
-
-
-                            if (cliente.IdVendedor != model.idVendedor)
-                            {
-                                estadoVenta = "Aprobar";
-                            }
-
-                            // Verificar si hay suficiente stock
                             bool hayStock = VentasManager.VerificarStock(model.ProductosVenta, model.idVendedor);
                             if (!hayStock)
-                                return 1; // Código para falta de stock
+                                return 1;
 
-                            // Crear y agregar nueva venta
-                            Ventas venta = new Ventas
+                            string estadoVenta = cliente.IdVendedor != model.idVendedor ? "Aprobar" : "";
+
+                            var venta = new Ventas
                             {
                                 Entrega = model.Entrega,
                                 Fecha = model.Fecha,
@@ -639,29 +626,22 @@ namespace Sistema_David.Models.Modelo
                                 Comprobante = 0,
                                 Estado = "Aprobar",
                                 EstadoCobro = "0",
-                                Turno = model.Turno != null ? model.Turno.ToUpper() : model.Turno,
+                                Turno = model.Turno != null ? model.Turno.ToUpper() : null,
                                 FranjaHoraria = model.FranjaHoraria,
                                 IdTipoNegocio = usuario.IdTipoNegocio,
                                 CobroPendiente = 0
                             };
 
-
                             db.Ventas.Add(venta);
                             db.SaveChanges();
 
-                            // Agregar productos de la venta
-                            var addProductosResult = AgregarProductosVenta(venta, model.ProductosVenta, model.idVendedor, db);
-                            if (!addProductosResult)
-                                throw new Exception("Error al agregar productos");
+                            var addProductos = AgregarProductosVenta(venta, model.ProductosVenta, model.idVendedor, db);
+                            if (!addProductos) throw new Exception("Error al agregar productos");
 
-                            // Restar stock de los productos vendidos
-                            var restarStockResult = RestarStock(model.ProductosVenta, model.idVendedor, db);
+                            var restarStock = RestarStock(model.ProductosVenta, model.idVendedor, db);
+                            if (!restarStock) throw new Exception("Error al restar stock");
 
-                            if (!restarStockResult)
-                                throw new Exception("Error al restar stock");
-
-                            // Crear y agregar información de la venta
-                            InformacionVentas infoVenta = new InformacionVentas
+                            var infoVenta = new InformacionVentas
                             {
                                 IdVenta = venta.Id,
                                 Descripcion = $"Venta a {cliente?.Nombre} por {venta.Restante + venta.Entrega} pesos.",
@@ -676,41 +656,31 @@ namespace Sistema_David.Models.Modelo
                                 TipoNegocio = UsuariosModel.BuscarTipoNegocio((int)usuario.IdTipoNegocio).Nombre,
                                 IdCuentaBancaria = null
                             };
-                            var addInfoVentaResult = AgregarInformacionVenta(infoVenta);
-                            if (!addInfoVentaResult)
+
+                            if (!AgregarInformacionVenta(infoVenta))
                                 throw new Exception("Error al agregar información de venta");
 
                             ClientesModel.DeleteClienteEnCero(venta.idCliente);
 
                             if (estadoVenta == "")
-                            {
                                 ClientesModel.CambiarVendedor(venta.idCliente, venta.idVendedor);
-                            }
 
-
-
-                            // Commit de la transacción principal
                             transaction.Commit();
-
-                            return 0; // Éxito
+                            return 0;
                         }
                         catch (Exception ex)
                         {
-                            // Rollback de la transacción en caso de error
                             transaction.Rollback();
-
-                            // Manejar la excepción
-                            Console.WriteLine($"Error en Nuevo(): {ex.Message}");
-                            return 2; // Código para excepción
+                            Console.WriteLine("Error en Nuevo(): " + ex.Message);
+                            return 2;
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                // Manejar la excepción de búsqueda de cliente fuera de la transacción
-                Console.WriteLine($"Error al buscar cliente: {ex.Message}");
-                return 3; // Código para error de búsqueda de cliente
+                Console.WriteLine("Error general en Nuevo(): " + ex.Message);
+                return 3;
             }
         }
 
@@ -831,43 +801,53 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static bool AgregarProductosVenta(Ventas venta, ICollection<ProductosVenta> model, int idVendedor, Sistema_DavidEntities db)
+        public static bool AgregarProductosVenta(Ventas venta, ICollection<ProductosVenta> productos, int idVendedor, Sistema_DavidEntities db)
         {
             try
             {
-                if (model == null || model.Count == 0)
-                    throw new ArgumentNullException("model", "El modelo de productos es nulo o vacío.");
+                if (productos == null || productos.Count == 0)
+                    throw new ArgumentException("La lista de productos está vacía.");
 
-                if (venta == null)
-                    throw new ArgumentException("La venta no puede ser nula.", nameof(venta));
+                if (venta == null || venta.Id <= 0)
+                    throw new ArgumentException("La venta es inválida.");
 
-                foreach (ProductosVenta producto in model)
+                // Filtrar productos únicos por IdProducto
+                var productosUnicos = productos
+                    .GroupBy(p => p.IdProducto)
+                    .Select(g => g.First())
+                    .ToList();
+
+                foreach (var producto in productosUnicos)
                 {
-                    producto.IdVenta = venta.Id;
+                    var productoModel = ProductosModel.BuscarProducto(producto.IdProducto);
+                    if (productoModel == null)
+                        throw new Exception("No se encontró el producto con ID " + producto.IdProducto);
 
-                    VMProducto productoModel = ProductosModel.BuscarProducto(producto.IdProducto);
+                    var nuevoProducto = new ProductosVenta
+                    {
+                        IdVenta = venta.Id,
+                        IdProducto = producto.IdProducto,
+                        Cantidad = producto.Cantidad,
+                        PrecioUnitario = producto.PrecioUnitario > 0
+                            ? producto.PrecioUnitario
+                            : (productoModel.PrecioVenta > 0 && producto.Cantidad > 0
+                                ? Math.Round((decimal)(productoModel.PrecioVenta / producto.Cantidad), 2)
+                                : 0)
+                    };
 
-                    if (productoModel != null)
-                    {
-                        producto.PrecioUnitario = productoModel.PrecioVenta / producto.Cantidad;
-                        db.ProductosVenta.Add(producto);
-                    }
-                    else
-                    {
-                        // Lanzar excepción si no se encuentra el producto
-                        throw new Exception($"No se encontró el producto con ID {producto.IdProducto}.");
-                    }
+                    db.ProductosVenta.Add(nuevoProducto);
                 }
 
                 db.SaveChanges();
-                return true; // Éxito
+                return true;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error en AgregarProductosVenta(): {e.Message}");
-                return false; // Indica que hubo un problema
+                Console.WriteLine("Error en AgregarProductosVenta: " + ex.Message);
+                return false;
             }
         }
+
 
         public static bool RestarStock(ICollection<ProductosVenta> model, int idVendedor, Sistema_DavidEntities db)
         {
