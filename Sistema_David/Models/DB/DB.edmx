@@ -30,6 +30,7 @@
           <Property Name="Longitud" Type="varchar" MaxLength="255" />
           <Property Name="FechaenCero" Type="datetime" />
           <Property Name="IdVendedorAsignado" Type="int" />
+          <Property Name="LimiteVentas" Type="decimal" Precision="20" Scale="2" />
         </EntityType>
         <EntityType Name="ComprobantesImagenes">
           <Key>
@@ -1180,6 +1181,7 @@
           <NavigationProperty Name="Usuarios1" Relationship="Sistema_DavidModel.FK_Clientes_Usuarios1" FromRole="Clientes" ToRole="Usuarios" />
           <NavigationProperty Name="RecorridosCobranzas" Relationship="Sistema_DavidModel.FK_RecorridosCobranzas_Clientes" FromRole="Clientes" ToRole="RecorridosCobranzas" />
           <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_Ventas_Clientes" FromRole="Clientes" ToRole="Ventas" />
+          <Property Name="LimiteVentas" Type="Decimal" Precision="20" Scale="2" />
         </EntityType>
         <Association Name="FK_Clientes_EstadosClientes">
           <End Type="Sistema_DavidModel.EstadosClientes" Role="EstadosClientes" Multiplicity="0..1" />
@@ -1543,6 +1545,7 @@
           <EntitySetMapping Name="Clientes">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Clientes">
               <MappingFragment StoreEntitySet="Clientes">
+                <ScalarProperty Name="LimiteVentas" ColumnName="LimiteVentas" />
                 <ScalarProperty Name="IdVendedorAsignado" ColumnName="IdVendedorAsignado" />
                 <ScalarProperty Name="FechaenCero" ColumnName="FechaenCero" />
                 <ScalarProperty Name="Longitud" ColumnName="Longitud" />

@@ -21,6 +21,7 @@ namespace Sistema_David.Models.Modelo
         public Nullable<int> IdZona { get; set; }
         public Nullable<int> IdVendedorAsignado { get; set; }
         public string VendedorAsignado { get; set; }
+        public decimal LimiteVentas { get; set; }
 
         public string Vendedor { get; set; }
         public string Zona { get; set; }

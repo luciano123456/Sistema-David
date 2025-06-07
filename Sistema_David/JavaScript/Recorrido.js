@@ -509,7 +509,7 @@ async function cargarCobros() {
         var idZona = localStorage.getItem("R_Zona");
         var Turno = localStorage.getItem("R_Turno");
         var TipoNegocio = localStorage.getItem("R_TipoNegocio");
-        var url = `/Cobranzas/Listar?idVendedor=${idVendedor}&IdCobrador=${idCobrador}&FechaCobroDesde=${fechaCobroDesde}&FechaCobroHasta=${fechaCobroHasta}&Dni=${DNI}&idZona=${idZona}&Turno=${Turno}&TipoNegocio=${TipoNegocio}`;
+        var url = `/Cobranzas/Listar?idVendedor=${idVendedor}&IdCobrador=${idCobrador}&FechaCobroDesde=${fechaCobroDesde}&FechaCobroHasta=${fechaCobroHasta}&Dni=${DNI}&idZona=${idZona}&Turno=${Turno}&TipoNegocio=${TipoNegocio}&CobrosPendientes=${-1}`;
 
         let value = JSON.stringify({
 

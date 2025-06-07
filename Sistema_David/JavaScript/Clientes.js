@@ -143,6 +143,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
             { "data": "Zona" },
             { "data": "Estado" },
             { "data": "Saldo" },
+            { "data": "LimiteVentas" },
             {
                 "data": "Id",
                 "render": function (data, type, full) {
@@ -170,7 +171,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
                 "render": function (data, type, row) {
                     return formatNumber(data); // Formatear número en la columna
                 },
-                "targets": [8] // Columna de Saldo
+                "targets": [8,9] // Columna de Saldo
             }
         ],
 
