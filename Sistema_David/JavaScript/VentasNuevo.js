@@ -733,10 +733,10 @@ async function validarVenta() {
 
         var restanteTotalCliente = await TotalVentasCliente(idCliente)
 
-        if (parseInt(restanteTotalCliente) > parseInt(result)) {
-            alert("El limite maximo de venta para un cliente regular es de $" + result + " pesos.");
-            return false;
-        }
+        //if (parseInt(restanteTotalCliente) > parseInt(result)) {
+        //    alert("El limite maximo de venta para un cliente regular es de $" + result + " pesos.");
+        //    return false;
+        //}
        
 
     }
@@ -791,7 +791,8 @@ async function registrarVentaAjax() {
         } else if (result.Status == 1) {
 
             alert('Uno de tus productos no tiene el stock suficiente.');
-
+        } else if (result.Status == 4) {
+            alert('El cliente supera su monto permitido en ventas.');
         } else {
             alert('Ha ocurrido un error en la venta. Consulte con un Administrador');
         }

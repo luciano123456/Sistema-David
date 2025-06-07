@@ -35,6 +35,7 @@ namespace Sistema_David.Models.DB
         public string Longitud { get; set; }
         public Nullable<System.DateTime> FechaenCero { get; set; }
         public Nullable<int> IdVendedorAsignado { get; set; }
+        public Nullable<decimal> LimiteVentas { get; set; }
     
         public virtual EstadosClientes EstadosClientes { get; set; }
         public virtual Usuarios Usuarios { get; set; }

@@ -3059,12 +3059,13 @@ document.getElementById("addAccount").addEventListener("click", () => {
     const cbu = document.getElementById("accountCBU").value.trim();
     const CuentaPropia = document.getElementById("CuentaPropia").checked;
     const Activo = document.getElementById("Activo").checked;
+    const  MontoPagar = document.getElementById("accountMonto").value
     if (!Nombre || !cbu) {
         alert("Debes completar ambos campos.");
         return;
     }
 
-    const newAccount = { Nombre, cbu, CuentaPropia, Activo, };
+    const newAccount = { Nombre, cbu, CuentaPropia, Activo, MontoPagar };
 
     fetch('/Cobranzas/NuevaCuentaBancaria', {
         method: 'POST',

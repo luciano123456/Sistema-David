@@ -20,7 +20,7 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
@@ -40,7 +40,7 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
@@ -67,7 +67,7 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.LimiteVentas, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
@@ -153,6 +153,7 @@ namespace Sistema_David.Models.Modelo
                         result.Fecha = DateTime.Now;
                         result.FechaenCero = DateTime.Now;
                         result.IdVendedorAsignado = 0;
+                        result.LimiteVentas = model.LimiteVentas != null ? model.LimiteVentas : 0;
 
                         db.Clientes.Add(result);
                         db.SaveChanges();
@@ -190,6 +191,7 @@ namespace Sistema_David.Models.Modelo
                         result.IdZona = model.IdZona;
                         result.Longitud = model.Longitud;
                         result.Latitud = model.Latitud;
+                        result.LimiteVentas = model.LimiteVentas != null ? model.LimiteVentas : 0;
 
                         db.Entry(result).State = System.Data.Entity.EntityState.Modified;
                         db.SaveChanges();
@@ -377,7 +379,7 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.LimiteVentas, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
@@ -403,7 +405,7 @@ namespace Sistema_David.Models.Modelo
             {
 
                 var user = (from d in db.Clientes
-                         .SqlQuery("select c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.IdEstado,  c.IdZona, c.Longitud, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, ec.Nombre, c.IdVendedor, u.Nombre as Vendedor from Clientes c inner join EstadosClientes ec on c.IdEstado = ec.Id inner join Usuarios u on c.IdVendedor  = u.Id")
+                         .SqlQuery("select c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.IdEstado,  c.IdZona, c.Longitud, c.Latitud, c.FechaEncero,  c.LimiteVentas, c.IdVendedorAsignado, ec.Nombre as Estado, ec.Nombre, c.IdVendedor, u.Nombre as Vendedor from Clientes c inner join EstadosClientes ec on c.IdEstado = ec.Id inner join Usuarios u on c.IdVendedor  = u.Id")
                             select new VMCliente
                             {
                                 Id = d.Id,
@@ -420,7 +422,8 @@ namespace Sistema_David.Models.Modelo
                                 Longitud = d.Longitud,
                                 Latitud = d.Latitud,
                                 FechaenCero = d.FechaenCero != null ? d.FechaenCero : null,
-                                IdVendedorAsignado = d.IdVendedorAsignado != null || d.IdVendedorAsignado == 0 ? d.IdVendedorAsignado : null
+                                IdVendedorAsignado = d.IdVendedorAsignado != null || d.IdVendedorAsignado == 0 ? d.IdVendedorAsignado : null,
+                                LimiteVentas = (decimal)d.LimiteVentas
                             }).Where(x => x.Dni != null && x.Dni.Trim() == documento.Trim()).FirstOrDefault();
 
                 return user;

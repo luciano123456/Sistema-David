@@ -464,7 +464,7 @@ namespace Sistema_David.Models.Modelo
                         Observacion = iv.Observacion,
                         MetodoPago = iv.MetodoPago,
                         idCobrador = (int)iv.idCobrador,
-                        Deuda = (decimal)iv.Deuda != null ? (decimal)iv.Deuda : 0 ,
+                        Deuda = (decimal)iv.Deuda != null ? (decimal)iv.Deuda : 0,
                         ClienteAusente = iv.ClienteAusente != null ? (int)iv.ClienteAusente : 0,
                     })
                     .FirstOrDefault();
@@ -582,6 +582,25 @@ namespace Sistema_David.Models.Modelo
                     {
                         try
                         {
+
+                            var totalRestanteCliente = db.Ventas
+                        .Where(v => v.idCliente == model.idCliente)
+                        .Sum(v => (decimal?)v.Restante) ?? 0;
+
+                            var totalConNuevaVenta = totalRestanteCliente + model.Restante;
+
+                            if (cliente.LimiteVentas > 0 && totalConNuevaVenta > cliente.LimiteVentas)
+                            {
+                                return 4; // Código para superar el límite de ventas
+                            } else if(cliente.IdEstado == 2 && cliente.LimiteVentas == 0)
+                            {
+                                var totalLimite = db.Limites.Where(x => x.Nombre == "ClientesRegulares_Venta").FirstOrDefault().Valor;
+
+                                if(totalRestanteCliente > totalLimite)
+                                {
+                                    return 4;
+                                }
+                            }
                             // Verificar si el modelo re cibido es nulo
                             if (model == null)
                                 return 2; // Código para modelo nulo

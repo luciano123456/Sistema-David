@@ -146,6 +146,7 @@ async function cargarDatosUsuario() {
             document.getElementById("lbllongitud").value = result.Usuario.Longitud;
             document.getElementById("lbllatitud").value = result.Usuario.Latitud;
             document.getElementById("lbldireccion").value = result.Usuario.Direccion;
+            document.getElementById("LimiteVentas").value = result.Usuario.LimiteVentas;
 
 
             document.getElementById("Estados").value = result.Usuario.IdEstado;
@@ -204,6 +205,7 @@ async function registrarCliente() {
                 IdVendedor: document.getElementById("Usuarios").value,
                 IdEstado: document.getElementById("Estados").value,
                 IdZona: document.getElementById("Zonas").value,
+                LimiteVentas: document.getElementById("LimiteVentas").value,
                 Latitud: document.getElementById("lbllatitud").innerText,
                 Longitud: document.getElementById("lbllongitud").innerText
             });
@@ -259,6 +261,7 @@ async function modificarCliente() {
             Telefono: document.getElementById("Telefono").value,
             IdVendedor: document.getElementById("Usuarios").value,
             IdEstado: document.getElementById("Estados").value,
+            LimiteVentas: document.getElementById("LimiteVentas").value,
             IdZona: document.getElementById("Zonas").value,
             Latitud: document.getElementById("lbllatitud").innerText,
             Longitud: document.getElementById("lbllongitud").innerText
@@ -304,6 +307,7 @@ async function initMap() {
         await cargarDatosUsuario()
     } else {
         await cargarUsuariosyEstados();
+        document.getElementById("LimiteVentas").value = 180000;
     }
 
     if (document.getElementById("lbllatitud").value && document.getElementById("lbllongitud").value) {
