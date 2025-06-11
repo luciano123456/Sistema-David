@@ -17,7 +17,7 @@ namespace Sistema_David.Models
             {
 
                 var listUser = (from d in db.Usuarios
-                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
+                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.VistaStock, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
                                 select new VMUser
                                 {
                                     Id = d.Id,
@@ -38,6 +38,7 @@ namespace Sistema_David.Models
                                     ClientesCero = (int)d.ClientesCero,
                                     IdTipoNegocio = d.IdTipoNegocio, 
                                     BloqueoSistema = d.BloqueoSistema,
+                                    VistaStock = d.VistaStock,
                                     TipoNegocio = db.TipoNegocio.FirstOrDefault(u => u.Id == d.IdTipoNegocio).Nombre,
                                 }).ToList();
 
@@ -90,7 +91,7 @@ namespace Sistema_David.Models
             {
 
                 var listUser = (from d in db.Usuarios
-                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by  u.IdRol, u.IdEstado")
+                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.VistaStock, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by  u.IdRol, u.IdEstado")
                                 select new VMUser
                                 {
                                     Id = d.Id,
@@ -111,6 +112,7 @@ namespace Sistema_David.Models
                                     ClientesCero = (int)d.ClientesCero,
                                     IdTipoNegocio = d.IdTipoNegocio,
                                     BloqueoSistema = d.BloqueoSistema,
+                                    VistaStock = d.VistaStock,
                                     TipoNegocio = db.TipoNegocio.FirstOrDefault(u => u.Id == d.IdTipoNegocio).Nombre,
                                 }).Where(x => x.IdEstado == 1 && (x.IdTipoNegocio == TipoNegocio || TipoNegocio == -1 || (x.IdRol == 1 || x.IdRol == 3 || x.IdRol == 4))).ToList();
 
@@ -126,7 +128,7 @@ namespace Sistema_David.Models
             {
 
                 var listUser = (from d in db.Usuarios
-                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by  u.IdRol, u.IdEstado")
+                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.VistaStock, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by  u.IdRol, u.IdEstado")
                                 select new VMUser
                                 {
                                     Id = d.Id,
@@ -147,6 +149,7 @@ namespace Sistema_David.Models
                                     ClientesCero = (int)d.ClientesCero,
                                     IdTipoNegocio = d.IdTipoNegocio,
                                     BloqueoSistema = d.BloqueoSistema,
+                                    VistaStock = d.VistaStock,
                                     TipoNegocio = db.TipoNegocio.FirstOrDefault(u => u.Id == d.IdTipoNegocio).Nombre,
                                 }).Where(x => x.IdEstado == 1).ToList();
 
@@ -231,7 +234,7 @@ namespace Sistema_David.Models
             {
 
                 var listUser = (from d in db.Usuarios
-                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
+                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena,  u.VistaStock, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
                                 select new VMUser
                                 {
                                     Id = d.Id,
@@ -252,6 +255,7 @@ namespace Sistema_David.Models
                                     ClientesCero = (int)d.ClientesCero,
                                     IdTipoNegocio = d.IdTipoNegocio,
                                     BloqueoSistema = d.BloqueoSistema,
+                                    VistaStock = d.VistaStock,
                                     TipoNegocio = db.TipoNegocio.FirstOrDefault(u => u.Id == d.IdTipoNegocio).Nombre,
 
                                 }).Where(x => x.IdRol == 3 && x.Id == id).ToList();
@@ -266,7 +270,7 @@ namespace Sistema_David.Models
             {
 
                 var listUser = (from d in db.Usuarios
-                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
+                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.IdRol, u.Contrasena, u.CantVentas, u.VistaStock, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
                                 select new VMUser
                                 {
                                     Id = d.Id,
@@ -288,6 +292,7 @@ namespace Sistema_David.Models
                                     IdTipoNegocio = d.IdTipoNegocio,
                                     BloqueoSistema = d.BloqueoSistema,
                                     TipoNegocio = db.TipoNegocio.FirstOrDefault(u => u.Id == d.IdTipoNegocio).Nombre,
+                                    VistaStock = (int)d.VistaStock
                                 }).Where(x => x.Id == id).ToList();
 
                 return listUser;
@@ -539,6 +544,7 @@ namespace Sistema_David.Models
                         user.ClientesCero = 0;
                         user.IdTipoNegocio = model.IdTipoNegocio;
                         user.BloqueoSistema = 0;
+                        user.VistaStock = 0;
 
 
                         db.Usuarios.Add(user);
@@ -556,6 +562,31 @@ namespace Sistema_David.Models
             }
         }
 
+        public static bool setVistaStock(int id, int vista)
+        {
+
+            try
+            {
+                using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+                {
+
+                    var user = db.Usuarios.Find(id);
+                    user.VistaStock = vista;
+
+
+                    db.Entry(user).State = System.Data.Entity.EntityState.Modified;
+                    db.SaveChanges();
+
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+
+
+        }
         public static bool BloqueoSistema(int id, int bloqueo)
         {
 

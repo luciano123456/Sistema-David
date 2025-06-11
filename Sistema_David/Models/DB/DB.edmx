@@ -227,6 +227,7 @@
           <Property Name="ClientesCero" Type="int" />
           <Property Name="IdTipoNegocio" Type="int" />
           <Property Name="BloqueoSistema" Type="int" />
+          <Property Name="VistaStock" Type="int" />
         </EntityType>
         <EntityType Name="Ventas">
           <Key>
@@ -725,6 +726,7 @@
           <NavigationProperty Name="Clientes1" Relationship="Sistema_DavidModel.FK_Clientes_Usuarios1" FromRole="Usuarios" ToRole="Clientes" />
           <Property Name="IdTipoNegocio" Type="Int32" />
           <Property Name="BloqueoSistema" Type="Int32" />
+          <Property Name="VistaStock" Type="Int32" />
         </EntityType>
         <Association Name="FK_Productos_Categorias">
           <End Role="Categorias" Type="Self.Categorias" Multiplicity="0..1" />
@@ -1416,6 +1418,7 @@
           <EntitySetMapping Name="Usuarios">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Usuarios">
               <MappingFragment StoreEntitySet="Usuarios">
+                <ScalarProperty Name="VistaStock" ColumnName="VistaStock" />
                 <ScalarProperty Name="BloqueoSistema" ColumnName="BloqueoSistema" />
                 <ScalarProperty Name="IdTipoNegocio" ColumnName="IdTipoNegocio" />
                 <ScalarProperty Name="ClientesCero" ColumnName="ClientesCero" />

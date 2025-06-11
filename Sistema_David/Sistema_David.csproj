@@ -488,6 +488,7 @@
     <Compile Include="Models\Modelo\VMCuentaBancariaConVentas.cs" />
     <Compile Include="Models\Modelo\VMUser.cs" />
     <Compile Include="Models\Modelo\VMPedido.cs" />
+    <Compile Include="Models\Modelo\VMResultadoStock.cs" />
     <Compile Include="Models\Modelo\VMVenta.cs" />
     <Compile Include="Models\RecorridosModel.cs" />
     <Compile Include="Models\StockPendienteModel.cs" />

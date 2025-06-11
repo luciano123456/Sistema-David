@@ -84,21 +84,29 @@ async function configurarDataTable() {
             { "data": "Estado" },
             {
                 "data": "Id", "render": function (data, type, full) {
-
                     var activo = full.BloqueoSistema === 1;
                     var color = activo ? "success" : "danger";
                     var titulo = activo ? "Desbloquear" : "Bloquear";
-
-                    // Invertir el estado del producto para enviarlo a la función cambiarEstadoProducto
                     var estadoInverso = full.BloqueoSistema ? 0 : 1;
 
-                    return "<button class='btn btn-sm btn-" + color + " btnacciones' type='button' onclick='bloqueoSistema(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white' aria-hidden='true'></i></button>" + "<button class='ms-1 btn btn-sm btneditar btnacciones' type='button' onclick='editarUsuario(" + data + ")'title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
-                    "<button class='btn btn-sm btnacciones' type='button' onclick='stockUsuario(" + data + ")'title='Stock'><i class='fa fa-shopping-basket fa-lg text-white' aria-hidden='true'></i></button>" +
-                    "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarUsuario(" + data + ")'title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>" 
-                },
+                    // Ícono de vista stock
+                    var iconoVista = full.VistaStock == 0 ? 'fa-eye-slash' : 'fa-eye';
+                    var nuevoVista = full.VistaStock == 1 ? 0 : 1;
 
-                "orderable": true,
-                "searchable": true,
+                    let botones = "";
+
+                    botones += "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='toggleVistaStock(" + data + ", " + nuevoVista + ")' title='Mostrar/Ocultar stock'><i class='fa " + iconoVista + " fa-lg text-info' aria-hidden='true'></i></button> ";
+
+                    botones += "<button class='btn btn-sm btn-" + color + " btnacciones' type='button' onclick='bloqueoSistema(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white' aria-hidden='true'></i></button>";
+
+                    botones += "<button class='ms-1 btn btn-sm btneditar btnacciones' type='button' onclick='editarUsuario(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>";
+
+                    botones += "<button class='btn btn-sm btnacciones' type='button' onclick='stockUsuario(" + data + ")' title='Stock'><i class='fa fa-shopping-basket fa-lg text-white' aria-hidden='true'></i></button>";
+
+                    botones += "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarUsuario(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>";
+
+                    return botones;
+                }
             }
         ],
 
@@ -616,4 +624,31 @@ function configurarOpcionesColumnas() {
         localStorage.setItem(storageKey, JSON.stringify(savedConfig));
         grid.column(columnIdx).visible(isChecked);
     });
+}
+
+async function toggleVistaStock(idUsuario, nuevoValor) {
+    const url = "/Usuarios/setVistaStock";
+
+    let value = JSON.stringify({
+        id: idUsuario,
+        stock: nuevoValor
+    });
+
+    let options = {
+        type: "POST",
+        url: url,
+        async: true,
+        data: value,
+        contentType: "application/json",
+        dataType: "json"
+    };
+
+    let result = await MakeAjax(options);
+
+    if (result && result.Status) {
+        const table = $('#grdUsuarios').DataTable();
+        table.ajax.reload();
+    } else {
+        alert("Error al cambiar la vista de stock.");
+    }
 }

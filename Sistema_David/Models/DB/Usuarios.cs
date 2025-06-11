@@ -42,6 +42,7 @@ namespace Sistema_David.Models.DB
         public Nullable<int> ClientesCero { get; set; }
         public Nullable<int> IdTipoNegocio { get; set; }
         public Nullable<int> BloqueoSistema { get; set; }
+        public Nullable<int> VistaStock { get; set; }
     
         public virtual EstadosUsuarios EstadosUsuarios { get; set; }
         public virtual Roles Roles { get; set; }

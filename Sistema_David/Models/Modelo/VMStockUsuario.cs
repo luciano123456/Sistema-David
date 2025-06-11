@@ -20,6 +20,7 @@ namespace Sistema_David.Models.Modelo
 
         public decimal PrecioVenta { get; set; }
         public string TipoNegocio { get; set; }
+        public int? VistaStock { get; set; }
 
         public string Producto { get; set; }
         public virtual Productos Productos { get; set; }

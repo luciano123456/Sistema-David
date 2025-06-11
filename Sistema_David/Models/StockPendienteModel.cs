@@ -28,7 +28,7 @@ namespace Sistema_David.Models
                     var stockExistente = db.StocksPendientes
                         .FirstOrDefault(s => s.IdProducto == model.IdProducto && s.IdUsuario == model.IdUsuario && s.Estado == "Pendiente");
 
-                   
+
 
                     if (stockExistente != null && stockExistente.Tipo == "SUMAR")
                     {
@@ -178,7 +178,7 @@ namespace Sistema_David.Models
 
                     var stockProducto = ProductosModel.BuscarProducto((int)model.IdProducto);
 
-                    if(stockProducto.Stock < model.Cantidad)
+                    if (stockProducto.Stock < model.Cantidad)
                     {
                         return 2;
                     }
@@ -262,10 +262,20 @@ namespace Sistema_David.Models
                                   Asignacion = d.Asignacion != null ? d.Asignacion : "ADMINISTRADOR",
                                   Tipo = d.Tipo
                               })
-                            .Where(x => ((x.IdUsuario == idUser || idUser == -1) &&
-                                (x.Estado == Estado || Estado == "Todos") &&
-                                (x.Asignacion.ToUpper() == Asignacion.ToUpper() || Asignacion == "Todos") &&
-                                (!Fecha.HasValue || (DateTime)x.Fecha == Fecha)) || (x.IdUsuarioAsignado == idUser && x.Asignacion == "TRANSFERENCIA" && x.Estado == "Pendiente"))
+                            .Where(x =>
+    ((x.IdUsuario == idUser || idUser == -1) &&
+     (x.Estado == Estado || Estado == "Todos") &&
+     (x.Asignacion.ToUpper() == Asignacion.ToUpper() || Asignacion == "Todos") &&
+     (
+         !Fecha.HasValue ||
+         (Estado == "Pendiente" && x.Fecha <= Fecha) ||
+         (Estado != "Pendiente" && x.Fecha == Fecha)
+     )
+    )
+    ||
+    (x.IdUsuarioAsignado == idUser && x.Asignacion == "TRANSFERENCIA" && x.Estado == "Pendiente")
+)
+
                             .OrderByDescending(x => x.Fecha) // Ordenar por fecha más nueva
                             .ToList();
 

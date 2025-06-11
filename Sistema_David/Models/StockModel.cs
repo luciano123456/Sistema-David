@@ -13,14 +13,15 @@ namespace Sistema_David.Models
 
 
 
-
-        public static List<VMStockUsuario> BuscarStock(int id)
+        public static ResultadoStock BuscarStock(int id)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
+                var usuario = db.Usuarios.FirstOrDefault(u => u.Id == id);
+                bool vistaStock = usuario != null && usuario.VistaStock == 1;
 
-                var result = (from d in db.StockUsuarios
-                         .SqlQuery("select s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.Estado,  s.IdCategoria from StockUsuarios s inner join Usuarios u on u.Id = s.IdUsuario inner join Productos p on p.Id = s.IdProducto")
+                var stocks = (from d in db.StockUsuarios
+                              .SqlQuery("SELECT s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.Estado, u.VistaStock, s.IdCategoria FROM StockUsuarios s INNER JOIN Usuarios u ON u.Id = s.IdUsuario INNER JOIN Productos p ON p.Id = s.IdProducto")
                               select new VMStockUsuario
                               {
                                   Id = d.Id,
@@ -31,14 +32,20 @@ namespace Sistema_David.Models
                                   Producto = d.Productos.Nombre,
                                   PrecioVenta = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta : 0,
                                   Total = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta * d.Cantidad : 0,
-                                  Estado = d.Estado,
-                              }).Where(x => x.IdUsuario == id)
-                                .OrderBy(x => x.Producto)
-                                .ToList();
+                                  Estado = d.Estado
+                              })
+                             .Where(x => x.IdUsuario == id)
+                             .OrderBy(x => x.Producto)
+                             .ToList();
 
-                return result;
+                return new ResultadoStock
+                {
+                    Stocks = stocks,
+                    VistaStock = vistaStock
+                };
             }
         }
+
 
         public static VMStockUsuario BuscarStockId(int id)
         {
@@ -58,7 +65,8 @@ namespace Sistema_David.Models
                                   Usuario = u.Nombre,
                                   Producto = p.Nombre,
                                   PrecioVenta = (decimal)p.PrecioVenta,
-                                  Total = (decimal)p.PrecioVenta * s.Cantidad
+                                  Total = (decimal)p.PrecioVenta * s.Cantidad,
+                                  VistaStock = u.VistaStock
                               })
                               .AsEnumerable() // Materializa la consulta en memoria
                               .Select(x => new VMStockUsuario
@@ -70,7 +78,8 @@ namespace Sistema_David.Models
                                   Usuario = x.Usuario,
                                   Producto = x.Producto,
                                   PrecioVenta = x.PrecioVenta,
-                                  Total = x.Total
+                                  Total = x.Total,
+                                  VistaStock = x.VistaStock
                               })
                               .FirstOrDefault();
 
