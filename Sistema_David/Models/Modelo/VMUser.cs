@@ -29,6 +29,7 @@ namespace Sistema_David.Models.ViewModels
         public Nullable<int> TotalAsignados { get; set; }
         public Nullable<int> IdTipoNegocio { get; set; }
         public Nullable<int> BloqueoSistema { get; set; }
+        public Nullable<int> VistaStock { get; set; }
 
         public virtual EstadosUsuarios EstadosUsuarios { get; set; }
         public virtual Roles Roles { get; set; }

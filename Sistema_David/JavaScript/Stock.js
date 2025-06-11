@@ -30,7 +30,7 @@ $(document).ready(function () {
     if (userSession.IdRol == 1) { //Administrador
         $("#btnUsuarios").css("background", "#2E4053");
         document.getElementById("divStock").removeAttribute("hidden");
-        /*document.getElementById("btnAgregar").removeAttribute("hidden");*/
+        document.getElementById("btnExportarPdf").removeAttribute("hidden");
     } else {
         $("#btnStock").css("background", "#2E4053");
     }
@@ -42,72 +42,67 @@ $(document).ready(function () {
 
 
 async function configurarDataTable() {
+    const response = await $.ajax({
+        url: "/Stock/BuscarStock/" + idUserStock,
+        type: "GET",
+        dataType: "json"
+    });
+
+    const datos = response.data;
+    mostrarCantidad = response.vistaStock;
 
     const dataTableOptions = {
-        "ajax": {
-            "url": "/Stock/BuscarStock/" + idUserStock,
-            "type": "GET",
-            "dataType": "json"
+        data: datos,
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         },
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
-        },
-
         scrollX: true,
-
-        "columns": [
-
+        columns: [
             {
-                "data": "Imagen",
-                "render": function (data, type, row) { 
+                data: "Imagen",
+                render: function (data, type, row) {
                     var imgUrl = '/Productos/ObtenerImagen/' + row.IdProducto;
-
-                    // Aquí se agrega el evento onclick para abrir el modal
                     return '<img src="' + imgUrl + '" height="45px" width="45px" class="img-thumbnail" style="background-color: transparent; cursor: pointer;" onclick="openModal(\'' + imgUrl + '\')" />';
                 }
             },
-
-
-            { "data": "Producto" },
-            { "data": "Cantidad" },
-            { "data": "PrecioVenta" },
-            { "data": "Total" },
+            { data: "Producto" },
             {
-                "data": "Id",
-                "render": function (data, type, row) {
-                    var botones = "";
-
-                    botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ", " + row.IdProducto + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
+                data: "Cantidad",
+                render: function (data, type, row) {
+                    return mostrarCantidad ? data : "-";
+                }
+            },
+            { data: "PrecioVenta" },
+            { data: "Total" },
+            {
+                data: "Id",
+                render: function (data, type, row) {
+                    let botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ", " + row.IdProducto + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
 
                     botones += "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
                         "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>";
 
                     return botones;
                 },
-                "orderable": true,
-                "searchable": true,
-                "width": "100px"
+                orderable: true,
+                searchable: true,
+                width: "100px"
             }
         ],
-
-        "columnDefs": [
+        columnDefs: [
             {
-                "render": function (data, type, row) {
-                    return formatNumber(data); // Formatear número en la columna
+                render: function (data, type, row) {
+                    return formatNumber(data);
                 },
-                "targets": [3, 4] // Columnas PrecioVenta y Total
+                targets: [3, 4]
             },
             {
-                "targets": [4], // Columnas de acciones
-                "visible": (userSession.IdRol == 1) // Ocultar si el rol no es 1
+                targets: [4],
+                visible: (userSession.IdRol == 1)
             }
         ],
-
-        "initComplete": async function (settings, json) {
-
+        initComplete: async function () {
             await configurarOpcionesColumnas();
-
-
         }
     };
 
@@ -117,23 +112,16 @@ async function configurarDataTable() {
         actualizarPrecio();
     });
 
-
-    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
+    let filaSeleccionada = null;
     $('#grdStock tbody').on('click', 'tr', function () {
-        // Remover la clase de la fila anteriormente seleccionada
         if (filaSeleccionada) {
             $(filaSeleccionada).removeClass('seleccionada');
             $('td', filaSeleccionada).removeClass('seleccionada');
-
         }
 
-        // Obtener la fila actual
         filaSeleccionada = $(this);
-
-        // Agregar la clase a la fila actual
         $(filaSeleccionada).addClass('seleccionada');
         $('td', filaSeleccionada).addClass('seleccionada');
-
     });
 }
 
@@ -186,7 +174,8 @@ const editarStock = async id => {
 
             $("#Cantidad").val(result.data.Cantidad);
 
-            $("#Productos").val(result.data.IdProducto);
+            $("#Productos").val(result.data.IdProducto).trigger('change');
+
 
             $("#Productos").prop('disabled', true);
 

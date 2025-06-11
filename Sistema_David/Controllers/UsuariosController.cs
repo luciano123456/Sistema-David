@@ -74,6 +74,26 @@ namespace Sistema_David.Controllers
         }
 
 
+        public ActionResult setVistaStock(int id, int stock)
+        {
+            try
+            {
+
+                var result = UsuariosModel.setVistaStock(id, stock);
+
+                if (result)
+                    return Json(new { Status = true });
+
+                else
+                    return Json(new { Status = false });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false });
+            }
+
+        }
+
 
         public ActionResult BloqueoSistema(int id, int bloqueo)
         {

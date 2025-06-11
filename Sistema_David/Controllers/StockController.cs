@@ -47,8 +47,15 @@ namespace Sistema_David.Controllers
         public ActionResult BuscarStock(int id)
         {
             var result = StockModel.BuscarStock(id);
-            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+
+            return Json(new
+            {
+                data = result.Stocks,
+                vistaStock = result.VistaStock
+            }, JsonRequestBehavior.AllowGet);
         }
+
+
 
         public ActionResult BuscarStockProducto(string producto)
         {
