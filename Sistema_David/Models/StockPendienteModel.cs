@@ -191,6 +191,15 @@ namespace Sistema_David.Models
 
                     if (stockExistente != null)
                     {
+
+                        var suma = stockExistente.Cantidad + model.Cantidad;
+
+
+                        if (stockProducto.Stock < suma)
+                        {
+                            return 3;
+                        }
+
                         // Si existe, sumarle la cantidad
                         stockExistente.Cantidad += model.Cantidad;
                     }

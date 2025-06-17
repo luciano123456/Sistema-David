@@ -620,6 +620,11 @@ async function agregarStockUser() {
             $('.datos-error').text('Stock insuficiente.')
             $('.datos-error').removeClass('d-none');
 
+        } else if (result.Status == 3) {
+
+                $('.datos-error').text('La suma de cantidad de este producto, excede el stock.')
+                $('.datos-error').removeClass('d-none');
+
         } else {
             $('.datos-error').text('Ha ocurrido un error en los datos.')
             $('.datos-error').removeClass('d-none')

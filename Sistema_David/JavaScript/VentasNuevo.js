@@ -140,6 +140,11 @@ async function cargarCliente() {
 
         if (result.data != null) {
 
+            if (result.data.LimiteVentas == 0) {
+                alert("El cliente no posee un scoring crediticio. Avisar a un administrador");
+                return;
+            }
+
 
 
             $("#estadocliente").css("color", "white");
@@ -643,7 +648,7 @@ document.getElementById("Productos").addEventListener("change", async (e) => {
 
 async function registrarVenta() {
 
-    let now = new Date().getTime();
+     let now = new Date().getTime();
 
 
     if (now - localStorage.getItem("lastSaleTime") >= 6) { 
