@@ -1099,6 +1099,7 @@ const configurarDataTableCobrosPendientes = async () => {
 
         var rowData = gridCobranzasPendientes.row(filaSeleccionada).data();
         var saldoCliente = rowData.SaldoCliente;
+        var limiteCliente = rowData.LimiteVentas;
         var nombreClienteElement = $(this).find('a.cliente-link-no-style'); // Elemento del nombre del cliente
 
         var nombreCliente = rowData.Cliente;
@@ -1107,6 +1108,12 @@ const configurarDataTableCobrosPendientes = async () => {
         saldoLabel.textContent = `Saldo de ${nombreCliente} : ${formatNumber(saldoCliente)}`;
         var divSaldo = document.getElementById("divSaldo");
         divSaldo.removeAttribute("hidden");
+
+        var saldoLabel = document.getElementById("totLimite");
+
+        saldoLabel.textContent = `Limite de ventas : ${formatNumber(limiteCliente)}`;
+        var divLimite = document.getElementById("divLimite");
+        divLimite.removeAttribute("hidden");
 
     });
 
@@ -1481,11 +1488,18 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
         var nombreClienteElement = $(this).find('a.cliente-link-no-style'); // Elemento del nombre del cliente
 
         var nombreCliente = rowData.Cliente;
+        var limiteCliente = rowData.LimiteVentas;
         var saldoLabel = document.getElementById("totsaldo");
 
         saldoLabel.textContent = `Saldo de ${nombreCliente} : ${formatNumber(saldoCliente)}`;
         var divSaldo = document.getElementById("divSaldo");
         divSaldo.removeAttribute("hidden");
+
+        var saldoLabel = document.getElementById("totLimite");
+
+        saldoLabel.textContent = `Limite de ventas : ${formatNumber(limiteCliente)}`;
+        var divLimite = document.getElementById("divLimite");
+        divLimite.removeAttribute("hidden");
 
     });
 

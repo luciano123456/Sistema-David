@@ -56,8 +56,8 @@
 }
 
 .divTotalSaldo {
-    display: inline-block !important;
-    position: relative !important;
+    display: flex !important;
+    justify-content: center;
     margin-left: 10px !important;
    
 }

@@ -50,6 +50,7 @@ namespace Sistema_David.Models.Modelo
         public string Estado { get; set; }
         public decimal ValorCuota { get; set; }
         public decimal SaldoCliente { get; set; }
+        public decimal LimiteVentas { get; set; }
         public decimal Interes { get; set; }
         public int CobroPendiente { get; set; }
         public DateTime FechaCliente { get; set; }

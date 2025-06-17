@@ -77,7 +77,8 @@ namespace Sistema_David.Models.Modelo
                                       Turno = d.Turno != null ? d.Turno : "N/A",
                                       IdUsuarioRecorrido = r != null ? (int)r.IdUsuario : 0,
                                       FranjaHoraria = d.FranjaHoraria != null ? d.FranjaHoraria : "",
-                                      EstadoCobro = d.EstadoCobro != null ? d.EstadoCobro : ""
+                                      EstadoCobro = d.EstadoCobro != null ? d.EstadoCobro : "",
+                                      LimiteVentas = (decimal)c.LimiteVentas
                                   }).ToList();
 
                     // Ordenar por si está en un recorrido, luego por el orden del recorrido, y finalmente por otra ordenación que desees
@@ -165,7 +166,8 @@ namespace Sistema_David.Models.Modelo
                                   Turno = d.Turno != null ? d.Turno : "N/A",
                                   IdUsuarioRecorrido = r != null ? (int)r.IdUsuario : 0,
                                   FranjaHoraria = d.FranjaHoraria != null ? d.FranjaHoraria : "",
-                                  EstadoCobro = d.EstadoCobro != null ? d.EstadoCobro : ""
+                                  EstadoCobro = d.EstadoCobro != null ? d.EstadoCobro : "",
+                                  LimiteVentas = (decimal)c.LimiteVentas
                               }).ToList();
 
                 // Ordenar por si está en un recorrido, luego por el orden del recorrido, y finalmente por otra ordenación que desees
