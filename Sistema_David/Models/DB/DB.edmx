@@ -102,6 +102,7 @@
           <Property Name="TipoNegocio" Type="varchar" MaxLength="255" />
           <Property Name="IdCuentaBancaria" Type="int" />
           <Property Name="CobroPendiente" Type="int" />
+          <Property Name="TipoInteres" Type="varchar" MaxLength="255" />
         </EntityType>
         <EntityType Name="Limites">
           <Key>
@@ -1292,6 +1293,7 @@
           <Property Name="IdCuentaBancaria" Type="Int32" />
           <NavigationProperty Name="CuentasBancarias" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas1" FromRole="InformacionVentas" ToRole="CuentasBancarias" />
           <Property Name="CobroPendiente" Type="Int32" />
+          <Property Name="TipoInteres" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="TipoNegocio">
           <Key>
@@ -1591,6 +1593,7 @@
           <EntitySetMapping Name="InformacionVentas">
             <EntityTypeMapping TypeName="Sistema_DavidModel.InformacionVentas">
               <MappingFragment StoreEntitySet="InformacionVentas">
+                <ScalarProperty Name="TipoInteres" ColumnName="TipoInteres" />
                 <ScalarProperty Name="CobroPendiente" ColumnName="CobroPendiente" />
                 <ScalarProperty Name="IdCuentaBancaria" ColumnName="IdCuentaBancaria" />
                 <ScalarProperty Name="TipoNegocio" ColumnName="TipoNegocio" />

@@ -466,6 +466,7 @@ namespace Sistema_David.Models.Modelo
                         idCobrador = (int)iv.idCobrador,
                         Deuda = (decimal)iv.Deuda != null ? (decimal)iv.Deuda : 0,
                         ClienteAusente = iv.ClienteAusente != null ? (int)iv.ClienteAusente : 0,
+                        TipoInteres = iv.TipoInteres
                     })
                     .FirstOrDefault();
 

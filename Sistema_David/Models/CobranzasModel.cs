@@ -543,8 +543,9 @@ namespace Sistema_David.Models.Modelo
                                 venta.idCobrador = 0;
                                 venta.Turno = model.Turno.ToUpper();
                                 venta.FranjaHoraria = model.FranjaHoraria;
-                                venta.EstadoCobro = model.EstadoCobro;
+                                venta.EstadoCobro = model.EstadoCobro != null ? model.EstadoCobro : null;
                                 venta.CobroPendiente = model.CobroPendiente != null ? model.CobroPendiente : 0;
+
 
                                 var cliente = ClientesModel.InformacionCliente(venta.idCliente);
                                 var saldo = cliente.Saldo - model.Entrega;
@@ -578,13 +579,14 @@ namespace Sistema_David.Models.Modelo
                                 infoventa.MetodoPago = model.MetodoPago != null ? model.MetodoPago.ToUpper() : "";
                                 infoventa.idCobrador = SessionHelper.GetUsuarioSesion().Id;
                                 infoventa.whatssap = 0;
-                                infoventa.ClienteAusente = int.Parse(model.EstadoCobro);
+                                infoventa.ClienteAusente = model.EstadoCobro != null ? int.Parse(model.EstadoCobro) : 0;
                                 infoventa.ProximoCobro = model.FechaCobro;
                                 infoventa.Deuda = (ClientesModel.BuscarCliente(venta.idCliente).Saldo + model.Interes) - model.Entrega;
                                 infoventa.Imagen = model.Imagen;
                                 infoventa.IdTipoNegocio = venta.IdTipoNegocio;
                                 infoventa.TipoNegocio = UsuariosModel.BuscarTipoNegocio((int)venta.IdTipoNegocio).Nombre;
                                 infoventa.IdCuentaBancaria = model.MetodoPago != null && model.MetodoPago.ToUpper() != "EFECTIVO" ? (int?)model.IdCuenta : null;
+                                infoventa.TipoInteres = model.TipoInteres;
 
                                 VentasModel.AgregarInformacionVenta(infoventa);
 
@@ -594,7 +596,7 @@ namespace Sistema_David.Models.Modelo
                             }
                             return 3;
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
                             transaction.Rollback(); // Revierte los cambios si hay un error
                             return 3;

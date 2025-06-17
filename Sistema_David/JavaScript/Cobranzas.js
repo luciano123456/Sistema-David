@@ -348,6 +348,9 @@ async function cobranzaVenta(id, tabla) {
             document.getElementById("ValorCuotahidden").value = venta.ValorCuota;
             document.getElementById("FechaCobro").value = moment(venta.FechaCobro).add(7, 'days').format('YYYY-MM-DD');
             document.getElementById("estadoCobro").value = "";
+
+            document.getElementById("divTipoInteres").setAttribute("hidden", "hidden");
+            document.getElementById("TipoInteres").value = "";
              
             document.getElementById("checkValorCuota").checked = false;
             document.getElementById("progressBarContainerCobro").setAttribute("hidden", "hidden");
@@ -397,13 +400,17 @@ importeCobranza.addEventListener("keyup", (e) => {
     if (importeCobranza == 0 || document.querySelector("#Entrega").value == "") {
         document.getElementById("lblValorInteres").removeAttribute("hidden", "hidden");
         document.getElementById("ValorInteres").removeAttribute("hidden", "hidden");
+        document.getElementById("divTipoInteres").removeAttribute("hidden", "hidden");
+        document.getElementById('TipoInteres').value = ""
 
         iconoCasa.classList.remove('d-none');
     } else {
         document.getElementById("ValorInteres").value = 0;
         document.getElementById("lblValorInteres").setAttribute("hidden", "hidden");
         document.getElementById("ValorInteres").setAttribute("hidden", "hidden");
+        document.getElementById("divTipoInteres").setAttribute("hidden", "hidden");
         document.getElementById('estadoCobro').value = "0"
+        document.getElementById('TipoInteres').value = ""
         iconoCasa.classList.add('d-none');
     }
 
@@ -475,6 +482,7 @@ async function hacerCobranza() {
                     MetodoPago: document.getElementById("MetodoPago").value,
                     FranjaHoraria: document.getElementById("FranjaHorariaCobro").value,
                     Turno: document.querySelector('#TurnoCobro option:checked').textContent,
+                    TipoInteres: document.querySelector('#TipoInteres option:checked').textContent,
                     EstadoCobro: document.getElementById("estadoCobro").value,
                     IdCuenta: document.getElementById("CuentaPago").value,
                     Imagen: document.getElementById("imgProd").value,
@@ -554,6 +562,7 @@ function validarCobranza() {
     const EstadoCobro = document.querySelector("#estadoCobro").value;
     const interes = document.querySelector("#ValorInteres").value;
     const cuentapago = document.querySelector("#CuentaPago").value;
+    const tipoInteres = document.querySelector("#TipoInteres").value;
 
     const imgComprobante = document.getElementById("imgProd").value;
 
@@ -593,7 +602,7 @@ function validarCobranza() {
     } else if (importeCobranza == "") {
         alert("Debes poner un importe");
         return false;
-    } else if (importeCobranza <= 0 && EstadoCobro == "") {
+    } else if (importeCobranza <= 0 && EstadoCobro == "" && tipoInteres == "") {
         alert("Debes poner un Estado de Cobro");
         return false;
     } else if (importeCobranza <= 0 && interes == "") {
@@ -2569,6 +2578,32 @@ async function deleteRecorrido(idRecorrido, idCliente) {
     }
 
 }
+
+
+function habilitarCasaInteres() {
+    const InteresSelect = document.getElementById('TipoInteres');
+    const iconoCasa = document.getElementById('iconoCasa');
+
+    if (InteresSelect.value === "" || InteresSelect.value === "0") {
+        iconoCasa.classList.remove('d-none');
+    } else {
+        iconoCasa.classList.add('d-none');
+    }
+       
+}
+
+const InteresSelect = document.getElementById('ValorInteres');
+
+InteresSelect.addEventListener('keyup', function () {
+    if (this.value === "" || this.value === "0") {
+        document.getElementById("divTipoInteres").setAttribute("hidden", "hidden");
+        const iconoCasa = document.getElementById('iconoCasa');
+        iconoCasa.classList.remove('d-none');
+        iconoCasa.classList.add('d-none');
+    } else {
+        document.getElementById("divTipoInteres").removeAttribute("hidden");
+    }
+});
 
 const turnoCobroSelect = document.getElementById('TurnoCobro');
 const franjaHorariaSelect = document.getElementById('FranjaHorariaCobro');
