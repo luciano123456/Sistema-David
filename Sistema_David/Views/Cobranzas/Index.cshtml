@@ -708,6 +708,18 @@
                             <label class="lblNombreInput" id="lblValorInteres"> Intereses: </label>
                             <input type="number" placeholder="Interes" value="0" id="ValorInteres" class="input-nuevomodif" />
 
+                            <div id="divTipoInteres" hidden>
+                                <label class="lblNombreInput">Tipo de Interes</label>
+                                <select id="TipoInteres" name="select" class="input-nuevomodif select-modal-personalizado mt-3" onchange="habilitarCasaInteres()" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="VISITA CON CAMBIO">VISITA CON CAMBIO</option>
+                                    <option value="INTERES DE 30 DIAS">INTERES DE 30 DIAS</option>
+                                    <option value="INTERES DE 60 DIAS">INTERES DE 60 DIAS</option>
+                                    <option value="PROMESA DE PAGO">PROMESA DE PAGO</option>
+                                </select>
+                            </div>
+
+
                             <label class="lblNombreInput">Metodo de pago</label>
                             <select id="MetodoPago" name="select" class="input-nuevomodif select-modal-personalizado mt-3" onchange="habilitarCuentas()" required>
                                 <option value="">Seleccionar</option>
@@ -962,5 +974,5 @@
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=2.6"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=2.7"></script>
 }

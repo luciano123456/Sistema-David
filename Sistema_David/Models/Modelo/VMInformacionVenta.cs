@@ -23,6 +23,7 @@ namespace Sistema_David.Models.Modelo
         public string Imagen { get; set; }
         public string MetodoPago { get; set; }
         public string FranjaHoraria { get; set; }
+        public string TipoInteres { get; set; }
         public int idCobrador { get; set; }
         public int idCliente { get; set; }
         public int ClienteAusente { get; set; }
