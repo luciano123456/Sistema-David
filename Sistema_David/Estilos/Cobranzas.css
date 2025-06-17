@@ -291,3 +291,117 @@
         transform: translateX(-100%);
     }
 }
+
+
+.modal-lg-custom {
+    max-width: 800px;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.form-control,
+.form-select {
+    height: 38px;
+    font-size: 14px;
+    background-color: #fff;
+    color: #000;
+}
+
+#ValordelaCuota {
+    background-color: #dee2e6;
+    font-weight: 600;
+    text-align: center;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    color: #000;
+}
+
+.progress-wrapper {
+    position: relative;
+}
+
+.checkbox-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.icono-casa span {
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+@media (min-width: 576px) {
+    .col-mobile-6 {
+        flex: 0 0 auto;
+        width: 50%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .col-mobile-6 {
+        flex: 0 0 auto;
+        width: 50%;
+    }
+}
+
+input {
+    color: black !important;
+}
+
+.modal-cobranza {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+@media (max-width: 700px) {
+    .modal-cobranza {
+        max-width: 95%;
+    }
+}
+
+
+.form-select {
+    white-space: normal !important;
+    text-overflow: unset !important;
+    overflow: visible !important;
+}
+
+#cobranzaModal .form-select {
+    font-size: 0.875rem; /* o 14px */
+}
+
+
+.colorEncabezado {
+    background: linear-gradient(to right, #005bea, #418bf9, #7baaf7);
+    color: white !important;
+    border: none !important
+}
+
+
+.alert-icon {
+    animation: pulse 2s infinite;
+    margin-right: 6px;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
