@@ -865,50 +865,9 @@ async function enviarWhatssapId(id, interes) {
 
             mensaje += " Muchas gracias por confiar en Indumentaria DG"
 
-            if (result.InformacionVenta.TipoInteres === "VISITA CON CAMBIO") {
-                mensaje = `${saludo}, ${result.Cliente.Nombre} ${result.Cliente.Apellido}. El día ${fecha} el cobrador pasó por su domicilio. Al reprogramarse el pago, se aplicó un recargo de ${formatNumber(result.InformacionVenta.Interes)} por la visita realizada. Su nueva fecha de cobro es ${fechaCobro}. El saldo pendiente de esta venta es ${formatNumber(result.InformacionVenta.Restante)}. El saldo total de todas sus ventas es ${formatNumber(result.Cliente.Saldo)}. Le recordamos que en caso de avisar previamente por WhatsApp, no se aplica el recargo. Muchas gracias.`;
-            }
 
-            else if (result.InformacionVenta.TipoInteres === "INTERES DE 30 DIAS") {
-                mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} se cumplieron 30 días desde la venta realizada, y aún no se cubrió el 50% de arreglo acordado. Por este motivo, se aplicó un pequeño recargo de ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
-                    `• *Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n` +
-                    `• *Próxima visita de cobro:* ${fechaCobro}\n` +
-                    `• *Total acumulado de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
-                    `Ante cualquier consulta, no dude en comunicarse con nosotros.`;
-
-            }
-
-
-            else if (result.InformacionVenta.TipoInteres === "INTERES DE 60 DIAS") {
-                mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} su cuenta superó los 60 días de plazo máximo para abonar. Por este motivo, se han generado los siguientes cargos:\n\n` +
-                    `*Interés aplicado:* ${formatNumber(result.InformacionVenta.Interes)}\n\n` +
-                    `*Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n\n` +
-                    `*Saldo total de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
-                    `⚠️ *Próxima visita de cobro:* ${fechaCobro}\n\n` +
-                    `Muchas gracias por confiar en INDUMENTARIADG.`;
-            }
-
-
-            else if (result.InformacionVenta.TipoInteres === "PROMESA DE PAGO") {
-                mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} estuvimos esperando su promesa de pago mediante transferencia. ` +
-                    `Al no haber recibido el comprobante y estando próximos al cierre de jornada, se ha agregado un interés de ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
-
-                    `🗒️ *Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n` +
-                    `📄 *Saldo total de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
-
-                    `📅 *El pago ha sido reprogramado para el día siguiente:* ${fechaCobro}\n\n` +
-
-                    `Muchas gracias.`;
-            }
-
-
-
-            const mensajeCodificado = encodeURIComponent(mensaje);
-            const urlwsp = `https://api.whatsapp.com/send?phone=+549${result.Cliente.Telefono}&text=${mensajeCodificado}`;
-            //const urlwsp = `https://api.whatsapp.com/send?phone=++54 9 3777 53-5622&text=${mensajeCodificado}`;
-
+            const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${result.Cliente.Telefono}&text=${mensaje}`;
             window.open(urlwsp, '_blank');
-
         }
     } catch (error) {
 
