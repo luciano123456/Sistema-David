@@ -8,10 +8,10 @@
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/Productos.css?v=1.2" rel="stylesheet" />
 <link href="~/Estilos/Ventas.css?v=1.3" rel="stylesheet" />
-<link href="~/Estilos/Cobranzas.css?v=1.4" rel="stylesheet" />
 
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 
+<link href="~/Estilos/Cobranzas.css?v=1.4" rel="stylesheet" />
 
 <body>
 
@@ -94,125 +94,125 @@
 
 
 
-            <div class="container-fluid2">
-                <div class="row">
+        <div class="container-fluid2">
+            <div class="row">
 
 
-                    <div class="col-lg-12">
-                        <div class="card cardTablePersonalizado">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                Cobranzas
-                                <div class="dropdown ms-auto">
-                                    <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fa fa-cog me-2"></i> Config. Columnas
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu">
-                                    </ul>
-                                </div>
+                <div class="col-lg-12">
+                    <div class="card cardTablePersonalizado">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            Cobranzas
+                            <div class="dropdown ms-auto">
+                                <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-cog me-2"></i> Config. Columnas
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu">
+                                </ul>
                             </div>
+                        </div>
 
-                            <div class="card-body">
-                                <table class="display nowrap w-100" id="grdCobranzas">
-                                    <thead>
-                                    <th class="text-center">
-                                        <p>Seleccionar Todos <input type="checkbox" id="selectAllCheckbox"></p>
-                                    </th>
-                                    <tr>
-                                        <th class="text-center">Orden</th>
-                                        <th class="text-center">Cliente</th>
-                                        <th class="text-center">Direccion</th>
-                                        <th class="text-center">Cuota</th>
-                                        <th class="text-center">Entrega</th>
-                                        <th class="text-center">Restante</th>
-                                        <th class="text-center">Cobro</th>
-                                        <th class="text-center">Vencimiento</th>
-                                        <th class="text-center">V</th>
-                                        <th class="text-center">C</th>
-                                        <th class="text-center">EnRecorrido</th>
-                                        <th class="text-center">T</th>
-                                        <th class="text-center">F.H </th>
-                                        <th class="text-center">Zona</th>
-                                        <th class="text-center">Acciones</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Aquí va el contenido de tu datatable -->
-                                    </tbody>
-                                </table>
-
-
-                            </div>
-
-                            <div class="col-12" id="grdCobranzasPendientesDiv" hidden>
-                                <div class="card cardTablePersonalizadoVentaPendiente">
-                                    <div class="card-header">Cobranzas Pendientes</div>
-                                    <div class="card-body">
-                                        <table class="display nowrap w-100" id="grdCobranzasPendientes">
-                                            <thead>
-                                                <tr>
-                                                    <th class="text-center">Orden</th>
-                                                    <th class="text-center">Cliente</th>
-                                                    <th class="text-center">Direccion</th>
-                                                    <th class="text-center">Cuota</th>
-                                                    <th class="text-center">Entrega</th>
-                                                    <th class="text-center">Restante</th>
-                                                    <th class="text-center">Cobro</th>
-                                                    <th class="text-center">Vencimiento</th>
-                                                    <th class="text-center">V</th>
-                                                    <th class="text-center">C</th>
-                                                    <th class="text-center">EnRecorrido</th>
-                                                    <th class="text-center">T</th>
-                                                    <th class="text-center">F.H </th>
-                                                    <th class="text-center">Zona</th>
-                                                    <th class="text-center">Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <!-- Aquí va el contenido de tu datatable -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <div class="d-flexv flex-wrap justify-content-end mt-2 mb-4">
-                                <div id="btnCuentaBancaria" class="me-2 mb-2" style="display: none">
-                                    <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirModalCuentasBancarias()" style="background-color: #3e0f00; border-color: #4285F4; color: white;">
-                                        <i class="fa fa-university"></i> Cuentas Bancarias
-                                    </a>
-
-                                </div>
-                                <div id="btnAsignarTurno" class="me-2 mb-2" style="display: none;">
-                                    <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalTurno()">Asignar Turno</a>
-                                </div>
-                                <div id="btnAsignarCobrador" class="me-2 mb-2" style="display: none;">
-                                    <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalCobrador()">Asignar Cobrador</a>
-                                </div>
-                                <div id="btnFinalizarRecorrido" class="me-2 mb-2">
-                                    <a class="btn btn-success btnnuevo btn-uniform" onclick="borrarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
-                                        <i class="fa fa-map-marker"></i> Finalizar Recorrido
-                                    </a>
-                                </div>
-                                <div id="btnArmarRecorrido" class="me-2 mb-2">
-                                    <a class="btn btn-success btnnuevo btn-uniform" onclick="armarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
-                                        <i class="fa fa-map-marker"></i> Armar Recorrido
-                                    </a>
-                                </div>
-
-                            </div>
+                        <div class="card-body">
+                            <table class="display nowrap w-100" id="grdCobranzas">
+                                <thead>
+                                <th class="text-center">
+                                    <p>Seleccionar Todos <input type="checkbox" id="selectAllCheckbox"></p>
+                                </th>
+                                <tr>
+                                    <th class="text-center">Orden</th>
+                                    <th class="text-center">Cliente</th>
+                                    <th class="text-center">Direccion</th>
+                                    <th class="text-center">Cuota</th>
+                                    <th class="text-center">Entrega</th>
+                                    <th class="text-center">Restante</th>
+                                    <th class="text-center">Cobro</th>
+                                    <th class="text-center">Vencimiento</th>
+                                    <th class="text-center">V</th>
+                                    <th class="text-center">C</th>
+                                    <th class="text-center">EnRecorrido</th>
+                                    <th class="text-center">T</th>
+                                    <th class="text-center">F.H </th>
+                                    <th class="text-center">Zona</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Aquí va el contenido de tu datatable -->
+                                </tbody>
+                            </table>
 
 
                         </div>
 
+                        <div class="col-12" id="grdCobranzasPendientesDiv" hidden>
+                            <div class="card cardTablePersonalizadoVentaPendiente">
+                                <div class="card-header">Cobranzas Pendientes</div>
+                                <div class="card-body">
+                                    <table class="display nowrap w-100" id="grdCobranzasPendientes">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-center">Orden</th>
+                                                <th class="text-center">Cliente</th>
+                                                <th class="text-center">Direccion</th>
+                                                <th class="text-center">Cuota</th>
+                                                <th class="text-center">Entrega</th>
+                                                <th class="text-center">Restante</th>
+                                                <th class="text-center">Cobro</th>
+                                                <th class="text-center">Vencimiento</th>
+                                                <th class="text-center">V</th>
+                                                <th class="text-center">C</th>
+                                                <th class="text-center">EnRecorrido</th>
+                                                <th class="text-center">T</th>
+                                                <th class="text-center">F.H </th>
+                                                <th class="text-center">Zona</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Aquí va el contenido de tu datatable -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="d-flexv flex-wrap justify-content-end mt-2 mb-4">
+                            <div id="btnCuentaBancaria" class="me-2 mb-2" style="display: none">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirModalCuentasBancarias()" style="background-color: #3e0f00; border-color: #4285F4; color: white;">
+                                    <i class="fa fa-university"></i> Cuentas Bancarias
+                                </a>
+
+                            </div>
+                            <div id="btnAsignarTurno" class="me-2 mb-2" style="display: none;">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalTurno()">Asignar Turno</a>
+                            </div>
+                            <div id="btnAsignarCobrador" class="me-2 mb-2" style="display: none;">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalCobrador()">Asignar Cobrador</a>
+                            </div>
+                            <div id="btnFinalizarRecorrido" class="me-2 mb-2">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="borrarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
+                                    <i class="fa fa-map-marker"></i> Finalizar Recorrido
+                                </a>
+                            </div>
+                            <div id="btnArmarRecorrido" class="me-2 mb-2">
+                                <a class="btn btn-success btnnuevo btn-uniform" onclick="armarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
+                                    <i class="fa fa-map-marker"></i> Armar Recorrido
+                                </a>
+                            </div>
+
+                        </div>
+
+
                     </div>
+
                 </div>
             </div>
+        </div>
 
 
-            <!--<div class="col-lg-12">-->
-            <!-- NUEVA TABLA: Cobranzas Pendientes -->
-            <!--<div class="card cardTablePersonalizado mb-4">
+        <!--<div class="col-lg-12">-->
+        <!-- NUEVA TABLA: Cobranzas Pendientes -->
+        <!--<div class="card cardTablePersonalizado mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             Cobranzas Pendientes
             <div class="dropdown ms-auto">
@@ -248,13 +248,13 @@
                 </tr>
                 </thead>
                 <tbody>-->
-            <!-- Aquí va el contenido de la datatable de pendientes -->
-            <!--</tbody>
-            </table>
-        </div>
-    </div>-->
-            <!-- TABLA ORIGINAL: Cobranzas -->
-            <!--<div class="card">
+        <!-- Aquí va el contenido de la datatable de pendientes -->
+        <!--</tbody>
+                </table>
+            </div>
+        </div>-->
+        <!-- TABLA ORIGINAL: Cobranzas -->
+        <!--<div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             Cobranzas
             <div class="dropdown ms-auto">
@@ -290,427 +290,428 @@
                 </tr>
                 </thead>
                 <tbody>-->
-            <!-- Aquí va el contenido de la datatable -->
-            <!--</tbody>
-                </table>
+        <!-- Aquí va el contenido de la datatable -->
+        <!--</tbody>
+                    </table>
+                </div>
+
+
+
+
+                <div class="d-flexv flex-wrap justify-content-end mt-2 mb-4">
+                    <div id="btnCuentaBancaria" class="me-2 mb-2" style="display: none">
+                        <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirModalCuentasBancarias()" style="background-color: #3e0f00; border-color: #4285F4; color: white;">
+                            <i class="fa fa-university"></i> Cuentas Bancarias
+                        </a>
+
+                    </div>
+                    <div id="btnAsignarTurno" class="me-2 mb-2" style="display: none;">
+                        <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalTurno()">Asignar Turno</a>
+                    </div>
+                    <div id="btnAsignarCobrador" class="me-2 mb-2" style="display: none;">
+                        <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalCobrador()">Asignar Cobrador</a>
+                    </div>
+                    <div id="btnFinalizarRecorrido" class="me-2 mb-2">
+                        <a class="btn btn-success btnnuevo btn-uniform" onclick="borrarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
+                            <i class="fa fa-map-marker"></i> Finalizar Recorrido
+                        </a>
+                    </div>
+                    <div id="btnArmarRecorrido" class="me-2 mb-2">
+                        <a class="btn btn-success btnnuevo btn-uniform" onclick="armarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
+                            <i class="fa fa-map-marker"></i> Armar Recorrido
+                        </a>
+                    </div>
+
+                </div>
+
+
+
             </div>
+        </div>-->
+        @*</div>*@
+    }
+    else
+    {
+        <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
+    }
 
+    <div class="modal fade centered-modal-importar" id="modalHomeCobranza" tabindex="-1" aria-labelledby="modalHomeCobranzaLabel" aria-hidden="true">
+        <div class="modal-dialog estilowpp">
+            <div class="estilowpp modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalHomeCobranzaLabel">Observacion de Cobro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
 
+                    <input type="Text" id="idVentaHome" class="input-nuevomodif" hidden />
+                    <input type="Text" placeholder="Detalla informacion del mismo..." id="mensajeobs" class="input-whatssap" />
 
-
-            <div class="d-flexv flex-wrap justify-content-end mt-2 mb-4">
-                <div id="btnCuentaBancaria" class="me-2 mb-2" style="display: none">
-                    <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirModalCuentasBancarias()" style="background-color: #3e0f00; border-color: #4285F4; color: white;">
-                        <i class="fa fa-university"></i> Cuentas Bancarias
-                    </a>
 
                 </div>
-                <div id="btnAsignarTurno" class="me-2 mb-2" style="display: none;">
-                    <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalTurno()">Asignar Turno</a>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="estadoHome()">Enviar</button>
                 </div>
-                <div id="btnAsignarCobrador" class="me-2 mb-2" style="display: none;">
-                    <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalCobrador()">Asignar Cobrador</a>
-                </div>
-                <div id="btnFinalizarRecorrido" class="me-2 mb-2">
-                    <a class="btn btn-success btnnuevo btn-uniform" onclick="borrarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
-                        <i class="fa fa-map-marker"></i> Finalizar Recorrido
-                    </a>
-                </div>
-                <div id="btnArmarRecorrido" class="me-2 mb-2">
-                    <a class="btn btn-success btnnuevo btn-uniform" onclick="armarRecorrido()" style="background-color: #4285F4; border-color: #4285F4; color: white;">
-                        <i class="fa fa-map-marker"></i> Armar Recorrido
-                    </a>
-                </div>
-
             </div>
-
-
-
         </div>
-    </div>-->
-            @*</div>*@
-            }
-            else
-            {
-            <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
-            }
+    </div>
 
-            <div class="modal fade centered-modal-importar" id="modalHomeCobranza" tabindex="-1" aria-labelledby="modalHomeCobranzaLabel" aria-hidden="true">
-                <div class="modal-dialog estilowpp">
-                    <div class="estilowpp modal-content ">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalHomeCobranzaLabel">Observacion de Cobro</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
+    <div class="modal fade centered-modal-importar" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
+        <div class="modal-dialog estilowpp">
+            <div class="estilowpp modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalWhatssapLabel">Enviar mensaje por whatssap</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
 
-                            <input type="Text" id="idVentaHome" class="input-nuevomodif" hidden />
-                            <input type="Text" placeholder="Detalla informacion del mismo..." id="mensajeobs" class="input-whatssap" />
+                    <input type="Text" id="idClienteWhatssap" class="input-nuevomodif" hidden />
+                    <input type="Text" placeholder="Escribe el mensaje" id="mensajewsp" class="input-whatssap" />
 
 
-                        </div>
-                        <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
-                            <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="estadoHome()">Enviar</button>
-                        </div>
-                    </div>
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="enviarWhatssap()">Enviar</button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="modal fade centered-modal-importar" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
-                <div class="modal-dialog estilowpp">
-                    <div class="estilowpp modal-content ">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalWhatssapLabel">Enviar mensaje por whatssap</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-
-                            <input type="Text" id="idClienteWhatssap" class="input-nuevomodif" hidden />
-                            <input type="Text" placeholder="Escribe el mensaje" id="mensajewsp" class="input-whatssap" />
-
-
-                        </div>
-                        <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
-                            <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="enviarWhatssap()">Enviar</button>
-                        </div>
-                    </div>
+    <div class="modal fade centered-modal-importar" id="modalCobradores" tabindex="-1" aria-labelledby="modalCobradoresLabel" aria-hidden="true">
+        <div class="modal-dialog estilowpp">
+            <div class="estilowpp modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCobradorespLabel">Asignar Cobrador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <label class="lblNombreInput" hidden>Cobrador</label>
+                <select id="Cobrador" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
+                    <option value="" selected>Seleccione Cobrador</option>
+                </select>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="asignarCobrador()">Asignar</button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="modal fade centered-modal-importar" id="modalCobradores" tabindex="-1" aria-labelledby="modalCobradoresLabel" aria-hidden="true">
-                <div class="modal-dialog estilowpp">
-                    <div class="estilowpp modal-content ">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalCobradorespLabel">Asignar Cobrador</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <label class="lblNombreInput" hidden>Cobrador</label>
-                        <select id="Cobrador" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
-                            <option value="" selected>Seleccione Cobrador</option>
-                        </select>
-                        <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
-                            <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="asignarCobrador()">Asignar</button>
-                        </div>
-                    </div>
+    <div class="modal fade centered-modal-importar" id="modalTurnos" tabindex="-1" aria-labelledby="modalTurnosLabel" aria-hidden="true">
+        <div class="modal-dialog estilowpp">
+            <div class="estilowpp modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTurnospLabel">Asignar Turno</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <label class="lblNombreInput" hidden>Cobrador</label>
+                <select id="Turno" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
+                    <option value="" selected>Seleccione Turno</option>
+                </select>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="asignarTurno()">Asignar</button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="modal fade centered-modal-importar" id="modalTurnos" tabindex="-1" aria-labelledby="modalTurnosLabel" aria-hidden="true">
-                <div class="modal-dialog estilowpp">
-                    <div class="estilowpp modal-content ">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalTurnospLabel">Asignar Turno</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <label class="lblNombreInput" hidden>Cobrador</label>
-                        <select id="Turno" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
-                            <option value="" selected>Seleccione Turno</option>
-                        </select>
-                        <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
-                            <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnaccion" onclick="asignarTurno()">Asignar</button>
-                        </div>
-                    </div>
+    <div id="modalImagenAmpliada">
+        <img src="" alt="Imagen ampliada">
+    </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalComprobantes" tabindex="-1" aria-labelledby="modalComprobantesLabel" aria-hidden="true" style="z-index: 999999;">
+        <input type="text" id="idaccount" class="extra-comprobante d-none">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+
+                    <h5 class="modal-title" id="modalComprobantesLabel">Agregar Comprobantes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-            </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Casillero 1 -->
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
 
-            <div id="modalImagenAmpliada">
-                <img src="" alt="Imagen ampliada">
-            </div>
-
-
-            <!-- Modal -->
-            <div class="modal fade" id="modalComprobantes" tabindex="-1" aria-labelledby="modalComprobantesLabel" aria-hidden="true" style="z-index: 999999;">
-                <input type="text" id="idaccount" class="extra-comprobante d-none">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-
-                            <h5 class="modal-title" id="modalComprobantesLabel">Agregar Comprobantes</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row g-3">
-                                <!-- Casillero 1 -->
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="0">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
                                 </div>
 
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="1">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="0">
+                                    </label>
                                 </div>
 
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="2">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="3">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="4">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="5">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="6">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="7">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="8">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="9">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-
-
-
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="10">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-6 col-md-3">
-                                    <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
-                                        <h6 class="mb-2 text-black">Comprobante</h6>
-                                        <div class="vista-previa-container">
-                                            <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <label class="form-label btn btn-outline-primary w-100 mb-1">
-                                                <i class="bi bi-upload me-1"></i> Seleccionar archivo
-                                                <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="11">
-                                            </label>
-                                        </div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
-                                    </div>
-                                </div>
-
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
                             </div>
                         </div>
 
-                        <div class="modal-footer">
-                            <button id="btnCancelarModal" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button id="btnGuardarComprobantes" onclick="guardarComprobantes()" type="button" class="btn btn-primary">Guardar</button>
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="1">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
                         </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="2">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="3">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="4">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="5">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="6">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="7">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="8">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="9">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+
+
+
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="10">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                <h6 class="mb-2 text-black">Comprobante</h6>
+                                <div class="vista-previa-container">
+                                    <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                        <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                        <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="11">
+                                    </label>
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+
+                <div class="modal-footer">
+                    <button id="btnCancelarModal" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button id="btnGuardarComprobantes" onclick="guardarComprobantes()" type="button" class="btn btn-primary">Guardar</button>
+                </div>
             </div>
+        </div>
+    </div>
 
 
-            <div class="modal fade centered-modal-cobranza" id="cobranzaModal" tabindex="-1" aria-labelledby="cobranzaModallLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="cobranzaModalLabel">Cobranza</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
+    <div class="modal fade" id="cobranzaModal" tabindex="-1" aria-labelledby="cobranzaModallLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-cobranza">
+            <div class="modal-content">
+                <div class="modal-header colorEncabezado">
+                    <h5 class="modal-title fw-bold text-white" id="cobranzaModalLabel">Cobranza</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <form class="row g-3">
+                            <input type="text" id="IdVenta" class="form-control" hidden />
+                            <input type="number" id="ValorCuotahidden" hidden />
+                            <input type="number" id="estadoCobro" hidden />
 
-                            <label class="lblNombreInput text-bg-secondary" id="saldoRestante" hidden></label>
-
-
-                            <input type="Text" id="IdVenta" class="input-nuevomodif" hidden />
-                            <label class="lblNombreInput text-bg-secondary" id="ValordelaCuota"></label>
-
-                            <br />
-                            <label class="lblNombreInput" id="lblImporte"> Importe: </label>
-                            <input type="number" placeholder="0" value="0" id="Entrega" class="input-nuevomodif" />
-                            <label class="lblNombreInput text-danger mb-2 mt-0" id="errorImporteCobranza" hidden></label>
-
-
-                            <label class="lblNombreInput" id="lblValorCuota" hidden> Nuevo Valor de Cuota: </label>
-                            <label class="lblNombreInput text-danger mb-2 mt-0" id="errorValorCuotaCobranza" hidden></label>
-
-
-                            <div class="d-flex align-items-center">
-                                <input type="number" placeholder="Valor de la cuota" value="0" id="ValorCuota" class="input-nuevomodif" />
-                                <input type="number" placeholder="Valor de la cuota" value="0" id="ValorCuotahidden" hidden class="input-nuevomodif" />
-
-                                <input type="checkbox" id="checkValorCuota" class="form-check-input input-checkbox" style="z-index:1; position:relative; top: -10px;" onclick="calcularRestanteCuota()" />
-
-                                <label class="text-danger ml-2" id="errorValorCuotaCobranza" hidden></label>
+                            <div class="col-12">
+                                <label id="saldoRestante" hidden class="form-label text-bg-secondary"></label>
+                                <div id="ValordelaCuota" class="bg-gradient fw-bold text-center p-2 rounded text-dark">¡El valor de la cuota es de 0 pesos!</div>
                             </div>
 
-                            <label class="lblNombreInput" id="lblValorInteres"> Intereses: </label>
-                            <input type="number" placeholder="Interes" value="0" id="ValorInteres" class="input-nuevomodif" />
+                            <div class="col-6 col-lg-3">
+                                <label for="Entrega" class="form-label text-nowrap small">Importe</label>
+                                <input type="number" id="Entrega" value="0" class="form-control form-control-sm text-dark text-nowrap" />
+                                <div class="form-check mt-2">
+                                    <input type="checkbox" id="checkValorCuota" class="form-check-input" onclick="calcularRestanteCuota()" />
+                                    <label class="form-check-label small text-nowrap text-black" for="checkValorCuota">Modificar Cuota</label>
+                                </div>
+                            </div>
 
-                            <div id="divTipoInteres" hidden>
-                                <label class="lblNombreInput">Tipo de Interes</label>
-                                <select id="TipoInteres" name="select" class="input-nuevomodif select-modal-personalizado mt-3" onchange="habilitarCasaInteres()" required>
+                            <div class="col-6 col-lg-3">
+                                <label for="ValorCuota" class="form-label text-nowrap small" id="lblValorCuota" hidden>Nuevo Valor de Cuota</label>
+                                <input type="number" id="ValorCuota" value="0" class="form-control form-control-sm text-dark text-nowrap" />
+                            </div>
+
+                            <div class="col-6 col-lg-3" id="divIntereses">
+                                <label for="ValorInteres" class="form-label text-nowrap small" id="lblValorInteres">Intereses</label>
+                                <input type="number" id="ValorInteres" value="0" class="form-control form-control-sm text-dark text-nowrap" />
+                            </div>
+
+                            <div class="col-6 col-lg-3" id="divTipoInteres" hidden>
+                                <label for="TipoInteres" class="form-label text-nowrap small">Tipo de Interés</label>
+                                <select id="TipoInteres" class="form-select form-select-sm text-dark text-nowrap" onchange="habilitarCasaInteres()" required>
                                     <option value="">Seleccionar</option>
                                     <option value="VISITA CON CAMBIO">VISITA CON CAMBIO</option>
                                     <option value="INTERES DE 30 DIAS">INTERES DE 30 DIAS</option>
@@ -719,121 +720,148 @@
                                 </select>
                             </div>
 
+                            <div class="col-6 col-lg-3" id="divMetodoPago">
+                                <label for="MetodoPago" class="form-label text-nowrap small">Método de pago</label>
+                                <select id="MetodoPago" class="form-select form-select-sm text-dark text-nowrap" onchange="habilitarCuentas()" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Transferencia Propia">Transferencia Propia</option>
+                                    <option value="Transferencia a Terceros">Transferencia a Terceros</option>
+                                </select>
+                            </div>
 
-                            <label class="lblNombreInput">Metodo de pago</label>
-                            <select id="MetodoPago" name="select" class="input-nuevomodif select-modal-personalizado mt-3" onchange="habilitarCuentas()" required>
-                                <option value="">Seleccionar</option>
-                                <option value="Efectivo">Efectivo</option>
-                                <option value="Transferencia Propia">Transferencia Propia</option>
-                                <option value="Transferencia a Terceros">Transferencia a Terceros</option>
-                            </select>
+                            <div class="col-6 col-lg-3" id="divCuentaPago" hidden>
+                                <label for="CuentaPago" class="form-label text-nowrap small" id="lblCuentaPago">Cuenta</label>
+                                <select id="CuentaPago" class="form-select form-select-sm text-dark text-nowrap" required>
+                                    <option value="">Seleccionar</option>
+                                </select>
+                            </div>
 
-                            <label class="lblNombreInput" id="lblCuentaPago" hidden>Cuenta</label>
-                            <select id="CuentaPago" name="select" class="input-nuevomodif select-modal-personalizado mt-3" required hidden>
-                                <option value="">Seleccionar</option>
-                            </select>
+                            <div class="col-6 col-lg-3">
+                                <label for="FechaCobro" class="form-label text-nowrap small" id="lblFechaCobro">Nueva Fecha de Cobro</label>
+                                <input type="date" id="FechaCobro" class="form-control form-control-sm text-dark text-nowrap" />
+                            </div>
 
-                            <div id="progressBarContainerCobro" class="progress-wrapper mt-3" hidden>
-                                <!-- Contenedor superior con el Total y el texto Cobros Pendientes -->
+                            <div class="col-6 col-lg-3">
+                                <label for="TurnoCobro" class="form-label text-nowrap small" id="lblProximoTurno">Próximo Turno</label>
+                                <select id="TurnoCobro" class="form-select form-select-sm text-dark text-nowrap" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="mañana">Mañana</option>
+                                    <option value="tarde">Tarde</option>
+                                </select>
+                            </div>
+
+                            <div class="col-6 col-lg-3">
+                                <label for="FranjaHorariaCobro" class="form-label text-nowrap small" id="lblFranjaHoraria">Franja Horaria</label>
+                                <select id="FranjaHorariaCobro" class="form-select form-select-sm text-dark text-nowrap" required>
+                                    <option value="">Seleccionar</option>
+                                </select>
+                            </div>
+
+                            <div class="col-6 col-lg-3">
+                                <label class="form-label me-2 mb-0 text-nowrap small" for="chkCobroPendiente">Observación:</label>
+                                <input type="checkbox" id="chkCobroPendiente" class="form-check-input me-2" />
+                                <input type="text" id="Observacion" class="form-control form-control-sm text-dark text-nowrap" />
+                            </div>
+
+                            <div class="col-12 d-flex justify-content-center align-items-center" id="iconoCasa">
+                                <div id="iconosAlternativos" class="d-flex align-items-center gap-3">
+                                    <span id="iconoRojo" class="fa fa-home text-danger" onclick="cambiarColor('text-danger')"></span>
+                                    <span id="iconoVerde" class="fa fa-home text-success" onclick="cambiarColor('text-success')"></span>
+                                </div>
+                                <span id="iconoPrincipal" class="fa fa-home text-dark ms-3" onclick="toggleIcon()"></span>
+                            </div>
+
+                            <div class="col-12 bg-light border rounded p-3 mt-3" id="progressBarContainerCobro" hidden>
                                 <div class="d-flex justify-content-between mb-2">
-                                    <span id="total-labelCobro" hidden class="text-black" style="font-weight: bold;">Cobros: $50,000</span>
-                                    <span id="cobrosPendientesCobro" class="text-warning" hidden style="font-weight: bold;">Pendientes; $50,000</span>
+                                    <span id="total-labelCobro" hidden class="fw-bold text-black">Cobros: $50,000</span>
+                                    <span id="cobrosPendientesCobro" class="text-warning fw-bold">Pendientes: $50,000</span>
                                 </div>
-
-                                <!-- Barra de progreso -->
-                                <div class="progress" style="height: 20px; background-color: #f1f1f1; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
-                                    <div id="progressBarCobro" class="progress-bar" style="width: 0%; transition: width 0.5s; border-radius: 10px;"></div>
+                                <div class="progress" style="height: 20px; background-color: #f1f1f1;">
+                                    <div id="progressBarCobro" class="progress-bar" style="width: 0%; transition: width 0.5s;"></div>
                                 </div>
-
-                                <!-- Contenedor inferior con el Restante -->
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span id="entregas-labelCobro" hidden class="text-black" style="font-weight: bold;">Entregas: $50,000</span>
-                                    <span id="restante-labelCobro" hidden class="text-black" style="font-weight: bold;">Restante: $50,000</span>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span id="entregas-labelCobro" hidden class="fw-bold text-black">Entregas: $50,000</span>
+                                    <span id="restante-labelCobro" hidden class="fw-bold text-black">Restante: $50,000</span>
                                 </div>
+                                <span id="progressPercentageCobro" class="text-center position-absolute w-100 text-white fw-bold" style="top: 50%; transform: translateY(-50%);"></span>
+                            </div>
+                            <div class="col-12" id="divImagen" hidden>
+                                <div class="mb-1">
+                                    <label for="Imagen" class="form-label fw-semibold">Comprobante</label>
+                                </div>
+                                <div class="border rounded p-3 d-flex align-items-center justify-content-start gap-3 flex-wrap">
+                                    <img id="imgProducto" src="" class="rounded" style="width: 50px; height: 50px; cursor: pointer;" onclick="openModal(this.src)" />
+                                    <input id="Imagen" class="form-control form-control-sm" type="file" name="adjunto" accept=".pdf,.jpg,.png" multiple />
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="borrarImagen()">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
+                                <p id="imgProd" hidden></p>
+                            </div>
 
-                                <!-- Texto del porcentaje de progreso centrado -->
-                                <span id="progressPercentageCobro" class="text-center"
-                                      style="position: absolute; width: 100%; top: 50%; transform: translateY(-50%); color: white; font-weight: bold; font-size: 14px;">
-                                </span>
+                            <div id="alertasErrores" class="alert alert-danger d-none flex-column gap-1"></div>
+
+
+                            <div id="errorCampos" class="alert alert-danger d-none">
+                                Debes completar los campos obligatorios.
                             </div>
 
 
 
-                            <label class="lblNombreInput" id="lblFechaCobro">Nueva Fecha de Cobro</label>
-                            <input type="date" placeholder="1" value="1" id="FechaCobro" class="input-nuevomodif" />
-
-                            <label id="lblProximoTurno" class="lblNombreInput">Proximo Turno</label>
-                            <select id="TurnoCobro" name="select" class="input-nuevomodif select-modal-personalizado mt-3" required>
-                                <option value="">Seleccionar</option>
-                                <option value="mañana">Mañana</option>
-                                <option value="tarde">Tarde</option>
-                            </select>
-
-                            <label id="lblFranjaHoraria" class="lblNombreInput">Franja Horaria</label>
-                            <select id="FranjaHorariaCobro" name="select" class="input-nuevomodif select-modal-personalizado mt-3" required>
-                                <option value="">Seleccionar</option>
-                            </select>
-
-
-                            <div class="mb-3">
-                                <div class="d-flex align-items-center justify-content-center">
-                                    <label class="lblNombreInput mb-1 me-2" for="Observacion">Observación:</label>
-                                    <input type="checkbox" id="chkCobroPendiente" class="form-check-input input-checkbox" title="Cobro Pendiente" />
-                                </div>
-                                <input type="text" id="Observacion" class="input-nuevomodif" />
-                            </div>
-
-                            <!-- Contenedor para el ícono principal y los íconos alternativos -->
-                            <div id="iconoCasa" class="d-flex align-items-center justify-content-center mt-12">
-                                <div id="iconosAlternativos" class="d-none d-flex align-items-center">
-                                    <span id="iconoRojo" class="fa fa-home fa-2x text-danger cursor-pointer" onclick="cambiarColor('text-danger')"></span>
-                                    <span id="iconoVerde" class="fa fa-home fa-2x text-success cursor-pointer" onclick="cambiarColor('text-success')"></span>
-                                    <input type="number" placeholder="" value="" id="estadoCobro" class="input-nuevomodif" hidden />
-                                </div>
-                                <span id="iconoPrincipal" class="fa fa-home fa-3x text-dark cursor-pointer" style="position: relative;" onclick="toggleIcon()"></span>
-                            </div>
-
-                            <div id="divImagen" class="divImagen" hidden>
-                                <h5>Comprobante</h5>
-                                <img id="imgProducto" class="mb-3" style="width: 50px; height: 50px;" src="" />
-                                <input id="Imagen" class="input-imagen" type="file" placeholder="Imagen" name="adjunto" accept=".pdf,.jpg,.png" multiple />
-                                <p id="imgProd" class="" hidden></p>
-                            </div>
-
-                        </div>
-                        <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                            <button id="btnCobrar" type="button" class="btn" onclick="hacerCobranza()">Cobrar</button>
-                        </div>
+                        </form>
                     </div>
                 </div>
-            </div>
-
-            <div class="modal fade centered-modal-importar" id="importanteModal" tabindex="-1" aria-labelledby="importanteModallLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="importanteModalLabel">Cobranza Importante</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-
-                            <input type="Text" id="IdVentaImportante" class="input-nuevomodif" hidden />
-
-                            <label class="lblNombreInput" id="lblImporte"> Orden: </label>
-                            <input type="number" placeholder="" value="" id="OrdenCobranza" class="input-nuevomodif" />
-
-
-                        </div>
-                        <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                            <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="cobranzaImportanteModal()">Aceptar</button>
-                        </div>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnCobrar" type="button" class="btn btn-primary" onclick="hacerCobranza()">Cobrar</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+
+    <!-- Modal global para imágenes -->
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true" style="z-index: 99999999;">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Imagen Ampliada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid rounded shadow" alt="Imagen Ampliada" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="modal fade centered-modal-importar" id="importanteModal" tabindex="-1" aria-labelledby="importanteModallLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importanteModalLabel">Cobranza Importante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <input type="Text" id="IdVentaImportante" class="input-nuevomodif" hidden />
+
+                    <label class="lblNombreInput" id="lblImporte"> Orden: </label>
+                    <input type="number" placeholder="" value="" id="OrdenCobranza" class="input-nuevomodif" />
+
+
+                </div>
+                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="cobranzaImportanteModal()">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
@@ -974,5 +1002,5 @@
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=2.8"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=3.2"></script>
 }

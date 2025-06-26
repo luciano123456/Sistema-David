@@ -52,10 +52,6 @@ $(document).ready(async function () {
         Dni = localStorage.getItem("Dni");
     }
 
-
-
-    //localStorage.removeItem("FechaCobroDesde");
-    //localStorage.removeItem("FechaCobroHasta");
     localStorage.removeItem("Dni");
 
     if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
@@ -98,15 +94,69 @@ $(document).ready(async function () {
 
 
 }).on('init.dt', function () {
-    //if (data.Restante <= 0) {
-    //    var cobranzaId = "Cobranza(" + data.Id + ")"
-    //}
-    //// Acciones a realizar una vez que los campos se hayan cargado
-
     verificarCobranzas();
 
 
 });
+
+
+// Mapeo de campos a los mensajes de error que deben limpiar
+const mapaValidaciones = [
+    {
+        id: "Entrega",
+        tipo: "input",
+        mensaje: "Debes poner un importe"
+    },
+    {
+        id: "TurnoCobro",
+        tipo: "change",
+        mensaje: "Debes seleccionar un Turno"
+    },
+    {
+        id: "FranjaHorariaCobro",
+        tipo: "change",
+        mensaje: "Debes seleccionar una Franja Horaria"
+    },
+    {
+        id: "estadoCobro",
+        tipo: "change",
+        mensaje: "Debes seleccionar un Estado de Cobro"
+    },
+    {
+        id: "MetodoPago",
+        tipo: "change",
+        mensaje: "Debes poner un Método de Pago"
+    },
+    {
+        id: "ValorInteres",
+        tipo: "input",
+        mensaje: "Debes poner un Interés"
+    },
+    {
+        id: "ValorCuota",
+        tipo: "input",
+        mensaje: "Debes poner un valor cuota"
+    }
+];
+
+const eventos = ["input", "change"];
+
+mapaValidaciones.forEach(({ id, mensaje }) => {
+    const campo = document.getElementById(id);
+    if (!campo) return;
+
+    eventos.forEach(tipo => {
+        campo.addEventListener(tipo, () => {
+            const valor = campo.value.trim();
+            if (valor !== "" && valor !== "Seleccionar") {
+                limpiarAlerta(mensaje);
+            } else {
+                agregarAlerta(mensaje);
+            }
+        });
+    });
+});
+
 
 
 function calcularRestanteCuota() {
@@ -299,8 +349,7 @@ async function cobranzaVenta(id, tabla) {
     document.getElementById("lblProximoTurno").removeAttribute("hidden", "hidden");
     document.getElementById("lblFranjaHoraria").removeAttribute("hidden", "hidden");
     document.getElementById("FranjaHorariaCobro").removeAttribute("hidden", "hidden");
-    document.getElementById("CuentaPago").setAttribute("hidden", "hidden");
-    document.getElementById("lblCuentaPago").setAttribute("hidden", "hidden");
+    document.getElementById("divCuentaPago").setAttribute("hidden", "hidden");
 
     document.getElementById("Entrega").value = 0;
     document.getElementById("Observacion").value = "";
@@ -319,8 +368,7 @@ async function cobranzaVenta(id, tabla) {
     document.querySelector('#chkCobroPendiente').checked = false;
 
     document.getElementById("ValorInteres").value = 0;
-    document.getElementById("lblValorInteres").removeAttribute("hidden", "hidden");
-    document.getElementById("ValorInteres").removeAttribute("hidden", "hidden");
+    document.getElementById("divIntereses").removeAttribute("hidden", "hidden");
 
     $("#imgProducto").attr("src", "");
     $("#imgProducto").attr("hidden", "hidden");
@@ -330,7 +378,7 @@ async function cobranzaVenta(id, tabla) {
     var divImagen = document.getElementById("divImagen");
     divImagen.hidden = true;
 
-    
+    limpiarAlertas();
 
 
     table.rows().eq(0).each(function (index) {
@@ -342,7 +390,7 @@ async function cobranzaVenta(id, tabla) {
 
             document.getElementById("IdVenta").innerText = id;
             document.getElementById("saldoRestante").innerText = venta.Restante
-            document.getElementById("ValordelaCuota").innerText = "¡El valor de la cuota es de " + venta.ValorCuota + " pesos !";
+            document.getElementById("ValordelaCuota").innerText = "¡El valor de la cuota es de " + formatNumber(venta.ValorCuota) + " pesos !";
 
             document.getElementById("ValorCuota").value = venta.ValorCuota;
             document.getElementById("ValorCuotahidden").value = venta.ValorCuota;
@@ -354,6 +402,7 @@ async function cobranzaVenta(id, tabla) {
              
             document.getElementById("checkValorCuota").checked = false;
             document.getElementById("progressBarContainerCobro").setAttribute("hidden", "hidden");
+
 
             $("#cobranzaModal").modal("show");
 
@@ -391,33 +440,33 @@ const importeCobranza = document.querySelector("#Entrega");
 importeCobranza.addEventListener("keyup", (e) => {
     const saldoRestante = parseInt(document.getElementById("saldoRestante").innerText);
     const importeCobranza = parseInt(document.querySelector("#Entrega").value);
-    // Obtener el elemento por ID
     const iconoCasa = document.getElementById('iconoCasa');
 
-
-    
-
-    if (importeCobranza == 0 || document.querySelector("#Entrega").value == "") {
-        document.getElementById("lblValorInteres").removeAttribute("hidden", "hidden");
-        document.getElementById("ValorInteres").removeAttribute("hidden", "hidden");
-        document.getElementById("divTipoInteres").removeAttribute("hidden", "hidden");
-        document.getElementById('TipoInteres').value = ""
-
+    if (importeCobranza == 0 || isNaN(importeCobranza)) {
+        document.getElementById("divIntereses").removeAttribute("hidden");
+        document.getElementById('TipoInteres').value = "";
         iconoCasa.classList.remove('d-none');
+        agregarAlerta("Debes poner un Interés");
+
     } else {
         document.getElementById("ValorInteres").value = 0;
-        document.getElementById("lblValorInteres").setAttribute("hidden", "hidden");
-        document.getElementById("ValorInteres").setAttribute("hidden", "hidden");
+        document.getElementById("divIntereses").setAttribute("hidden", "hidden");
         document.getElementById("divTipoInteres").setAttribute("hidden", "hidden");
-        document.getElementById('estadoCobro').value = "0"
-        document.getElementById('TipoInteres').value = ""
+
+        document.getElementById('estadoCobro').value = "0";
+        document.getElementById('TipoInteres').value = "";
         iconoCasa.classList.add('d-none');
+        limpiarAlerta("Debes seleccionar un Estado de Cobro");
+        limpiarAlerta("Debes poner un Interés");
     }
 
     if (importeCobranza > saldoRestante) {
-        document.getElementById("errorImporteCobranza").removeAttribute("hidden")
-        document.getElementById("errorImporteCobranza").innerText = `El valor supera el restante de la venta (${formatNumber(saldoRestante)}) `
-    } else if (importeCobranza == saldoRestante) {
+        agregarAlerta(`El valor supera el restante de la venta (${formatNumber(saldoRestante)})`);
+    } else {
+        limpiarAlerta(`El valor supera el restante de la venta (${formatNumber(saldoRestante)})`);
+    }
+
+    if (importeCobranza === saldoRestante) {
         document.getElementById("lblFechaCobro").setAttribute("hidden", "hidden");
         document.getElementById("FechaCobro").setAttribute("hidden", "hidden");
         document.getElementById("lblValorCuota").setAttribute("hidden", "hidden");
@@ -427,24 +476,21 @@ importeCobranza.addEventListener("keyup", (e) => {
         document.getElementById("lblProximoTurno").setAttribute("hidden", "hidden");
         document.getElementById("lblFranjaHoraria").setAttribute("hidden", "hidden");
         document.getElementById("FranjaHorariaCobro").setAttribute("hidden", "hidden");
-        document.getElementById("ValorCuota").value = 0
-        document.getElementById("errorValorCuotaCobranza").setAttribute("hidden", "hidden");
-
+        document.getElementById("ValorCuota").value = 0;
+        limpiarAlerta("Debes poner un valor cuota");
     } else {
-        document.getElementById("errorImporteCobranza").setAttribute("hidden", "hidden");
-        document.getElementById("lblFechaCobro").removeAttribute("hidden", "hidden");
-        document.getElementById("FechaCobro").removeAttribute("hidden", "hidden");
-        document.getElementById("lblValorCuota").removeAttribute("hidden", "hidden");
-        document.getElementById("ValorCuota").removeAttribute("hidden", "hidden");
-        document.getElementById("checkValorCuota").removeAttribute("hidden", "hidden");
-        document.getElementById("TurnoCobro").removeAttribute("hidden", "hidden");
-        document.getElementById("lblProximoTurno").removeAttribute("hidden", "hidden");
-        document.getElementById("lblFranjaHoraria").removeAttribute("hidden", "hidden");
-        document.getElementById("FranjaHorariaCobro").removeAttribute("hidden", "hidden");
+        document.getElementById("lblFechaCobro").removeAttribute("hidden");
+        document.getElementById("FechaCobro").removeAttribute("hidden");
+        document.getElementById("lblValorCuota").removeAttribute("hidden");
+        document.getElementById("ValorCuota").removeAttribute("hidden");
+        document.getElementById("checkValorCuota").removeAttribute("hidden");
+        document.getElementById("TurnoCobro").removeAttribute("hidden");
+        document.getElementById("lblProximoTurno").removeAttribute("hidden");
+        document.getElementById("lblFranjaHoraria").removeAttribute("hidden");
+        document.getElementById("FranjaHorariaCobro").removeAttribute("hidden");
     }
 
     calcularRestanteCuota();
-
 });
 
 const importeValorCuotaCobranza = document.querySelector("#ValorCuota");
@@ -454,10 +500,11 @@ importeValorCuotaCobranza.addEventListener("keyup", (e) => {
     const importeCobranza = parseInt(document.querySelector("#ValorCuota").value);
 
     if (importeCobranza > saldoRestante) {
-        document.getElementById("errorValorCuotaCobranza").removeAttribute("hidden")
-        document.getElementById("errorValorCuotaCobranza").innerText = "El valor supera el restante de la venta."
+        //document.getElementById("errorValorCuotaCobranza").removeAttribute("hidden")
+        agregarAlerta("El nuevo valor supera el restante de la venta.")
     } else {
-        document.getElementById("errorValorCuotaCobranza").setAttribute("hidden", "hidden");
+        limpiarAlerta("El nuevo valor supera el restante de la venta.")
+        //document.getElementById("errorValorCuotaCobranza").setAttribute("hidden", "hidden");
     }
 
 });
@@ -552,81 +599,143 @@ async function hacerCobranza() {
 }
 
 
+function agregarAlerta(mensaje) {
+    const contenedor = document.getElementById("alertasErrores");
+    contenedor.classList.remove("d-none");
+
+    // Normaliza el texto para evitar duplicados (trim, lowercase)
+    const existe = [...contenedor.children].some(div =>
+        div.innerText.trim().toLowerCase() === mensaje.trim().toLowerCase()
+    );
+
+    if (existe) return;
+
+    const div = document.createElement("div");
+    div.className = "d-flex align-items-center";
+    div.innerHTML = `<i class="fa fa-exclamation-triangle text-warning alert-icon me-2"></i><span>${mensaje}</span>`;
+    contenedor.appendChild(div);
+}
+
+function limpiarAlerta(mensaje) {
+    const contenedor = document.getElementById("alertasErrores");
+
+    [...contenedor.children].forEach(div => {
+        const texto = div.innerText.trim().toLowerCase();
+        if (texto === mensaje.trim().toLowerCase()) {
+            div.remove();
+        }
+    });
+
+    if (contenedor.children.length === 0) {
+        contenedor.classList.add("d-none");
+    }
+}
+
+
+
 function validarCobranza() {
-    const saldoRestante = parseInt(document.getElementById("saldoRestante").innerText);
-    const importeCobranza = document.querySelector("#Entrega").value;
-    const importeValorCuotaCobranza = document.querySelector("#ValorCuota").value;
-    const MetodoPago = document.querySelector("#MetodoPago").value;
-    const FranjaHoraria = document.querySelector("#FranjaHorariaCobro").value;
-    const Turno = document.querySelector("#TurnoCobro").value;
-    const EstadoCobro = document.querySelector("#estadoCobro").value;
-    const interes = document.querySelector("#ValorInteres").value;
-    const cuentapago = document.querySelector("#CuentaPago").value;
-    const tipoInteres = document.querySelector("#TipoInteres").value;
+    limpiarAlertas();
+    let valido = true;
 
-    const imgComprobante = document.getElementById("imgProd").value;
+    const saldoRestante = parseFloat(document.getElementById("saldoRestante").innerText) || 0;
+    const importe = document.getElementById("Entrega").value;
+    const cuota = parseFloat(document.getElementById("ValorCuota").value) || 0;
+    const metodo = document.getElementById("MetodoPago").value.trim();
+    const franja = document.getElementById("FranjaHorariaCobro").value.trim();
+    const turno = document.getElementById("TurnoCobro").value.trim();
+    const estado = document.getElementById("estadoCobro").value.trim();
+    const interes = document.getElementById("ValorInteres").value.trim();
+    const cuenta = document.getElementById("CuentaPago").value.trim();
+    const tipoInteres = document.getElementById("TipoInteres").value.trim();
+    const img = document.getElementById("imgProd").value.trim();
 
-  
- 
-    var nuevaFecha = moment(document.getElementById("FechaCobro").value, "YYYY-MM-DD");
-    var fechaHoy = moment();
-    var fechaLimite = moment().add(30, 'days');
-
-
-    if ((MetodoPago.toUpperCase() == "TRANSFERENCIA PROPIA" || MetodoPago.toUpperCase() == "TRANSFERENCIA A TERCEROS") && imgComprobante == "") {
-        alert("Debes poner una imagen de comprobante");
-        return;
+    if ((metodo.toUpperCase() === "TRANSFERENCIA PROPIA" || metodo.toUpperCase() === "TRANSFERENCIA A TERCEROS") && img === "") {
+        agregarAlerta("Debes poner una imagen de comprobante");
+        valido = false;
     }
 
-    if (importeCobranza > saldoRestante) {
-        alert("El valor supera el restante de la venta");
-        return false;
-    } else if (importeValorCuotaCobranza > saldoRestante) {
-        alert("El valor cuota supera el restante de la venta");
-        return false;
-    } else if (importeCobranza > 0 && MetodoPago == "") {
-        alert("Debes poner un Metodo de Pago");
-        return false;
-    } else if ((MetodoPago.toUpperCase() == "TRANSFERENCIA PROPIA" || MetodoPago.toUpperCase() == "TRANSFERENCIA A TERCEROS") && cuentapago == "") {
-        alert("Debes poner una cuenta");
-        return false;
-    } else if (importeCobranza < saldoRestante && Turno == "") {
-        alert("Debes poner un Turno");
-        return false;
-    } else if (importeCobranza < saldoRestante && FranjaHoraria == "") {
-        alert("Debes poner una Franja Horaria");
-        return false;
-    } else if (importeCobranza < saldoRestante && importeValorCuotaCobranza == "") {
-        alert("Debes poner un valor cuota");
-        return false;
-    } else if (importeCobranza == "") {
-        alert("Debes poner un importe");
-        return false;
-    } else if (importeCobranza <= 0 && EstadoCobro == "" && tipoInteres == "") {
-        alert("Debes poner un Estado de Cobro");
-        return false;
-    } else if (importeCobranza <= 0 && interes == "") {
-        alert("Debes poner un Interes");
-        return false;
-    }
-    if (importeCobranza < saldoRestante && importeValorCuotaCobranza < saldoRestante && fechaHoy.isSameOrAfter(nuevaFecha, 'day') && fechaHoy.isSameOrAfter(nuevaFecha, 'month') && fechaHoy.isSameOrAfter(nuevaFecha, 'year')) {
-        alert("La fecha de cobro debe ser superior al dia de la fecha.");
-        return false;
-    } else if (userSession.IdRol != 1 && nuevaFecha.isAfter(fechaLimite, 'day')) {
-        alert("La fecha de cobro no debe superar los 30 días a partir de hoy.");
-        return false;
-    } else {
-        return true;
+    if (importe == "")  {
+        agregarAlerta("Debes poner un importe");
+        valido = false;
     }
 
-  
-   
+    if (interes == "") {
+        agregarAlerta("Debes poner un interes");
+        valido = false;
+    }
+
+    if (importe > saldoRestante) {
+        agregarAlerta("El valor supera el restante de la venta");
+        valido = false;
+    }
+
+    if (cuota > saldoRestante) {
+        agregarAlerta("El valor cuota supera el restante de la venta");
+        valido = false;
+    }
+
+    if (importe > 0 && metodo === "") {
+        agregarAlerta("Debes poner un Método de Pago");
+        valido = false;
+    }
+
+    if ((metodo.toUpperCase().includes("TRANSFERENCIA")) && cuenta === "") {
+        agregarAlerta("Debes seleccionar una cuenta");
+        valido = false;
+    }
+
+    if (importe < saldoRestante && turno === "") {
+        agregarAlerta("Debes seleccionar un Turno");
+        valido = false;
+    }
+
+    if (importe < saldoRestante && franja === "") {
+        agregarAlerta("Debes seleccionar una Franja Horaria");
+        valido = false;
+    }
+
+    if (importe < saldoRestante && cuota === 0) {
+        agregarAlerta("Debes poner un valor de cuota");
+        valido = false;
+    }
+
+    if (importe <= 0 && estado === "" && tipoInteres === "") {
+        agregarAlerta("Debes seleccionar un Estado de Cobro");
+        valido = false;
+    }
+
+    if (importe <= 0 && interes === "") {
+        agregarAlerta("Debes poner un Interés");
+        valido = false;
+    }
+
+    const fecha = moment(document.getElementById("FechaCobro").value, "YYYY-MM-DD");
+    const hoy = moment();
+    const limite = moment().add(30, "days");
+
+    if (importe < saldoRestante && cuota < saldoRestante && fecha.isSameOrBefore(hoy, 'day')) {
+        agregarAlerta("La fecha de cobro debe ser superior al día de la fecha.");
+        valido = false;
+    }
+
+    if (userSession.IdRol !== 1 && fecha.isAfter(limite, 'day')) {
+        agregarAlerta("La fecha de cobro no debe superar los 30 días desde hoy.");
+        valido = false;
+    }
+
+    return valido;
+}
+
+function limpiarAlertas() {
+    const contenedor = document.getElementById("alertasErrores");
+    contenedor.innerHTML = '';
+    contenedor.classList.add("d-none");
 }
 
 async function habilitarCuentas() {
     var formaPagoSelect = document.getElementById("MetodoPago");
     var cuenta = document.getElementById("CuentaPago");
-    var cuentaLbl = document.getElementById("lblCuentaPago");
+    var cuentaDiv = document.getElementById("divCuentaPago");
     var progressBarContainer = document.getElementById("progressBarContainerCobro");
     var divImagen = document.getElementById("divImagen");
 
@@ -635,10 +744,11 @@ async function habilitarCuentas() {
 
     if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" ||
         formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
-        cuenta.hidden = false;
-        cuentaLbl.hidden = false;
+        cuentaDiv.hidden = false;
         progressBarContainer.hidden = false;
         divImagen.hidden = false;
+        divImagen.classList.add("d-flex", "justify-content-center", "align-items-center");
+
 
         // Si el rol no es vendedor, mostramos los labels "Restante" y "Monto a entregar"
         if (userSession.IdRol == 1 || userSession.IdRol == 4) {
@@ -662,9 +772,10 @@ async function habilitarCuentas() {
             }
         }
     } else {
-        cuenta.hidden = true;
+        cuentaDiv.hidden = true;
         divImagen.hidden = true;
-        cuentaLbl.hidden = true;
+        divImagen.classList.remove("d-flex", "justify-content-center", "align-items-center");
+
         progressBarContainer.hidden = true;
     }
 
@@ -754,6 +865,7 @@ async function enviarWhatssapId(id, interes) {
 
             mensaje += " Muchas gracias por confiar en Indumentaria DG"
 
+
             if (result.InformacionVenta.TipoInteres === "VISITA CON CAMBIO") {
                 mensaje = `${saludo}, ${result.Cliente.Nombre} ${result.Cliente.Apellido}. El día ${fecha} el cobrador pasó por su domicilio. Al reprogramarse el pago, se aplicó un recargo de ${formatNumber(result.InformacionVenta.Interes)} por la visita realizada. Su nueva fecha de cobro es ${fechaCobro}. El saldo pendiente de esta venta es ${formatNumber(result.InformacionVenta.Restante)}. El saldo total de todas sus ventas es ${formatNumber(result.Cliente.Saldo)}. Le recordamos que en caso de avisar previamente por WhatsApp, no se aplica el recargo. Muchas gracias.`;
             }
@@ -792,10 +904,10 @@ async function enviarWhatssapId(id, interes) {
 
 
 
-
             const mensajeCodificado = encodeURIComponent(mensaje);
             const urlwsp = `https://api.whatsapp.com/send?phone=+549${result.Cliente.Telefono}&text=${mensajeCodificado}`;
-            //const urlwsp = `https://api.whatsapp.com/send?phone=+54 9 3777 53-5622&text=${mensajeCodificado}`;
+            //const urlwsp = `https://api.whatsapp.com/send?phone=++54 9 3777 53-5622&text=${mensajeCodificado}`;
+
             window.open(urlwsp, '_blank');
         }
     } catch (error) {
@@ -2625,6 +2737,7 @@ function habilitarCasaInteres() {
 
     if (InteresSelect.value === "" || InteresSelect.value === "0") {
         iconoCasa.classList.remove('d-none');
+
     } else {
         iconoCasa.classList.add('d-none');
     }
@@ -2636,13 +2749,34 @@ const InteresSelect = document.getElementById('ValorInteres');
 InteresSelect.addEventListener('keyup', function () {
     if (this.value === "" || this.value === "0") {
         document.getElementById("divTipoInteres").setAttribute("hidden", "hidden");
+     
+        document.getElementById("divMetodoPago").removeAttribute("hidden");
         const iconoCasa = document.getElementById('iconoCasa');
         iconoCasa.classList.remove('d-none');
         iconoCasa.classList.add('d-none');
+        agregarAlerta("Debes poner un importe");
+
     } else {
+      
+     
+        limpiarAlerta("Debes poner un importe");
         document.getElementById("divTipoInteres").removeAttribute("hidden");
+        document.getElementById("divMetodoPago").setAttribute("hidden", "hidden");
     }
 });
+
+const tipoInteresSelect = document.getElementById('TipoInteres');
+
+
+tipoInteresSelect.addEventListener('change', function () {
+    if (this.value === "" || this.value === "0") {
+        agregarAlerta("Debes seleccionar un Estado de Cobro");
+    } else {
+        limpiarAlerta("Debes seleccionar un Estado de Cobro");
+    }
+});
+
+
 
 const turnoCobroSelect = document.getElementById('TurnoCobro');
 const franjaHorariaSelect = document.getElementById('FranjaHorariaCobro');
@@ -2658,6 +2792,9 @@ turnoCobroSelect.addEventListener('change', function () {
     }
     llenarFranjasHorarias(franjas);
 });
+
+
+
 
 // Función para generar franjas horarias
 function generarFranjasHorarias(startHour, endHour) {
@@ -2696,10 +2833,12 @@ function toggleIcon() {
         // Mostrar íconos alternativos y cambiar ícono principal a negro
         iconosAlternativos.classList.remove('d-none');
         iconoPrincipal.className = 'fa fa-home fa-3x text-dark cursor-pointer';
+        agregarAlerta("Debes seleccionar un Estado de Cobro");
     } else {
         // Ocultar íconos alternativos y cambiar ícono principal a negro
         iconosAlternativos.classList.add('d-none');
         iconoPrincipal.className = 'fa fa-home fa-3x text-dark cursor-pointer';
+        limpiarAlerta("Debes seleccionar un Estado de Cobro");
     }
 }
 
@@ -2709,8 +2848,10 @@ function cambiarColor(color) {
 
     if (color == 'text-danger') {
         document.getElementById('estadoCobro').value = "1"
+       
     } else {
         document.getElementById('estadoCobro').value = "0"
+       
     }
 
     // Cambiar el color del ícono principal
@@ -2718,6 +2859,7 @@ function cambiarColor(color) {
 
     // Ocultar íconos alternativos
     iconosAlternativos.classList.add('d-none');
+    limpiarAlerta("Debes seleccionar un Estado de Cobro");
 }
 
 // get a reference to the file input
@@ -3864,6 +4006,39 @@ function getImageFormat(base64) {
 }
 
 
+
+document.getElementById("Imagen").addEventListener("change", function (event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    if (file) {
+        reader.onload = function (e) {
+            document.getElementById("imgProducto").src = e.target.result;
+            document.getElementById("imgProducto").style.display = "block";
+            document.getElementById("imgProd").innerText = file.name;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function borrarImagen() {
+    const input = document.getElementById("Imagen");
+    const img = document.getElementById("imgProducto");
+    const p = document.getElementById("imgProd");
+
+    input.value = "";
+    img.src = "";
+    img.style.display = "none";
+    p.innerText = "";
+}
+
+
+
+function openModal(imageSrc) {
+    // Cambia el src de la imagen del modal
+    document.getElementById('modalImage').src = imageSrc;
+    // Muestra el modal
+    $('#imageModal').modal('show');
+}
 
 
 
