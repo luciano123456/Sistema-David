@@ -525,7 +525,8 @@ namespace Sistema_David.Models.Modelo
                         Observacion = iv.Observacion,
                         MetodoPago = iv.MetodoPago,
                         idCobrador = (int)iv.idCobrador,
-                        Cobrador = iv.idCobrador == 0 ? "N/A" : db.Usuarios.FirstOrDefault(u => u.Id == iv.idCobrador).Nombre ?? "N/A"
+                        Cobrador = iv.idCobrador == 0 ? "N/A" : db.Usuarios.FirstOrDefault(u => u.Id == iv.idCobrador).Nombre ?? "N/A",
+                        TipoInteres = iv.TipoInteres
                     })
                     .ToList();
 
@@ -557,7 +558,8 @@ namespace Sistema_David.Models.Modelo
                         Observacion = iv.Observacion,
                         MetodoPago = iv.MetodoPago,
                         idCobrador = (int)iv.idCobrador,
-                        Cobrador = iv.idCobrador == 0 ? "N/A" : db.Usuarios.FirstOrDefault(u => u.Id == iv.idCobrador).Nombre ?? "N/A"
+                        Cobrador = iv.idCobrador == 0 ? "N/A" : db.Usuarios.FirstOrDefault(u => u.Id == iv.idCobrador).Nombre ?? "N/A",
+                        TipoInteres = iv.TipoInteres
                     })
                     .FirstOrDefault();
 

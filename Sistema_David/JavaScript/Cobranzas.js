@@ -52,10 +52,6 @@ $(document).ready(async function () {
         Dni = localStorage.getItem("Dni");
     }
 
-
-
-    //localStorage.removeItem("FechaCobroDesde");
-    //localStorage.removeItem("FechaCobroHasta");
     localStorage.removeItem("Dni");
 
     if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
@@ -98,11 +94,6 @@ $(document).ready(async function () {
 
 
 }).on('init.dt', function () {
-    //if (data.Restante <= 0) {
-    //    var cobranzaId = "Cobranza(" + data.Id + ")"
-    //}
-    //// Acciones a realizar una vez que los campos se hayan cargado
-
     verificarCobranzas();
 
 
@@ -148,21 +139,24 @@ const mapaValidaciones = [
     }
 ];
 
-// Asociar eventos
-mapaValidaciones.forEach(({ id, tipo, mensaje }) => {
+const eventos = ["input", "change"];
+
+mapaValidaciones.forEach(({ id, mensaje }) => {
     const campo = document.getElementById(id);
     if (!campo) return;
 
-    campo.addEventListener(tipo, () => {
-        const valor = campo.value.trim();
-
-        if (valor !== "" && valor !== "Seleccionar" && valor !== "0") {
-            limpiarAlerta(mensaje);
-        } else {
-            agregarAlerta(mensaje);
-        }
+    eventos.forEach(tipo => {
+        campo.addEventListener(tipo, () => {
+            const valor = campo.value.trim();
+            if (valor !== "" && valor !== "Seleccionar") {
+                limpiarAlerta(mensaje);
+            } else {
+                agregarAlerta(mensaje);
+            }
+        });
     });
 });
+
 
 
 function calcularRestanteCuota() {
@@ -374,8 +368,7 @@ async function cobranzaVenta(id, tabla) {
     document.querySelector('#chkCobroPendiente').checked = false;
 
     document.getElementById("ValorInteres").value = 0;
-    document.getElementById("lblValorInteres").removeAttribute("hidden", "hidden");
-    document.getElementById("ValorInteres").removeAttribute("hidden", "hidden");
+    document.getElementById("divIntereses").removeAttribute("hidden", "hidden");
 
     $("#imgProducto").attr("src", "");
     $("#imgProducto").attr("hidden", "hidden");
@@ -385,7 +378,7 @@ async function cobranzaVenta(id, tabla) {
     var divImagen = document.getElementById("divImagen");
     divImagen.hidden = true;
 
-    
+    limpiarAlertas();
 
 
     table.rows().eq(0).each(function (index) {
@@ -397,7 +390,7 @@ async function cobranzaVenta(id, tabla) {
 
             document.getElementById("IdVenta").innerText = id;
             document.getElementById("saldoRestante").innerText = venta.Restante
-            document.getElementById("ValordelaCuota").innerText = "¡El valor de la cuota es de " + venta.ValorCuota + " pesos !";
+            document.getElementById("ValordelaCuota").innerText = "¡El valor de la cuota es de " + formatNumber(venta.ValorCuota) + " pesos !";
 
             document.getElementById("ValorCuota").value = venta.ValorCuota;
             document.getElementById("ValorCuotahidden").value = venta.ValorCuota;
@@ -409,6 +402,7 @@ async function cobranzaVenta(id, tabla) {
              
             document.getElementById("checkValorCuota").checked = false;
             document.getElementById("progressBarContainerCobro").setAttribute("hidden", "hidden");
+
 
             $("#cobranzaModal").modal("show");
 
@@ -449,19 +443,21 @@ importeCobranza.addEventListener("keyup", (e) => {
     const iconoCasa = document.getElementById('iconoCasa');
 
     if (importeCobranza == 0 || isNaN(importeCobranza)) {
-        document.getElementById("lblValorInteres").removeAttribute("hidden");
-        document.getElementById("ValorInteres").removeAttribute("hidden");
-        document.getElementById("divTipoInteres").removeAttribute("hidden");
+        document.getElementById("divIntereses").removeAttribute("hidden");
         document.getElementById('TipoInteres').value = "";
         iconoCasa.classList.remove('d-none');
+        agregarAlerta("Debes poner un Interés");
+
     } else {
         document.getElementById("ValorInteres").value = 0;
-        document.getElementById("lblValorInteres").setAttribute("hidden", "hidden");
-        document.getElementById("ValorInteres").setAttribute("hidden", "hidden");
+        document.getElementById("divIntereses").setAttribute("hidden", "hidden");
         document.getElementById("divTipoInteres").setAttribute("hidden", "hidden");
+
         document.getElementById('estadoCobro').value = "0";
         document.getElementById('TipoInteres').value = "";
         iconoCasa.classList.add('d-none');
+        limpiarAlerta("Debes seleccionar un Estado de Cobro");
+        limpiarAlerta("Debes poner un Interés");
     }
 
     if (importeCobranza > saldoRestante) {
@@ -504,10 +500,11 @@ importeValorCuotaCobranza.addEventListener("keyup", (e) => {
     const importeCobranza = parseInt(document.querySelector("#ValorCuota").value);
 
     if (importeCobranza > saldoRestante) {
-        document.getElementById("errorValorCuotaCobranza").removeAttribute("hidden")
-        document.getElementById("errorValorCuotaCobranza").innerText = "El valor supera el restante de la venta."
+        //document.getElementById("errorValorCuotaCobranza").removeAttribute("hidden")
+        agregarAlerta("El nuevo valor supera el restante de la venta.")
     } else {
-        document.getElementById("errorValorCuotaCobranza").setAttribute("hidden", "hidden");
+        limpiarAlerta("El nuevo valor supera el restante de la venta.")
+        //document.getElementById("errorValorCuotaCobranza").setAttribute("hidden", "hidden");
     }
 
 });
@@ -606,25 +603,33 @@ function agregarAlerta(mensaje) {
     const contenedor = document.getElementById("alertasErrores");
     contenedor.classList.remove("d-none");
 
-    // Evita duplicados
-    if ([...contenedor.children].some(e => e.innerText === mensaje)) return;
+    // Normaliza el texto para evitar duplicados (trim, lowercase)
+    const existe = [...contenedor.children].some(div =>
+        div.innerText.trim().toLowerCase() === mensaje.trim().toLowerCase()
+    );
+
+    if (existe) return;
 
     const div = document.createElement("div");
     div.className = "d-flex align-items-center";
     div.innerHTML = `<i class="fa fa-exclamation-triangle text-warning alert-icon me-2"></i><span>${mensaje}</span>`;
-
-    contenedor.prepend(div); // 👈 coloca la nueva alerta al inicio
+    contenedor.appendChild(div);
 }
 
 function limpiarAlerta(mensaje) {
     const contenedor = document.getElementById("alertasErrores");
-    const hijos = [...contenedor.children];
-    const filtrados = hijos.filter(e => e.innerText !== mensaje);
-    contenedor.innerHTML = '';
-    filtrados.forEach(e => contenedor.appendChild(e));
-    if (filtrados.length === 0) contenedor.classList.add("d-none");
-}
 
+    [...contenedor.children].forEach(div => {
+        const texto = div.innerText.trim().toLowerCase();
+        if (texto === mensaje.trim().toLowerCase()) {
+            div.remove();
+        }
+    });
+
+    if (contenedor.children.length === 0) {
+        contenedor.classList.add("d-none");
+    }
+}
 
 
 
@@ -633,7 +638,7 @@ function validarCobranza() {
     let valido = true;
 
     const saldoRestante = parseFloat(document.getElementById("saldoRestante").innerText) || 0;
-    const importe = parseFloat(document.getElementById("Entrega").value) || 0;
+    const importe = document.getElementById("Entrega").value;
     const cuota = parseFloat(document.getElementById("ValorCuota").value) || 0;
     const metodo = document.getElementById("MetodoPago").value.trim();
     const franja = document.getElementById("FranjaHorariaCobro").value.trim();
@@ -649,8 +654,13 @@ function validarCobranza() {
         valido = false;
     }
 
-    if (importe <= 0) {
+    if (importe == "")  {
         agregarAlerta("Debes poner un importe");
+        valido = false;
+    }
+
+    if (interes == "") {
+        agregarAlerta("Debes poner un interes");
         valido = false;
     }
 
@@ -855,8 +865,48 @@ async function enviarWhatssapId(id, interes) {
 
             mensaje += " Muchas gracias por confiar en Indumentaria DG"
 
+            if (result.InformacionVenta.TipoInteres === "VISITA CON CAMBIO") {
+                mensaje = `${saludo}, ${result.Cliente.Nombre} ${result.Cliente.Apellido}. El día ${fecha} el cobrador pasó por su domicilio. Al reprogramarse el pago, se aplicó un recargo de ${formatNumber(result.InformacionVenta.Interes)} por la visita realizada. Su nueva fecha de cobro es ${fechaCobro}. El saldo pendiente de esta venta es ${formatNumber(result.InformacionVenta.Restante)}. El saldo total de todas sus ventas es ${formatNumber(result.Cliente.Saldo)}. Le recordamos que en caso de avisar previamente por WhatsApp, no se aplica el recargo. Muchas gracias.`;
+            }
 
-            const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${result.Cliente.Telefono}&text=${mensaje}`;
+            else if (result.InformacionVenta.TipoInteres === "INTERES DE 30 DIAS") {
+                mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} se cumplieron 30 días desde la venta realizada, y aún no se cubrió el 50% de arreglo acordado. Por este motivo, se aplicó un pequeño recargo de ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
+                    `• *Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n` +
+                    `• *Próxima visita de cobro:* ${fechaCobro}\n` +
+                    `• *Total acumulado de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
+                    `Ante cualquier consulta, no dude en comunicarse con nosotros.`;
+
+            }
+
+
+            else if (result.InformacionVenta.TipoInteres === "INTERES DE 60 DIAS") {
+                mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} su cuenta superó los 60 días de plazo máximo para abonar. Por este motivo, se han generado los siguientes cargos:\n\n` +
+                    `*Interés aplicado:* ${formatNumber(result.InformacionVenta.Interes)}\n\n` +
+                    `*Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n\n` +
+                    `*Saldo total de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
+                    `⚠️ *Próxima visita de cobro:* ${fechaCobro}\n\n` +
+                    `Muchas gracias por confiar en INDUMENTARIADG.`;
+            }
+
+
+            else if (result.InformacionVenta.TipoInteres === "PROMESA DE PAGO") {
+                mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} estuvimos esperando su promesa de pago mediante transferencia. ` +
+                    `Al no haber recibido el comprobante y estando próximos al cierre de jornada, se ha agregado un interés de ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
+
+                    `🗒️ *Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n` +
+                    `📄 *Saldo total de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
+
+                    `📅 *El pago ha sido reprogramado para el día siguiente:* ${fechaCobro}\n\n` +
+
+                    `Muchas gracias.`;
+            }
+
+
+
+            const mensajeCodificado = encodeURIComponent(mensaje);
+            const urlwsp = `https://api.whatsapp.com/send?phone=+549${result.Cliente.Telefono}&text=${mensajeCodificado}`;
+            //const urlwsp = `https://api.whatsapp.com/send?phone=++54 9 3777 53-5622&text=${mensajeCodificado}`;
+
             window.open(urlwsp, '_blank');
 
         }
@@ -2687,6 +2737,7 @@ function habilitarCasaInteres() {
 
     if (InteresSelect.value === "" || InteresSelect.value === "0") {
         iconoCasa.classList.remove('d-none');
+
     } else {
         iconoCasa.classList.add('d-none');
     }
@@ -2698,13 +2749,34 @@ const InteresSelect = document.getElementById('ValorInteres');
 InteresSelect.addEventListener('keyup', function () {
     if (this.value === "" || this.value === "0") {
         document.getElementById("divTipoInteres").setAttribute("hidden", "hidden");
+     
+        document.getElementById("divMetodoPago").removeAttribute("hidden");
         const iconoCasa = document.getElementById('iconoCasa');
         iconoCasa.classList.remove('d-none');
         iconoCasa.classList.add('d-none');
+        agregarAlerta("Debes poner un importe");
+
     } else {
+      
+     
+        limpiarAlerta("Debes poner un importe");
         document.getElementById("divTipoInteres").removeAttribute("hidden");
+        document.getElementById("divMetodoPago").setAttribute("hidden", "hidden");
     }
 });
+
+const tipoInteresSelect = document.getElementById('TipoInteres');
+
+
+tipoInteresSelect.addEventListener('change', function () {
+    if (this.value === "" || this.value === "0") {
+        agregarAlerta("Debes seleccionar un Estado de Cobro");
+    } else {
+        limpiarAlerta("Debes seleccionar un Estado de Cobro");
+    }
+});
+
+
 
 const turnoCobroSelect = document.getElementById('TurnoCobro');
 const franjaHorariaSelect = document.getElementById('FranjaHorariaCobro');
@@ -2720,6 +2792,9 @@ turnoCobroSelect.addEventListener('change', function () {
     }
     llenarFranjasHorarias(franjas);
 });
+
+
+
 
 // Función para generar franjas horarias
 function generarFranjasHorarias(startHour, endHour) {
@@ -2758,10 +2833,12 @@ function toggleIcon() {
         // Mostrar íconos alternativos y cambiar ícono principal a negro
         iconosAlternativos.classList.remove('d-none');
         iconoPrincipal.className = 'fa fa-home fa-3x text-dark cursor-pointer';
+        agregarAlerta("Debes seleccionar un Estado de Cobro");
     } else {
         // Ocultar íconos alternativos y cambiar ícono principal a negro
         iconosAlternativos.classList.add('d-none');
         iconoPrincipal.className = 'fa fa-home fa-3x text-dark cursor-pointer';
+        limpiarAlerta("Debes seleccionar un Estado de Cobro");
     }
 }
 
@@ -2771,8 +2848,10 @@ function cambiarColor(color) {
 
     if (color == 'text-danger') {
         document.getElementById('estadoCobro').value = "1"
+       
     } else {
         document.getElementById('estadoCobro').value = "0"
+       
     }
 
     // Cambiar el color del ícono principal
@@ -2780,6 +2859,7 @@ function cambiarColor(color) {
 
     // Ocultar íconos alternativos
     iconosAlternativos.classList.add('d-none');
+    limpiarAlerta("Debes seleccionar un Estado de Cobro");
 }
 
 // get a reference to the file input

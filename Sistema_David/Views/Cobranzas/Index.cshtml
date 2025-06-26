@@ -687,7 +687,7 @@
 
                             <div class="col-12">
                                 <label id="saldoRestante" hidden class="form-label text-bg-secondary"></label>
-                                <div id="ValordelaCuota" class="bg-light fw-bold text-center p-2 rounded text-dark">¡El valor de la cuota es de 0 pesos!</div>
+                                <div id="ValordelaCuota" class="bg-gradient fw-bold text-center p-2 rounded text-dark">¡El valor de la cuota es de 0 pesos!</div>
                             </div>
 
                             <div class="col-6 col-lg-3">
@@ -704,7 +704,7 @@
                                 <input type="number" id="ValorCuota" value="0" class="form-control form-control-sm text-dark text-nowrap" />
                             </div>
 
-                            <div class="col-6 col-lg-3">
+                            <div class="col-6 col-lg-3" id="divIntereses">
                                 <label for="ValorInteres" class="form-label text-nowrap small" id="lblValorInteres">Intereses</label>
                                 <input type="number" id="ValorInteres" value="0" class="form-control form-control-sm text-dark text-nowrap" />
                             </div>
@@ -720,7 +720,7 @@
                                 </select>
                             </div>
 
-                            <div class="col-6 col-lg-3">
+                            <div class="col-6 col-lg-3" id="divMetodoPago">
                                 <label for="MetodoPago" class="form-label text-nowrap small">Método de pago</label>
                                 <select id="MetodoPago" class="form-select form-select-sm text-dark text-nowrap" onchange="habilitarCuentas()" required>
                                     <option value="">Seleccionar</option>
@@ -1002,5 +1002,5 @@
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=2.7"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=3.2"></script>
 }
