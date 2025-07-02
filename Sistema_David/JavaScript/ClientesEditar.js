@@ -23,6 +23,13 @@ $(document).ready(function () {
         document.getElementById("Dni").value = localStorage.getItem("DNIClienteVenta");
         
     }
+
+
+    if (userSession.IdRol == 2 || userSession.IdRol == 3) {
+        document.getElementById("LimiteVentas").setAttribute("disabled", true);
+    } else {
+        document.getElementById("LimiteVentas").removeAttribute("disabled");
+    }
   
 });
 
@@ -107,6 +114,12 @@ async function cargarDatosUsuario() {
 
         if (result != null) {
 
+            if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+                document.getElementById("Direccion").removeAttribute("disabled");
+            } else {
+                document.getElementById("Direccion").setAttribute("disabled", true);
+            }
+
             selectUsuarios = document.getElementById("Usuarios");
 
             $('#Usuarios option').remove();
@@ -146,7 +159,8 @@ async function cargarDatosUsuario() {
             document.getElementById("lbllongitud").value = result.Usuario.Longitud;
             document.getElementById("lbllatitud").value = result.Usuario.Latitud;
             document.getElementById("lbldireccion").value = result.Usuario.Direccion;
-            document.getElementById("LimiteVentas").value = result.Usuario.LimiteVentas;
+            document.getElementById("LimiteVentas").value = formatearMiles(result.Usuario.LimiteVentas);
+
 
 
             document.getElementById("Estados").value = result.Usuario.IdEstado;
@@ -205,7 +219,7 @@ async function registrarCliente() {
                 IdVendedor: document.getElementById("Usuarios").value,
                 IdEstado: document.getElementById("Estados").value,
                 IdZona: document.getElementById("Zonas").value,
-                LimiteVentas: document.getElementById("LimiteVentas").value,
+                LimiteVentas: formatearSinMiles(document.getElementById("LimiteVentas").value),
                 Latitud: document.getElementById("lbllatitud").innerText,
                 Longitud: document.getElementById("lbllongitud").innerText
             });
@@ -261,7 +275,7 @@ async function modificarCliente() {
             Telefono: document.getElementById("Telefono").value,
             IdVendedor: document.getElementById("Usuarios").value,
             IdEstado: document.getElementById("Estados").value,
-            LimiteVentas: document.getElementById("LimiteVentas").value,
+            LimiteVentas: formatearSinMiles(document.getElementById("LimiteVentas").value),
             IdZona: document.getElementById("Zonas").value,
             Latitud: document.getElementById("lbllatitud").innerText,
             Longitud: document.getElementById("lbllongitud").innerText
@@ -298,6 +312,21 @@ async function modificarCliente() {
     }
 }
 
+function tienePermisosEditarMapa() {
+    const rol = userSession.IdRol;
+    const editando = !!localStorage.getItem("EdicionCliente");
+
+    // Si NO está editando, todos pueden
+    if (!editando) return true;
+
+    // Si está editando y rol 4, NO puede
+    if (rol === 4) return false;
+
+    // Si está editando y cualquier otro rol, puede
+    return true;
+}
+
+
 
 async function initMap() {
     var lat, lng;
@@ -307,7 +336,8 @@ async function initMap() {
         await cargarDatosUsuario()
     } else {
         await cargarUsuariosyEstados();
-        document.getElementById("LimiteVentas").value = 180000;
+        document.getElementById("LimiteVentas").value = formatearMiles(130000);
+
     }
 
     if (document.getElementById("lbllatitud").value && document.getElementById("lbllongitud").value) {
@@ -344,65 +374,63 @@ async function initMap() {
 function initializeMap(location) {
     var defaultLocation = { lat: location.lat, lng: location.lng };
 
-    // Inicializar el mapa
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: defaultLocation,
-        zoom: 15
-    });
+    const permisos = tienePermisosEditarMapa();
 
-    // Crear un marcador en el mapa
+    let mapOptions = {
+        center: defaultLocation,
+        zoom: 15,
+        gestureHandling: permisos ? "auto" : "none",
+        draggable: permisos
+    };
+
+    map = new google.maps.Map(document.getElementById('map'), mapOptions);
+
     marker = new google.maps.Marker({
         map: map,
-        draggable: true,
+        draggable: permisos,
         position: defaultLocation
     });
 
-    google.maps.event.addListener(map, 'click', function (event) {
-        marker.setPosition(event.latLng);
-        updateCoordinates(event.latLng.lat(), event.latLng.lng());
-    });
-
-    // Crear un cuadro de búsqueda de lugares y asociarlo con el mapa
-    var input = document.getElementById('pac-input');
-    searchBox = new google.maps.places.SearchBox(input);
-    map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-
-    // Escuchar cambios en el cuadro de búsqueda
-    searchBox.addListener('places_changed', function () {
-        var places = searchBox.getPlaces();
-
-        if (places.length == 0) {
-            return;
-        }
-
-        // Mover el mapa al primer lugar encontrado
-        var bounds = new google.maps.LatLngBounds();
-        places.forEach(function (place) {
-            if (!place.geometry) {
-                console.log("El lugar devuelto no tiene geometría");
-                return;
-            }
-
-            if (place.geometry.viewport) {
-                // Solo geocodificar el área visible
-                bounds.union(place.geometry.viewport);
-            } else {
-                bounds.extend(place.geometry.location);
-            }
+    if (permisos) {
+        google.maps.event.addListener(map, 'click', function (event) {
+            marker.setPosition(event.latLng);
+            updateCoordinates(event.latLng.lat(), event.latLng.lng());
         });
-        map.fitBounds(bounds);
 
-        // Actualizar la posición del marcador y las coordenadas mostradas
-        marker.setPosition(bounds.getCenter());
-        updateCoordinates(bounds.getCenter().lat(), bounds.getCenter().lng());
-    });
+        google.maps.event.addListener(marker, 'dragend', function (event) {
+            updateCoordinates(event.latLng.lat(), event.latLng.lng());
+        });
+    }
 
-    // Escuchar evento de arrastre del marcador para actualizar las coordenadas
-    google.maps.event.addListener(marker, 'dragend', function (event) {
-        updateCoordinates(event.latLng.lat(), event.latLng.lng());
-    });
+    var input = document.getElementById('pac-input');
 
-    // Mostrar las coordenadas iniciales en los labels
+    if (permisos) {
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+        searchBox = new google.maps.places.SearchBox(input);
+
+        searchBox.addListener('places_changed', function () {
+            var places = searchBox.getPlaces();
+            if (places.length == 0) return;
+
+            var bounds = new google.maps.LatLngBounds();
+            places.forEach(function (place) {
+                if (!place.geometry) return;
+                if (place.geometry.viewport) {
+                    bounds.union(place.geometry.viewport);
+                } else {
+                    bounds.extend(place.geometry.location);
+                }
+            });
+            map.fitBounds(bounds);
+            marker.setPosition(bounds.getCenter());
+            updateCoordinates(bounds.getCenter().lat(), bounds.getCenter().lng());
+        });
+    } else {
+        // Si no tiene permisos, ocultar input
+        input.style.display = "none";
+    }
+
     updateCoordinates(defaultLocation.lat, defaultLocation.lng);
 }
 
@@ -490,3 +518,22 @@ document.getElementById("Nombre").addEventListener("input", function () {
 document.getElementById("Apellido").addEventListener("input", function () {
     this.value = quitarAcentos(this.value);
 });
+
+
+const input = document.getElementById("LimiteVentas");
+
+input.addEventListener("input", function () {
+    const cursorPos = input.selectionStart;
+    const originalLength = input.value.length;
+
+    const formateado = formatearMiles(input.value);
+
+    input.value = formateado;
+
+    const newLength = formateado.length;
+    input.setSelectionRange(
+        cursorPos + (newLength - originalLength),
+        cursorPos + (newLength - originalLength)
+    );
+});
+

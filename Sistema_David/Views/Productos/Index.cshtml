@@ -80,44 +80,75 @@
 <!-- Button trigger modal -->
 <!-- Modal -->
 <div class="modal fade" id="productoModal" tabindex="-1" aria-labelledby="productoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered modal-producto">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="productoModalLabel">Registrar nuevo producto</h5>
+            <div class="modal-header colorEncabezado">
+                <h5 class="modal-title fw-bold text-white" id="productoModalLabel">Registrar nuevo producto</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="row g-3">
+                        <input type="text" id="IdProducto" hidden />
 
-                <input type="Text" id="IdProducto" class="input-nuevomodif" hidden />
-                <label class="lblNombreInput">Codigo</label>
-                <input type="Text" placeholder="" id="Codigo" class="input-nuevomodif" />
-                <label class="lblNombreInput">Nombre</label>
-                <input type="Text" placeholder="" id="Nombre" class="input-nuevomodif" />
-                <label class="lblNombreInput">Categoria</label>
-                <select id="Categorias" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
-                    <option value="" selected>Seleccione Categoria</option>
-                </select>
-                <label class="lblNombreInput">Stock</label>
-                <input type="Text" placeholder="" id="Stock" class="input-nuevomodif" />
-                <label class="lblNombreInput">Precio de Compra</label>
-                <input type="Text" placeholder="" id="PrecioCompra" class="input-nuevomodif" />
-                <label class="lblNombreInput">Precio de Venta</label>
-                <input type="Text" placeholder="" id="PrecioVenta" class="input-nuevomodif" />
-                <label class="lblNombreInput">Porcentaje de Venta</label>
-                <input type="Text" placeholder="" id="PorcVenta" class="input-nuevomodif" />
-                <div class="divImagen">
-                    <h5>Imagen</h5>
-                    <img id="imgProducto" class="mb-3" style="width: 50px; height: 50px;" src="" />
-                    <input id="Imagen" class="input-imagen" type="file" placeholder="Imagen" name="adjunto" accept=".pdf,.jpg,.png" multiple />
-                    <p id="imgProd" class="" hidden></p>
+                        <div class="col-6">
+                            <label for="Codigo" class="form-label text-nowrap small  text-black">Código</label>
+                            <input type="text" id="Codigo" class="form-control form-control-sm text-dark text-nowrap" />
+                        </div>
 
+                        <div class="col-6">
+                            <label for="Nombre" class="form-label text-nowrap small text-black">Nombre</label>
+                            <input type="text" id="Nombre" class="form-control form-control-sm text-dark text-nowrap" />
+                        </div>
+
+                        <div class="col-6">
+                            <label for="Categorias" class="form-label text-nowrap small  text-black">Categoría</label>
+                            <select id="Categorias" class="form-select form-select-sm text-dark text-nowrap">
+                                <option value="" selected>Seleccione Categoría</option>
+                            </select>
+                        </div>
+
+                        <div class="col-6">
+                            <label for="Stock" class="form-label text-nowrap small  text-black">Stock</label>
+                            <input type="text" id="Stock" class="form-control form-control-sm text-dark text-nowrap" />
+                        </div>
+
+                        <div class="col-6">
+                            <label for="PrecioCompra" class="form-label text-nowrap small  text-black">P. Compra</label>
+                            <input type="text" id="PrecioCompra" class="form-control form-control-sm text-dark text-nowrap" />
+                        </div>
+
+                        <div class="col-6">
+                            <label for="PrecioVenta" class="form-label text-nowrap small  text-black">P. Venta</label>
+                            <input type="text" id="PrecioVenta" class="form-control form-control-sm text-dark text-nowrap" />
+                        </div>
+
+                        <div class="col-6">
+                            <label for="PorcVenta" class="form-label text-nowrap small  text-black">Porcentaje de Venta</label>
+                            <input type="text" id="PorcVenta" class="form-control form-control-sm text-dark text-nowrap" />
+                        </div>
+
+                        <div class="col-12">
+                            <div class="mb-1">
+                                <label for="Imagen" class="form-label fw-semibold  text-black" >Imagen</label>
+                            </div>
+                            <div class="border rounded p-3 d-flex align-items-center justify-content-start gap-3 flex-wrap">
+                                <img id="imgProducto" src="" class="rounded" style="width: 50px; height: 50px; cursor: pointer;" onclick="openModal(this.src)" />
+                                <input id="Imagen" class="form-control form-control-sm" type="file" name="adjunto" accept=".pdf,.jpg,.png" multiple />
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="borrarImagen()">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                            <p id="imgProd" hidden></p>
+                        </div>
+
+                        <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
+                    </form>
                 </div>
-
             </div>
-            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btnnuevo" data-bs-dismiss="modal">Cerrar</button>
-                <button id="btnRegistrarModificar" type="button" class="btn btn-primary btnnuevo" onclick="AccionBtn()"></button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="AccionBtn()">Registrar</button>
             </div>
         </div>
     </div>
@@ -178,14 +209,11 @@
 
                 <input type="Text" id="IdProductoStock" class="input-nuevomodif" hidden />
 
-            
-                <input type="text"  id="ProductoStock" class="input-nuevomodif" disabled /> <!-- Desactivado -->
 
+                <input type="text" id="ProductoStock" class="input-nuevomodif" disabled /> <!-- Desactivado -->
                 <!-- Cantidad (no editable) -->
                 <label class="lblNombreInput">Cantidad</label>
                 <input type="number" value="1" id="CantidadStock" class="input-nuevomodif" disabled /> <!-- Desactivado -->
-              
-
                 <!-- Nueva sección con cantidad nueva -->
                 <label id="lblAgregarQuitar" class="lblNombreInput mt-3">Agregar / Quitar</label>
                 <div class="d-flex justify-content-center">
@@ -219,5 +247,5 @@
 
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Productos.js?v=1.5"></script>
+    <script src="~/JavaScript/Productos.js?v=1.7"></script>
 }

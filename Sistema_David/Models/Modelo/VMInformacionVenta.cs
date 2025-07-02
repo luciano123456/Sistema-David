@@ -29,6 +29,7 @@ namespace Sistema_David.Models.Modelo
         public int ClienteAusente { get; set; }
         public int CobroPendiente { get; set; }
         public Nullable<int> IdCuentaBancaria { get; set; }
+        public Nullable<int> ActualizoUbicacion { get; set; }
 
 
 

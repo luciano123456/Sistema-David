@@ -123,17 +123,14 @@ namespace Sistema_David.Controllers
             try
             {
                 var result = CuentasBancariasModel.Nuevo(cuentabancaria);
-
-
                 return Json(result);
             }
             catch (Exception ex)
             {
-                return Json(null);
+                return Json(new { Status = 1 });
             }
-
-
         }
+
 
         [HttpPost]
         public ActionResult EditarCuentaBancaria(VMCuentaBancaria cuentabancaria)
@@ -318,7 +315,7 @@ namespace Sistema_David.Controllers
             }
         }
 
-        public ActionResult Cobranza(VMVenta model)
+        public ActionResult Cobranza(VMCobranza model)
         {
             try
             {

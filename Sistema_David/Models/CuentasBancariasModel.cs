@@ -271,34 +271,30 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static int Nuevo(VMCuentaBancaria model)
+        public static object Nuevo(VMCuentaBancaria model)
         {
-
             try
             {
                 using (var db = new Sistema_DavidEntities())
                 {
-
-                    CuentasBancarias cuenta = new CuentasBancarias();
-
-                    cuenta.Id = model.Id;
-                    cuenta.CBU = model.CBU;
-                    cuenta.Nombre = model.Nombre;
-                    cuenta.CuentaPropia = model.CuentaPropia;
-                    cuenta.Activo = model.Activo;
-                    cuenta.MontoPagar = model.MontoPagar;
+                    var cuenta = new CuentasBancarias
+                    {
+                        CBU = model.CBU,
+                        Nombre = model.Nombre,
+                        CuentaPropia = model.CuentaPropia,
+                        Activo = model.Activo,
+                        MontoPagar = model.MontoPagar
+                    };
 
                     db.CuentasBancarias.Add(cuenta);
                     db.SaveChanges();
 
-                    return 0;
+                    return new { Status = 0, Id = cuenta.Id };
                 }
-
-                return 1;
             }
             catch (Exception e)
             {
-                return 1;
+                return new { Status = 1 };
             }
         }
 

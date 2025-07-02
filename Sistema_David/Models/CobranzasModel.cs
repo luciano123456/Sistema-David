@@ -167,7 +167,7 @@ namespace Sistema_David.Models.Modelo
                                   IdUsuarioRecorrido = r != null ? (int)r.IdUsuario : 0,
                                   FranjaHoraria = d.FranjaHoraria != null ? d.FranjaHoraria : "",
                                   EstadoCobro = d.EstadoCobro != null ? d.EstadoCobro : "",
-                                  LimiteVentas = (decimal)c.LimiteVentas
+                                  LimiteVentas = (decimal)c.LimiteVentas,
                               }).ToList();
 
                 // Ordenar por si está en un recorrido, luego por el orden del recorrido, y finalmente por otra ordenación que desees
@@ -509,7 +509,7 @@ namespace Sistema_David.Models.Modelo
 
 
 
-        public static int Cobranza(VMVenta model)
+        public static int Cobranza(VMCobranza model)
         {
             try
             {
@@ -587,6 +587,7 @@ namespace Sistema_David.Models.Modelo
                                 infoventa.TipoNegocio = UsuariosModel.BuscarTipoNegocio((int)venta.IdTipoNegocio).Nombre;
                                 infoventa.IdCuentaBancaria = model.MetodoPago != null && model.MetodoPago.ToUpper() != "EFECTIVO" ? (int?)model.IdCuenta : null;
                                 infoventa.TipoInteres = model.TipoInteres;
+                                infoventa.ActualizoUbicacion = model.ActualizoUbicacion;
 
                                 VentasModel.AgregarInformacionVenta(infoventa);
 

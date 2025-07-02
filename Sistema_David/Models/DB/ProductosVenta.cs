@@ -19,6 +19,7 @@ namespace Sistema_David.Models.DB
         public int IdVenta { get; set; }
         public int Cantidad { get; set; }
         public Nullable<decimal> PrecioUnitario { get; set; }
+        public string Producto { get; set; }
     
         public virtual Productos Productos { get; set; }
         public virtual Ventas Ventas { get; set; }

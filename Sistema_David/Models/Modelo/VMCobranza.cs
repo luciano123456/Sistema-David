@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Sistema_David.Models.Modelo
 {
-    public class VMVenta
+    public class VMCobranza
     {
         public int Id { get; set; }
         public int idCliente { get; set; }

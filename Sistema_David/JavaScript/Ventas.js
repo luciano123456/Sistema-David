@@ -222,10 +222,13 @@ const configurarDataTable = async (idVendedor, fechaDesde, fechaHasta, Finalizad
             var fechaLimite = moment(data.FechaLimite).format('DD/MM/YYYY');
             var fechaCliente = moment(data.FechaCliente).format('DD/MM/YYYY');
 
-            if (fechaHoy == fechaCliente) {
-                $('td', nRow).css('color', '#6DC316'); // Cambiar color de la celda del cliente en verde
+            var diferenciaDias = moment().diff(moment(data.FechaCliente), 'days');
+
+            if (diferenciaDias >= 0 && diferenciaDias <= 7) {
+                $('td', nRow).css('color', '#6DC316');
                 $('td:eq(3) a', nRow).css('color', '#6DC316');
             }
+
 
             if (data.Estado == "Aprobar") {
                 $('td', nRow).css('background-color', '#DED803');
