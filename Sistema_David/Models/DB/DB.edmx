@@ -103,6 +103,7 @@
           <Property Name="IdCuentaBancaria" Type="int" />
           <Property Name="CobroPendiente" Type="int" />
           <Property Name="TipoInteres" Type="varchar" MaxLength="255" />
+          <Property Name="ActualizoUbicacion" Type="int" />
         </EntityType>
         <EntityType Name="Limites">
           <Key>
@@ -136,6 +137,7 @@
           <Property Name="IdVenta" Type="int" Nullable="false" />
           <Property Name="Cantidad" Type="int" Nullable="false" />
           <Property Name="PrecioUnitario" Type="decimal" Precision="20" Scale="2" />
+          <Property Name="Producto" Type="varchar" MaxLength="255" />
         </EntityType>
         <EntityType Name="Recorridos">
           <Key>
@@ -974,6 +976,7 @@
           <Property Name="PrecioUnitario" Type="Decimal" Precision="20" Scale="2" />
           <NavigationProperty Name="Productos" Relationship="Sistema_DavidModel.FK_ProductosVenta_Productos" FromRole="ProductosVenta" ToRole="Productos" />
           <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_ProductosVenta_Ventas" FromRole="ProductosVenta" ToRole="Ventas" />
+          <Property Name="Producto" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
         </EntityType>
         <Association Name="FK_ProductosVenta_Productos">
           <End Type="Sistema_DavidModel.Productos" Role="Productos" Multiplicity="1" />
@@ -1294,6 +1297,7 @@
           <NavigationProperty Name="CuentasBancarias" Relationship="Sistema_DavidModel.FK_InformacionVentas_Ventas1" FromRole="InformacionVentas" ToRole="CuentasBancarias" />
           <Property Name="CobroPendiente" Type="Int32" />
           <Property Name="TipoInteres" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="ActualizoUbicacion" Type="Int32" />
         </EntityType>
         <EntityType Name="TipoNegocio">
           <Key>
@@ -1472,6 +1476,7 @@
           <EntitySetMapping Name="ProductosVenta">
             <EntityTypeMapping TypeName="Sistema_DavidModel.ProductosVenta">
               <MappingFragment StoreEntitySet="ProductosVenta">
+                <ScalarProperty Name="Producto" ColumnName="Producto" />
                 <ScalarProperty Name="PrecioUnitario" ColumnName="PrecioUnitario" />
                 <ScalarProperty Name="Cantidad" ColumnName="Cantidad" />
                 <ScalarProperty Name="IdVenta" ColumnName="IdVenta" />
@@ -1593,6 +1598,7 @@
           <EntitySetMapping Name="InformacionVentas">
             <EntityTypeMapping TypeName="Sistema_DavidModel.InformacionVentas">
               <MappingFragment StoreEntitySet="InformacionVentas">
+                <ScalarProperty Name="ActualizoUbicacion" ColumnName="ActualizoUbicacion" />
                 <ScalarProperty Name="TipoInteres" ColumnName="TipoInteres" />
                 <ScalarProperty Name="CobroPendiente" ColumnName="CobroPendiente" />
                 <ScalarProperty Name="IdCuentaBancaria" ColumnName="IdCuentaBancaria" />

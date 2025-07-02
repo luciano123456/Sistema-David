@@ -31,11 +31,11 @@ async function configurarDataTable() {
             {
                 "data": "Id",
                 "render": function (data) {
-                    var imgUrl = '/Productos/ObtenerImagen/' + data;
+                    var imgUrl = '/Productos/ObtenerImagen/' + data + '?v=' + new Date().getTime();
 
-                    // Aquí se agrega el evento onclick para abrir el modal
                     return '<img src="' + imgUrl + '" height="45px" width="45px" class="img-thumbnail" style="background-color: transparent; cursor: pointer;" onclick="openModal(\'' + imgUrl + '\')" />';
                 }
+
             },
 
 
@@ -55,11 +55,18 @@ async function configurarDataTable() {
                     var color = activo ? "success" : "danger";
                     var titulo = activo ? "Desactivar" : "Activar";
                     var estadoInverso = full.Activo ? 0 : 1;
+
                     var iconEditar = userSession.IdRol == 1 ?
-                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarProducto(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" : "";
+                        "<button class='btn btn-sm btneditar btnacciones ms-2' type='button' onclick='editarProducto(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white'></i></button>" : "";
+
                     var iconStock = userSession.IdRol == 1 ?
-                        "<button class='btn btn-sm btneditar btnacciones ms-2' type='button' onclick='editarStock(" + data + ")' title='Editar Stock'><i class='fa fa fa-arrows-v fa-lg text-white' aria-hidden='true'></i></button>" : "";
-                    return "<button class='btn btn-sm btn-" + color + " btnacciones' type='button' onclick='cambiarEstadoProducto(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white' aria-hidden='true'></i></button>"  + iconStock + iconEditar;
+                        "<button class='btn btn-sm btneditar btnacciones ms-2' type='button' onclick='editarStock(" + data + ")' title='Editar Stock'><i class='fa fa-arrows-v fa-lg text-white'></i></button>" : "";
+
+                    var iconEliminar = userSession.IdRol == 1 ?
+                        "<button class='btn btn-sm btn-danger btnacciones ms-2' type='button' onclick='eliminarProducto(" + data + ")' title='Eliminar'><i class='fa fa-trash fa-lg text-white'></i></button>" : "";
+
+                    return "<button class='btn btn-sm btn-" + color + " btnacciones' type='button' onclick='cambiarEstadoProducto(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white'></i></button>"
+                        + iconStock + iconEditar + iconEliminar;
                 },
                 "orderable": true,
                 "searchable": true
@@ -149,16 +156,12 @@ const cambiarEstadoProducto = async (id, estado) => {
 }
 
 const eliminarProducto = async id => {
-
     try {
-        if (confirm("¿Seguro desea eliminar de este producto?")) {
-            var url = "/Productos/Eliminar";
+        if (confirm("¿Seguro desea eliminar este producto?")) {
+            const url = "/Productos/Eliminar";
+            const value = JSON.stringify({ Id: id });
 
-            let value = JSON.stringify({
-                Id: id
-            });
-
-            let options = {
+            const options = {
                 type: "POST",
                 url: url,
                 async: true,
@@ -167,22 +170,26 @@ const eliminarProducto = async id => {
                 dataType: "json"
             };
 
-            let result = await MakeAjax(options);
+            const result = await MakeAjax(options);
+
+            if (result.TieneStock) {
+                const mensaje = result.Mensaje + "\n\n" + result.Detalle.join("\n");
+                errorModal(mensaje);
+                return;
+            }
 
             if (result.Status) {
-                alert('Producto eliminado correctamente.');
-                $('.datos-error').removeClass('d-none');
-                document.location.href = "../../Index/";
+                exitoModal('Producto eliminado correctamente.');
+                const table = $('#grdProductos').DataTable();
+                table.ajax.reload();
             } else {
-                $('.datos-error').text('Ha ocurrido un error en los datos.')
-                $('.datos-error').removeClass('d-none')
+                $('.datos-error').text('Ha ocurrido un error en los datos.').removeClass('d-none');
             }
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.').removeClass('d-none');
     }
-}
+};
 
 
 
@@ -212,6 +219,7 @@ const editarProducto = async id => {
         if (result != null) {
 
             $("#productoModal").modal("show");
+            $('.datos-error').text('')
 
             document.getElementById("IdProducto").value = result.Producto.Id;
             document.getElementById("Codigo").value = result.Producto.Codigo;
@@ -235,15 +243,21 @@ const editarProducto = async id => {
                 selectCategorias.appendChild(option);
             }
 
-            if (result.Producto.Imagen != null) {
-                $("#imgProducto").removeAttr('hidden');
+            if (result.Producto.Imagen != null && result.Producto.Imagen !== "") {
+                // Si hay imagen, mostrarla
+                $("#imgProducto").removeAttr("hidden");
                 $("#imgProducto").attr("src", "data:image/png;base64," + result.Producto.Imagen);
+            } else {
+                // Si NO hay imagen, ocultar el <img>
+                $("#imgProducto").attr("src", "");
+                $("#imgProducto").attr("hidden", "hidden");
             }
+
         } else {
-            alert("Ha ocurrido un error en los datos");
+            errorModal("Ha ocurrido un error en los datos");
         }
     } catch (error) {
-        alert("Ha ocurrido un error en los datos");
+        errorModal("Ha ocurrido un error en los datos");
     }
 }
 
@@ -252,7 +266,7 @@ const editarProducto = async id => {
 
 async function AccionBtn() {
     if (userSession.IdRol != 1) { //ROL VENDEDOR
-        alert("No tienes permisos para realizar esta accion.")
+        errorModal("No tienes permisos para realizar esta accion.")
         return false;
     }
     if (document.getElementById("btnRegistrarModificar").textContent == "Registrar") {
@@ -288,10 +302,12 @@ async function registrarProducto() {
 
         let result = await MakeAjax(options);
 
-            if (result.Status) {
-            alert('Producto agregado correctamente.');
+        if (result.Status) {
+            $("#productoModal").modal("hide");
+            exitoModal('Producto agregado correctamente.');
             $('.datos-error').removeClass('d-none');
-            document.location.href = "../Index/";
+                const table = $('#grdProductos').DataTable();
+                table.ajax.reload();
         } else {
             $('.datos-error').text('Ha ocurrido un error en los datos.')
             $('.datos-error').removeClass('d-none')
@@ -330,9 +346,11 @@ async function modificarProducto() {
         let result = await MakeAjax(options);
 
         if (result.Status) {
-            alert('Producto modificado correctamente.');
+            $("#productoModal").modal("hide");
+            exitoModal('Producto modificado correctamente.');
             $('.datos-error').removeClass('d-none');
-            document.location.href = "../Index/";
+            const table = $('#grdProductos').DataTable();
+            table.ajax.reload(null, false);
         } else {
             $('.datos-error').text('Ha ocurrido un error en los datos.')
             $('.datos-error').removeClass('d-none')
@@ -442,7 +460,7 @@ async function cargarCategorias() {
 
 function abrirmodalimportacionmasiva() {
     if (userSession.IdRol != 1) { //ROL VENDEDOR
-        alert("No tienes permisos para realizar esta accion.")
+        errorModal("No tienes permisos para realizar esta accion.")
         return false;
     }
     $("#modalImportacionMasiva").modal("show");
@@ -450,7 +468,7 @@ function abrirmodalimportacionmasiva() {
 
 async function enviarImportacionMasiva() {
     if (userSession.IdRol != 1) { //ROL VENDEDOR
-        alert("No tienes permisos para realizar esta accion.")
+        errorModal("No tienes permisos para realizar esta accion.")
         return false;
     }
     try {
@@ -467,17 +485,18 @@ async function enviarImportacionMasiva() {
             success: function (data, textStatus) {
                 if (data == "True") {
                     $("#modalImportacionMasiva").modal("hide");
-                    alert("Los productos han sido registrados con exito.")
-                    document.location.href = "../Index/";
+                    exitoModal("Los productos han sido registrados con exito.")
+                    const table = $('#grdProductos').DataTable();
+                    table.ajax.reload();
                 } else {
 
                     $("#modalImportacionMasiva").modal("hide");
-                    alert("Ha ocurrido un error con los datos.")
+                    errorModal("Ha ocurrido un error con los datos.")
                 }
 
             },
             error: function (data, textStatus) {
-                alert("Ha ocurrido un error, consulte a un Administrador.")
+                errorModal("Ha ocurrido un error, consulte a un Administrador.")
             }
         });
 
@@ -664,10 +683,10 @@ const editarStock = async id => {
             
 
         } else {
-            alert("Ha ocurrido un error en los datos");
+            errorModal("Ha ocurrido un error en los datos");
         }
     } catch (error) {
-        alert("Ha ocurrido un error en los datos");
+        errorModal("Ha ocurrido un error en los datos");
     }
 }
 
@@ -692,11 +711,13 @@ async function agregarStockCantidad() {
         let result = await MakeAjax(options);
 
         if (result.Status) {
-            alert('Stock agregado correctamente.');
+            $("#nuevoStockModal").modal("hide");
+            exitoModal('Stock agregado correctamente.');
             $('.datos-error').removeClass('d-none');
-            document.location.href = "../../Productos/Index/";
+            const table = $('#grdProductos').DataTable();
+            table.ajax.reload();
         } else {
-            alert("Ha ocurrido un error al restar el stock.")
+            errorModal("Ha ocurrido un error al restar el stock.")
         }
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.')
@@ -725,11 +746,13 @@ async function restarStockCantidad() {
         let result = await MakeAjax(options);
 
         if (result.Status) {
-            alert('Stock restado correctamente.');
+            $("#nuevoStockModal").modal("hide");
+            exitoModal('Stock restado correctamente.');
             $('.datos-error').removeClass('d-none');
-            document.location.href = "../../Productos/Index/";
+             const table = $('#grdProductos').DataTable();
+                table.ajax.reload();
         } else {
-            alert("Ha ocurrido un error al agregar el stock.")
+            errorModal("Ha ocurrido un error al agregar el stock.")
         }
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.')
@@ -755,4 +778,17 @@ function actualizarTotalStock() {
     $("#precioventa").text(formatNumber(total));
 
 
+}
+
+
+function borrarImagen() {
+    const input = document.getElementById("Imagen");
+    const img = document.getElementById("imgProducto");
+    const p = document.getElementById("imgProd");
+
+    input.value = "";
+    p.value = "";
+    img.src = "";
+    img.style.display = "none";
+    p.innerText = "";
 }

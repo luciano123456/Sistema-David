@@ -278,7 +278,7 @@ function createUsuarioNombre(usuario, rol) {
 }
 
 function createBloqueoButton(usuario) {
-    
+
     const color = usuario.BloqueoSistema ? "danger" : "success";
     const titulo = usuario.BloqueoSistema ? "Desbloquear" : "Bloquear";
     const estadoInverso = usuario.BloqueoSistema ? 0 : 1;
@@ -293,8 +293,8 @@ function createBloqueoButton(usuario) {
         bloqueoSistema(usuario.Id, estadoInverso);
     });
 
-        return botonBloqueo;
-   
+    return botonBloqueo;
+
 }
 
 function createIconoVentas(usuario) {
@@ -426,10 +426,10 @@ function seleccionarRendimiento(elemento, idVendedor) {
     }
 
     if (userSession.idRol == 1) {
-    // Alternar los íconos cuando se haga clic
-    iconoVentas.addEventListener("click", function () {
-        alternarColorIcono(iconoVentas);
-    });
+        // Alternar los íconos cuando se haga clic
+        iconoVentas.addEventListener("click", function () {
+            alternarColorIcono(iconoVentas);
+        });
     }
 
     iconoCobranzas.addEventListener("click", function () {
@@ -563,7 +563,7 @@ function aplicarFiltros() {
 
 
         const estadoCobranzas = usuarioSeleccionado.querySelector(".fa-check[title='Cobranzas']").classList.contains("text-success") ? 1 : 0;
-        
+
 
         localStorage.setItem("FechaDesdeRendimiento", document.getElementById("FechaDesde").value);
         localStorage.setItem("FechaHastaRendimiento", document.getElementById("FechaHasta").value);
@@ -634,8 +634,8 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         return metodoPago + ' ' + icon; // Retorna el método de pago seguido del ícono si existe la imagen
                     }
                 },
-                
-                
+
+
                 { "data": "CuentaBancaria" },
                 { "data": "Cliente" },
                 { "data": "CapitalInicial" },
@@ -643,7 +643,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                 { "data": "Cobro" },
                 { "data": "Interes" },
                 { "data": "CapitalFinal" },
-                
+
                 {
                     "data": "ProximoCobro",
                     "render": function (data) {
@@ -664,10 +664,10 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         let iconColorClass = row.whatssap === 1 ? 'text-success' : 'text-danger';
                         var iconColor = userSession.IdRol == 2 ? "red" : "white"; // Color del icono basado en el rol
                         var disabled = userSession.IdRol == 2 ? "disabled" : ""; // Desactivar el botón basado en el rol
-                        var iconWhatssap = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>" 
+                        var iconWhatssap = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>"
                         var iconEliminar = row.Descripcion && userSession.IdRol == 1 && !row.Descripcion.includes("Venta") ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarInformacion(" + data + ")' title='Eliminar' style='color: " + iconColor + ";' " + disabled + "><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>" : '';
                         return iconWhatssap + iconEliminar;
-                            
+
                     },
                 }
 
@@ -687,11 +687,22 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
             "order": [[0, "ddMmYyyy-desc"], [1, "asc"]],
 
+            "fnRowCallback": function (nRow, data, row) {
+                if (data.ActualizoUbicacion == 1) {
+                    $('td', nRow).css({
+                        'background-color': '#f7f122',
+                        'color': 'black',
+                        'font-weight': 'bold'
+                    });
+                }
+            },
+
+        
 
 
             "initComplete": async function (settings, json) {
                 // Calcular los totales de Venta y Cobro
-               
+
 
                 gridRendimiento.data().each(function (rowData) {
                     if (rowData.Descripcion.includes("Cobranza")) {
@@ -736,63 +747,63 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
             }
         });
 
-    } else {
-        // Si la tabla ya existe, simplemente actualizar los datos
-        const table = $('#grdRendimiento').DataTable();
-
-       
-
-        table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}&ComprobantesEnviados=${comprobantesEnviados}`).load(function () {
-            // Recorrer los datos de la tabla después de que se hayan cargado
-            table.data().each(async function (rowData) {
+} else {
+    // Si la tabla ya existe, simplemente actualizar los datos
+    const table = $('#grdRendimiento').DataTable();
 
 
-                if (rowData.Descripcion.includes("Cobranza")) {
-                    totCobro += rowData.Cobro;
 
-                    if (rowData.MetodoPago != null && rowData.MetodoPago == "EFECTIVO") {
-                        totEfectivo += rowData.Cobro;
-                    }
-                    if (rowData.MetodoPago != null && (rowData.MetodoPago == "TRANSFERENCIA PROPIA" || rowData.MetodoPago == "TRANSFERENCIA A TERCEROS")) {
-                        totTransferencia += rowData.Cobro;
-                    }
-                }
-                if (rowData.Descripcion.includes("Venta")) {
-                    totVenta += rowData.Venta;
-                }
-                if (rowData.Descripcion.includes("Interes")) {
-                    totInteres += rowData.Interes;
-                }
-            });
-            document.getElementById("totventa").textContent = formatNumber(totVenta);
-            document.getElementById("totcobro").textContent = formatNumber(totCobro);
-            document.getElementById("totinteres").textContent = formatNumber(totInteres);
-            document.getElementById("totefectivo").textContent = formatNumber(totEfectivo);
-            document.getElementById("tottransferencia").textContent = formatNumber(totTransferencia);
-        });
+table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}&ComprobantesEnviados=${comprobantesEnviados}`).load(function () {
+    // Recorrer los datos de la tabla después de que se hayan cargado
+    table.data().each(async function (rowData) {
+
+
+        if (rowData.Descripcion.includes("Cobranza")) {
+            totCobro += rowData.Cobro;
+
+            if (rowData.MetodoPago != null && rowData.MetodoPago == "EFECTIVO") {
+                totEfectivo += rowData.Cobro;
+            }
+            if (rowData.MetodoPago != null && (rowData.MetodoPago == "TRANSFERENCIA PROPIA" || rowData.MetodoPago == "TRANSFERENCIA A TERCEROS")) {
+                totTransferencia += rowData.Cobro;
+            }
+        }
+        if (rowData.Descripcion.includes("Venta")) {
+            totVenta += rowData.Venta;
+        }
+        if (rowData.Descripcion.includes("Interes")) {
+            totInteres += rowData.Interes;
+        }
+    });
+    document.getElementById("totventa").textContent = formatNumber(totVenta);
+    document.getElementById("totcobro").textContent = formatNumber(totCobro);
+    document.getElementById("totinteres").textContent = formatNumber(totInteres);
+    document.getElementById("totefectivo").textContent = formatNumber(totEfectivo);
+    document.getElementById("tottransferencia").textContent = formatNumber(totTransferencia);
+});
 
 
 
     }
 
 
-    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
-    $('#grdRendimiento tbody').on('click', 'tr', function () {
-        // Remover la clase de la fila anteriormente seleccionada
-        if (filaSeleccionada) {
-            $(filaSeleccionada).removeClass('seleccionada');
-            $('td', filaSeleccionada).removeClass('seleccionada');
+let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
+$('#grdRendimiento tbody').on('click', 'tr', function () {
+    // Remover la clase de la fila anteriormente seleccionada
+    if (filaSeleccionada) {
+        $(filaSeleccionada).removeClass('seleccionada');
+        $('td', filaSeleccionada).removeClass('seleccionada');
 
-        }
+    }
 
-        // Obtener la fila actual
-        filaSeleccionada = $(this);
+    // Obtener la fila actual
+    filaSeleccionada = $(this);
 
-        // Agregar la clase a la fila actual
-        $(filaSeleccionada).addClass('seleccionada');
-        $('td', filaSeleccionada).addClass('seleccionada');
+    // Agregar la clase a la fila actual
+    $(filaSeleccionada).addClass('seleccionada');
+    $('td', filaSeleccionada).addClass('seleccionada');
 
-    });
+});
 
 }
 
@@ -1190,7 +1201,7 @@ async function enviarWhatssap(id) {
             }
 
 
-            else if(result.InformacionVenta.TipoInteres === "INTERES DE 60 DIAS") {
+            else if (result.InformacionVenta.TipoInteres === "INTERES DE 60 DIAS") {
                 mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} su cuenta superó los 60 días de plazo máximo para abonar. Por este motivo, se han generado los siguientes cargos:\n\n` +
                     `*Interés aplicado:* ${formatNumber(result.InformacionVenta.Interes)}\n\n` +
                     `*Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n\n` +
@@ -1200,7 +1211,7 @@ async function enviarWhatssap(id) {
             }
 
 
-            else if(result.InformacionVenta.TipoInteres === "PROMESA DE PAGO") {
+            else if (result.InformacionVenta.TipoInteres === "PROMESA DE PAGO") {
                 mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} estuvimos esperando su promesa de pago mediante transferencia. ` +
                     `Al no haber recibido el comprobante y estando próximos al cierre de jornada, se ha agregado un interés de ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
 
@@ -1429,7 +1440,8 @@ const bloqueoSistema = async (id, estado) => {
     }
 }
 
-function sumarFecha(){;
+function sumarFecha() {
+    ;
     var FechaDesde = document.getElementById("FechaDesde").value;
     var FechaHasta = document.getElementById("FechaHasta").value;
 
@@ -1481,7 +1493,7 @@ function configurarOpcionesColumnas() {
             // Asegúrate de que la columna esté visible si el valor es 'true'
             grid.column(index).visible(isChecked);
 
-            const columnName =  col.data;
+            const columnName = col.data;
 
             // Ahora agregamos el checkbox, asegurándonos de que se marque solo si 'isChecked' es 'true'
             container.append(`

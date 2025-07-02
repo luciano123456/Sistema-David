@@ -175,21 +175,35 @@ namespace Sistema_David.Controllers
         {
             try
             {
+                var stock = StockModel.ObtenerUsuariosConProductoEnStock(id);
+
+                if (stock.Any())
+                {
+                    var mensaje = $"No puedes eliminar este producto ya que lo tienen {stock.Count} vendedores:";
+                    var detalle = stock
+                        .Select(x => $"- {x.Usuario} ({x.Cantidad}) ${x.PrecioVenta}")
+                        .ToList();
+
+                    return Json(new
+                    {
+                        Status = false,
+                        TieneStock = true,
+                        Mensaje = mensaje,
+                        Detalle = detalle
+                    });
+                }
+
 
                 var result = ProductosModel.Eliminar(id);
 
-                if (result)
-                    return Json(new { Status = true });
-
-                else
-                    return Json(new { Status = false });
+                return Json(new { Status = result });
             }
             catch (Exception ex)
             {
                 return Json(new { Status = false });
             }
-
         }
+
 
         [HttpPost]
         public ActionResult EditarInfo(int id)

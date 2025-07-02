@@ -684,15 +684,24 @@
                             <input type="text" id="IdVenta" class="form-control" hidden />
                             <input type="number" id="ValorCuotahidden" hidden />
                             <input type="number" id="estadoCobro" hidden />
+                            <input type="text" id="latitudCliente" hidden />
+                            <input type="text" id="longitudCliente" hidden />
 
                             <div class="col-12">
                                 <label id="saldoRestante" hidden class="form-label text-bg-secondary"></label>
                                 <div id="ValordelaCuota" class="bg-gradient fw-bold text-center p-2 rounded text-dark">¡El valor de la cuota es de 0 pesos!</div>
+
+                                @*<button type="button" class="btn btn-outline-danger btn-sm" onclick="actualizarUbicacionCliente()">
+                                    <i class="fa fa-map-marker"></i> Actualizar Ubicación
+                                </button>*@
+
                             </div>
+
+
 
                             <div class="col-6 col-lg-3">
                                 <label for="Entrega" class="form-label text-nowrap small">Importe</label>
-                                <input type="number" id="Entrega" value="0" class="form-control form-control-sm text-dark text-nowrap" />
+                                <input type="text" id="Entrega" value="0" class="form-control form-control-sm text-dark text-nowrap" />
                                 <div class="form-check mt-2">
                                     <input type="checkbox" id="checkValorCuota" class="form-check-input" onclick="calcularRestanteCuota()" />
                                     <label class="form-check-label small text-nowrap text-black" for="checkValorCuota">Modificar Cuota</label>
@@ -701,12 +710,12 @@
 
                             <div class="col-6 col-lg-3">
                                 <label for="ValorCuota" class="form-label text-nowrap small" id="lblValorCuota" hidden>Nuevo Valor de Cuota</label>
-                                <input type="number" id="ValorCuota" value="0" class="form-control form-control-sm text-dark text-nowrap" />
+                                <input type="text" id="ValorCuota" value="0" class="form-control form-control-sm text-dark text-nowrap" />
                             </div>
 
                             <div class="col-6 col-lg-3" id="divIntereses">
                                 <label for="ValorInteres" class="form-label text-nowrap small" id="lblValorInteres">Intereses</label>
-                                <input type="number" id="ValorInteres" value="0" class="form-control form-control-sm text-dark text-nowrap" />
+                                <input type="text" id="ValorInteres" value="0" class="form-control form-control-sm text-dark text-nowrap" />
                             </div>
 
                             <div class="col-6 col-lg-3" id="divTipoInteres" hidden>
@@ -1002,5 +1011,6 @@
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=3.2"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=3.4"></script>
 }
+

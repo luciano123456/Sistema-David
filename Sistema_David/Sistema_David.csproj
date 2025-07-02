@@ -467,6 +467,7 @@
     </Compile>
     <Compile Include="Models\LoginModel.cs" />
     <Compile Include="Models\Manager\VentasManager.cs" />
+    <Compile Include="Models\Modelo\VMClienteNuevaDireccion.cs" />
     <Compile Include="Models\Modelo\VMInformacionClienteAsignado.cs" />
     <Compile Include="Models\Modelo\VMComprobantesImagenes.cs" />
     <Compile Include="Models\Modelo\VMInformacionVenta.cs" />
@@ -489,6 +490,7 @@
     <Compile Include="Models\Modelo\VMUser.cs" />
     <Compile Include="Models\Modelo\VMPedido.cs" />
     <Compile Include="Models\Modelo\VMResultadoStock.cs" />
+    <Compile Include="Models\Modelo\VMCobranza.cs" />
     <Compile Include="Models\Modelo\VMVenta.cs" />
     <Compile Include="Models\RecorridosModel.cs" />
     <Compile Include="Models\StockPendienteModel.cs" />
@@ -706,6 +708,7 @@
     <Content Include="Views\Pedidos\Nuevo.cshtml" />
     <Content Include="Views\Recorrido\Index.cshtml" />
     <Content Include="Views\Stock\General.cshtml" />
+    <Content Include="Views\Utils\Modals.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

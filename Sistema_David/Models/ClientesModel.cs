@@ -121,6 +121,35 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
+
+        public static int NuevaDireccion(int idCliente, string Longitud, string Latitud)
+        {
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                {
+                    var client = db.Clientes.FirstOrDefault(x => x.Id == idCliente);
+
+                    if (client == null)
+                        return 2; // Cliente no encontrado
+
+                    client.Latitud = Latitud;
+                    client.Longitud = Longitud;
+
+                    db.Entry(client).Property(c => c.Latitud).IsModified = true;
+                    db.Entry(client).Property(c => c.Longitud).IsModified = true;
+
+                    db.SaveChanges();
+                    return 0;
+                }
+            }
+            catch
+            {
+                return 1; // Error general
+            }
+        }
+
+
         public static int Nuevo(VMCliente model)
         {
 

@@ -212,6 +212,23 @@ namespace Sistema_David.Controllers
         }
 
         [HttpPost]
+        public ActionResult NuevaDireccion(VMClienteNuevaDireccion model)
+        {
+            try
+            {
+
+                var result = ClientesModel.NuevaDireccion(model.IdCliente, model.Longitud, model.Latitud);
+
+                return Json(new { Status = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = 1 });
+            }
+
+        }
+
+        [HttpPost]
         public ActionResult Eliminar(int id)
         {
             try

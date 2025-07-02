@@ -224,11 +224,11 @@
     }
 
     .lblNombreInput {
-        font-size: 7vw !important;
+        font-size: 5vw !important;
     }
 
     select {
-        font-size: 7vw !important;
+        font-size: 5vw !important;
     }
 
     .btnnuevo {
@@ -278,4 +278,10 @@
     border-color: white;
     border-width: 1px;
     border-style: double;
+}
+
+.colorEncabezado {
+    background: linear-gradient(to right, #005bea, #418bf9, #7baaf7);
+    color: white !important;
+    border: none !important
 }

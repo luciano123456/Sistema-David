@@ -167,9 +167,9 @@ function calcularRestanteCuota() {
     const valorCuota = document.getElementById("ValorCuotahidden").value;
 
     if (chkCuota.checked) {
-        document.getElementById("ValorCuota").value = saldoRestante - Importe;
+        document.getElementById("ValorCuota").value = formatearMiles(saldoRestante - formatearSinMiles(Importe));
     } else {
-        document.getElementById("ValorCuota").value = valorCuota;
+        document.getElementById("ValorCuota").value = formatearMiles(valorCuota);
     }
 
 }
@@ -392,16 +392,31 @@ async function cobranzaVenta(id, tabla) {
             document.getElementById("saldoRestante").innerText = venta.Restante
             document.getElementById("ValordelaCuota").innerText = "¡El valor de la cuota es de " + formatNumber(venta.ValorCuota) + " pesos !";
 
-            document.getElementById("ValorCuota").value = venta.ValorCuota;
+            document.getElementById("ValorCuota").value = formatearMiles(venta.ValorCuota);
             document.getElementById("ValorCuotahidden").value = venta.ValorCuota;
             document.getElementById("FechaCobro").value = moment(venta.FechaCobro).add(7, 'days').format('YYYY-MM-DD');
             document.getElementById("estadoCobro").value = "";
 
             document.getElementById("divTipoInteres").setAttribute("hidden", "hidden");
             document.getElementById("TipoInteres").value = "";
+            document.getElementById("latitudCliente").value = venta.Latitud;
+            document.getElementById("longitudCliente").value = venta.Longitud;
              
             document.getElementById("checkValorCuota").checked = false;
             document.getElementById("progressBarContainerCobro").setAttribute("hidden", "hidden");
+
+            localStorage.setItem("CobranzaCliente", venta.idCliente);
+
+            //if (userSession.IdRol == 4) {
+            //    const metodoPagoSelect = document.getElementById("MetodoPago");
+            //    const opciones = metodoPagoSelect.options;
+
+            //    for (let i = opciones.length - 1; i >= 0; i--) {
+            //        if (opciones[i].value === "Efectivo") {
+            //            metodoPagoSelect.remove(i);
+            //        }
+            //    }
+            //}
 
 
             $("#cobranzaModal").modal("show");
@@ -512,21 +527,78 @@ importeValorCuotaCobranza.addEventListener("keyup", (e) => {
 async function hacerCobranza() {
     try {
 
+        let metodopago = document.getElementById("MetodoPago").value;
+
         let now = new Date().getTime();
 
         if (now - localStorage.getItem("lastCobranzaTime") >= 6000) {
             var url = "/Cobranzas/Cobranza";
 
+            if (!navigator.geolocation) {
+                alert("Tu navegador no soporta geolocalización.");
+                return;
+            }
+
+          
+          
+            // 1️⃣ Obtener ubicación actual
+            const posicion = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            });
+
+
+            const latActual = posicion.coords.latitude;
+            const lngActual = posicion.coords.longitude;
+
+            // 2️⃣ Traer ubicación anterior del cliente
+            const idCliente = localStorage.getItem("CobranzaCliente");
+            const clienteLat = document.getElementById("latitudCliente").value;
+            const clienteLng = document.getElementById("longitudCliente").value;
+
+            let seActualizoUbicacion = false;
+
+          
 
             if (validarCobranza()) {
+
+                // 3️⃣ Si tiene ubicación anterior, calcular distancia
+                if (metodopago.toUpperCase() === "EFECTIVO") {
+                    if (clienteLat && clienteLng) {
+                        const distancia = calcularDistanciaMetros(clienteLat, clienteLng, latActual, lngActual);
+
+                        if (distancia > 100) {
+                            // Actualizar ubicación
+                            const confirmacion1 = await confirmarModal("Estás a más de 100 metros de distancia del cliente. ¿Deseas actualizar la ubicación?");
+                            if (!confirmacion1) {
+                                await advertenciaModal("El cobro ha sido cancelado, ya que debes actualizar la ubicación.");
+                                return false;
+                            }
+
+                            const confirmacion2 = await confirmarModal("Este cambio de ubicación será informado a un Administrador. ¿Desea continuar?");
+                            if (!confirmacion2) {
+                                await advertenciaModal("El cobro ha sido cancelado, ya que se debe informar a un Administrador.");
+                                return false;
+                            }
+
+                            await enviarUbicacionAlServidor(idCliente, latActual, lngActual);
+                            seActualizoUbicacion = true;
+                        }
+                    }
+                }
+
+
                 let value = JSON.stringify({
                     Id: document.getElementById("IdVenta").innerText,
-                    Entrega: document.getElementById("Entrega").value,
+                    Entrega: formatearSinMiles(document.getElementById("Entrega").value),
                     FechaCobro: moment(document.getElementById("FechaCobro").value).format('DD/MM/YYYY'),
                     Observacion: document.getElementById("Observacion").value,
-                    ValorCuota: document.getElementById("ValorCuota").value,
-                    Interes: document.getElementById("ValorInteres").value,
-                    MetodoPago: document.getElementById("MetodoPago").value,
+                    ValorCuota: formatearSinMiles(document.getElementById("ValorCuota").value),
+                    Interes: formatearSinMiles(document.getElementById("ValorInteres").value),
+                    MetodoPago: metodopago,
                     FranjaHoraria: document.getElementById("FranjaHorariaCobro").value,
                     Turno: document.querySelector('#TurnoCobro option:checked').textContent,
                     TipoInteres: document.querySelector('#TipoInteres option:checked').textContent,
@@ -534,6 +606,7 @@ async function hacerCobranza() {
                     IdCuenta: document.getElementById("CuentaPago").value,
                     Imagen: document.getElementById("imgProd").value,
                     CobroPendiente: document.querySelector('#chkCobroPendiente').checked,
+                    ActualizoUbicacion: seActualizoUbicacion ? 1 : 0,
                 });
 
 
@@ -551,28 +624,34 @@ async function hacerCobranza() {
                 if (result.Status) {
 
                     if (result.Status == 2) {
-                        alert("No puedes hacerle una cobranza a ese cliente, ya que aun no es su turno en el recorrido")
+                        errorModal("No puedes hacerle una cobranza a ese cliente, ya que aun no es su turno en el recorrido")
                         return
                     };
                     if (result.Status == 3) {
-                        alert("Ha ocurrido un error al hacer la cobranza")
+                        errorModal("Ha ocurrido un error al hacer la cobranza")
                         return
                     };
 
                     if (result.Status == 1) {
 
                         if (userSession.IdRol == 1 || userSession.IdRol == 4) {
-                            const confirmacion = confirm('Cobranza realizada con éxito. ¿Deseas enviar el comprobante al cliente vía WhatsApp?');
+                            const confirmacion = await confirmarModal('Cobranza realizada con éxito. ¿Deseas enviar el comprobante al cliente vía WhatsApp?');
 
                             if (confirmacion) {
                                 // El usuario ha confirmado, llamar a enviarWhatssap
                                 enviarWhatssapId(document.getElementById("IdVenta").innerText, document.getElementById("ValorInteres").value);
                             }
                         } else {
-                            alert("Cobranza realizada con éxito.")
+                            exitoModal("Cobranza realizada con éxito.")
                         }
 
+                        if (seActualizoUbicacion) {
+                            advertenciaModal("Ubicacion del cliente actualizada correctamente.");
+                        }
+
+
                         buscarRecorridos();
+                        localStorage.removeItem("CobranzaCliente");
                         $("#cobranzaModal").modal("hide");
                         gridCobranzas.ajax.reload();
                         gridCobranzasPendientes.ajax.reload();
@@ -583,12 +662,12 @@ async function hacerCobranza() {
                     }
                     //document.location.href = "../Index/";
                 } else {
-                    alert('Los datos que has ingresado son incorrectos.');
+                    errorModal('Los datos que has ingresado son incorrectos.');
                 }
             }
 
         } else {
-            alert("Tienes que esperar al menos 6 segundos antes de volver a realizar esta acción.");
+            errorModal("Tienes que esperar al menos 6 segundos antes de volver a realizar esta acción.");
             return;
         }
 
@@ -597,6 +676,7 @@ async function hacerCobranza() {
         alert('Ha ocurrido un error en los datos. Vuelva a intentarlo');
     }
 }
+
 
 
 function agregarAlerta(mensaje) {
@@ -815,6 +895,7 @@ async function enviarWhatssapId(id, interes) {
 
         if (result != null) {
 
+            localStorage.removeItem("CobranzaCliente");
             $("#cobranzaModal").modal("hide");
 
             var fecha = moment(result.InformacionVenta.Fecha).format('DD/MM/YYYY');
@@ -2749,7 +2830,7 @@ const InteresSelect = document.getElementById('ValorInteres');
 InteresSelect.addEventListener('keyup', function () {
     if (this.value === "" || this.value === "0") {
         document.getElementById("divTipoInteres").setAttribute("hidden", "hidden");
-     
+
         document.getElementById("divMetodoPago").removeAttribute("hidden");
         const iconoCasa = document.getElementById('iconoCasa');
         iconoCasa.classList.remove('d-none');
@@ -2757,13 +2838,31 @@ InteresSelect.addEventListener('keyup', function () {
         agregarAlerta("Debes poner un importe");
 
     } else {
-      
-     
+
+
         limpiarAlerta("Debes poner un importe");
         document.getElementById("divTipoInteres").removeAttribute("hidden");
         document.getElementById("divMetodoPago").setAttribute("hidden", "hidden");
     }
 });
+
+document.querySelectorAll("#ValorInteres, #Entrega, #ValorCuota").forEach(input => {
+    input.addEventListener("input", function () {
+        const cursorPos = this.selectionStart;
+        const originalLength = this.value.length;
+
+        const formateado = formatearMiles(this.value);
+        this.value = formateado;
+
+        const newLength = formateado.length;
+        this.setSelectionRange(
+            cursorPos + (newLength - originalLength),
+            cursorPos + (newLength - originalLength)
+        );
+    });
+});
+
+
 
 const tipoInteresSelect = document.getElementById('TipoInteres');
 
@@ -3283,13 +3382,13 @@ function anadirCuenta() {
 
 }
 
-// Añadir nueva cuenta
-document.getElementById("addAccount").addEventListener("click", () => {
+document.getElementById("addAccount").addEventListener("click", async () => {
     const Nombre = document.getElementById("accountName").value.trim();
     const cbu = document.getElementById("accountCBU").value.trim();
     const CuentaPropia = document.getElementById("CuentaPropia").checked;
     const Activo = document.getElementById("Activo").checked;
-    const  MontoPagar = document.getElementById("accountMonto").value
+    const MontoPagar = document.getElementById("accountMonto").value;
+
     if (!Nombre || !cbu) {
         alert("Debes completar ambos campos.");
         return;
@@ -3297,29 +3396,55 @@ document.getElementById("addAccount").addEventListener("click", () => {
 
     const newAccount = { Nombre, cbu, CuentaPropia, Activo, MontoPagar };
 
-    fetch('/Cobranzas/NuevaCuentaBancaria', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newAccount)
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result == 0) {
-                alert("Cuenta añadida con éxito");
-                document.getElementById("accountName").value = "";
-                document.getElementById("accountCBU").value = "";
-                document.getElementById("accountMonto").value = "";
-                document.getElementById("CuentaPropia").checked = false;
-                document.getElementById("Activo").checked = true;
-                loadCuentasBancarias(activoCuentasBancarias);
-            } else {
-                alert("Error al añadir la cuenta.");
-            }
-        })
-        .catch(error => console.error('Error adding account:', error));
+    try {
+        const response = await fetch('/Cobranzas/NuevaCuentaBancaria', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newAccount)
+        });
+
+        const result = await response.json();
+
+        if (result?.Status === 0 && result.Id) {
+            alert("Cuenta añadida con éxito.");
+
+            // Restaurar inputs
+            document.getElementById("accountName").value = "";
+            document.getElementById("accountCBU").value = "";
+            document.getElementById("accountMonto").value = "";
+            document.getElementById("CuentaPropia").checked = false;
+            document.getElementById("Activo").checked = true;
+
+            // Mostrar botones originales
+            document.getElementById("anadirCuenta").hidden = false;
+            document.getElementById("btnStockPendiente").hidden = false;
+
+            // Ocultar registrar/cancelar
+            document.getElementById("addAccount").hidden = true;
+            document.getElementById("canceladdAccount").hidden = true;
+
+            // Recargar lista
+            await loadCuentasBancarias(activoCuentasBancarias);
+
+            // Seleccionar nueva cuenta
+            seleccionarCuenta(result.Id);
+        } else {
+            alert("Error al añadir la cuenta.");
+        }
+
+    } catch (error) {
+        console.error("Error adding account:", error);
+        alert("Ocurrió un error al registrar la cuenta.");
+    }
 });
+
+function seleccionarCuenta(id) {
+    const item = document.querySelector(`#accountList [data-id='${id}']`);
+    if (item) {
+        item.click(); // Simula la selección
+        item.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+}
 
 async function cancelarNuevaCuenta() {
     document.getElementById("accountName").value = "";
@@ -4060,4 +4185,94 @@ async function ObtenerImagen(idVenta) {
     } else {
         return null;
     }
+}
+
+
+async function actualizarUbicacionCliente() {
+    if (!navigator.geolocation) {
+        errorModal("Tu navegador no soporta geolocalización.");
+        return;
+    }
+
+    const opciones = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+    };
+
+    let seActualizo = false;
+
+    const idWatch = navigator.geolocation.watchPosition(
+        async function (position) {
+            if (seActualizo) return;
+
+            seActualizo = true;
+            navigator.geolocation.clearWatch(idWatch); // detener seguimiento
+
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const idCliente = localStorage.getItem("CobranzaCliente"); // o como obtengas el ID
+            const precision = position.coords.accuracy;
+
+            console.log("Lat:", lat, "Lng:", lng, "Precisión:", precision);
+
+            await enviarUbicacionAlServidor(idCliente, lat, lng);
+        },
+        async function (error) {
+            console.warn("Error con watchPosition. Intentando getCurrentPosition...");
+
+            navigator.geolocation.getCurrentPosition(
+                async function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const precision = position.coords.accuracy;
+
+                    await enviarUbicacionAlServidor(idCliente, lat, lng);
+                },
+                function (error) {
+                    errorModal("No se pudo obtener la ubicación.");
+                },
+                opciones
+            );
+        },
+        opciones
+    );
+}
+
+
+
+async function enviarUbicacionAlServidor(idCliente, latitud, longitud) {
+    try {
+        const res = await fetch('/Clientes/NuevaDireccion', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                idCliente: idCliente,
+                Latitud: latitud,
+                Longitud: longitud
+            })
+        });
+
+        const data = await res.json();
+
+    } catch (err) {
+        console.error(err);
+        alert("Error al conectar con el servidor.");
+    }
+}
+
+function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // Radio de la Tierra en metros
+    const rad = Math.PI / 180;
+    const dLat = (lat2 - lat1) * rad;
+    const dLon = (lon2 - lon1) * rad;
+
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
 }

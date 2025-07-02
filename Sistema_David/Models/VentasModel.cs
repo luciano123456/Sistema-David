@@ -381,16 +381,16 @@ namespace Sistema_David.Models.Modelo
             {
 
                 var productosventa = (from d in db.ProductosVenta
-                         .SqlQuery("select pv.Id, pv.idproducto, pv.idventa, pv.Cantidad, pv.PrecioUnitario, p.Nombre as Producto, p.PrecioVenta from ProductosVenta pv inner join Productos p on pv.IdProducto = p.Id")
+                         .SqlQuery("select pv.Id, pv.idproducto, pv.idventa, pv.Cantidad, pv.PrecioUnitario, pv.Producto, p.Nombre as Producto, p.PrecioVenta from ProductosVenta pv left join Productos p on pv.IdProducto = p.Id")
                                       select new VMProductoVenta
                                       {
                                           Id = d.Id,
                                           IdProducto = d.IdProducto,
                                           IdVenta = d.IdVenta,
-                                          Producto = d.Productos.Nombre,
+                                          Producto = d.Productos == null ? d.Producto : d.Productos.Nombre,
                                           Cantidad = (int)d.Cantidad,
                                           PrecioUnitario = (decimal)d.PrecioUnitario,
-                                          PrecioTotal = d.PrecioUnitario == 0 ? (decimal)(d.Productos.PrecioVenta * d.Cantidad) : (decimal)(d.PrecioUnitario * d.Cantidad)
+                                          PrecioTotal = (decimal)(d.PrecioUnitario * d.Cantidad)
                                       }).Where(x => x.IdVenta == id).ToList();
 
                 return productosventa;
@@ -569,7 +569,7 @@ namespace Sistema_David.Models.Modelo
         }
 
 
-        public static int Nuevo(Ventas model)
+        public static object Nuevo(Ventas model)
         {
             VMCliente cliente = null;
             VMUser usuario = null;
@@ -591,22 +591,46 @@ namespace Sistema_David.Models.Modelo
 
                             decimal totalConNuevaVenta = (decimal)(totalRestanteCliente + model.Restante);
 
+                            // Validación por límite de cliente
                             if (cliente.LimiteVentas > 0 && totalConNuevaVenta > cliente.LimiteVentas)
-                                return 4;
+                            {
+                                return new
+                                {
+                                    Status = 4,
+                                    Mensaje = "El cliente supera su límite de ventas.",
+                                    Limite = cliente.LimiteVentas,
+                                    RestanteActual = totalRestanteCliente,
+                                    NuevaVenta = model.Restante,
+                                    Total = totalConNuevaVenta,
+                                    Exceso = totalConNuevaVenta - cliente.LimiteVentas
+                                };
+                            }
 
+                            // Validación general para clientes regulares
                             if (cliente.IdEstado == 2 && cliente.LimiteVentas == 0)
                             {
                                 var totalLimite = db.Limites.FirstOrDefault(x => x.Nombre == "ClientesRegulares_Venta").Valor;
                                 if (totalRestanteCliente > totalLimite)
-                                    return 4;
+                                {
+                                    return new
+                                    {
+                                        Status = 4,
+                                        Mensaje = "El cliente regular supera el límite global permitido.",
+                                        Limite = totalLimite,
+                                        RestanteActual = totalRestanteCliente,
+                                        NuevaVenta = model.Restante,
+                                        Total = totalRestanteCliente + model.Restante,
+                                        Exceso = totalRestanteCliente + model.Restante - totalLimite
+                                    };
+                                }
                             }
 
                             if (model == null)
-                                return 2;
+                                return new { Status = 2, Mensaje = "Datos inválidos." };
 
                             bool hayStock = VentasManager.VerificarStock(model.ProductosVenta, model.idVendedor);
                             if (!hayStock)
-                                return 1;
+                                return new { Status = 1, Mensaje = "Uno o más productos no tienen stock suficiente." };
 
                             string estadoVenta = cliente.IdVendedor != model.idVendedor ? "Aprobar" : "";
 
@@ -658,7 +682,8 @@ namespace Sistema_David.Models.Modelo
                                 ProximoCobro = model.FechaCobro,
                                 IdTipoNegocio = usuario.IdTipoNegocio,
                                 TipoNegocio = UsuariosModel.BuscarTipoNegocio((int)usuario.IdTipoNegocio).Nombre,
-                                IdCuentaBancaria = null
+                                IdCuentaBancaria = null,
+                                ActualizoUbicacion = 0
                             };
 
                             if (!AgregarInformacionVenta(infoVenta))
@@ -670,23 +695,22 @@ namespace Sistema_David.Models.Modelo
                                 ClientesModel.CambiarVendedor(venta.idCliente, venta.idVendedor);
 
                             transaction.Commit();
-                            return 0;
+                            return new { Status = 0, Mensaje = "Venta registrada correctamente." };
                         }
                         catch (Exception ex)
                         {
                             transaction.Rollback();
-                            Console.WriteLine("Error en Nuevo(): " + ex.Message);
-                            return 2;
+                            return new { Status = 2, Mensaje = "Error inesperado en la operación." };
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error general en Nuevo(): " + ex.Message);
-                return 3;
+                return new { Status = 3, Mensaje = "Error general en el servidor." };
             }
         }
+
 
 
 
@@ -832,6 +856,7 @@ namespace Sistema_David.Models.Modelo
                         IdVenta = venta.Id,
                         IdProducto = producto.IdProducto,
                         Cantidad = producto.Cantidad,
+                        Producto = producto.Producto,
                         PrecioUnitario = producto.PrecioUnitario > 0
                             ? producto.PrecioUnitario
                             : (productoModel.PrecioVenta > 0 && producto.Cantidad > 0

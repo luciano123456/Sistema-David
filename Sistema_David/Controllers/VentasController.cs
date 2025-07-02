@@ -173,23 +173,20 @@ namespace Sistema_David.Controllers
         }
 
 
-
+        [HttpPost]
         public ActionResult NuevaVenta(Ventas venta)
         {
             try
             {
-
-
                 var result = VentasModel.Nuevo(venta);
-
-                return Json(new { Status = result });
+                return Json(result); // ahora devuelve todo el objeto con Status, Mensaje, etc.
             }
             catch (Exception ex)
             {
-                return Json(new { Status = false });
+                return Json(new { Status = 3, Mensaje = "Error inesperado en el controlador." });
             }
-
         }
+
 
 
         public ActionResult EditarInfoVenta(Ventas venta)

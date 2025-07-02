@@ -87,6 +87,32 @@ namespace Sistema_David.Models
             }
         }
 
+        public static List<VMStockUsuario> ObtenerUsuariosConProductoEnStock(int idProducto)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var result = (from s in db.StockUsuarios
+                              join u in db.Usuarios on s.IdUsuario equals u.Id
+                              join p in db.Productos on s.IdProducto equals p.Id
+                              where s.IdProducto == idProducto && s.Cantidad > 0
+                              select new VMStockUsuario
+                              {
+                                  Id = s.Id,
+                                  IdProducto = s.IdProducto,
+                                  Cantidad = s.Cantidad,
+                                  IdUsuario = u.Id,
+                                  Usuario = u.Nombre,
+                                  Producto = p.Nombre,
+                                  PrecioVenta = (decimal)p.PrecioVenta,
+                                  Total = (decimal)p.PrecioVenta * s.Cantidad,
+                                  VistaStock = u.VistaStock
+                              }).ToList();
+
+                return result;
+            }
+        }
+
+
         public static List<VMStockUsuario> BuscarStockProducto(string producto)
         {
             if (string.IsNullOrEmpty(producto) || producto.Length < 3)

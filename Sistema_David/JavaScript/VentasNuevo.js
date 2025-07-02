@@ -789,18 +789,27 @@ async function registrarVentaAjax() {
 
         let result = await MakeAjax(options);
 
-        if (result.Status == 0) {
-
-            alert('Venta agregada correctamente.');
+        if (result.Status === 0) {
+            alert(result.Mensaje || 'Venta registrada correctamente.');
             document.location.href = "../Index/";
-        } else if (result.Status == 1) {
-
-            alert('Uno de tus productos no tiene el stock suficiente.');
-        } else if (result.Status == 4) {
-            alert('El cliente supera su monto permitido en ventas.');
-        } else {
-            alert('Ha ocurrido un error en la venta. Consulte con un Administrador');
         }
+        else if (result.Status === 1) {
+            alert(result.Mensaje);
+        }
+        else if (result.Status === 4) {
+            alert(
+                `${result.Mensaje}\n\n` +
+                `🔐 Límite permitido: $${result.Limite.toLocaleString()}\n` +
+                `📌 Crédito actual: $${result.RestanteActual.toLocaleString()}\n` +
+                `🛒 Nueva venta: $${result.NuevaVenta.toLocaleString()}\n` +
+                `🚫 Total: $${result.Total.toLocaleString()}\n` +
+                `❗ Exceso: $${result.Exceso.toLocaleString()}`
+            );
+        }
+        else {
+            alert(result.Mensaje || 'Ha ocurrido un error en la venta.');
+        }
+
 
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.')

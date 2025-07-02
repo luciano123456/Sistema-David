@@ -247,9 +247,6 @@ option {
     font-size: 1.2vw;
 }
 
-select {
-    font-size: 1.2vw !important;
-}
 
 @media screen and (max-width: 1200px) {
 
@@ -878,4 +875,21 @@ a:hover {
     .nav-user {
         font-size: 4vw !important;
     }
+}
+
+
+#modalConfirmar{
+    z-index: 99999;
+}
+
+#AdvertenciaModal {
+    z-index: 99999;
+}
+
+#ExitoModal {
+    z-index: 99999;
+}
+
+#ErrorModal {
+    z-index: 99999;
 }
