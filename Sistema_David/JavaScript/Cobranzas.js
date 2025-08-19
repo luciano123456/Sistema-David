@@ -89,8 +89,8 @@ $(document).ready(async function () {
 
     await buscarRecorridos()
 
-    configurarDataTable(-1, -1, fechaCobroDesde, fechaCobroHasta, document.getElementById("Dni").value, -1, "Todos", -1, 0);
-    configurarDataTableCobrosPendientes();
+    await configurarDataTable(-1, -1, fechaCobroDesde, fechaCobroHasta, document.getElementById("Dni").value, -1, "Todos", -1, 0);
+    await configurarDataTableCobrosPendientes();
 
 
 }).on('init.dt', function () {
@@ -341,14 +341,11 @@ async function cobranzaVenta(id, tabla) {
     
 
 
-    document.getElementById("lblFechaCobro").removeAttribute("hidden");
-    document.getElementById("FechaCobro").removeAttribute("hidden");
-    document.getElementById("lblValorCuota").removeAttribute("hidden");
-    document.getElementById("ValorCuota").removeAttribute("hidden");
-    document.getElementById("TurnoCobro").removeAttribute("hidden", "hidden");
-    document.getElementById("lblProximoTurno").removeAttribute("hidden", "hidden");
-    document.getElementById("lblFranjaHoraria").removeAttribute("hidden", "hidden");
-    document.getElementById("FranjaHorariaCobro").removeAttribute("hidden", "hidden");
+    document.getElementById("divNuevaFechaCobro").removeAttribute("hidden");
+    document.getElementById("divNuevoValorCuota").removeAttribute("hidden");
+    document.getElementById("divCheckValorCuota").removeAttribute("hidden");
+    document.getElementById("divProximoTurno").removeAttribute("hidden");
+    document.getElementById("divFranjaHoraria").removeAttribute("hidden");
     document.getElementById("divCuentaPago").setAttribute("hidden", "hidden");
 
     document.getElementById("Entrega").value = 0;
@@ -453,8 +450,8 @@ function validarBotonesCobro() {
 const importeCobranza = document.querySelector("#Entrega");
 
 importeCobranza.addEventListener("keyup", (e) => {
-    const saldoRestante = parseInt(document.getElementById("saldoRestante").innerText);
-    const importeCobranza = parseInt(document.querySelector("#Entrega").value);
+    const saldoRestante = parseFloat(formatearSinMiles(document.getElementById("saldoRestante").innerText));
+    const importeCobranza = parseFloat(formatearSinMiles(document.querySelector("#Entrega").value));
     const iconoCasa = document.getElementById('iconoCasa');
 
     if (importeCobranza == 0 || isNaN(importeCobranza)) {
@@ -482,27 +479,19 @@ importeCobranza.addEventListener("keyup", (e) => {
     }
 
     if (importeCobranza === saldoRestante) {
-        document.getElementById("lblFechaCobro").setAttribute("hidden", "hidden");
-        document.getElementById("FechaCobro").setAttribute("hidden", "hidden");
-        document.getElementById("lblValorCuota").setAttribute("hidden", "hidden");
-        document.getElementById("ValorCuota").setAttribute("hidden", "hidden");
-        document.getElementById("checkValorCuota").setAttribute("hidden", "hidden");
-        document.getElementById("TurnoCobro").setAttribute("hidden", "hidden");
-        document.getElementById("lblProximoTurno").setAttribute("hidden", "hidden");
-        document.getElementById("lblFranjaHoraria").setAttribute("hidden", "hidden");
-        document.getElementById("FranjaHorariaCobro").setAttribute("hidden", "hidden");
+        document.getElementById("divNuevaFechaCobro").setAttribute("hidden", "hidden");
+        document.getElementById("divNuevoValorCuota").setAttribute("hidden", "hidden");
+        document.getElementById("divCheckValorCuota").setAttribute("hidden", "hidden");
+        document.getElementById("divProximoTurno").setAttribute("hidden", "hidden");
+        document.getElementById("divFranjaHoraria").setAttribute("hidden", "hidden");
         document.getElementById("ValorCuota").value = 0;
         limpiarAlerta("Debes poner un valor cuota");
     } else {
-        document.getElementById("lblFechaCobro").removeAttribute("hidden");
-        document.getElementById("FechaCobro").removeAttribute("hidden");
-        document.getElementById("lblValorCuota").removeAttribute("hidden");
-        document.getElementById("ValorCuota").removeAttribute("hidden");
-        document.getElementById("checkValorCuota").removeAttribute("hidden");
-        document.getElementById("TurnoCobro").removeAttribute("hidden");
-        document.getElementById("lblProximoTurno").removeAttribute("hidden");
-        document.getElementById("lblFranjaHoraria").removeAttribute("hidden");
-        document.getElementById("FranjaHorariaCobro").removeAttribute("hidden");
+        document.getElementById("divNuevaFechaCobro").removeAttribute("hidden");
+        document.getElementById("divNuevoValorCuota").removeAttribute("hidden");
+        document.getElementById("divCheckValorCuota").removeAttribute("hidden");
+        document.getElementById("divProximoTurno").removeAttribute("hidden");
+        document.getElementById("divFranjaHoraria").removeAttribute("hidden");
     }
 
     calcularRestanteCuota();
@@ -529,35 +518,57 @@ async function hacerCobranza() {
 
         let metodopago = document.getElementById("MetodoPago").value;
 
+
+        let latActual, lngActual;
+        let clienteLat, clienteLng;
+
         let now = new Date().getTime();
 
-        if (now - localStorage.getItem("lastCobranzaTime") >= 6000) {
+        if (now - localStorage.getItem("lastCobranzaTime") >= 6000 ) {
             var url = "/Cobranzas/Cobranza";
 
+            if (metodopago.toUpperCase() === "EFECTIVO" && userSession.IdRol != 4 && userSession.IdRol != 1) {
             if (!navigator.geolocation) {
-                alert("Tu navegador no soporta geolocalización.");
+                errorModal("Tu navegador no soporta geolocalización.");
                 return;
             }
 
-          
-          
-            // 1️⃣ Obtener ubicación actual
-            const posicion = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
+            try {
+                const posicion = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
                 });
-            });
 
+                latActual = posicion.coords.latitude;
+                lngActual = posicion.coords.longitude;
 
-            const latActual = posicion.coords.latitude;
-            const lngActual = posicion.coords.longitude;
+                // seguir tu flujo...
+
+            } catch (geoError) {
+                if (geoError.code === 1) {
+                    // PERMISSION_DENIED
+                    await advertenciaModal("La ubicación es requerida para hacer el cobro. Debes habilitarla y otorgar permisos de acceso al navegador. Si estás en un teléfono, revisa la configuración de permisos de la app o navegador.");
+                    return;
+                } else if (geoError.code === 2) {
+                    await advertenciaModal("No se pudo determinar tu ubicación actual. Intenta nuevamente en un lugar con mejor señal GPS.");
+                    return;
+                } else if (geoError.code === 3) {
+                    await advertenciaModal("La solicitud de ubicación ha tardado demasiado. Intenta nuevamente.");
+                    return;
+                } else {
+                    await advertenciaModal("Error desconocido al obtener la ubicación.");
+                    return;
+                }
+                }
+            }
 
             // 2️⃣ Traer ubicación anterior del cliente
             const idCliente = localStorage.getItem("CobranzaCliente");
-            const clienteLat = document.getElementById("latitudCliente").value;
-            const clienteLng = document.getElementById("longitudCliente").value;
+            clienteLat = document.getElementById("latitudCliente").value;
+            clienteLng = document.getElementById("longitudCliente").value;
 
             let seActualizoUbicacion = false;
 
@@ -566,7 +577,7 @@ async function hacerCobranza() {
             if (validarCobranza()) {
 
                 // 3️⃣ Si tiene ubicación anterior, calcular distancia
-                if (metodopago.toUpperCase() === "EFECTIVO") {
+                if (metodopago.toUpperCase() === "EFECTIVO" && userSession.IdRol != 4 && userSession.IdRol != 1) {
                     if (clienteLat && clienteLng) {
                         const distancia = calcularDistanciaMetros(clienteLat, clienteLng, latActual, lngActual);
 
@@ -717,9 +728,9 @@ function validarCobranza() {
     limpiarAlertas();
     let valido = true;
 
-    const saldoRestante = parseFloat(document.getElementById("saldoRestante").innerText) || 0;
-    const importe = document.getElementById("Entrega").value;
-    const cuota = parseFloat(document.getElementById("ValorCuota").value) || 0;
+    const saldoRestante = parseFloat(formatearSinMiles(document.getElementById("saldoRestante").innerText)) || 0;
+    const importe = formatearSinMiles(document.getElementById("Entrega").value);
+    const cuota = formatearSinMiles(document.getElementById("ValorCuota").value) || 0;
     const metodo = document.getElementById("MetodoPago").value.trim();
     const franja = document.getElementById("FranjaHorariaCobro").value.trim();
     const turno = document.getElementById("TurnoCobro").value.trim();
@@ -729,12 +740,13 @@ function validarCobranza() {
     const tipoInteres = document.getElementById("TipoInteres").value.trim();
     const img = document.getElementById("imgProd").value.trim();
 
+
     if ((metodo.toUpperCase() === "TRANSFERENCIA PROPIA" || metodo.toUpperCase() === "TRANSFERENCIA A TERCEROS") && img === "") {
         agregarAlerta("Debes poner una imagen de comprobante");
         valido = false;
     }
 
-    if (importe == "")  {
+    if (importe == "" && importe != 0)  {
         agregarAlerta("Debes poner un importe");
         valido = false;
     }

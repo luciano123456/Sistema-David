@@ -702,14 +702,14 @@
                             <div class="col-6 col-lg-3">
                                 <label for="Entrega" class="form-label text-nowrap small">Importe</label>
                                 <input type="text" id="Entrega" value="0" class="form-control form-control-sm text-dark text-nowrap" />
-                                <div class="form-check mt-2">
+                                <div class="form-check mt-2" id="divCheckValorCuota">
                                     <input type="checkbox" id="checkValorCuota" class="form-check-input" onclick="calcularRestanteCuota()" />
                                     <label class="form-check-label small text-nowrap text-black" for="checkValorCuota">Modificar Cuota</label>
                                 </div>
                             </div>
 
-                            <div class="col-6 col-lg-3">
-                                <label for="ValorCuota" class="form-label text-nowrap small" id="lblValorCuota" hidden>Nuevo Valor de Cuota</label>
+                            <div class="col-6 col-lg-3" id="divNuevoValorCuota">
+                                <label for="ValorCuota" class="form-label text-nowrap small" id="lblValorCuota">Nuevo Valor de Cuota</label>
                                 <input type="text" id="ValorCuota" value="0" class="form-control form-control-sm text-dark text-nowrap" />
                             </div>
 
@@ -746,12 +746,12 @@
                                 </select>
                             </div>
 
-                            <div class="col-6 col-lg-3">
+                            <div class="col-6 col-lg-3" id="divNuevaFechaCobro">
                                 <label for="FechaCobro" class="form-label text-nowrap small" id="lblFechaCobro">Nueva Fecha de Cobro</label>
                                 <input type="date" id="FechaCobro" class="form-control form-control-sm text-dark text-nowrap" />
                             </div>
 
-                            <div class="col-6 col-lg-3">
+                            <div class="col-6 col-lg-3" id="divProximoTurno">
                                 <label for="TurnoCobro" class="form-label text-nowrap small" id="lblProximoTurno">Próximo Turno</label>
                                 <select id="TurnoCobro" class="form-select form-select-sm text-dark text-nowrap" required>
                                     <option value="">Seleccionar</option>
@@ -760,7 +760,7 @@
                                 </select>
                             </div>
 
-                            <div class="col-6 col-lg-3">
+                            <div class="col-6 col-lg-3" id="divFranjaHoraria">
                                 <label for="FranjaHorariaCobro" class="form-label text-nowrap small" id="lblFranjaHoraria">Franja Horaria</label>
                                 <select id="FranjaHorariaCobro" class="form-select form-select-sm text-dark text-nowrap" required>
                                     <option value="">Seleccionar</option>
@@ -1011,6 +1011,6 @@
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
-    <script src="~/JavaScript/Cobranzas.js?v=3.4"></script>
+    <script src="~/JavaScript/Cobranzas.js?v=3.9"></script>
 }
 
