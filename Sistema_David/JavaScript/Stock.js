@@ -77,7 +77,8 @@ async function configurarDataTable() {
             {
                 data: "Id",
                 render: function (data, type, row) {
-                    let botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ", " + row.IdProducto + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
+                    //let botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ", " + row.IdProducto + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
+                    let botones = "";
 
                     botones += "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
                         "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>";
@@ -622,8 +623,8 @@ async function agregarStockUser() {
 
         } else if (result.Status == 3) {
 
-                $('.datos-error').text('La suma de cantidad de este producto, excede el stock.')
-                $('.datos-error').removeClass('d-none');
+            $('.datos-error').text('La suma de cantidad de este producto, excede el stock.')
+            $('.datos-error').removeClass('d-none');
 
         } else {
             $('.datos-error').text('Ha ocurrido un error en los datos.')
@@ -838,7 +839,7 @@ async function enviarWhatssap() {
 }
 
 
-async function exportarPdf() { 
+async function exportarPdf() {
 
     try {
 
