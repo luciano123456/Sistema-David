@@ -183,15 +183,23 @@ namespace Sistema_David.Models
                         return 2;
                     }
 
+
+
                     int idUsuarioSesion = SessionHelper.GetUsuarioSesion().Id;
 
                     // Buscar si ya existe un stock pendiente con el mismo IdProducto y el mismo IdUsuario
                     var stockExistente = db.StocksPendientes
                         .FirstOrDefault(s => s.IdProducto == model.IdProducto && s.IdUsuario == model.IdUsuario && s.Estado == "Pendiente");
 
+                   
+
                     if (stockExistente != null)
                     {
 
+                        if(stockExistente.Tipo == "RESTAR" || stockExistente.Tipo == "ELIMINAR")
+                        {
+                            return 4;
+                        }
                         var suma = stockExistente.Cantidad + model.Cantidad;
 
 
@@ -245,7 +253,7 @@ namespace Sistema_David.Models
                                  )
                     .Count();
 
-                return cantidad;
+                return cantidad;    
             }
         }
 
