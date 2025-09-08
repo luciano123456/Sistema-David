@@ -476,12 +476,7 @@ function obtenerIdListSeleccionado() {
 }
 
 async function agregarStock() {
-    if ($("#IdStock").text() > 0) {
-        modificarStockuser();
-    } else {
         agregarStockUser();
-    }
-
 }
 
 
@@ -625,6 +620,10 @@ async function agregarStockUser() {
 
             $('.datos-error').text('La suma de cantidad de este producto, excede el stock.')
             $('.datos-error').removeClass('d-none');
+
+        } else if (result.Status == 4) {
+
+            alert("Ya tienes un stock pendiente de este producto, antes de eliminar, el administrador debe aceptar o rechazar el que tenes en curso.")
 
         } else {
             $('.datos-error').text('Ha ocurrido un error en los datos.')
