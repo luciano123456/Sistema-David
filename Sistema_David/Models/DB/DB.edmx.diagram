@@ -50,6 +50,17 @@
         <AssociationConnector Association="Sistema_DavidModel.FK_InformacionVentas_Ventas1" />
         <EntityTypeShape EntityType="Sistema_DavidModel.ComprobantesImagenes" Width="1.5" PointX="0.75" PointY="14.75" />
         <AssociationConnector Association="Sistema_DavidModel.FK_ComprobantesImagenes_CuentasBancarias" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_Reglas" Width="1.5" PointX="15.625" PointY="11" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_SueldosReglas_TipoNegocio" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos" Width="1.5" PointX="5.25" PointY="19.5" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_Detalle" Width="1.5" PointX="15.625" PointY="15.25" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_Pagos" Width="1.5" PointX="5.25" PointY="15.75" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Sueldos" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Usuarios" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Usuarios1" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Detalle_TipoNegocio" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Pagos_Usuarios" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_PagosParciales" Width="1.5" PointX="7.375" PointY="16.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

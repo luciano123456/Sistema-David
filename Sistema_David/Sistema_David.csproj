@@ -373,6 +373,7 @@
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\ProductosController.cs" />
     <Compile Include="Controllers\LimiteController.cs" />
+    <Compile Include="Controllers\PagosController.cs" />
     <Compile Include="Controllers\StockPendienteController.cs" />
     <Compile Include="Controllers\StockController.cs" />
     <Compile Include="Controllers\RendimientoController.cs" />
@@ -399,6 +400,21 @@
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DB\RecorridosCobranzas.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Sueldos.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Sueldos_Detalle.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Sueldos_Pagos.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Sueldos_PagosParciales.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Sueldos_Reglas.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DB\sysdiagrams.cs">
@@ -467,6 +483,7 @@
     </Compile>
     <Compile Include="Models\LoginModel.cs" />
     <Compile Include="Models\Manager\VentasManager.cs" />
+    <Compile Include="Models\Modelo\VMTiposNegocio.cs" />
     <Compile Include="Models\Modelo\VMClienteNuevaDireccion.cs" />
     <Compile Include="Models\Modelo\VMInformacionClienteAsignado.cs" />
     <Compile Include="Models\Modelo\VMComprobantesImagenes.cs" />
@@ -476,6 +493,7 @@
     <Compile Include="Models\Modelo\VMRendimientoGeneral.cs" />
     <Compile Include="Models\Modelo\VMLimite.cs" />
     <Compile Include="Models\Modelo\VMProductoVenta.cs" />
+    <Compile Include="Models\Modelo\VMPagoSueldos.cs" />
     <Compile Include="Models\Modelo\VMStockPendiente.cs" />
     <Compile Include="Models\Modelo\VMCuentaBancaria.cs" />
     <Compile Include="Models\Modelo\VMStockUsuario.cs" />
@@ -498,6 +516,7 @@
     <Compile Include="Models\CobranzasModel.cs" />
     <Compile Include="Models\RendimientoModel.cs" />
     <Compile Include="Models\PedidosModel.cs" />
+    <Compile Include="Models\PayrollModel.cs" />
     <Compile Include="Models\VentasModel.cs" />
     <Compile Include="Models\ProductosModel.cs" />
     <Compile Include="Models\UsuariosModel.cs" />
@@ -533,6 +552,8 @@
     <Content Include="Content\font-awesome.css" />
     <Content Include="Content\font-awesome.min.css" />
     <Content Include="Estilos\ClientesEditar.css" />
+    <Content Include="Estilos\PagosNuevoModif.css" />
+    <Content Include="Estilos\Pagos.css" />
     <Content Include="Estilos\Recorrido.css" />
     <Content Include="Estilos\StockGeneral.css" />
     <Content Include="Estilos\StockPendiente.css" />
@@ -561,6 +582,7 @@
     <Content Include="JavaScript\ClientesEditar.js" />
     <Content Include="JavaScript\InformacionCliente.js" />
     <Content Include="JavaScript\NavBarLogin.js" />
+    <Content Include="JavaScript\PagosNuevoModif.js" />
     <Content Include="JavaScript\RecorridoCobranzas.js" />
     <Content Include="JavaScript\Recorrido.js" />
     <Content Include="JavaScript\Cobranzas.js" />
@@ -594,6 +616,7 @@
     <Content Include="JavaScript\Login.js" />
     <Content Include="JavaScript\Productos.js" />
     <Content Include="JavaScript\Rendimiento.js" />
+    <Content Include="JavaScript\Pagos.js" />
     <Content Include="JavaScript\Usuarios.js" />
     <Content Include="JavaScript\Utils\Utils.js" />
     <Content Include="JavaScript\Pedidos.js" />
@@ -677,6 +700,8 @@
     <Content Include="Views\Clientes\Index.cshtml" />
     <Content Include="Views\Cobranzas\Index.cshtml" />
     <Content Include="Views\Login\Index.cshtml" />
+    <Content Include="Views\Pagos\Index.cshtml" />
+    <Content Include="Views\Pagos\NuevoModif.cshtml" />
     <Content Include="Views\Productos\Index.cshtml" />
     <Content Include="Views\Rendimiento\Index.cshtml" />
     <Content Include="Views\Shared\Partials\NavBarLogin.cshtml" />

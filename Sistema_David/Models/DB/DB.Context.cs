@@ -46,5 +46,10 @@ namespace Sistema_David.Models.DB
         public virtual DbSet<TipoNegocio> TipoNegocio { get; set; }
         public virtual DbSet<CuentasBancarias> CuentasBancarias { get; set; }
         public virtual DbSet<ComprobantesImagenes> ComprobantesImagenes { get; set; }
+        public virtual DbSet<Sueldos_Reglas> Sueldos_Reglas { get; set; }
+        public virtual DbSet<Sueldos> Sueldos { get; set; }
+        public virtual DbSet<Sueldos_Detalle> Sueldos_Detalle { get; set; }
+        public virtual DbSet<Sueldos_Pagos> Sueldos_Pagos { get; set; }
+        public virtual DbSet<Sueldos_PagosParciales> Sueldos_PagosParciales { get; set; }
     }
 }

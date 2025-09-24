@@ -24,6 +24,9 @@ namespace Sistema_David.Models.DB
             this.Ventas = new HashSet<Ventas>();
             this.Clientes = new HashSet<Clientes>();
             this.Clientes1 = new HashSet<Clientes>();
+            this.Sueldos = new HashSet<Sueldos>();
+            this.Sueldos1 = new HashSet<Sueldos>();
+            this.Sueldos_Pagos = new HashSet<Sueldos_Pagos>();
         }
     
         public int Id { get; set; }
@@ -60,5 +63,11 @@ namespace Sistema_David.Models.DB
         public virtual ICollection<Clientes> Clientes { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Clientes> Clientes1 { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Sueldos> Sueldos { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Sueldos> Sueldos1 { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Sueldos_Pagos> Sueldos_Pagos { get; set; }
     }
 }

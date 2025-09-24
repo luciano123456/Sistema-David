@@ -14,8 +14,20 @@ namespace Sistema_David.Models.DB
     
     public partial class TipoNegocio
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public TipoNegocio()
+        {
+            this.Sueldos_Reglas = new HashSet<Sueldos_Reglas>();
+            this.Sueldos_Detalle = new HashSet<Sueldos_Detalle>();
+        }
+    
         public int Id { get; set; }
         public string Nombre { get; set; }
         public Nullable<int> DiasVencimiento { get; set; }
+    
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Sueldos_Reglas> Sueldos_Reglas { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Sueldos_Detalle> Sueldos_Detalle { get; set; }
     }
 }
