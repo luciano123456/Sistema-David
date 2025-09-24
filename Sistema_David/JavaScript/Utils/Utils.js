@@ -37,7 +37,14 @@ async function MakeAjaxFormData(options) {
 
 
 
-
+function formatearFechaParaInput(fecha) {
+    const m = moment(fecha, [moment.ISO_8601, 'YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD']);
+    return m.isValid() ? m.format('YYYY-MM-DD') : '';
+}
+function formatearFechaParaVista(fecha) {
+    const m = moment(fecha, [moment.ISO_8601, 'YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD']);
+    return m.isValid() ? m.format('DD/MM/YYYY') : '';
+}
 
 
 function formatNumber(number) {
@@ -133,4 +140,43 @@ function confirmarModal(mensaje) {
 
         nuevoModal.show();
     });
+}
+
+
+function parseSrvDate(val) {
+    if (!val) return null;
+    if (val instanceof Date) return val;
+
+    if (typeof val === 'string') {
+        // /Date(1757390400000)/  ó  /Date(-62135596800000)/
+        const m = /\/Date\((\-?\d+)\)\//.exec(val);
+        if (m) {
+            const d = new Date(parseInt(m[1], 10));
+            return isNaN(d.getTime()) ? null : d;
+        }
+        const d2 = new Date(val);            // intenta ISO u otros
+        return isNaN(d2.getTime()) ? null : d2;
+    }
+
+    if (typeof val === 'number') {
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+}
+
+function fmtFecha(val) {
+    const d = parseSrvDate(val);
+    if (!d) return '-';
+    return (window.moment
+        ? moment(d).format('DD/MM/YYYY')
+        : d.toLocaleDateString('es-AR'));
+}
+
+function fmtFechaHora(val) {
+    const d = parseSrvDate(val);
+    if (!d) return '-';
+    return (window.moment
+        ? moment(d).format('DD/MM/YYYY HH:mm')
+        : d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
 }

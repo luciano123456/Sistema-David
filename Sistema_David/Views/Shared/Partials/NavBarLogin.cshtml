@@ -43,6 +43,13 @@
                             Usuarios <i id="notificationStock" class="fa fa-check text-danger" style="display:none;"></i>
                         </a>
                     </li>
+                    <li class="nav-item" id="seccionSueldos" hidden>
+                        <a class="nav-link" id="btnSueldos"
+                           onclick="document.location.href='@Url.Content("~/Pagos/Index/")'">
+                            Pagos de Sueldos
+                        </a>
+                    </li>
+
 
                     <li class="nav-item" id="seccionRendimiento" hidden>
                         <a class="nav-link" id="btnRendimiento" onclick="document.location.href='@Url.Content("~/Rendimiento/Index/")'">Rendimiento</a>
@@ -117,5 +124,5 @@
     <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
 
-    <script src="~/JavaScript/NavBarLogin.js?v=1.5"></script>
+    <script src="~/JavaScript/NavBarLogin.js?v=1.6"></script>
 </body>

@@ -197,25 +197,28 @@ async function cerrarSession() {
 
 function verificarRoles(idRol) {
 
-    if (idRol == 1) { //ADMINISTRADOR
+    if (idRol == 1) { // ADMINISTRADOR
         document.getElementById("seccionUsuarios").removeAttribute("hidden");
         document.getElementById("seccionProductos").removeAttribute("hidden");
         document.getElementById("seccionClientes").removeAttribute("hidden");
         document.getElementById("seccionCobranzas").removeAttribute("hidden");
         document.getElementById("seccionRendimiento").removeAttribute("hidden");
-        //document.getElementById("seccionPedidos").removeAttribute("hidden");
-    } else if (idRol == 3) { //COBRADOR
+        document.getElementById("seccionSueldos").removeAttribute("hidden");
+
+    } else if (idRol == 3) { // COBRADOR
         document.getElementById("seccionCobranzas").removeAttribute("hidden");
         document.getElementById("seccionClientesCero").removeAttribute("hidden");
         document.getElementById("seccionStock").removeAttribute("hidden");
-    } else if (idRol == 4) { //COMPROBANTES
+
+    } else if (idRol == 4) { // COMPROBANTES
         document.getElementById("seccionRendimiento").removeAttribute("hidden");
         document.getElementById("seccionClientesCero").removeAttribute("hidden");
         document.getElementById("seccionProductos").removeAttribute("hidden");
         document.getElementById("seccionCobranzas").removeAttribute("hidden");
-    } else {
+
+    } else { // VENDEDOR u otros
         document.getElementById("seccionStock").removeAttribute("hidden");
         document.getElementById("seccionClientesCero").removeAttribute("hidden");
+        // NO mostramos Sueldos
     }
-
 }

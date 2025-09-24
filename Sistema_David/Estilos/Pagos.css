@@ -1,0 +1,273 @@
+﻿/* Estilos/pagos.css */
+/* Contraste alegre sobre fondo oscuro global */
+
+.cardTablePersonalizado {
+    background: #121418;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    overflow: hidden;
+}
+
+    .cardTablePersonalizado .card-header {
+        background: linear-gradient(90deg, #1E5799, #7DB9E8);
+        color: #fff;
+        font-weight: 600;
+        border-bottom: none;
+    }
+
+.divFiltros .lblcliente {
+    color: #cfd8dc;
+    margin-right: 8px;
+}
+
+.input-nuevo {
+    background: #1b1f26;
+    border: 1px solid #2a2f38;
+    color: #e3f2fd;
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-right: 10px;
+}
+
+    .input-nuevo:focus {
+        outline: none;
+        border-color: #7db9e8;
+        box-shadow: 0 0 0 2px rgba(125,185,232,0.2);
+    }
+
+.btnaccion,
+.btnnuevo,
+.btn-uniformv {
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.table.dataTable tbody tr {
+    background: #161a20;
+    color: #e0e6ed;
+}
+
+.table.dataTable thead th {
+    background: #0f1217;
+    color: #9cc0ff;
+}
+
+.table.dataTable tbody tr:hover {
+    background: #1b2028;
+}
+
+.dropdown-menu {
+    background: #1b1f26;
+    border: 1px solid #2a2f38;
+}
+
+.dropdown-item {
+    color: #dfe7ef;
+}
+
+    .dropdown-item:hover {
+        background: #2a3442;
+        color: #fff;
+    }
+
+
+
+/* PagosParciales – ajustes de layout */
+#modalPagosParciales .table td,
+#modalPagosParciales .table th {
+    vertical-align: middle;
+}
+
+/* Disposición más cómoda en pantallas pequeñas */
+@media (max-width: 576px) {
+    #modalPagosParciales .modal-body .form-label {
+        font-size: .85rem;
+    }
+
+    #modalPagosParciales .table {
+        font-size: .92rem;
+    }
+
+    #modalPagosParciales .card .form-control,
+    #modalPagosParciales .card .form-select {
+        font-size: .9rem;
+    }
+
+    #modalPagosParciales .card .row > [class^="col-"] {
+        margin-bottom: .25rem;
+    }
+}
+
+/* Mediano: que no se amontone */
+@media (min-width: 577px) and (max-width: 992px) {
+    #modalPagosParciales .table {
+        font-size: .95rem;
+    }
+}
+
+
+/* ===== Modal Pagos Parciales – dark pulido ===== */
+.pp-modal {
+    background: #121418;
+    color: #e3f2fd;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.pp-modal-header {
+    background: linear-gradient(90deg, #1E5799, #7DB9E8);
+    color: #fff;
+    border: 0;
+}
+
+.pp-modal-footer {
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
+/* Controles oscuros acordes */
+.pp-control {
+    background: #1b1f26 !important;
+    border: 1px solid #2a2f38 !important;
+    color: #e3f2fd !important;
+}
+
+    .pp-control::placeholder {
+        color: #8aa2c0;
+    }
+
+    .pp-control:focus {
+        outline: none;
+        border-color: #7db9e8 !important;
+        box-shadow: 0 0 0 2px rgba(125,185,232,.2) !important;
+    }
+
+.pp-addon {
+    background: #1b2330;
+    border: 1px solid #2a2f38;
+    color: #9cc0ff;
+}
+
+/* Bloque alta rápida */
+.pp-add {
+    background: #161a20;
+    border: 1px solid #2a2f38;
+    border-radius: 12px;
+}
+
+.pp-add-title {
+    font-weight: 600;
+    color: #cfd8dc;
+}
+
+/* Tabla dentro del modal coherente con tu tema */
+#modalPagosParciales .table thead th {
+    background: #0f1217;
+    color: #9cc0ff;
+    border-color: #2a2f38;
+}
+
+#modalPagosParciales .table tbody tr {
+    background: #161a20;
+    color: #e0e6ed;
+}
+
+    #modalPagosParciales .table tbody tr:hover {
+        background: #1b2028;
+    }
+
+#modalPagosParciales .table tfoot th {
+    background: #0f1217;
+    color: #e3f2fd;
+    border-top: 1px solid #2a2f38;
+}
+
+/* Compactación en móviles */
+@media (max-width: 576px) {
+    #modalPagosParciales .modal-body .form-label {
+        font-size: .85rem;
+    }
+
+    #modalPagosParciales .table {
+        font-size: .92rem;
+    }
+
+    .pp-control {
+        font-size: .92rem !important;
+    }
+}
+
+
+
+/* ================= Unificar alto en "Nuevo pago parcial" ================= */
+#modalPagosParciales {
+  --pp-field-height: 38px;           /* cambiá este valor si querés más/menos alto */
+}
+
+/* Campos del bloque de alta rápida */
+#modalPagosParciales .pp-add .form-control,
+#modalPagosParciales .pp-add .form-select,
+#modalPagosParciales .pp-add .input-group-text {
+  height: var(--pp-field-height) !important;
+  min-height: var(--pp-field-height) !important;
+  line-height: calc(var(--pp-field-height) - 0.75rem) !important; /* texto centrado */
+  padding-top: .375rem !important;
+  padding-bottom: .375rem !important;
+}
+
+/* Input-group: que el símbolo $ quede centrado igual que el input */
+#modalPagosParciales .pp-add .input-group-text {
+  display: flex;
+  align-items: center;
+}
+
+/* Date inputs suelen venir más “bajos” en algunos navegadores */
+#modalPagosParciales .pp-add input[type="date"].form-control {
+  padding-top: .375rem !important;
+  padding-bottom: .375rem !important;
+}
+
+/* Cuando usás variantes -sm en el HTML, forzamos el mismo alto */
+#modalPagosParciales .pp-add .form-control.form-control-sm,
+#modalPagosParciales .pp-add .form-select.form-select-sm,
+#modalPagosParciales .pp-add .input-group.input-group-sm .form-control,
+#modalPagosParciales .pp-add .input-group.input-group-sm .input-group-text {
+  height: var(--pp-field-height) !important;
+  min-height: var(--pp-field-height) !important;
+  line-height: calc(var(--pp-field-height) - 0.75rem) !important;
+}
+
+/* (Opcional) Que todos los campos se vean consistentes en móviles */
+@media (max-width: 576px) {
+  #modalPagosParciales { --pp-field-height: 42px; }
+}
+
+
+/* ===== Tipografía uniforme en "Nuevo pago parcial" ===== */
+#modalPagosParciales .pp-add {
+    --pp-font-size: 1rem; /* mismo tamaño que form-select de Bootstrap */
+    --pp-font-weight: 400;
+    --pp-line-height: 1.5;
+}
+
+    #modalPagosParciales .pp-add .form-control,
+    #modalPagosParciales .pp-add .form-select,
+    #modalPagosParciales .pp-add .input-group-text {
+        font-size: var(--pp-font-size) !important;
+        font-weight: var(--pp-font-weight) !important;
+        line-height: var(--pp-line-height) !important;
+    }
+
+        /* Placeholders con el mismo tamaño (importe, detalle, etc.) */
+        #modalPagosParciales .pp-add .form-control::placeholder {
+            font-size: var(--pp-font-size) !important;
+            line-height: var(--pp-line-height) !important;
+            opacity: .65; /* similar a Bootstrap */
+        }
+
+    /* El símbolo $ del input-group a la misma tipografía */
+    #modalPagosParciales .pp-add .input-group-text {
+        display: flex;
+        align-items: center;
+    }

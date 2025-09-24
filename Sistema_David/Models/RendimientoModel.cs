@@ -165,27 +165,34 @@ namespace Sistema_David.Models
 
         public static List<VMRendimiento> MostrarRendimiento(int idVendedor, int ventas, int cobranzas, DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria, int ComprobantesEnviados)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+
+            try
             {
+                using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+                {
 
 
-                var idVendedorParam = new SqlParameter("@idVendedor", SqlDbType.Int) { Value = idVendedor };
-                var ventasParam = new SqlParameter("@ventas", SqlDbType.Int) { Value = ventas };
-                var cobranzasParam = new SqlParameter("@cobranzas", SqlDbType.Int) { Value = cobranzas };
-                var fechadesdeParam = new SqlParameter("@fechadesde", SqlDbType.DateTime) { Value = fechadesde };
-                var fechahastaParam = new SqlParameter("@fechahasta", SqlDbType.DateTime) { Value = fechahasta };
-                var tiponegocioParam = new SqlParameter("@Idtiponegocio", SqlDbType.Int) { Value = tiponegocio };
-                
-                var metodoPagoParam = new SqlParameter("@metodoPago", SqlDbType.VarChar, 50) { Value = metodoPago };
-                var cuentabancariaParam = new SqlParameter("@IdCuentaBancaria", SqlDbType.Int) { Value = IdCuentaBancaria };
-                var comprobantesEnviadosParam = new SqlParameter("@ComprobantesEnviados", SqlDbType.Int) { Value = ComprobantesEnviados };
+                    var idVendedorParam = new SqlParameter("@idVendedor", SqlDbType.Int) { Value = idVendedor };
+                    var ventasParam = new SqlParameter("@ventas", SqlDbType.Int) { Value = ventas };
+                    var cobranzasParam = new SqlParameter("@cobranzas", SqlDbType.Int) { Value = cobranzas };
+                    var fechadesdeParam = new SqlParameter("@fechadesde", SqlDbType.DateTime) { Value = fechadesde };
+                    var fechahastaParam = new SqlParameter("@fechahasta", SqlDbType.DateTime) { Value = fechahasta };
+                    var tiponegocioParam = new SqlParameter("@Idtiponegocio", SqlDbType.Int) { Value = tiponegocio };
 
-                var resultList = db.Database.SqlQuery<VMRendimiento>(
-                    "EXEC sp_MostrarRendimiento @idVendedor, @ventas, @cobranzas, @fechadesde, @fechahasta, @Idtiponegocio, @metodoPago, @IdCuentaBancaria, @ComprobantesEnviados",
-                    idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam, metodoPagoParam, cuentabancariaParam, comprobantesEnviadosParam
-                ).ToList();
+                    var metodoPagoParam = new SqlParameter("@metodoPago", SqlDbType.VarChar, 50) { Value = metodoPago };
+                    var cuentabancariaParam = new SqlParameter("@IdCuentaBancaria", SqlDbType.Int) { Value = IdCuentaBancaria };
+                    var comprobantesEnviadosParam = new SqlParameter("@ComprobantesEnviados", SqlDbType.Int) { Value = ComprobantesEnviados };
 
-                return resultList;
+                    var resultList = db.Database.SqlQuery<VMRendimiento>(
+                        "EXEC sp_MostrarRendimiento @idVendedor, @ventas, @cobranzas, @fechadesde, @fechahasta, @Idtiponegocio, @metodoPago, @IdCuentaBancaria, @ComprobantesEnviados",
+                        idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam, metodoPagoParam, cuentabancariaParam, comprobantesEnviadosParam
+                    ).ToList();
+
+                    return resultList;
+                }
+            } catch (Exception ex)
+            {
+                return null;
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Sistema_David.Helpers;
 using Sistema_David.Models;
+using Sistema_David.Models.Modelo;
 using Sistema_David.Models.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -38,14 +39,39 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListarTipoNegocio()
         {
-            var result = UsuariosModel.ListaTipoNegocio();
-            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+            try
+            {
+                // Esto asume que UsuariosModel.ListaTipoNegocio() retorna entidades con Id y Nombre.
+                var tipos = UsuariosModel.ListaTipoNegocio()
+                    .Select(t => new VMTiposNegocio
+                    {
+                        Id = t.Id,
+                        Nombre = t.Nombre
+                    })
+                    .OrderBy(t => t.Nombre) // opcional: ordenado alfabético
+                    .ToList();
+
+                return Json(new { data = tipos }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                // Nunca devuelvas null: la UI espera { data: [] }
+                return Json(new { data = new List<VMTiposNegocio>(), error = "No se pudo obtener tipos de negocio." },
+                            JsonRequestBehavior.AllowGet);
+            }
         }
 
         public ActionResult BuscarTipoNegocio(int id)
         {
             var result = UsuariosModel.BuscarTipoNegocio(id);
-            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+
+            VMTiposNegocio tipoNegocio = new VMTiposNegocio();
+
+            tipoNegocio.Id = result.Id;
+            tipoNegocio.Nombre = result.Nombre;
+            tipoNegocio.DiasVencimiento = (int)result.DiasVencimiento;
+
+            return Json(new { data = tipoNegocio }, JsonRequestBehavior.AllowGet);
         }
 
         public ActionResult CambiarDiasVencimientoNegocio(int id, int valor)
@@ -146,7 +172,16 @@ namespace Sistema_David.Controllers
                 var usuario = UsuariosModel.BuscarUsuario(id);
                 var roles = UsuariosModel.ListaRoles();
                 var estados = UsuariosModel.ListaEstados();
-                var tiposnegocios = UsuariosModel.ListaTipoNegocio();
+                // Esto asume que UsuariosModel.ListaTipoNegocio() retorna entidades con Id y Nombre.
+                var tiposnegocios = UsuariosModel.ListaTipoNegocio()
+                    .Select(t => new VMTiposNegocio
+                    {
+                        Id = t.Id,
+                        Nombre = t.Nombre
+                    })
+                    .OrderBy(t => t.Nombre) // opcional: ordenado alfabético
+                    .ToList();
+
 
                 var result = new Dictionary<string, object>();
                 result.Add("Usuario", usuario);
