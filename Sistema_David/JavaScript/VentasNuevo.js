@@ -528,31 +528,26 @@ const editarProducto = async id => {
 
 }
 
-const eliminarProducto = async id => {
+const eliminarProducto = id => {
+    const table = $('#grdProductosVenta').DataTable();
+    const idNum = parseInt(id, 10);
 
-    let actualizo = false;
-    let stock = true;
-    var table = $('#grdProductosVenta').DataTable();
-
-    table.rows().eq(0).each(function (index) {
-        var row = table.row(index);
-
-
-        let producto = row.data();
-
-        if (producto.IdProducto == id) {
-
-            table.rows(index).remove().draw();
-
-            actualizarPrecio();
-            
-
-
-        }
-
+    // Buscar índice de la fila a eliminar
+    const idx = table.rows().indexes().toArray().find(i => {
+        const rowData = table.row(i).data();
+        return rowData && parseInt(rowData.IdProducto, 10) === idNum;
     });
 
-}
+    if (idx !== undefined) {
+        table.row(idx).remove().draw(false);
+    }
+
+    // Quitar del array 'productos'
+    const i = productos.findIndex(p => parseInt(p.IdProducto, 10) === idNum);
+    if (i !== -1) productos.splice(i, 1);
+
+    actualizarPrecio();
+};
 
 function actualizarPrecio() {
 
@@ -931,7 +926,7 @@ function abrirmodalTelefono() {
 
     document.getElementById("mTelefono").value = numeroTelefono;
     document.getElementById("btnRegistrarModificar").textContent = "Modificar";
-    document.getElementById("clienteModalLabel").textContent = "Modificar nuevo cliente";
+  
 
 };
 
