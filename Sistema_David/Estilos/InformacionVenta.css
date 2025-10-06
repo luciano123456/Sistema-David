@@ -1,0 +1,890 @@
+﻿/* ========= InformacionVenta.css ========= */
+:root {
+    --bg-1: #0b1221;
+    --bg-2: #0f172a;
+    --bg-3: #121d36;
+    --stroke: rgba(255,255,255,.08);
+    --muted: #9cb4d8;
+    --ok: #2bd19b;
+    --warn: #ffb657;
+    --accent: #6ca2ff;
+}
+
+/* Tarjetas y botones base (consistente con tu tema) */
+.pay-nm .card.glass {
+    border: 1px solid var(--stroke);
+    background: linear-gradient(180deg,#101a33,#0b1327);
+    border-radius: 14px
+}
+
+.pay-nm .card-header.sticky {
+    background: linear-gradient(180deg,#142349,#0e1933);
+    border-bottom: 1px solid var(--stroke);
+    font-weight: 700
+}
+
+.btn-ghost {
+    background: #0e1a33;
+    border: 1px solid var(--stroke);
+    color: #cfe3ff
+}
+
+.btn-slate {
+    background: #0d1730;
+    border: 1px solid var(--stroke);
+    color: #cfe3ff
+}
+
+.btn-success-soft {
+    background: #0d2a1c;
+    border: 1px solid rgba(43,209,155,.25);
+    color: #bdf3de
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid var(--stroke);
+    background: #0d1830;
+    color: #cfe3ff
+}
+
+    .btn-icon:hover {
+        filter: brightness(1.1)
+    }
+
+.info-box {
+    border: 1px solid var(--stroke);
+    background: #0c152a;
+    border-radius: 12px;
+    padding: .8rem 1rem
+}
+
+    .info-box .info-label {
+        color: var(--muted);
+        font-size: .85rem
+    }
+
+    .info-box .info-value {
+        font-weight: 800;
+        font-size: 1.2rem
+    }
+
+/* ===== Lista de ventas ===== */
+.venta-item {
+    border: 1px solid var(--stroke);
+    background: linear-gradient(180deg,#112043,#0b1327);
+    border-radius: 12px;
+    overflow: hidden
+}
+
+.venta-head {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem .75rem
+}
+
+    .venta-head .title-wrap {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        min-width: 0
+    }
+
+    .venta-head .venta-title {
+        font-weight: 800;
+        color: #d7e6ff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+    .venta-head .venta-sub {
+        color: var(--muted);
+        font-size: .88rem
+    }
+
+    .venta-head .spacer {
+        flex: 1
+    }
+
+    .venta-head .restante-pill {
+        background: #0e1a33;
+        border: 1px solid var(--stroke);
+        padding: .2rem .5rem;
+        border-radius: 999px;
+        color: #eaf3ff;
+        font-weight: 700
+    }
+
+.venta-toggle {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid var(--stroke);
+    display: inline-grid;
+    place-items: center;
+    background: #0d1830;
+    color: #fff
+}
+
+.venta-body {
+    display: none;
+    border-top: 1px dashed var(--stroke);
+    background: linear-gradient(180deg,#0e1933,#0b1221)
+}
+
+.venta-item.open .venta-body {
+    display: block
+}
+
+.venta-item.open .venta-toggle i {
+    transform: rotate(180deg)
+}
+
+/* ===== Productos ===== */
+.product-list {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    gap: .6rem;
+    align-items: center
+}
+
+.product-item {
+    padding: .5rem;
+    border-bottom: 1px dashed var(--stroke)
+}
+
+.product-img {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--stroke);
+    background: #0a142a
+}
+
+.product-name {
+    color: #eaf2ff;
+    font-weight: 700
+}
+
+.product-meta {
+    color: var(--muted);
+    font-size: .85rem
+}
+
+.product-total {
+    font-weight: 800
+}
+
+/* ===== Tabla mini ===== */
+.table-mini {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0
+}
+
+    .table-mini th, .table-mini td {
+        padding: .45rem .6rem;
+        border-bottom: 1px dashed var(--stroke);
+        font-size: .92rem
+    }
+
+    .table-mini th {
+        color: #cfe3ff;
+        font-weight: 700;
+        background: #0d1730
+    }
+
+    .table-mini td {
+        color: #eaf2ff
+    }
+
+/* ===== Chips de fecha por tipo (solo columna Fecha) ===== */
+.chip-date {
+    display: inline-block;
+    padding: .18rem .5rem;
+    border-radius: 8px;
+    font-weight: 800;
+    color: #fff
+}
+
+.chip-cobro {
+    background: #1e7a46
+}
+/* verde */
+.chip-interes {
+    background: #b84b5e
+}
+/* rosado */
+.chip-venta {
+    background: #2b6cb0
+}
+/* azul */
+.chip-obs {
+    background: #5a6472
+}
+/* gris */
+
+/* ===== Skeleton ===== */
+.skel {
+    position: relative;
+    overflow: hidden;
+    background: #0f1726;
+    border-radius: 8px;
+    min-height: 48px
+}
+
+    .skel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
+        animation: shimmer 1.2s infinite
+    }
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%)
+    }
+
+    100% {
+        transform: translateX(100%)
+    }
+}
+
+/* ===== Overlay export ===== */
+.export-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(9,14,25,.68);
+    backdrop-filter: blur(2px);
+    display: none;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center
+}
+
+.export-box {
+    border: 1px solid var(--stroke);
+    background: #0f172a;
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    min-width: 260px;
+    text-align: center;
+    color: #d7e6ff
+}
+
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(255,255,255,.25);
+    border-top-color: #6ca2ff;
+    border-radius: 50%;
+    margin: 0 auto .65rem;
+    animation: spin .8s linear infinite
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 600px) {
+    .venta-head {
+        padding: .7rem .6rem
+    }
+
+        .venta-head .venta-title {
+            font-size: 1rem
+        }
+
+        .venta-head .venta-sub {
+            font-size: .78rem
+        }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px
+    }
+
+    .product-list {
+        grid-template-columns: 52px 1fr auto
+    }
+}
+
+
+tbody tr:nth-child(odd) {
+    background-color: transparent !important;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #097CF7;
+}
+
+/* =========================================================
+   Cobranza (modal) — Estilos integrados con InformacionVenta
+   ========================================================= */
+
+/* Paleta local para el modal (no pisa el resto de la app) */
+#cobranzaModal {
+    --cobro-accent: #73c3b2; /* teal principal */
+    --cobro-accent-2: #3fbfa3; /* teal más profundo */
+    --cobro-bg: rgba(255,255,255,0.06);
+    --cobro-border: rgba(255,255,255,0.14);
+    --cobro-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    --cobro-text: #e8f2ef;
+    --cobro-muted: #a9b6c1;
+    --cobro-danger: #ef476f;
+    --cobro-warning: #f7b267;
+    --cobro-dark: #0b1220;
+}
+
+    /* Tamaño y “glass look” */
+    #cobranzaModal .modal-dialog.modal-cobranza {
+        max-width: 860px;
+    }
+
+    #cobranzaModal .modal-content {
+        background: radial-gradient(1200px 400px at 100% -200px, rgba(115,195,178,0.12), transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+        border: 1px solid var(--cobro-border);
+        border-radius: 16px;
+        box-shadow: var(--cobro-shadow);
+        backdrop-filter: blur(10px);
+        color: var(--cobro-text);
+    }
+
+    /* Encabezado con gradiente */
+    #cobranzaModal .modal-header.colorEncabezado {
+        background: linear-gradient(90deg, var(--cobro-accent), var(--cobro-accent-2) 65%, #2aa18c);
+        border-bottom: none;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
+    }
+
+    #cobranzaModal .modal-title {
+        letter-spacing: .3px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    #cobranzaModal .btn-close {
+        filter: invert(1) brightness(2);
+        opacity: .85;
+    }
+
+        #cobranzaModal .btn-close:hover {
+            opacity: 1;
+        }
+
+    /* Cuerpo del modal */
+    #cobranzaModal .modal-body {
+        padding: 1.25rem 1.25rem 0.75rem;
+    }
+
+    #cobranzaModal .form-label {
+        color: var(--cobro-muted);
+        font-weight: 600;
+        font-size: .85rem;
+    }
+
+    /* Inputs/Selects “soft” */
+    #cobranzaModal .form-control,
+    #cobranzaModal .form-select {
+        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(0,0,0,0.08);
+        color: #0e1a1a;
+        box-shadow: 0 0 0 rgba(0,0,0,0);
+        transition: box-shadow .15s ease, border-color .15s ease, transform .03s ease;
+    }
+
+        #cobranzaModal .form-control:focus,
+        #cobranzaModal .form-select:focus {
+            border-color: var(--cobro-accent-2);
+            box-shadow: 0 0 0 3px rgba(63,191,163,.18);
+        }
+
+    /* Info de cuota destacada */
+    #cobranzaModal #ValordelaCuota {
+        background: linear-gradient(135deg, #f6fffb, #e9fbf6);
+        border: 1px solid rgba(63,191,163,.25);
+        color: #145247;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    }
+
+    /* Iconos casita / estado */
+    #cobranzaModal #iconoCasa .fa-home {
+        font-size: 28px;
+        cursor: pointer;
+        transition: transform .12s ease, filter .12s ease, color .12s ease;
+    }
+
+        #cobranzaModal #iconoCasa .fa-home:hover {
+            transform: translateY(-1px) scale(1.05);
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,.15));
+        }
+
+    #cobranzaModal #iconoCasa .text-danger {
+        text-shadow: 0 0 14px rgba(239,71,111,.25);
+    }
+
+    #cobranzaModal #iconoCasa .text-success {
+        text-shadow: 0 0 14px rgba(63,191,163,.25);
+    }
+
+    /* Uploader de comprobante */
+    #cobranzaModal #divImagen .border {
+        background: rgba(255,255,255,0.65);
+        border: 1px dashed rgba(0,0,0,.12) !important;
+    }
+
+    #cobranzaModal #imgProducto {
+        width: 56px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,.08);
+        box-shadow: 0 1px 0 rgba(255,255,255,.6);
+    }
+
+    /* Barra de progreso (transferencias / cobros) */
+    #cobranzaModal #progressBarContainerCobro {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--cobro-border);
+        border-radius: 12px;
+    }
+
+        #cobranzaModal #progressBarContainerCobro .progress {
+            height: 16px;
+            background-color: rgba(0,0,0,.12);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+    #cobranzaModal #progressBarCobro {
+        width: 0%;
+        background: linear-gradient(90deg, var(--cobro-accent-2), var(--cobro-accent));
+        transition: width .45s ease;
+    }
+
+        /* Estados de color si usás clases dinámicas */
+        #cobranzaModal #progressBarCobro.low {
+            background: linear-gradient(90deg, #ef476f, #ff7a8f);
+        }
+
+        #cobranzaModal #progressBarCobro.medium {
+            background: linear-gradient(90deg, #ffb703, #ffd166);
+        }
+
+        #cobranzaModal #progressBarCobro.high {
+            background: linear-gradient(90deg, #3fbfa3, #73c3b2);
+        }
+
+        #cobranzaModal #progressBarCobro.full {
+            background: linear-gradient(90deg, #48b1f5, #00d4ff);
+        }
+
+    #cobranzaModal #progressPercentageCobro {
+        font-weight: 800;
+        letter-spacing: .2px;
+        text-shadow: 0 1px 0 rgba(0,0,0,.25);
+    }
+
+    /* Alertas del modal */
+    #cobranzaModal #alertasErrores,
+    #cobranzaModal #errorCampos {
+        border-radius: 10px;
+        border: 1px solid rgba(239,71,111,.22);
+        background: linear-gradient(180deg, rgba(239,71,111,.08), rgba(239,71,111,.04));
+        color: #5b1c2b;
+    }
+
+    /* Footer y botones */
+    #cobranzaModal .modal-footer {
+        border-top: 1px solid var(--cobro-border);
+        background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
+    }
+
+    #cobranzaModal .btn-primary#btnCobrar {
+        background: linear-gradient(90deg, var(--cobro-accent-2), var(--cobro-accent));
+        border: 1px solid rgba(63,191,163,.55);
+        color: #083d34;
+        font-weight: 700;
+        letter-spacing: .2px;
+        box-shadow: 0 6px 22px rgba(63,191,163,.28);
+    }
+
+        #cobranzaModal .btn-primary#btnCobrar:hover {
+            filter: brightness(1.03) saturate(1.02);
+            transform: translateY(-1px);
+        }
+
+    #cobranzaModal .btn-secondary {
+        background: rgba(255,255,255,.85);
+        color: #0f1d1c;
+        border: 1px solid rgba(0,0,0,.08);
+    }
+
+    /* Switch / checks */
+    #cobranzaModal .form-check-input {
+        border-color: rgba(0,0,0,.24);
+    }
+
+        #cobranzaModal .form-check-input:checked {
+            background-color: var(--cobro-accent-2);
+            border-color: var(--cobro-accent-2);
+            box-shadow: 0 0 0 3px rgba(63,191,163,.18);
+        }
+
+    /* Mini detalles visuales */
+    #cobranzaModal .bg-gradient {
+        border-radius: 10px;
+    }
+
+    #cobranzaModal .small {
+        font-size: .8rem;
+    }
+
+/* Overlay de export (por si lo usás desde esta vista) */
+.export-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(3px);
+    z-index: 1075;
+}
+
+    .export-overlay .export-box {
+        min-width: 260px;
+        background: rgba(20,30,40,.75);
+        border: 1px solid rgba(255,255,255,.12);
+        color: #eaf4f2;
+        padding: 18px 20px;
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(0,0,0,.45);
+        text-align: center;
+    }
+
+    .export-overlay .spinner {
+        width: 28px;
+        height: 28px;
+        border: 3px solid rgba(255,255,255,.25);
+        border-top-color: var(--cobro-accent);
+        border-radius: 50%;
+        margin: 0 auto 10px;
+        animation: spin .85s linear infinite;
+    }
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================
+   Responsivo (móvil)
+   ========================= */
+@media (max-width: 768px) {
+    #cobranzaModal .modal-dialog.modal-cobranza {
+        max-width: 100%;
+        margin: .5rem;
+    }
+
+    /* Forzar columnas a 1 en móvil para que se vea limpio */
+    #cobranzaModal .row.g-3 > [class^="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    #cobranzaModal .modal-body {
+        padding: 1rem .9rem .5rem;
+    }
+
+    #cobranzaModal #ValordelaCuota {
+        font-size: .95rem;
+    }
+
+    #cobranzaModal .form-control,
+    #cobranzaModal .form-select {
+        height: 40px;
+    }
+
+    #cobranzaModal .modal-footer {
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+}
+
+
+/* ---------- List / cards ---------- */
+.venta-item {
+    border-radius: 14px;
+    background: #0f172a;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    margin: 10px 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.06)
+}
+
+    .venta-item.open {
+        outline: 1px solid rgba(96,165,250,.35)
+    }
+
+.venta-head {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: 12px 14px 12px 16px;
+    cursor: pointer
+}
+
+    .venta-head .title-wrap {
+        min-width: 0
+    }
+
+.venta-title {
+    font-weight: 700;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+.venta-sub {
+    font-size: .85rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+.spacer {
+    flex: 1
+}
+
+.restante-pill {
+    background: linear-gradient(135deg,#0ea5e9,#22c55e);
+    color: #fff;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 6px 12px;
+    box-shadow: 0 2px 10px rgba(34,197,94,.2)
+}
+
+.btn-icon, .venta-toggle {
+    border: 1px solid rgba(255,255,255,.12);
+    background: #0b1220;
+    color: #e2e8f0;
+    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center
+}
+
+    .btn-icon:hover, .venta-toggle:hover {
+        background: #0f172a
+    }
+
+.venta-body {
+    display: none;
+    background: #0b1220;
+    border-top: 1px dashed rgba(255,255,255,.08)
+}
+
+.card.glass {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 14px
+}
+
+    .card.glass .card-header {
+        background: rgba(255,255,255,.04);
+        border-bottom: 1px dashed rgba(255,255,255,.08);
+        border-radius: 14px 14px 0 0
+    }
+
+.table-mini {
+    width: 100%;
+    font-size: .9rem
+}
+
+    .table-mini th, .table-mini td {
+        white-space: nowrap;
+        padding: 6px 10px;
+        border-bottom: 1px dashed rgba(255,255,255,.07)
+    }
+
+    .table-mini thead th {
+        color: #9cc6ff
+    }
+
+/* Chips de fecha */
+.chip-date {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-weight: 700;
+    font-size: .75rem
+}
+
+.chip-cobro {
+    background: rgba(34,197,94,.12);
+    color: #86efac;
+    border: 1px solid rgba(34,197,94,.25)
+}
+
+.chip-interes {
+    background: rgba(250,204,21,.12);
+    color: #fde68a;
+    border: 1px solid rgba(250,204,21,.25)
+}
+
+.chip-venta {
+    background: rgba(59,130,246,.12);
+    color: #93c5fd;
+    border: 1px solid rgba(59,130,246,.25)
+}
+
+.chip-obs {
+    background: rgba(148,163,184,.12);
+    color: #cbd5e1;
+    border: 1px solid rgba(148,163,184,.25)
+}
+
+/* Productos compactos */
+.product-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: 8px 6px;
+    border-bottom: 1px dashed rgba(255,255,255,.06)
+}
+
+.product-img {
+    width: 46px;
+    height: 46px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,.08)
+}
+
+.product-name {
+    font-weight: 700;
+    color: #e5e7eb
+}
+
+.product-meta {
+    color: #9ca3af
+}
+
+.product-total {
+    margin-left: auto;
+    font-weight: 800;
+    color: #c7d2fe
+}
+
+/* ---------- Modal Cobranza ---------- */
+.modal-cobranza {
+    max-width: 920px
+}
+
+.cobranza-modal {
+    background: #0b1220;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px;
+    color: #e5e7eb
+}
+
+.cobranza-header {
+    background: linear-gradient(135deg,#0ea5e9,#2563eb);
+    color: #fff;
+    border: 0
+}
+
+.cobranza-footer {
+    background: rgba(255,255,255,.03);
+    border: 0;
+    border-top: 1px solid rgba(255,255,255,.06)
+}
+
+.cobranza-banner {
+    background: linear-gradient(90deg,#d1fae5,#f0fdf4);
+    color: #065f46;
+    font-weight: 800;
+    border-radius: 8px;
+    padding: .4rem .6rem
+}
+
+.cobrar-input {
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,.12);
+    color: #e5e7eb
+}
+
+    .cobrar-input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 .2rem rgba(96,165,250,.15)
+    }
+
+.cobranza-progress {
+    height: 14px;
+    background: #111827;
+    border: 1px solid rgba(255,255,255,.08)
+}
+
+    .cobranza-progress .progress-bar {
+        transition: width .5s
+    }
+
+.progress-bar.low {
+    background: #ef4444
+}
+
+.progress-bar.medium {
+    background: #f59e0b
+}
+
+.progress-bar.high {
+    background: #10b981
+}
+
+.progress-bar.full {
+    background: #22c55e
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 520px) {
+    .venta-sub {
+        display: block;
+        white-space: normal
+    }
+
+    .restante-pill {
+        padding: 4px 10px
+    }
+
+    .btn-icon, .venta-toggle {
+        width: 32px;
+        height: 32px
+    }
+
+    .product-item {
+        padding: 10px 4px
+    }
+}

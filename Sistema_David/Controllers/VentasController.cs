@@ -18,6 +18,7 @@ using Sistema_David.Models.ViewModels;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
+using System.Linq;
 
 namespace Sistema_David.Controllers
 
@@ -446,6 +447,85 @@ namespace Sistema_David.Controllers
                 return Json(null);
             }
 
+        }
+
+        // Vista: UNA venta (detalle)
+        [HttpGet]
+        public ActionResult Venta(int id)  // /Informacion/Venta/123
+        {
+            var venta = VentasModel.BuscarVenta(id);
+            if (venta == null) return HttpNotFound();
+
+            var vm = new VMVentaInfoDetalle
+            {
+                Venta = venta,
+                Productos = VentasModel.ListaProductosVenta(id) ?? new System.Collections.Generic.List<VMProductoVenta>(),
+                Cobros = VentasModel.ListarInformacionVenta(id) ?? new System.Collections.Generic.List<VMInformacionVenta>()
+            };
+
+            // KPIs
+            vm.Total = (venta.Restante ?? 0) + (venta.Entrega ?? 0);
+            vm.Abonado = vm.Cobros.Sum(c => (decimal?)c.Entrega ?? 0);
+            vm.Saldo = (venta.Restante ?? 0);
+
+            return View("InformacionVenta", vm);
+        }
+
+        // Vista: TODAS las ventas del cliente (acordeones)
+        [HttpGet]
+        public ActionResult Ventas(int idCliente, int? seleccionada) // /Informacion/Ventas?idCliente=10&seleccionada=123
+        {
+            var ventas = VentasModel.ListaVentasCliente(idCliente) ?? new System.Collections.Generic.List<VMVenta>();
+
+            var vm = new VMInfoVentasPage
+            {
+                IdCliente = idCliente,
+                IdSeleccionada = seleccionada,
+                Ventas = ventas.Select(v => new VMVentaInfoResumen
+                {
+                    Venta = v,
+                    // KPIs por venta:
+                    Total = (v.Restante ?? 0) + (v.Entrega ?? 0),
+                    Abonado = (VentasModel.ListarInformacionVenta(v.Id)?.Sum(c => (decimal?)c.Entrega ?? 0)) ?? 0,
+                    Saldo = (v.Restante ?? 0)
+                }).OrderByDescending(x => x.Venta.Fecha).ToList()
+            };
+
+            // KPIs globales (del cliente)
+            vm.TotalGlobal = vm.Ventas.Sum(x => x.Total);
+            vm.AbonadoGlobal = vm.Ventas.Sum(x => x.Abonado);
+            vm.SaldoGlobal = vm.Ventas.Sum(x => x.Saldo);
+
+            return View("InformacionVentas", vm);
+        }
+
+        // Lazy-load del detalle de una venta (opcional para performance)
+        [HttpGet]
+        public ActionResult VentaDetalle(int id) // /Informacion/VentaDetalle?id=123
+        {
+            var data = new
+            {
+                Productos = VentasModel.ListaProductosVenta(id),
+                Cobros = VentasModel.ListarInformacionVenta(id)
+            };
+            return Json(new { data }, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public ActionResult AgregarInteresDesdeInfo(AgregarInteresDto dto)
+        {
+            try
+            {
+                if (dto == null || dto.IdVenta <= 0 || dto.ValorInteres <= 0)
+                    return Json(new { success = false, message = "Datos inválidos." });
+
+                var result = VentasModel.AgregarInteresDesdeInfo(dto.IdVenta, dto.ValorInteres, dto.TipoInteres, dto.Observacion);
+                return Json(result);
+            }
+            catch
+            {
+                return Json(new { success = false, message = "Error inesperado." });
+            }
         }
 
 

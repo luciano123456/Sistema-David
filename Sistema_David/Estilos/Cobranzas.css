@@ -19,7 +19,9 @@
     }
 
 
-
+    p {
+        color: black;
+    }
 
 #bankAccountsModal .form-control:disabled {
     background-color: rgb(128, 128, 128,0.3);

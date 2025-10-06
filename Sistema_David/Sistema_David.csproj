@@ -552,6 +552,7 @@
     <Content Include="Content\font-awesome.css" />
     <Content Include="Content\font-awesome.min.css" />
     <Content Include="Estilos\ClientesEditar.css" />
+    <Content Include="Estilos\InformacionVenta.css" />
     <Content Include="Estilos\PagosNuevoModif.css" />
     <Content Include="Estilos\Pagos.css" />
     <Content Include="Estilos\Recorrido.css" />

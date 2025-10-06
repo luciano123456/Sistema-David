@@ -61,5 +61,46 @@ namespace Sistema_David.Models.Modelo
         public virtual Clientes Clientes { get; set; }
         public virtual Zonas Zonas { get; set; }
         public string Imagen { get; set; }
+        public decimal TotalVenta { get; set; }
     }
+
+    public class VMVentaInfoResumen
+    {
+        public VMVenta Venta { get; set; }
+        public decimal Total { get; set; }
+        public decimal Abonado { get; set; }
+        public decimal Saldo { get; set; }
+    }
+
+    public class VMVentaInfoDetalle
+    {
+        public VMVenta Venta { get; set; }
+        public List<VMProductoVenta> Productos { get; set; }
+        public List<VMInformacionVenta> Cobros { get; set; }
+
+        public decimal Total { get; set; }
+        public decimal Abonado { get; set; }
+        public decimal Saldo { get; set; }
+    }
+
+    public class VMInfoVentasPage
+    {
+        public int IdCliente { get; set; }
+        public int? IdSeleccionada { get; set; }
+        public List<VMVentaInfoResumen> Ventas { get; set; }
+
+        public decimal TotalGlobal { get; set; }
+        public decimal AbonadoGlobal { get; set; }
+        public decimal SaldoGlobal { get; set; }
+    }
+
+    public class AgregarInteresDto
+    {
+        public int IdVenta { get; set; }
+        public decimal ValorInteres { get; set; }
+        public string TipoInteres { get; set; }
+        public string Observacion { get; set; }
+    }
+
+
 }

@@ -54,6 +54,86 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
+        public static object AgregarInteresDesdeInfo(int idVenta, decimal valorInteres, string tipoInteres, string observacion)
+        {
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                using (var tx = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        // Validaciones de entrada
+                        if (idVenta <= 0 || valorInteres <= 0)
+                            return new { success = false, message = "Datos inválidos." };
+
+                        // Venta
+                        var venta = db.Ventas.Find(idVenta);
+                        if (venta == null)
+                            return new { success = false, message = "Venta inexistente." };
+
+                        // Ajustes de venta
+                        decimal interesActual = venta.Interes ?? 0m;
+                        decimal restanteActual = venta.Restante ?? 0m;
+
+                        venta.Interes = interesActual + valorInteres;
+                        venta.Restante = restanteActual + valorInteres;
+
+                        db.Entry(venta).State = System.Data.Entity.EntityState.Modified;
+
+                        // Info auxiliar
+                        var cliente = db.Clientes.FirstOrDefault(c => c.Id == venta.idCliente);
+                        var tipoNegocio = UsuariosModel.BuscarTipoNegocio((int)venta.IdTipoNegocio)?.Nombre;
+                        var usuarioSesion = SessionHelper.GetUsuarioSesion();
+
+                        // Registro en historial (InformacionVentas)
+                        var info = new InformacionVentas
+                        {
+                            IdVenta = venta.Id,
+                            Fecha = DateTime.Now,
+                            Descripcion = $"Interes a {cliente?.Nombre} de {valorInteres} pesos.",
+                            Entrega = 0m,
+                            Restante = venta.Restante ?? 0m,
+                            ValorCuota = venta.ValorCuota ?? 0m,
+                            Interes = valorInteres,
+                            idCobrador = 0,
+                            idVendedor = usuarioSesion?.Id ?? 0,
+                            whatssap = 0,
+                            Observacion = observacion,
+                            MetodoPago = null,
+                            ClienteAusente = 0,
+                            ProximoCobro = venta.FechaCobro,
+                            // Deuda: si el cliente no existe, 0; si existe, sumo interés
+                            Deuda = (ClientesModel.BuscarCliente(venta.idCliente)?.Saldo ?? 0m) + valorInteres,
+                            IdTipoNegocio = venta.IdTipoNegocio,
+                            TipoNegocio = tipoNegocio,
+                            IdCuentaBancaria = null,
+                            TipoInteres = tipoInteres,
+                            ActualizoUbicacion = 0,
+                            CobroPendiente = 0
+                        };
+
+                        db.InformacionVentas.Add(info);
+
+                        db.SaveChanges();
+                        tx.Commit();
+
+                        // Devolver la venta actualizada en formato VMVenta para refrescar UI
+                        var vm = BuscarVenta(venta.Id);
+                        return new { success = true, venta = vm };
+                    }
+                    catch (Exception ex)
+                    {
+                        tx.Rollback();
+                        return new { success = false, message = "No se pudo agregar el interés." };
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return new { success = false, message = "Error general del servidor." };
+            }
+        }
 
 
         public static List<VMVenta> ListaVentas(int idVendedor, int tipoNegocio)
@@ -221,71 +301,90 @@ namespace Sistema_David.Models.Modelo
 
         public static (List<VMVenta> Ventas, decimal TotalRestante) RestanteVentasCliente(int idCliente)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            try
             {
-                // Obtenemos la lista de ventas del cliente
-                var ventas = (from v in db.Ventas
-                              join c in db.Clientes on v.idCliente equals c.Id
-                              join u in db.Usuarios on v.idVendedor equals u.Id
-                              join t in db.TipoNegocio on v.IdTipoNegocio equals t.Id
-                              where v.idCliente == idCliente
-                              select new VMVenta
-                              {
-                                  Id = v.Id,
-                                  idCliente = v.idCliente,
-                                  Fecha = v.Fecha,
-                                  Entrega = v.Entrega,
-                                  Restante = v.Restante,
-                              }).ToList();
+                using (var db = new Sistema_DavidEntities())
+                {
+                    var ventas = (from v in db.Ventas
+                                  join c in db.Clientes on v.idCliente equals c.Id
+                                  where v.idCliente == idCliente
+                                  select new VMVenta
+                                  {
+                                      Id = v.Id,
+                                      idCliente = v.idCliente,
+                                      Fecha = v.Fecha,
+                                      Entrega = v.Entrega,
+                                      Restante = v.Restante,
 
-                // Calculamos la suma de los valores restantes
-                decimal totalRestante = ventas.Sum(v => v.Restante ?? 0); // Manejo de nulos si Restante puede ser null
+                                      // NUEVO: total por suma de productos
+                                      TotalVenta = db.ProductosVenta
+                                          .Where(p => p.IdVenta == v.Id)
+                                          .Select(p => (decimal?)p.PrecioUnitario * (decimal?)p.Cantidad)
+                                          .Sum() ?? 0
+                                  }).ToList();
 
-                // Devolvemos la lista de ventas y la suma de los restantes
-                return (ventas, totalRestante);
+                    var totalRestante = ventas.Sum(x => x.Restante ?? 0);
+                    return (ventas, totalRestante);
+                }
+            }
+            catch (Exception)
+            {
+                return (new List<VMVenta>(), 0m);
             }
         }
 
-
         public static List<VMVenta> ListaVentasCliente(int idCliente)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            try
             {
-                var result = (from v in db.Ventas
-                              join c in db.Clientes on v.idCliente equals c.Id
-                              join u in db.Usuarios on v.idVendedor equals u.Id
-                              join t in db.TipoNegocio on v.IdTipoNegocio equals t.Id
-                              where v.idCliente == idCliente
-                              select new VMVenta
-                              {
-                                  Id = v.Id,
-                                  idCliente = v.idCliente,
-                                  Fecha = v.Fecha,
-                                  Entrega = v.Entrega,
-                                  Restante = v.Restante,
-                                  FechaCobro = v.FechaCobro,
-                                  FechaLimite = v.FechaLimite,
-                                  idVendedor = v.idVendedor,
-                                  Observacion = v.Observacion,
-                                  Cliente = c.Nombre,
-                                  Direccion = c.Direccion,
-                                  DniCliente = c.Dni,
-                                  Vendedor = u.Nombre,
-                                  Interes = v.Interes.HasValue ? v.Interes.Value : 0,
-                                  idCobrador = v.idCobrador.HasValue ? v.idCobrador.Value : 0,
-                                  FechaCliente = c.Fecha.HasValue ? c.Fecha.Value : DateTime.MinValue,
-                                  P_ValorCuota = v.P_ValorCuota.HasValue ? v.P_ValorCuota.Value : 0,
-                                  P_FechaCobro = v.P_FechaCobro.HasValue ? v.P_FechaCobro.Value : DateTime.MinValue,
-                                  Comprobante = v.Comprobante.HasValue ? v.Comprobante.Value : 0,
-                                  Longitud = c.Longitud,
-                                  Latitud = c.Latitud,
-                                  Turno = v.Turno,
-                                  FranjaHoraria = v.FranjaHoraria,
-                                  IdTipoNegocio = (int)v.IdTipoNegocio,
-                                  TipoNegocio = t.Nombre
-                              }).ToList();
+                using (var db = new Sistema_DavidEntities())
+                {
+                    var result = (from v in db.Ventas
+                                  join c in db.Clientes on v.idCliente equals c.Id
+                                  join u in db.Usuarios on v.idVendedor equals u.Id
+                                  join t in db.TipoNegocio on v.IdTipoNegocio equals t.Id
+                                  where v.idCliente == idCliente
+                                  select new VMVenta
+                                  {
+                                      Id = v.Id,
+                                      idCliente = v.idCliente,
+                                      Fecha = v.Fecha,
+                                      Entrega = v.Entrega,
+                                      Restante = v.Restante,
+                                      FechaCobro = v.FechaCobro,
+                                      FechaLimite = v.FechaLimite,
+                                      idVendedor = v.idVendedor,
+                                      Observacion = v.Observacion,
+                                      Cliente = c.Nombre,
+                                      Direccion = c.Direccion,
+                                      DniCliente = c.Dni,
+                                      Vendedor = u.Nombre,
+                                      Interes = v.Interes ?? 0,
+                                      idCobrador = v.idCobrador ?? 0,
+                                      FechaCliente = c.Fecha ?? DateTime.MinValue,
+                                      P_ValorCuota = v.P_ValorCuota ?? 0,
+                                      P_FechaCobro = v.P_FechaCobro ?? DateTime.MinValue,
+                                      Comprobante = v.Comprobante ?? 0,
+                                      Longitud = c.Longitud,
+                                      Latitud = c.Latitud,
+                                      Turno = v.Turno,
+                                      FranjaHoraria = v.FranjaHoraria,
+                                      IdTipoNegocio = (int)v.IdTipoNegocio,
+                                      TipoNegocio = t.Nombre,
 
-                return result;
+                                      // NUEVO: total por suma de productos
+                                      TotalVenta = db.ProductosVenta
+                                          .Where(p => p.IdVenta == v.Id)
+                                          .Select(p => (decimal?)p.PrecioUnitario * (decimal?)p.Cantidad)
+                                          .Sum() ?? 0
+                                  }).ToList();
+
+                    return result;
+                }
+            }
+            catch (Exception)
+            {
+                return new List<VMVenta>();
             }
         }
 
