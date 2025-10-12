@@ -1207,7 +1207,7 @@ const configurarDataTableCobrosPendientes = async () => {
                     iconoCobrador = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalHome(" + data + ")' title='Estado de Cobro' ><i class='fa fa-home fa-lg' style='color: " + estadoCobroIconColor + ";' aria-hidden='true'></i></button>" +
                         modifiedButton +
                         `<button class='btn btn-sm btnacciones' type='button' id='Cobranza(${data})' onclick='cobranzaVenta(${data}, "grdCobranzasPendientes")' title='Cobranza'><i class='fa fa-money fa-lg text-white'></i></button>`
-                    iconosAdmin = `<button class='btn btn-sm btnacciones' type = 'button' id = 'infoVenta(${data})' onclick = 'informacionVenta(${data})' title = 'Informacion de la Venta' > <i class='fa fa-info-circle fa-lg text-white'></i></button >` +
+                    iconosAdmin = `<button class='btn btn-sm btnacciones' type = 'button' id = 'infoVenta(${data})' onclick="informacionVenta(${data}, gridCobranzasPendientes)" title = 'Informacion de la Venta' > <i class='fa fa-info-circle fa-lg text-white'></i></button >` +
                         "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='imprimirComprobante(" + data + ")' title='Imprimir Comprobante' ><i class='fa fa-print fa-lg' style='color: " + comprobanteIconColor + ";' aria-hidden='true'></i></button>" +
                         `<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalWhatssap(${data})' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg text-white' aria-hidden='true'></i></button>
                             <a class='btn btn-sm btnacciones' href='tel:${telefono}' title='Llamar ${telefono}'><i class='fa fa-phone text-white'></i></a>`
@@ -1593,7 +1593,7 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
                     iconoCobrador = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalHome(" + data + ")' title='Estado de Cobro' ><i class='fa fa-home fa-lg' style='color: " + estadoCobroIconColor + ";' aria-hidden='true'></i></button>" + 
                         modifiedButton +
                         `<button class='btn btn-sm btnacciones' type='button' id='Cobranza(${data})' onclick='cobranzaVenta(${data}, "grdCobranzas")' title='Cobranza'><i class='fa fa-money fa-lg text-white'></i></button>`
-                    iconosAdmin = `<button class='btn btn-sm btnacciones' type = 'button' id = 'infoVenta(${data})' onclick = 'informacionVenta(${data})' title = 'Informacion de la Venta' > <i class='fa fa-info-circle fa-lg text-white'></i></button >` +
+                    iconosAdmin = `<button class='btn btn-sm btnacciones' type = 'button' id = 'infoVenta(${data})' onclick="informacionVenta(${data}, gridCobranzas)" title = 'Informacion de la Venta' > <i class='fa fa-info-circle fa-lg text-white'></i></button >` +
                         "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='imprimirComprobante(" + data + ")' title='Imprimir Comprobante' ><i class='fa fa-print fa-lg' style='color: " + comprobanteIconColor + ";' aria-hidden='true'></i></button>" +
                         `<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalWhatssap(${data})' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg text-white' aria-hidden='true'></i></button>
                             <a class='btn btn-sm btnacciones' href='tel:${telefono}' title='Llamar ${telefono}'><i class='fa fa-phone text-white'></i></a>`
@@ -1905,9 +1905,9 @@ function makeEditable(ventaId) {
 let _ventaSeleccionada = null;
 let _clienteSeleccionado = null;
 
-function informacionVenta(idVenta) {
+function informacionVenta(idVenta, grid) {
     // Buscar la fila en el DataTable de Cobranzas
-    const row = gridCobranzas
+    const row = grid
         .row((idx, data) => parseInt(data.Id, 10) === parseInt(idVenta, 10))
         .data();
 

@@ -174,11 +174,22 @@ function applyFilterAndRender(ventaSeleccionada = null) {
     const box = q$("#ventasAccordion"); box.innerHTML = "";
 
     const incluirSaldadas = q$("#swSaldadas")?.checked ?? false;
+
+    // stats
+    const totales = APP.ventasCache.length;
+    const noSaldadas = APP.ventasCache.filter(v => Number(v.Restante || 0) > 0).length;
+    const saldadas = totales - noSaldadas;
+
     APP.ventasFiltradas = APP.ventasCache.filter(v => {
         const rest = Number(v.Restante || 0);
-        // por defecto NO saldadas; si el switch está prendido, se muestran todas
         return incluirSaldadas ? true : rest > 0;
     });
+
+    // pill con contadores
+    const st = q$("#swStats");
+    if (st) st.innerHTML = incluirSaldadas
+        ? `<span class="chip-all">Todas ${totales}</span> · <span class="chip-ok">Saldadas ${saldadas}</span> · <span class="chip-pend">Pendientes ${noSaldadas}</span>`
+        : `<span class="chip-pend">Pendientes ${noSaldadas}</span> · <span class="chip-ok">Saldadas ${saldadas}</span>`;
 
     if (!APP.ventasFiltradas.length) { $("#emptyState").show(); return; }
     $("#emptyState").hide();
@@ -188,19 +199,27 @@ function applyFilterAndRender(ventaSeleccionada = null) {
         attachVentaHeaderEvents(v.Id);
     });
 
-    // si hay una seleccionada (o la que estaba abierta) la abrimos
-    const toOpen = ventaSeleccionada && APP.ventasFiltradas.some(x => x.Id === ventaSeleccionada)
-        ? ventaSeleccionada
-        : null;
+    const toOpen = ventaSeleccionada && APP.ventasCache.some(x => x.Id === ventaSeleccionada)
+        ? ventaSeleccionada : null;
     if (toOpen) toggleVenta(toOpen, true);
 }
 
 /* ===== Header title con nombre de cliente ===== */
 function setTituloCliente(head) {
-    const name = head?.Cliente || head?.ClienteNombre || head?.NombreCliente || null;
+    const name =
+        head?.Venta?.Cliente ||
+        head?.Cliente ||
+        head?.ClienteNombre ||
+        head?.NombreCliente ||
+        head?.ClienteDescripcion ||
+        head?.ClienteNombreCompleto ||
+        head?.Cliente?.Nombre ||
+        null;
+
     const t = q$("#clienteNombreTop");
     if (t) t.textContent = name || "—";
 }
+
 
 /* ===== Item ===== */
 function buildVentaItem(v) {
@@ -297,7 +316,6 @@ async function toggleVenta(ventaId, abrir) {
         body.style.display = "block";
         if (icon) { icon.classList.remove("bi-chevron-down"); icon.classList.add("bi-chevron-up"); }
         APP.currentVentaOpen = ventaId;
-
         if (!APP.detalleCache[ventaId]) await cargarDetalles(ventaId);
     } else {
         item.classList.remove("open");
@@ -306,6 +324,7 @@ async function toggleVenta(ventaId, abrir) {
         if (APP.currentVentaOpen === ventaId) APP.currentVentaOpen = null;
     }
 }
+
 
 /* ===== Detalles ===== */
 async function cargarDetalles(ventaId) {
@@ -414,6 +433,7 @@ function chipFecha(fecha, h) {
     const cls = t === "interes" ? "chip-interes" : t === "cobro" ? "chip-cobro" : t === "venta" ? "chip-venta" : "chip-obs";
     return `<span class="chip-date ${cls}">${fecha}</span>`;
 }
+
 function renderHistorial(ventaId, list) {
     const wrap = q$(`#histWrap_${ventaId}`);
     if (!wrap) return;
@@ -422,6 +442,17 @@ function renderHistorial(ventaId, list) {
         wrap.innerHTML = `<div class="text-muted">Sin movimientos.</div>`;
         return;
     }
+
+    // --- ORDENAR: más nuevo primero ---
+    const ts = (h) => {
+        // usa Fecha; si no viene, probá algún otro campo o caé en 0
+        if (h.Fecha) return new Date(h.Fecha).getTime();
+        if (h.P_FechaCobro) return new Date(h.P_FechaCobro).getTime();
+        return 0;
+    };
+    // copia + sort desc (fecha desc; de empate, Id desc)
+    list = list.slice().sort((a, b) => (ts(b) - ts(a)) || ((b.Id || 0) - (a.Id || 0)));
+    // -----------------------------------
 
     const rows = list.map(h => {
         const fecha = h.Fecha ? moment(h.Fecha).format("DD/MM/YYYY") : "-";
@@ -432,6 +463,17 @@ function renderHistorial(ventaId, list) {
         const rest = money(h.Restante || 0);
         const idInf = h.Id || 0;
 
+        // misma regla vieja: si contiene "Venta" NO se muestra el botón
+        const esVenta = (desc || "").toLowerCase().includes("venta");
+        const puedeBorrar = (userSession?.IdRol === 1) && !esVenta; // IdRol==1 admin; vendedor no
+
+        const btnDel = puedeBorrar
+            ? `<button class="btn-icon btn-del-info" title="Eliminar"
+                   data-info-id="${idInf}" data-venta-id="${ventaId}">
+           <i class="bi bi-trash"></i>
+         </button>`
+            : "";
+
         return `
       <tr data-info-id="${idInf}" data-venta-id="${ventaId}">
         <td>${chipFecha(fecha, h)}</td>
@@ -440,22 +482,36 @@ function renderHistorial(ventaId, list) {
         <td>${ent}</td>
         <td>${inte}</td>
         <td>${rest}</td>
-        <td class="text-end"></td>
+        <td class="text-center">${btnDel}</td>
       </tr>`;
     }).join("");
 
     wrap.innerHTML = `
-    <div class="table-responsive">
-      <table class="table-mini">
-        <thead>
-          <tr>
-            <th>Fecha</th><th>Descripción</th><th>Cobrador</th>
-            <th>Entrega</th><th>Interés</th><th>Restante</th><th class="text-end">Acc.</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+  <div class="table-responsive">
+    <table class="table-mini">
+      <colgroup>
+        <col class="col-fecha">
+        <col class="col-desc">
+        <col class="col-cobr">
+        <col class="col-imp">
+        <col class="col-imp">
+        <col class="col-imp">
+        <col class="col-acc">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Descripción</th>
+          <th>Cobrador</th>
+          <th>Entrega</th>
+          <th>Interés</th>
+          <th>Restante</th>
+          <th class="text-center">Acc.</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
 }
 
 /* ===== Header / Venta head ===== */
@@ -617,7 +673,7 @@ async function guardarInteres() {
         if (errs.length) { errBox.removeClass("d-none").html(errs.map(e => `<div>• ${e}</div>`).join("")); return; }
 
         // POST -> Model
-        const resp = await ajaxPost("/Ventas/AgregarInteresDesdeInfo", { IdVenta: idVenta, Valor: valor, Tipo: tipo, Obs: obs });
+        const resp = await ajaxPost("/Ventas/AgregarInteresDesdeInfo", { IdVenta: idVenta, ValorInteres: valor, Tipo: tipo, Obs: obs });
         if (!resp || resp.success === false) {
             const msg = resp?.message || "No se pudo registrar el interés.";
             errBox.removeClass("d-none").html(`• ${msg}`);
@@ -639,5 +695,46 @@ async function guardarInteres() {
         console.error(e);
         const errBox = $("#Int_Errores");
         errBox.removeClass("d-none").html("• Error inesperado al guardar el interés.");
+    }
+}
+
+
+// Delegación: click en Eliminar
+$(document).on("click", ".btn-del-info", async function (e) {
+    e.preventDefault(); e.stopPropagation();
+    const infoId = parseInt(this.getAttribute("data-info-id"), 10);
+    const ventaId = parseInt(this.getAttribute("data-venta-id"), 10);
+    await eliminarInformacion(infoId, ventaId);
+});
+
+async function eliminarInformacion(idInfo, idVenta) {
+    if (!idInfo) return;
+
+    const ok = confirm("¿Eliminar este registro de la información de la venta?");
+    if (!ok) return;
+
+    try {
+        // Ajustá la URL si tu acción se llama distinto
+        const resp = await ajaxPost("/Ventas/EliminarInformacionVenta", { id: idInfo });
+        if (!resp || resp.success === false) {
+            alert(resp?.message || "No se pudo eliminar.");
+            return;
+        }
+
+        // limpiar cache y refrescar la vista puntual
+        delete APP.detalleCache[idVenta];
+        await actualizarVistaVenta(idVenta);
+
+        // si la venta está abierta, recargo sus detalles
+        const isOpen = q$(`#ventaItem_${idVenta}`)?.classList.contains("open");
+        if (isOpen) {
+            await toggleVenta(idVenta, false);
+            await toggleVenta(idVenta, true);
+        }
+
+        alert("Registro eliminado correctamente.");
+    } catch (err) {
+        console.error(err);
+        alert("Error eliminando el registro.");
     }
 }

@@ -888,3 +888,226 @@ tbody tr:nth-child(odd) {
         padding: 10px 4px
     }
 }
+
+
+/* ---------- Saldadas toolbar ---------- */
+.saldadas-toolbar {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 6px 10px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    min-width: 0; /* para que pueda encogerse */
+}
+
+.sw-stats-pill {
+    margin-left: .35rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    white-space: nowrap; /* desktop: en una línea */
+    max-width: 52vw; /* evita romper el layout */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+    .sw-stats-pill .chip-all,
+    .sw-stats-pill .chip-ok,
+    .sw-stats-pill .chip-pend {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: .82rem;
+        background: rgba(15,23,42,.55);
+        border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .sw-stats-pill .chip-ok {
+        color: #86efac;
+        border-color: rgba(134,239,172,.25);
+    }
+
+    .sw-stats-pill .chip-pend {
+        color: #fca5a5;
+        border-color: rgba(252,165,165,.25);
+    }
+
+    .sw-stats-pill .chip-all {
+        color: #93c5fd;
+        border-color: rgba(147,197,253,.25);
+    }
+
+/* ---------- Topbar responsive ---------- */
+.topbar {
+    flex-wrap: wrap;
+    row-gap: 12px;
+}
+
+    .topbar .title {
+        line-height: 1.05;
+    }
+    /* quita salto feo en “Ventas del cliente …” */
+    .topbar .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+/* Mobile */
+@media (max-width: 576px) {
+    .topbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+        .topbar > div:first-child {
+            width: 100%;
+        }
+
+        .topbar .actions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+    /* switch a 100% y stats con scroll horizontal si falta espacio */
+    .saldadas-toolbar {
+        grid-column: 1 / -1;
+        width: 100%;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+    }
+
+    .sw-stats-pill {
+        font-size: .8rem;
+        gap: 6px;
+        max-width: 100%;
+        overflow-x: auto; /* si hay muchos números, scrollea suave */
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+        .sw-stats-pill::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sw-stats-pill .chip-all,
+        .sw-stats-pill .chip-ok,
+        .sw-stats-pill .chip-pend {
+            padding: 4px 10px; /* un poco más grandes en touch */
+            border-radius: 999px;
+        }
+
+    /* Botones principales grid responsive */
+    #btnExportPdf, #btnRefrescar, a.btn.btn-ghost {
+        width: 100%;
+    }
+}
+
+
+/* ===== Fix switch adentro del chip ===== */
+.saldadas-toolbar.form-switch {
+    position: relative;
+    padding-left: 52px; /* espacio para el toggle */
+    padding-right: 12px;
+    border-radius: 14px;
+}
+
+.saldadas-toolbar .form-check-input {
+    position: absolute;
+    left: 12px; /* toggle dentro del borde */
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 0; /* anula margen bootstrap */
+}
+
+.saldadas-toolbar .form-check-label {
+    padding-left: 0; /* quita padding propio del form-switch */
+    margin: 0;
+    display: block;
+}
+
+/* opcional: en móvil un poco más de espacio */
+@media (max-width: 576px) {
+    .saldadas-toolbar.form-switch {
+        padding-left: 58px;
+    }
+
+    .saldadas-toolbar .form-check-input {
+        left: 14px;
+    }
+}
+
+
+/* Tabla historial: layout fijo y anchos */
+.table-mini {
+    width: 100%;
+    table-layout: fixed; /* evita “gutter” a la derecha */
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    .table-mini th, .table-mini td {
+        padding: 8px 10px;
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Anchos sugeridos */
+    .table-mini .col-fecha {
+        width: 110px;
+    }
+
+    .table-mini .col-desc {
+        width: auto;
+    }
+    /* se estira */
+    .table-mini .col-cobr {
+        width: 140px;
+    }
+
+    .table-mini .col-imp {
+        width: 110px;
+        text-align: right;
+    }
+
+    .table-mini .col-acc {
+        width: 72px;
+    }
+    /* <- fija la última columna */
+
+    .table-mini thead th:nth-last-child(-n+4),
+    .table-mini tbody td:nth-last-child(-n+4) {
+        text-align: right; /* Entrega/Interés/Restante a la derecha */
+    }
+
+    .table-mini thead th:last-child,
+    .table-mini tbody td:last-child {
+        text-align: center; /* Acc. centrado */
+    }
+
+/* Botón de eliminar compacto */
+.btn-del-info {
+    width: 36px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.04);
+}
+
+    .btn-del-info i {
+        font-size: 15px;
+        line-height: 1;
+    }
