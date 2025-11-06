@@ -1,6 +1,6 @@
 ﻿const precioVenta = [];
 const stockTotal = [];
-const productos = [];
+let productos = [];
 let lastActionTime = 0;
 
 $(document).ready(async function () {
@@ -651,6 +651,8 @@ async function registrarVenta() {
         let numeroTelefono = $("#telefonocliente").text();
          
         numeroTelefono = numeroTelefono.replace("Tel: ", "");
+
+        productos = [];
 
         if (await validarVenta()) {
 
