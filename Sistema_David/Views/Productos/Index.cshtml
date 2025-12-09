@@ -130,7 +130,7 @@
 
                         <div class="col-12">
                             <div class="mb-1">
-                                <label for="Imagen" class="form-label fw-semibold  text-black" >Imagen</label>
+                                <label for="Imagen" class="form-label fw-semibold  text-black">Imagen</label>
                             </div>
                             <div class="border rounded p-3 d-flex align-items-center justify-content-start gap-3 flex-wrap">
                                 <img id="imgProducto" src="" class="rounded" style="width: 50px; height: 50px; cursor: pointer;" onclick="openModal(this.src)" />
@@ -240,7 +240,7 @@
 
 
 
-<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
+@*<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
 <script src="~/JavaScript/Utils/Utils.js"></script>
 <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
 <script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
@@ -248,4 +248,18 @@
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 @section scripts{
     <script src="~/JavaScript/Productos.js?v=1.7"></script>
-}
+}*@
+
+
+
+<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
+<script src="~/JavaScript/Utils/Utils.js"></script>
+<script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
+
+<script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
+
+<script src="~/Scripts/xlsx.full.min.js.js"></script>
+
+@section scripts{
+    <script src="~/JavaScript/Productos.js?v=1.7"></script>
+    }

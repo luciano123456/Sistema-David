@@ -363,7 +363,7 @@ async function modificarProducto() {
 
 function abrirmodal() {
 
-    $("#productoModal").modal("show");
+    $("#productoModal").modal('show');
     document.getElementById("IdProducto").value = ""
     document.getElementById("Codigo").value = ""
     document.getElementById("Nombre").value = ""

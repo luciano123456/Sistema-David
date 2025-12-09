@@ -1,0 +1,607 @@
+﻿:root {
+    --bg: #a4b1ce;
+    --panel: #0f1a33;
+    --panel2: #132041;
+    --ink: #eaf1ff;
+    --muted: #a7b4d8;
+    --line: #24345f;
+    --accent: #52a5ff;
+    --accent2: #00dbc8;
+    --ok: #20d6a1;
+    --warn: #ffd166;
+    --danger: #ff6b6b;
+    --chip: #223055;
+    --shadow: 0 12px 50px rgba(0,0,0,.45);
+    --radius: 16px;
+}
+
+
+a {
+    color: var(--accent)
+}
+
+    a:hover {
+        opacity: .9
+    }
+
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 14px
+}
+
+.title-icon {
+    color: var(--accent);
+    font-size: 22px
+}
+
+.subtitle {
+    color: var(--muted)
+}
+
+.ve-card {
+    background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow)
+}
+
+.ve-card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    gap: 8px;
+    align-items: center
+}
+
+.ve-card-title {
+    font-weight: 600
+}
+
+.ve-card-body {
+    padding: 16px 18px
+}
+
+.ve-input, .form-select {
+    background: #0c1731;
+    border-color: #223055;
+    color: var(--ink)
+}
+
+    .ve-input:focus, .form-select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 .15rem rgba(82,165,255,.25)
+    }
+
+.ve-select-mini {
+    background: #0c1731;
+    color: var(--ink);
+    border-color: #223055
+}
+
+.input-group-text {
+    background: #0c1731;
+    border-color: #223055;
+    color: var(--muted)
+}
+
+::placeholder {
+    color: #8fa1cb;
+    opacity: 1
+}
+
+.form-text {
+    color: #7f92c5
+}
+
+.text-accent {
+    color: var(--accent) !important
+}
+
+/* chips / badges */
+.badges-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: .4rem .8rem;
+    border: 1px solid #31426e;
+    border-radius: 999px;
+    background: var(--chip);
+    color: var(--ink)
+}
+
+.chip-muted {
+    opacity: .9
+}
+
+.chip.ok {
+    background: rgba(32,214,161,.1);
+    border-color: #2e8d7a
+}
+
+.chip.warn {
+    background: rgba(255,209,102,.1);
+    border-color: #c9a44b;
+    color: #ffeaa8
+}
+
+.chip.danger {
+    background: rgba(255,107,107,.12);
+    border-color: #a24c4c;
+    color: #ffb4b4
+}
+
+/* tablas */
+.table.ve-table {
+    color: var(--ink);
+    border-color: #253762
+}
+
+    .table.ve-table thead th {
+        background: #16264f;
+        border-color: #253762
+    }
+
+    .table.ve-table tbody tr {
+        background: #0f1d3b
+    }
+
+        .table.ve-table tbody tr:nth-child(odd) {
+            background: #0e1a35
+        }
+
+    .table.ve-table td, .table.ve-table th {
+        border-color: #24345f
+    }
+
+        .table.ve-table td .btn {
+            border-radius: 10px
+        }
+
+.kpi {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), transparent), var(--panel2);
+    border-radius: 14px;
+    padding: 14px
+}
+
+    .kpi span {
+        color: var(--muted);
+        font-size: .875rem
+    }
+
+    .kpi h3 {
+        margin: 0
+    }
+
+.kpi-total h3 {
+    color: #7db7ff
+}
+
+.kpi-entrega h3 {
+    color: #b0e4ff
+}
+
+.kpi-restante h3 {
+    color: #00dbc8
+}
+
+/* modales */
+.ve-modal {
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line)
+}
+
+    .ve-modal .modal-header {
+        border-bottom: 1px solid var(--line)
+    }
+
+    .ve-modal .modal-footer {
+        border-top: 1px solid var(--line)
+    }
+
+.ve-img {
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid #2a3b6b
+}
+
+/* acordeón */
+.ve-accordion-item {
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden
+}
+
+    .ve-accordion-item .accordion-button {
+        background: #0f1a33;
+        color: var(--ink)
+    }
+
+        .ve-accordion-item .accordion-button:not(.collapsed) {
+            background: #142449;
+            color: var(--ink)
+        }
+
+        .ve-accordion-item .accordion-button:focus {
+            box-shadow: none
+        }
+
+/* botones */
+.btn-primary {
+    background: var(--accent);
+    border-color: var(--accent)
+}
+
+.btn-outline-primary {
+    color: var(--accent);
+    border-color: var(--accent)
+}
+
+    .btn-outline-primary:hover {
+        background: rgba(82,165,255,.1)
+    }
+
+.btn-success {
+    background: var(--accent2);
+    border-color: var(--accent2)
+}
+
+.btn-outline-light {
+    border-color: #3a4b79;
+    color: #cfe0ff
+}
+
+    .btn-outline-light:hover {
+        background: #20315c
+    }
+
+.btn-close {
+    filter: invert(1)
+}
+
+@media (max-width: 768px) {
+    .ve-card-body {
+        padding: 12px
+    }
+
+    .table.ve-table {
+        font-size: .92rem
+    }
+}
+
+
+/* Inputs/Selects en dark */
+.form-control.ve-input,
+.form-select.ve-input,
+.input-group-text,
+.ve-modal .form-control,
+.ve-modal .form-select {
+    background-color: var(--panel2) !important;
+    color: var(--txt) !important;
+    border-color: var(--border) !important;
+}
+
+    .form-control.ve-input::placeholder {
+        color: #8ea3d1;
+        opacity: .6;
+    }
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 .2rem rgba(100,181,255,.15);
+    border-color: var(--accent);
+}
+
+/* Dropdown (menus del select) en dark */
+.dropdown-menu {
+    background: var(--panel2);
+    color: var(--txt);
+    border-color: var(--border);
+}
+
+.dropdown-item {
+    color: var(--txt);
+}
+
+    .dropdown-item:hover, .dropdown-item:focus {
+        background: rgba(100,181,255,.15);
+        color: var(--txt);
+    }
+
+/* Toggle % | $ */
+.ve-type-toggle .btn {
+    min-width: 44px;
+    border-color: var(--border);
+}
+
+    .ve-type-toggle .btn.active,
+    .ve-type-toggle .btn:focus {
+        background: var(--accent);
+        color: #051327;
+        border-color: var(--accent);
+    }
+
+
+    .container {
+        min-width: 97% !important;
+    }
+
+/* ===== Layout general ===== */
+.ve-dark {
+    background: #050e39;
+    color: #e6edff;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.navbar {
+    background: radial-gradient(circle at top left, #101938 0, #050816 55%, #040612 100%);
+}
+
+
+/* ancho máximo 95% en desktop */
+.container-xxl {
+    max-width: 95%;
+}
+
+/* ===== Cards ===== */
+.ve-card {
+    background: radial-gradient(circle at top left, #101938 0, #050816 55%, #040612 100%);
+    border-radius: 1rem;
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+    padding: 1.1rem 1.3rem 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.ve-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding-bottom: .6rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    flex-wrap: wrap;
+}
+
+.ve-card-title {
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    font-size: .82rem;
+}
+
+
+/* ===== Inputs pro ===== */
+.ve-input,
+.form-control.ve-input,
+.form-select.ve-input {
+    background: rgba(9, 15, 35, 0.98);
+    border-radius: .7rem;
+    border: 1px solid rgba(118, 158, 255, 0.35);
+    color: #f3f5ff;
+    font-size: .9rem;
+    padding: .55rem .8rem;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease, transform .08s ease;
+}
+
+    .ve-input::placeholder {
+        color: rgba(226, 233, 255, 0.55);
+    }
+
+    .ve-input:focus,
+    .form-control.ve-input:focus,
+    .form-select.ve-input:focus {
+        border-color: rgba(88, 166, 255, 0.95);
+        background: #0d1634;
+        box-shadow: 0 0 0 .16rem rgba(88, 166, 255, 0.45);
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+/* iconos de input-group */
+.input-group-text {
+    background: rgba(10, 17, 40, 0.95);
+    border-color: rgba(118, 158, 255, 0.45);
+    color: rgba(214, 224, 255, 0.9);
+}
+
+/* labels */
+.form-label {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: rgba(194, 206, 255, 0.9);
+    margin-bottom: .25rem;
+}
+
+/* ===== KPIs ===== */
+.kpi {
+    border-radius: .9rem;
+    padding: .75rem 1rem;
+    background: linear-gradient(135deg, rgba(26, 35, 80, 0.95), rgba(11, 25, 60, 0.95));
+    border: 1px solid rgba(99, 179, 237, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+
+    .kpi span {
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: rgba(200, 213, 255, 0.78);
+    }
+
+    .kpi h3 {
+        margin: 0;
+        font-size: 1.15rem;
+    }
+
+/* ===== Tabla cuotas ===== */
+.ve-table {
+    --row-bg: rgba(5, 11, 30, 0.95);
+    background: var(--row-bg);
+    color: #e5ecff;
+    font-size: .8rem;
+}
+
+    .ve-table thead th {
+        background: rgba(11, 22, 55, 0.98);
+        border-bottom: 1px solid rgba(88, 166, 255, 0.35);
+        text-transform: uppercase;
+        font-size: .72rem;
+        letter-spacing: .06em;
+    }
+
+    .ve-table tbody tr:nth-child(even) {
+        background: rgba(6, 13, 32, 0.9);
+    }
+
+/* ===== Chips / badges custom (cliente, etc.) ===== */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    border-radius: 999px;
+    padding: .2rem .65rem;
+    font-size: .75rem;
+    background: rgba(18, 28, 70, 0.95);
+    border: 1px solid rgba(99, 179, 237, 0.6);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 992px) {
+    .container-xxl {
+        max-width: 100%;
+    }
+
+    .ve-card {
+        padding: .9rem .9rem 1.1rem;
+    }
+
+    .ve-card-header {
+        align-items: flex-start;
+    }
+
+        .ve-card-header .btn-group,
+        .ve-card-header .d-flex {
+            width: 100%;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+}
+
+@media (max-width: 768px) {
+    .kpi {
+        margin-bottom: .4rem;
+    }
+
+    #tblCuotas th,
+    #tblCuotas td,
+    #tblFinalizadas th,
+    #tblFinalizadas td {
+        white-space: nowrap;
+        font-size: .72rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-xxl {
+        padding-inline: .75rem;
+    }
+
+    h1 {
+        font-size: 1.4rem;
+    }
+
+    .ve-card-header {
+        gap: .4rem;
+    }
+
+    .btn,
+    .btn-sm {
+        font-size: .75rem;
+        border-radius: .8rem;
+        padding-inline: .6rem;
+    }
+}
+
+
+.tt-info .tooltip-inner {
+    background: #0dcaf0;
+    color: #000;
+}
+
+.tt-success .tooltip-inner {
+    background: #198754;
+}
+
+.tt-danger .tooltip-inner {
+    background: #dc3545;
+}
+
+.tt-warn .tooltip-inner {
+    background: #ffc107;
+    color: #000;
+}
+
+
+.accordion-button {
+    padding: .5rem 1rem;
+    font-size: .9rem;
+}
+
+.accordion-body {
+    background: #1b1f2b;
+    color: #fff;
+}
+
+/* ===================== ACCIONES — IGUAL NUEVOMODIF ===================== */
+
+.btn-accion {
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .btn-accion i {
+        font-size: 14px;
+    }
+
+/* Cobrar */
+.btn-cobrar {
+    background: #f0ad4e !important;
+    border-color: #f0ad4e !important;
+    color: #000 !important;
+}
+
+/* Ajuste */
+.btn-ajuste {
+    background: #5bc0de !important;
+    border-color: #5bc0de !important;
+    color: #fff !important;
+}
+
+/* Historial */
+.btn-historial {
+    background: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #fff !important;
+}
+
+/* Separación visual idéntica */
+.btn-group .btn-accion + .btn-accion {
+    margin-left: 4px;
+}

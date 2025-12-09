@@ -50,9 +50,9 @@ namespace Sistema_David.Models.DB
         public virtual ICollection<ProductosVenta> ProductosVenta { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<RecorridosCobranzas> RecorridosCobranzas { get; set; }
-        public virtual Usuarios Usuarios { get; set; }
         public virtual Clientes Clientes { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<InformacionVentas> InformacionVentas { get; set; }
+        public virtual Usuarios Usuarios { get; set; }
     }
 }
