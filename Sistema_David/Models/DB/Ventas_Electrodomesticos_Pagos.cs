@@ -12,22 +12,26 @@ namespace Sistema_David.Models.DB
     using System;
     using System.Collections.Generic;
     
-    public partial class Recorridos
+    public partial class Ventas_Electrodomesticos_Pagos
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public Recorridos()
+        public Ventas_Electrodomesticos_Pagos()
         {
-            this.RecorridosCobranzas = new HashSet<RecorridosCobranzas>();
+            this.Ventas_Electrodomesticos_Pagos_Detalle = new HashSet<Ventas_Electrodomesticos_Pagos_Detalle>();
         }
     
         public int Id { get; set; }
-        public int IdUsuario { get; set; }
-        public int Orden { get; set; }
-        public int CantRecorridos { get; set; }
-        public Nullable<System.DateTime> Fecha { get; set; }
+        public int IdVenta { get; set; }
+        public System.DateTime FechaPago { get; set; }
+        public string MedioPago { get; set; }
+        public decimal ImporteTotal { get; set; }
+        public string Observacion { get; set; }
+        public int UsuarioCreacion { get; set; }
+        public System.DateTime FechaCreacion { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<RecorridosCobranzas> RecorridosCobranzas { get; set; }
+        public virtual ICollection<Ventas_Electrodomesticos_Pagos_Detalle> Ventas_Electrodomesticos_Pagos_Detalle { get; set; }
+        public virtual Ventas_Electrodomesticos Ventas_Electrodomesticos { get; set; }
         public virtual Usuarios Usuarios { get; set; }
     }
 }

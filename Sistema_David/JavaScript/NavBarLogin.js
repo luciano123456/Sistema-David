@@ -1,9 +1,6 @@
 ﻿let listaVacia = false;
 
-
 document.addEventListener("DOMContentLoaded", async function () {
-
-
 
     var userSession = JSON.parse(localStorage.getItem('usuario'));
 
@@ -11,69 +8,133 @@ document.addEventListener("DOMContentLoaded", async function () {
         $('#nombre').text(userSession.Nombre);
         if (userSession.IdRol != 2) {
             document.getElementById("divNotificacionComprobante").removeAttribute("hidden");
-            document.getElementById("divNotificacionHome").removeAttribute("hidden") ;
+            document.getElementById("divNotificacionHome").removeAttribute("hidden");
             CantidadClientesAusentes();
             CantidadComprobantes();
             CantidadStocksPendientes();
         }
     }
 
-   
-
     if (userSession) {
-        // Si el usuario está en el localStorage, actualizar el texto del enlace
         var userFullName = userSession.Nombre + ' ' + userSession.Apellido;
-        $("#userName").html('<i class="fa fa-user"></i> ' + userFullName); // Cambiar el contenido del enlace
-
+        $("#userName").html('<i class="fa fa-user"></i> ' + userFullName);
     }
 
     await verificarRoles(userSession.IdRol);
-    // Busca todos los elementos con la clase "dropdown-toggle"
+
+    // ============================
+    //  DROPDOWN ORIGINAL
+    // ============================
     var dropdownToggleList = document.querySelectorAll('.dropdown-toggle');
 
-    // Itera sobre cada elemento y agrega un evento de clic
     dropdownToggleList.forEach(function (dropdownToggle) {
         dropdownToggle.addEventListener('click', function (event) {
-            event.preventDefault(); // Evita la acción predeterminada del enlace
-
-            // Obtiene el menú desplegable correspondiente
+            event.preventDefault();
             var dropdownMenu = dropdownToggle.nextElementSibling;
-
-            // Cambia el atributo "aria-expanded" para alternar la visibilidad del menú desplegable
             var isExpanded = dropdownToggle.getAttribute('aria-expanded') === 'true';
             dropdownToggle.setAttribute('aria-expanded', !isExpanded);
-            dropdownMenu.classList.toggle('show'); // Agrega o quita la clase "show" para mostrar u ocultar el menú desplegable
+            dropdownMenu.classList.toggle('show');
         });
     });
 
-    // Agrega un manejador de eventos de clic al documento para ocultar el menú desplegable cuando se hace clic en cualquier lugar que no sea el menú desplegable
     document.addEventListener('click', function (event) {
-        var isDropdownToggle = event.target.closest('.dropdown-toggle'); // Verifica si el elemento clicado es un elemento con la clase "dropdown-toggle"
-        var isDropdownMenu = event.target.closest('.dropdown-menu'); // Verifica si el elemento clicado es un menú desplegable
+        var isDropdownToggle = event.target.closest('.dropdown-toggle');
+        var isDropdownMenu = event.target.closest('.dropdown-menu');
 
-        // Si el elemento clicado no es un menú desplegable ni un elemento con la clase "dropdown-toggle", oculta todos los menús desplegables
         if (!isDropdownToggle && !isDropdownMenu) {
             var dropdownMenus = document.querySelectorAll('.dropdown-menu.show');
             dropdownMenus.forEach(function (dropdownMenu) {
                 dropdownMenu.classList.remove('show');
-                var dropdownToggle = dropdownMenu.previousElementSibling;
-                dropdownToggle.setAttribute('aria-expanded', 'false');
+                dropdownMenu.previousElementSibling.setAttribute('aria-expanded', 'false');
             });
         }
     });
+
+    // ============================
+    // 🔥 AGREGADO — MODO DE VENTAS
+    // ============================
+
+    let tipoVentas = localStorage.getItem("tipoSistemaVentas");
+
+    // Si no está seleccionado aún → mostrar modal
+    if (!tipoVentas) {
+        try {
+            new bootstrap.Modal(document.getElementById("modalTipoVentas")).show();
+        } catch { }
+    }
+
+    // Click en opciones del modal
+    document.querySelectorAll(".select-tipo")?.forEach(btn => {
+        btn.addEventListener("click", function () {
+            let tipo = this.dataset.tipo;
+            localStorage.setItem("tipoSistemaVentas", tipo);
+
+            let modal = bootstrap.Modal.getInstance(document.getElementById("modalTipoVentas"));
+            modal?.hide();
+        });
+    });
+
+    // Botón para abrir modal manualmente
+    let btnCambio = document.getElementById("btnCambiarTipoVentas");
+    if (btnCambio) {
+        btnCambio.addEventListener("click", function () {
+            new bootstrap.Modal(document.getElementById("modalTipoVentas")).show();
+        });
+    }
+
+    // Manejo de botones generales
+    let btnVentasGeneral = document.getElementById("btnVentasGeneral");
+    if (btnVentasGeneral) {
+        btnVentasGeneral.addEventListener("click", function () {
+
+            let tipo = localStorage.getItem("tipoSistemaVentas");
+
+            if (!tipo) {
+                new bootstrap.Modal(document.getElementById("modalTipoVentas")).show();
+                return;
+            }
+
+            if (tipo === "electro")
+                window.location.href = "/Ventas_Electrodomesticos/Historial/";
+            else
+                window.location.href = "/Ventas/Index/";
+        });
+    }
+
+    let btnCobranzasGeneral = document.getElementById("btnCobranzasGeneral");
+    if (btnCobranzasGeneral) {
+        btnCobranzasGeneral.addEventListener("click", function () {
+
+            let tipo = localStorage.getItem("tipoSistemaVentas");
+
+            if (!tipo) {
+                new bootstrap.Modal(document.getElementById("modalTipoVentas")).show();
+                return;
+            }
+
+            if (tipo === "electro")
+                window.location.href = "/Ventas_Electrodomesticos/Cobros/";
+            else
+                window.location.href = "/Cobranzas/Index/";
+        });
+    }
+
 });
 
 
+// ===============================
+// TU CÓDIGO ORIGINAL (SIN TOCAR)
+// ===============================
 
 document.querySelectorAll('.nav-item.dropdown').forEach(dropdown => {
     dropdown.addEventListener('mouseenter', function () {
         const dropdownMenu = this.querySelector('.dropdown-menu');
-        dropdownMenu.classList.add('show'); // Mostrar el dropdown
+        dropdownMenu.classList.add('show');
     });
 
     dropdown.addEventListener('mouseleave', function () {
         const dropdownMenu = this.querySelector('.dropdown-menu');
-        dropdownMenu.classList.remove('show'); // Ocultar el dropdown
+        dropdownMenu.classList.remove('show');
     });
 });
 
@@ -82,9 +143,7 @@ async function CantidadComprobantes() {
 
     var url = "/Rendimiento/MostrarCantidadComprobantes";
 
-    let value = JSON.stringify({
-
-    });
+    let value = JSON.stringify({});
 
     let options = {
         type: "POST",
@@ -100,20 +159,16 @@ async function CantidadComprobantes() {
     if (result != null) {
         document.getElementById("notificacionComprobante").textContent = ` (${result.cantidad})`;
     } else {
-        document.getElementById("notificacionComprobante").textContent = ` (${0})`;
+        document.getElementById("notificacionComprobante").textContent = ` (0)`;
     }
-
 }
-
 
 
 async function CantidadClientesAusentes() {
 
     var url = "/Rendimiento/MostrarCantidadClientesAusentes";
 
-    let value = JSON.stringify({
-
-    });
+    let value = JSON.stringify({});
 
     let options = {
         type: "POST",
@@ -129,9 +184,8 @@ async function CantidadClientesAusentes() {
     if (result != null) {
         document.getElementById("notificationHome").textContent = ` (${result.cantidad})`;
     } else {
-        document.getElementById("notificationHome").textContent = ` (${0})`;
+        document.getElementById("notificationHome").textContent = ` (0)`;
     }
-
 
 }
 
@@ -139,9 +193,7 @@ async function CantidadStocksPendientes() {
 
     var url = "/StockPendiente/MostrarCantidadStocksPendientes";
 
-    let value = JSON.stringify({
-
-    });
+    let value = JSON.stringify({});
 
     let options = {
         type: "POST",
@@ -155,7 +207,6 @@ async function CantidadStocksPendientes() {
     let result = await MakeAjax(options);
 
     if (result > 0) {
-
         document.getElementById("notificationStock").style.display = "inline";
         document.getElementById("notificationStock").textContent = ` (${result})`;
     } else {
@@ -170,9 +221,7 @@ async function cerrarSession() {
         if (confirm("¿Está seguro que desea salir?")) {
             var url = "/Login/CerrarSesion";
 
-            let value = JSON.stringify({
-
-            });
+            let value = JSON.stringify({});
 
             let options = {
                 type: "POST",
@@ -219,6 +268,5 @@ function verificarRoles(idRol) {
     } else { // VENDEDOR u otros
         document.getElementById("seccionStock").removeAttribute("hidden");
         document.getElementById("seccionClientesCero").removeAttribute("hidden");
-        // NO mostramos Sueldos
     }
 }

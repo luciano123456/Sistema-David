@@ -143,6 +143,13 @@ namespace Sistema_David.Controllers
         }
 
 
+        public ActionResult GetClientesVendedor(int idVendedor)
+        {
+            var result = ClientesModel.ListaClientesVendedor(idVendedor);
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
+
         public ActionResult ListarVendedores()
         {
             var result = UsuariosModel.ListaUsuarios();

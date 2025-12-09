@@ -21,6 +21,7 @@ namespace Sistema_David.Models.DB
             this.StockUsuarios1 = new HashSet<StockUsuarios>();
             this.ProductosVenta = new HashSet<ProductosVenta>();
             this.StocksPendientes = new HashSet<StocksPendientes>();
+            this.Ventas_Electrodomesticos_Detalle = new HashSet<Ventas_Electrodomesticos_Detalle>();
         }
     
         public int Id { get; set; }
@@ -33,6 +34,7 @@ namespace Sistema_David.Models.DB
         public Nullable<decimal> PrecioVenta { get; set; }
         public Nullable<int> PorcVenta { get; set; }
         public Nullable<int> Activo { get; set; }
+        public Nullable<int> DiasVencimiento { get; set; }
     
         public virtual Categorias Categorias { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
@@ -43,5 +45,7 @@ namespace Sistema_David.Models.DB
         public virtual ICollection<ProductosVenta> ProductosVenta { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StocksPendientes> StocksPendientes { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Ventas_Electrodomesticos_Detalle> Ventas_Electrodomesticos_Detalle { get; set; }
     }
 }

@@ -1,0 +1,606 @@
+﻿@{
+    ViewBag.Title = "Nueva Venta";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css" rel="stylesheet" />
+
+<body class="ve-dark">
+
+    <div class="container py-4">
+
+        <!-- ====================== TÍTULO ====================== -->
+        <header class="d-flex align-items-start gap-3 mb-4">
+            <i class="fa fa-bolt text-info fs-2"></i>
+            <div>
+                <h1 class="m-0 fw-bold text-white">Nueva Venta</h1>
+                <small class="text-muted">Plan flexible de cuotas — claro y transparente.</small>
+            </div>
+        </header>
+
+
+        <!-- =====================================================
+             DATOS DEL CLIENTE
+        ====================================================== -->
+        <section class="ve-card">
+            <div class="ve-card-header justify-content-between">
+
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa fa-id-badge"></i>
+                    <span class="ve-card-title">Datos del Cliente</span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button id="btnBuscarClienteModal" class="btn btn-outline-light btn-sm">
+                        <i class="fa fa-table"></i> Buscar
+                    </button>
+                    <button id="btnNuevoCliente" class="btn btn-success btn-sm">
+                        <i class="fa fa-user-plus"></i> Nuevo
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="ve-card-body">
+
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-12 col-lg-5">
+                        <label class="form-label fw-semibold">DNI <span class="text-danger">*</span></label>
+
+                        <div class="input-group">
+                            <input id="dni" type="text" class="form-control ve-input" placeholder="Ej: 32123456" autocomplete="off" />
+                            <button id="btnBuscarDni" class="btn btn-primary">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+
+                        <div id="msgCliente" class="form-text text-danger mt-1 d-none">
+                            No se encontró el cliente.
+                            <a id="crearClienteLink" href="#" class="ms-1">Crear ahora</a>
+                        </div>
+                    </div>
+
+                    <!-- BADGES -->
+                    <div class="col-12">
+                        <div id="wrapBadges" class="d-flex flex-wrap gap-2 d-none">
+                            <span id="bNombre" class="chip chip-muted">
+                                <i class="fa fa-user"></i> —
+                            </span>
+                            <span id="bEstado" class="chip"><i class="fa fa-circle"></i> —</span>
+                            <span id="bDireccion" class="chip chip-muted">
+                                <i class="fa fa-map-marker"></i> —
+                            </span>
+                            <span id="bTelefono" class="chip chip-muted">
+                                <i class="fa fa-phone"></i> —
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+
+
+        <!-- =====================================================
+             DATOS DE VENTA
+        ====================================================== -->
+        <section class="ve-card mt-4">
+
+            <div class="ve-card-header">
+                <i class="fa fa-lock"></i>
+                <span class="ve-card-title">Datos de Venta</span>
+                <input type="hidden" id="idVenta" />
+            </div>
+
+            <div class="ve-card-body">
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Fecha Venta</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                            <input id="fechaVenta" type="date" class="form-control ve-input" />
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Entrega</label>
+                        <input id="entrega" type="text" class="form-control ve-input text-end" placeholder="$ 0,00" autocomplete="off" />
+                        <div class="form-text">Se descuenta del total de la venta.</div>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Primer Cobro</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-calendar-o"></i></span>
+                            <input id="fechaPrimerCobro" type="date" class="form-control ve-input" />
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Fecha Límite</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-calendar-check-o"></i></span>
+                            <input id="fechaLimite" type="date" class="form-control ve-input" />
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-semibold">Observación</label>
+                        <input id="observacion" type="text" class="form-control ve-input" placeholder="Notas internas de la venta..." />
+                    </div>
+
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold">Turno</label>
+                        <select id="turno" class="form-select ve-input">
+                            <option value="">Seleccionar</option>
+                            <option value="mañana">Mañana</option>
+                            <option value="tarde">Tarde</option>
+                        </select>
+                    </div>
+
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold">Franja horaria</label>
+                        <select id="franja" class="form-select ve-input">
+                            <option value="">Seleccionar</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================================
+             PRODUCTOS
+        ====================================================== -->
+        <section class="ve-card mt-4">
+
+            <div class="ve-card-header justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa fa-object-group"></i>
+                    <span class="ve-card-title">Productos</span>
+                </div>
+
+                <button id="btnAbrirProducto" class="btn btn-primary btn-sm">
+                    <i class="fa fa-plus"></i> Añadir
+                </button>
+            </div>
+
+            <div class="ve-card-body">
+
+                <div class="table-responsive">
+                    <table id="tblProductos" class="table ve-table align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width:110px">Imagen</th>
+                                <th>Producto</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Precio Total</th>
+                                <th class="text-center" style="width:120px">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- KPIs -->
+                <div class="row g-3 mt-2">
+                    <div class="col-12 col-md-4">
+                        <div class="kpi kpi-total">
+                            <span>Total</span>
+                            <h3 id="kpiTotal">$ 0,00</h3>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="kpi kpi-entrega">
+                            <span>Entrega</span>
+                            <h3 id="kpiEntrega">$ 0,00</h3>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="kpi kpi-restante">
+                            <span>Restante</span>
+                            <h3 id="kpiRestante">$ 0,00</h3>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================================
+             PLAN DE CUOTAS
+        ====================================================== -->
+        <section class="ve-card mt-4">
+
+            <div class="ve-card-header justify-content-between">
+
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa fa-calendar"></i>
+                    <span class="ve-card-title">Plan de Cuotas</span>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button id="btnGenerarCuotas" class="btn btn-success btn-sm">
+                        <i class="fa fa-calculator"></i> Generar
+                    </button>
+                    <button id="btnLimpiarCuotas" class="btn btn-outline-light btn-sm">
+                        <i class="fa fa-eraser"></i> Limpiar
+                    </button>
+                    <button id="btnExportarPdf" class="btn btn-primary btn-sm">
+                        <i class="fa fa-file-pdf-o"></i> Exportar PDF
+                    </button>
+
+                    <span id="contadorPagadas" class="chip ms-2">
+                        <i class="fa fa-check"></i>
+                        <b id="qPagadas">0</b>/<b id="qTotales">0</b>
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="ve-card-body">
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Forma</label>
+                        <select id="forma" class="form-select ve-input">
+                            <option value="diaria">Diaria</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="quincenal">Quincenal</option>
+                            <option value="mensual">Mensual</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Cantidad (0 = auto)</label>
+                        <input id="cantCuotas" type="number" min="0" class="form-control ve-input" value="0" />
+                    </div>
+
+                    <!-- Recargo -->
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Recargo</label>
+                        <div class="input-group">
+                            <input id="recargo" type="text" class="form-control ve-input text-end" placeholder="Ej: 10" />
+                            <div id="recargoTipoWrap" class="btn-group ve-type-toggle">
+                                <button type="button" class="btn btn-outline-light active" data-value="%">%</button>
+                                <button type="button" class="btn btn-outline-light" data-value="$">$</button>
+                            </div>
+                            <select id="recargoTipo" class="d-none">
+                                <option value="%">%</option>
+                                <option value="$">$</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Descuento -->
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Descuento</label>
+                        <div class="input-group">
+                            <input id="descuento" type="text" class="form-control ve-input text-end" placeholder="Ej: 5" />
+                            <div id="descuentoTipoWrap" class="btn-group ve-type-toggle">
+                                <button type="button" class="btn btn-outline-light active" data-value="%">%</button>
+                                <button type="button" class="btn btn-outline-light" data-value="$">$</button>
+                            </div>
+                            <select id="descuentoTipo" class="d-none">
+                                <option value="%">%</option>
+                                <option value="$">$</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- LISTADO DE CUOTAS -->
+                <div class="table-responsive">
+                    <table id="tblCuotas" class="table ve-table align-middle">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width:50px">#</th>
+                                <th>Vencimiento</th>
+                                <th class="text-end">Original</th>
+                                <th class="text-end">Recargo</th>
+                                <th class="text-end">Descuento</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Restante</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center" style="width:140px">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+
+                <!-- ACORDEÓN FINALIZADAS -->
+                <div class="accordion" id="accFinalizadas">
+                    <div class="accordion-item ve-accordion-item">
+                        <h2 class="accordion-header">
+                            <button id="btnFinalizadas" class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#colFinalizadas">
+                                <i class="fa fa-check-circle me-2"></i>
+                                Cuotas finalizadas
+                                <span class="badge bg-secondary ms-2" id="qFinalizadas">0</span>
+                            </button>
+                        </h2>
+                        <div id="colFinalizadas" class="accordion-collapse collapse" data-bs-parent="#accFinalizadas">
+                            <div class="accordion-body p-0">
+                                <div class="table-responsive">
+                                    <table id="tblFinalizadas" class="table ve-table align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-center" style="width:50px">#</th>
+                                                <th>Vencimiento</th>
+                                                <th class="text-end">Original</th>
+                                                <th class="text-end">Recargo</th>
+                                                <th class="text-end">Descuento</th>
+                                                <th class="text-end">Total</th>
+                                                <th class="text-end">Pagado</th>
+                                                <th class="text-center">Estado</th>
+                                                <th class="text-center" style="width:120px">Historial</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+
+        <!-- =====================================================
+             BOTONES FINALES
+        ====================================================== -->
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <a href="../Historial" class="btn btn-outline-light">
+                <i class="fa fa-chevron-left"></i> Volver
+            </a>
+            <button id="btnRegistrarVenta" class="btn btn-success">
+                <i class="fa fa-check"></i> Registrar Venta
+            </button>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- =====================================================
+         MODALES
+    ====================================================== -->
+    <!-- MODAL PRODUCTO -->
+    <div class="modal fade" id="mdProducto" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content ve-modal">
+
+                <div class="modal-header">
+                    <h5 class="modal-title text-white"><i class="fa fa-cube text-accent me-2"></i> Producto</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-4">
+
+                        <div class="col-12 col-md-4 text-center">
+                            <img id="imgProducto" class="img-fluid ve-img mb-2" alt="Producto sin imagen">
+                            <small id="msgStock" class="d-block mt-1 text-muted"></small>
+                        </div>
+
+                        <div class="col-12 col-md-8">
+
+                            <label class="form-label fw-semibold">Producto</label>
+                            <select id="selProducto" class="form-select ve-input"></select>
+
+                            <div class="mt-3">
+                                <label class="form-label fw-semibold">Cantidad</label>
+                                <div class="input-group">
+                                    <button class="btn btn-outline-light" id="btnMenos"><i class="fa fa-minus"></i></button>
+                                    <input id="cantidadProducto" class="form-control ve-input text-center" type="number" min="1" value="1" />
+                                    <button class="btn btn-outline-light" id="btnMas"><i class="fa fa-plus"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-3 mt-3">
+                                <span class="chip"><i class="fa fa-shield"></i> Validación stock</span>
+                                <span class="chip"><i class="fa fa-flash"></i> Precio automático</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnGuardarProducto" class="btn btn-primary">Añadir</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- MODAL COBRO -->
+    <div class="modal fade" id="mdCobro" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content ve-modal">
+
+                <div class="modal-header">
+                    <h5 class="modal-title text-white"><i class="fa fa-money text-accent me-2"></i> Cobrar cuota</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label fw-semibold">Restante</label>
+                            <input id="cobroRestante" class="form-control ve-input" type="text" readonly />
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label class="form-label fw-semibold">Importe a cobrar</label>
+                            <input id="cobroImporte" class="form-control ve-input text-end" type="text" placeholder="$ 0,00">
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label class="form-label fw-semibold">Observación</label>
+                            <input id="cobroObs" class="form-control ve-input" type="text" placeholder="Detalle del cobro (opcional)">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button id="btnConfirmarCobro" class="btn btn-success">Confirmar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- MODAL AJUSTE -->
+    <div class="modal fade" id="mdAjuste" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content ve-modal">
+
+                <div class="modal-header">
+                    <h5 class="modal-title text-white"><i class="fa fa-sliders text-accent me-2"></i> Ajustar cuota</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="row g-3">
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Recargo</label>
+                            <div class="input-group">
+                                <input id="ajRecargo" class="form-control ve-input text-end" type="text" placeholder="Ej: 10">
+                                <div id="ajRecargoTipoWrap" class="btn-group ve-type-toggle">
+                                    <button class="btn btn-outline-light active" data-value="%">%</button>
+                                    <button class="btn btn-outline-light" data-value="$">$</button>
+                                </div>
+                                <select id="ajRecargoTipo" class="d-none">
+                                    <option value="%">%</option>
+                                    <option value="$">$</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Descuento</label>
+                            <div class="input-group">
+                                <input id="ajDescuento" class="form-control ve-input text-end" type="text" placeholder="Ej: 5">
+                                <div id="ajDescuentoTipoWrap" class="btn-group ve-type-toggle">
+                                    <button class="btn btn-outline-light active" data-value="%">%</button>
+                                    <button class="btn btn-outline-light" data-value="$">$</button>
+                                </div>
+                                <select id="ajDescuentoTipo" class="d-none">
+                                    <option value="%">%</option>
+                                    <option value="$">$</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="form-text mt-2">
+                        El ajuste no puede dejar la cuota por debajo de lo ya pagado.
+                    </div>
+
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button id="btnConfirmarAjuste" class="btn btn-primary">Aplicar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- MODAL HISTORIAL -->
+    <div class="modal fade" id="mdHistorial" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content ve-modal">
+
+                <div class="modal-header">
+                    <h5 class="modal-title text-white"><i class="fa fa-list text-accent me-2"></i> Historial de cuota</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="table-responsive">
+                        <table class="table ve-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px">#</th>
+                                    <th>Fecha</th>
+                                    <th class="text-end">Importe</th>
+                                    <th>Medio</th>
+                                    <th>Observación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="histBody"></tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+
+
+@section scripts {
+
+    <!-- Bootstrap 5 JS (por si el layout no lo trae en bundle) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Moment -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
+
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- TU JS -->
+    <script src="~/JavaScript/Ventas_Electrodomesticos_NuevoModif.js?v=11.0"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        });
+    </script>
+}

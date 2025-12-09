@@ -377,6 +377,7 @@
     <Compile Include="Controllers\StockPendienteController.cs" />
     <Compile Include="Controllers\StockController.cs" />
     <Compile Include="Controllers\RendimientoController.cs" />
+    <Compile Include="Controllers\VentasElectrodomesticosController.cs" />
     <Compile Include="Controllers\UsuariosController.cs" />
     <Compile Include="Controllers\PedidosController.cs" />
     <Compile Include="Controllers\VentasController.cs" />
@@ -394,6 +395,9 @@
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DB\InformacionClientesAsignados.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\informacionventas_ult7d.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DB\Recorridos.cs">
@@ -424,6 +428,24 @@
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DB\Ventas.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Ventas_Electrodomesticos.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Ventas_Electrodomesticos_Cuotas.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Ventas_Electrodomesticos_Detalle.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Ventas_Electrodomesticos_Historial.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Ventas_Electrodomesticos_Pagos.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DB\Ventas_Electrodomesticos_Pagos_Detalle.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\LimitesModel.cs" />
@@ -483,6 +505,7 @@
     </Compile>
     <Compile Include="Models\LoginModel.cs" />
     <Compile Include="Models\Manager\VentasManager.cs" />
+    <Compile Include="Models\Modelo\VMVentasElectrodomesticos.cs" />
     <Compile Include="Models\Modelo\VMTiposNegocio.cs" />
     <Compile Include="Models\Modelo\VMClienteNuevaDireccion.cs" />
     <Compile Include="Models\Modelo\VMInformacionClienteAsignado.cs" />
@@ -511,6 +534,7 @@
     <Compile Include="Models\Modelo\VMCobranza.cs" />
     <Compile Include="Models\Modelo\VMVenta.cs" />
     <Compile Include="Models\RecorridosModel.cs" />
+    <Compile Include="Models\Ventas_ElectrodomesticosModel.cs" />
     <Compile Include="Models\StockPendienteModel.cs" />
     <Compile Include="Models\StockModel.cs" />
     <Compile Include="Models\CobranzasModel.cs" />
@@ -551,6 +575,8 @@
     <Content Include="Content\Datatable\js\jquery.dataTables.min.js" />
     <Content Include="Content\font-awesome.css" />
     <Content Include="Content\font-awesome.min.css" />
+    <Content Include="Estilos\RedisenoPantallas.css" />
+    <Content Include="Estilos\Ventas_Electrodomesticos.css" />
     <Content Include="Estilos\ClientesEditar.css" />
     <Content Include="Estilos\InformacionVenta.css" />
     <Content Include="Estilos\PagosNuevoModif.css" />
@@ -581,6 +607,9 @@
     <Content Include="JavaScript\bundle.js" />
     <Content Include="JavaScript\ClientesCero.js" />
     <Content Include="JavaScript\ClientesEditar.js" />
+    <Content Include="JavaScript\Ventas_Electrodomesticos_Cobros.js" />
+    <Content Include="JavaScript\Ventas_Electrodomesticos_Historial.js" />
+    <Content Include="JavaScript\Ventas_Electrodomesticos_NuevoModif.js" />
     <Content Include="JavaScript\InformacionCliente.js" />
     <Content Include="JavaScript\NavBarLogin.js" />
     <Content Include="JavaScript\PagosNuevoModif.js" />
@@ -735,6 +764,9 @@
     <Content Include="Views\Recorrido\Index.cshtml" />
     <Content Include="Views\Stock\General.cshtml" />
     <Content Include="Views\Utils\Modals.cshtml" />
+    <Content Include="Views\Ventas_Electrodomesticos\NuevoModif.cshtml" />
+    <Content Include="Views\Ventas_Electrodomesticos\Cobros.cshtml" />
+    <Content Include="Views\Ventas_Electrodomesticos\Historial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

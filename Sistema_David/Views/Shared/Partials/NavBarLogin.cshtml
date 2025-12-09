@@ -3,18 +3,26 @@
 <head>
     <meta charset="utf-8">
     <title>My favorite book</title>
-    <!-- Estilos de Bootstrap y otros -->
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link href="~/Estilos/NavBarLogin.css" rel="stylesheet" />
     <link href="~/Content/font-awesome.css" rel="stylesheet" />
+
     <style>
-        /* Tus estilos adicionales aquí */
+        .pointer {
+            cursor: pointer;
+        }
+
+        .select-tipo:hover {
+            background: rgba(0,123,255,0.1);
+        }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: rgba(112, 112, 112, 0.1);">
-        <div class="container-fluid">
 
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: rgba(112,112,112,0.1);">
+        <div class="container-fluid">
 
             <div class="d-flex align-items-center me-2">
                 <div id="divNotificacionComprobante" hidden>
@@ -28,55 +36,75 @@
                 </div>
             </div>
 
-
             <a class="navbar-brand">Indumentaria DG</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mt-2 mb-2 mb-lg-0">
-                    <!-- Items del menú aquí -->
 
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+                <ul class="navbar-nav me-auto mt-2 mb-2 mb-lg-0">
+
+                    <!-- ❌ ELIMINADO EL MENÚ COMPLETO DE VENTAS ELECTRODOMÉSTICOS -->
 
                     <li class="nav-item" id="seccionUsuarios" hidden>
                         <a class="nav-link" id="btnUsuarios" onclick="document.location.href='@Url.Content("~/Usuarios/Index/")'">
                             Usuarios <i id="notificationStock" class="fa fa-check text-danger" style="display:none;"></i>
                         </a>
                     </li>
+
                     <li class="nav-item" id="seccionSueldos" hidden>
-                        <a class="nav-link" id="btnSueldos"
-                           onclick="document.location.href='@Url.Content("~/Pagos/Index/")'">
+                        <a class="nav-link" id="btnSueldos" onclick="document.location.href='@Url.Content("~/Pagos/Index/")'">
                             Pagos de Sueldos
                         </a>
                     </li>
 
-
                     <li class="nav-item" id="seccionRendimiento" hidden>
-                        <a class="nav-link" id="btnRendimiento" onclick="document.location.href='@Url.Content("~/Rendimiento/Index/")'">Rendimiento</a>
+                        <a class="nav-link" id="btnRendimiento" onclick="document.location.href='@Url.Content("~/Rendimiento/Index/")'">
+                            Rendimiento
+                        </a>
                     </li>
 
                     <li class="nav-item" id="seccionProductos" hidden>
-                        <a class="nav-link" id="btnProductos" onclick="document.location.href='@Url.Content("~/Productos/Index/")'">Productos</a>
+                        <a class="nav-link" id="btnProductos" onclick="document.location.href='@Url.Content("~/Productos/Index/")'">
+                            Productos
+                        </a>
                     </li>
-                    <li class="nav-item" id="seccionCobranzas" hidden>
-                        <a class="nav-link" id="btnCobranzas" onclick="document.location.href='@Url.Content("~/Cobranzas/Index/")'">Cobranzas</a>
-                    </li>
+
+                    <!-- 🔥 NUEVOS BOTONES GENERALES -->
+
                     <li class="nav-item" id="seccionVentas">
-                        <a class="nav-link" id="btnVentas" onclick="document.location.href='@Url.Content("~/Ventas/Index/")'">Ventas</a>
+                        <a class="nav-link pointer" id="btnVentasGeneral">Ventas</a>
                     </li>
+
+                    <li class="nav-item" id="seccionCobranzas">
+                        <a class="nav-link pointer" id="btnCobranzasGeneral">Cobranzas</a>
+                    </li>
+
                     <li class="nav-item" id="seccionStock" hidden>
-                        <a class="nav-link" id="btnProductos" onclick="document.location.href='@Url.Content("~/Stock/Index/")'">Stock</a>
+                        <a class="nav-link" id="btnProductos"
+                           onclick="document.location.href='@Url.Content("~/Stock/Index/")'">
+                            Stock
+                        </a>
                     </li>
+
                     <li class="nav-item" id="seccionClientes" hidden>
-                        <a class="nav-link" id="btnClientes" onclick="document.location.href='@Url.Content("~/Clientes/Index/")'">Clientes</a>
+                        <a class="nav-link" id="btnClientes" onclick="document.location.href='@Url.Content("~/Clientes/Index/")'">
+                            Clientes
+                        </a>
                     </li>
+
                     <li class="nav-item" id="seccionClientesCero" hidden>
                         <a class="nav-link" id="btnClientesCero" onclick="document.location.href='@Url.Content("~/ClientesCero/Index/")'">
                             Clientes <i id="notificationIcon" class="fa fa-bell text-danger" style="display:none;"></i>
                         </a>
                     </li>
+
                     <li class="nav-item dropdown" id="configDropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="configDropdownLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="configDropdownLink" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
                             Soporte
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="configDropdownLink">
@@ -91,26 +119,28 @@
                                 </a>
                             </li>
                         </ul>
+                    </li>
 
-                        <!-- Agrega el enlace a Font Awesome 4.7 si no lo tienes -->
-                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
+                    <!-- 🔥 BOTÓN PARA CAMBIAR EL MODO -->
+                    <li class="nav-item">
+                        <a class="nav-link pointer" id="btnCambiarTipoVentas">
+                            <i class="fa fa-exchange"></i> Modo Venta
+                        </a>
                     </li>
 
                 </ul>
 
-
-                <!-- Usuario Dropdown -->
+                <!-- Usuario -->
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
+                           role="button" data-bs-toggle="dropdown">
                             <span id="userName"></span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" onclick="cerrarSession();">Cerrar Sesión</a></li>
                         </ul>
                     </li>
-
                 </ul>
 
             </div>
@@ -118,11 +148,46 @@
     </nav>
 
 
+    <!-- 🔥 MODAL PARA ELEGIR TIPO DE VENTA -->
+    <div class="modal fade" id="modalTipoVentas" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
 
-   
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Seleccioná el tipo de ventas</h5>
+                </div>
+
+                <div class="modal-body text-center">
+
+                    <p class="text-muted">Elegí qué sistema vas a usar:</p>
+
+                    <div class="row g-3">
+
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 border rounded pointer select-tipo" data-tipo="indumentaria">
+                                <i class="fa fa-shopping-bag fa-2x mb-2 text-primary"></i>
+                                <h5>Indumentaria</h5>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 border rounded pointer select-tipo" data-tipo="electro">
+                                <i class="fa fa-television fa-2x mb-2 text-success"></i>
+                                <h5>Electrodomésticos</h5>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
     <script src="~/JavaScript/Utils/Utils.js"></script>
-    <link href="~/Content/font-awesome.css" rel="stylesheet" />
+    <script src="~/JavaScript/NavBarLogin.js?v=2.0"></script>
 
-
-    <script src="~/JavaScript/NavBarLogin.js?v=1.6"></script>
 </body>
+</html>
