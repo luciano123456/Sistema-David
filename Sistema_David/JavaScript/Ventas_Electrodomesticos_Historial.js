@@ -267,13 +267,33 @@ function renderTabla(data) {
                 orderable: false,
                 className: "text-center",
                 render: id => `
-                    <button class="btn btn-outline-light btn-sm me-1" onclick="editarVenta(${id})">
-                        <i class="fa fa-pencil"></i>
-                    </button>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarVenta(${id})">
-                        <i class="fa fa-trash"></i>
-                    </button>
-                `
+    <div class="d-flex justify-content-center gap-2">
+
+        <!-- EDITAR -->
+        <button class="btn-accion btn-editar"
+                onclick="editarVenta(${id})"
+                title="Editar venta">
+            <i class="fa fa-pencil"></i>
+        </button>
+
+        <!-- ELIMINAR -->
+        <button class="btn-accion btn-eliminar"
+                onclick="eliminarVenta(${id})"
+                title="Eliminar venta">
+            <i class="fa fa-trash"></i>
+        </button>
+
+
+        <!-- PDF -->
+        <button class="btn-accion btn-pdf"
+                onclick="exportarPdfVenta(${id})"
+                title="Exportar PDF">
+            <i class="fa fa-file-pdf-o"></i>
+        </button>
+
+    </div>
+`
+
             }
         ]
     });
@@ -630,9 +650,21 @@ async function eliminarVenta(id) {
 /* ------------ PDF INDIVIDUAL ------------ */
 
 function exportarPdfVenta(idVenta) {
-    window.location.href = `/Ventas_Electrodomesticos/Cobros?idVenta=${idVenta}`;
-}
 
+    if (!idVenta || Number(idVenta) <= 0) {
+        showToast("Venta inválida", "danger");
+        return;
+    }
+
+    // Si existe tu exportador global (el de jsPDF que ya tenés)
+    if (typeof window.exportarVentaPDF === "function") {
+        window.exportarVentaPDF(Number(idVenta));
+        return;
+    }
+
+    // Fallback: si por alguna razón ese exportador no está cargado
+    showToast("Exportación PDF no disponible (falta exportarVentaPDF)", "danger");
+}
 
 async function cargarUsuarios() {
     try {

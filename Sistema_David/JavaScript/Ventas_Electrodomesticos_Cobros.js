@@ -115,11 +115,6 @@ VC.initEventos = function () {
         $("#iconFiltros").toggleClass("fa-chevron-down fa-chevron-up");
     });
 
-    // Confirmar cobro
-    $("#md_confirmarCobro").on("click", VC.confirmarCobro);
-
-    // Confirmar ajuste
-    $("#aj_confirmar").on("click", VC.confirmarAjuste);
 };
 
 /* ===========================================================
@@ -341,8 +336,7 @@ VC.cargarTabla = async function () {
 
             {
                 data: null, className: "text-center", orderable: false,
-                render: d => `
-<div class="btn-group">
+                render: d => `<div class="btn-group">
 
     <button class="btn btn-accion btn-cobrar me-1"
         onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta}, ${d.MontoRestante})"
@@ -356,14 +350,22 @@ VC.cargarTabla = async function () {
         <i class="fa fa-bolt"></i>
     </button>
 
-   <button class="btn btn-accion btn-historial"
-    onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})"
-    title="Historial">
-    <i class="fa fa-eye"></i>
+    <button class="btn btn-accion btn-historial me-1"
+        onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})"
+        title="Historial">
+        <i class="fa fa-eye"></i>
+    </button>
+
+    <!-- 🔥 EXPORTAR PDF -->
+  <button class="btn btn-accion btn-pdf"
+    onclick="VC.exportarVentaPdf(${d.IdVenta})"
+    title="Exportar PDF">
+    <i class="fa fa-file-pdf-o"></i>
 </button>
 
 
-</div>`
+</div>
+`
             }
         ]
     });
@@ -477,20 +479,24 @@ VC.formarAcordeonVenta = function (rowData) {
                 </table>
             </div>
 
-            <div class="accordion mt-3" id="accFin_${idV}">
-                <div class="accordion-item ve-accordion-item">
+           <div class="accordion mt-3" id="accFin_${idV}">
+    <div class="accordion-item ve-accordion-item">
 
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#colFin_${idV}">
-                            <i class="fa fa-check-circle text-success me-2"></i>
-                            Cuotas finalizadas
-                            <span class="badge bg-secondary ms-2" id="qFin_${idV}">0</span>
-                        </button>
-                    </h2>
+       <h2 class="accordion-header">
+    <button class="accordion-button collapsed js-fin-toggle"
+            type="button"
+            aria-expanded="false"
+            data-idventa="${idV}">
+        <i class="fa fa-check-circle text-success me-2"></i>
+        Cuotas finalizadas
+        <span class="badge bg-secondary ms-2" id="qFin_${idV}">0</span>
+    </button>
+</h2>
 
-                    <div id="colFin_${idV}" class="accordion-collapse collapse"
+<div id="colFin_${idV}"
+     class="accordion-collapse"
+     style="display:none">
+
                          data-bs-parent="#accFin_${idV}">
 
                         <div class="accordion-body p-0">
@@ -609,7 +615,7 @@ VC.renderCuotas = function (v) {
                     <td class="text-end">${VC.fmt(c.MontoPagado)}</td>
                     <td class="text-center">
                         <button class="btn btn-secondary btn-sm"
-                                onclick="VC.verHistorial(${c.Id}, ${v.IdVenta})">
+                            onclick="VC.abrirHistorialPartial(${v.IdVenta}, ${c.Id})">
                             <i class="fa fa-clock-o"></i>
                         </button>
                     </td>
@@ -675,11 +681,11 @@ VC.renderCuotas = function (v) {
                             <i class="fa fa-bolt"></i>
                         </button>
 
-                        <button class="btn btn-accion btn-historial"
-                            onclick="VC.verHistorial(${c.Id}, ${v.IdVenta})"
-                            title="Historial">
-                            <i class="fa fa-eye"></i>
-                        </button>
+                     <button class="btn btn-accion btn-historial"
+    onclick="VC.abrirHistorialPartial(${v.IdVenta}, ${c.Id})"
+    title="Historial">
+    <i class="fa fa-eye"></i>
+</button>
 
                     </div>
                 </td>
@@ -725,177 +731,25 @@ VC.puedeCobrarCuota = function (ventaDet, idCuota) {
    MODAL COBRO
 =========================================================== */
 
-VC.abrirCobro = function (idCuota, idVenta, montoRestante) {
 
-    // Delegamos TODO al partial
-    if (typeof window.abrirModalCobro !== "function") {
-        console.error("abrirModalCobro no está disponible");
-        return;
-    }
-
-    // Llamada REAL al modal del partial
-    window.abrirModalCobro(idVenta, idCuota);
-};
-
-VC.confirmarCobro = async function () {
-
-    const idCuota = Number($("#md_cuotaId").val());
-    const importe = VC.parseMoney($("#md_importe").val());
-    const obs = $("#md_obs").val();
-
-    if (!idCuota || importe <= 0) {
-        VC.toast("Importe inválido", "danger");
-        return;
-    }
-
-    const cuota = cuotasCache.find(x => x.IdCuota === idCuota);
-    if (!cuota) {
-        VC.toast("Cuota no encontrada", "danger");
-        return;
-    }
-
-    const payload = {
-        IdVenta: cuota.IdVenta,
-        FechaPago: moment().format("YYYY-MM-DD"),
-        MedioPago: "EFECTIVO",
-        ImporteTotal: importe,
-        Observacion: obs,
-        Aplicaciones: [
-            { IdCuota: idCuota, ImporteAplicado: importe }
-        ]
-    };
-
-    try {
-        const resp = await $.ajax({
-            url: "/Ventas_Electrodomesticos/RegistrarPago",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(payload)
-        });
-
-        if (!resp.success) {
-            VC.toast(resp.message || "Error al registrar pago", "danger");
-            return;
-        }
-
-        VC.toast("Pago registrado", "success");
-        VC.closeModal("mdCobro");
-
-        await VC.cargarTabla();
-
-        if (ventaAcordeonAbierta === cuota.IdVenta)
-            await VC.cargarDetalleVenta(cuota.IdVenta);
-
-    } catch (e) {
-        VC.toast("Error registrando pago", "danger");
-        console.error(e);
-    }
-};
 
 /* ===========================================================
    MODAL AJUSTE
 =========================================================== */
 
-VC.abrirAjuste = function (idCuota) {
-
-    $("#aj_cuotaId").val(idCuota);
-    $("#aj_recargo").val("");
-    $("#aj_descuento").val("");
-
-    VC.openModal("mdAjuste");
-};
-
-VC.confirmarAjuste = async function () {
-
-    const idCuota = Number($("#aj_cuotaId").val());
-    if (!idCuota) {
-        VC.toast("Cuota inválida", "danger");
-        return;
-    }
-
-    const cuota = cuotasCache.find(x => x.IdCuota === idCuota);
-    if (!cuota) {
-        VC.toast("No se encontró la cuota", "danger");
-        return;
-    }
-
-    const original = Number(cuota.MontoOriginal || 0);
-
-    const rVal = VC.parseMoney($("#aj_recargo").val());
-    const rTipo = $("#aj_recargoTipo").val();
-
-    const dVal = VC.parseMoney($("#aj_descuento").val());
-    const dTipo = $("#aj_descuentoTipo").val();
-
-    const recargo = rTipo === "%" ? (original * rVal / 100) : rVal;
-    const descuento = dTipo === "%" ? (original * dVal / 100) : dVal;
-
-    try {
-        const resp = await $.post("/Ventas_Electrodomesticos/ActualizarRecargoDescuentoCuota", {
-            idCuota,
-            recargo,
-            descuento
-        });
-
-        if (!resp.success) {
-            VC.toast(resp.message || "Error al ajustar cuota", "danger");
-            return;
-        }
-
-        VC.toast("Ajuste aplicado", "success");
-        VC.closeModal("mdAjuste");
-
-        await VC.cargarTabla();
-
-        if (ventaAcordeonAbierta === cuota.IdVenta)
-            await VC.cargarDetalleVenta(cuota.IdVenta);
-
-    } catch (e) {
-        VC.toast("Error ajustando cuota", "danger");
-        console.error(e);
-    }
-};
-
 /* ===========================================================
    HISTORIAL DE UNA CUOTA
 =========================================================== */
 
-VC.verHistorial = async function (idCuota, idVenta) {
-
-    try {
-        const resp = await $.getJSON("/Ventas_Electrodomesticos/GetDetalleVenta", { idVenta });
-
-        if (!resp.success) {
-            VC.toast(resp.message || "Error obteniendo historial", "danger");
-            return;
-        }
-
-        const venta = resp.data;
-        const movimientos = (venta.Historial || []).filter(h => h.IdCuota === idCuota);
-
-        const tb = $("#histBody").empty();
-
-        if (!movimientos.length) {
-            tb.append(`<tr><td colspan="4" class="text-center text-muted">Sin movimientos</td></tr>`);
-        } else {
-            movimientos.forEach((h, i) => {
-                tb.append(`
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td>${moment(h.FechaCambio).format("DD/MM/YYYY HH:mm")}</td>
-                        <td class="text-end">${VC.fmt(VC.extraerNumero(h.ValorNuevo))}</td>
-                        <td>${h.Observacion || ""}</td>
-                    </tr>`);
-            });
-        }
-
-        VC.openModal("mdHistorial");
-
-    } catch (e) {
-        VC.toast("Error obteniendo historial", "danger");
-        console.error(e);
-    }
+VC.abrirCobro = function (idCuota, idVenta) {
+    window.abrirModalCobro(idVenta, idCuota);
 };
+
+VC.abrirAjuste = function (idCuota) {
+    window.abrirAjusteDesdeCobros(ventaAcordeonAbierta, idCuota);
+};
+
+
 
 /* ===========================================================
    TOGGLES % / $
@@ -980,3 +834,46 @@ VC.abrirHistorialPartial = function (idVenta, idCuota) {
 
     window.abrirHistorialDesdeCobros(idVenta, idCuota);
 };
+
+
+VC.exportarVentaPdf = function (idVenta) {
+
+    if (!idVenta || idVenta <= 0) {
+        VC.toast("Venta inválida", "danger");
+        return;
+    }
+
+    if (typeof window.exportarVentaPDF !== "function") {
+        VC.toast("Exportación PDF no disponible", "danger");
+        return;
+    }
+
+    // Reutilizamos EXACTAMENTE el mismo exportador
+    window.exportarVentaPDF(idVenta);
+};
+
+
+/* ===========================================================
+ACORDEÓN FINALIZADAS - MISMO COMPORTAMIENTO QUE NUEVOMODIF
+=========================================================== */
+$(document).on("click", ".js-fin-toggle", function (e) {
+    e.preventDefault();
+
+    const btn = $(this);
+    const idVenta = btn.data("idventa");
+    const panel = $(`#colFin_${idVenta}`);
+
+    if (!panel.length) return;
+
+    const abierto = panel.is(":visible");
+
+    if (abierto) {
+        // 🔽 CERRAR
+        panel.slideUp(180);
+        btn.addClass("collapsed").attr("aria-expanded", "false");
+    } else {
+        // 🔼 ABRIR
+        panel.slideDown(180);
+        btn.removeClass("collapsed").attr("aria-expanded", "true");
+    }
+});

@@ -865,3 +865,233 @@ window.abrirAjusteDesdeCobros = async function (idVenta, idCuota) {
         showToast("Error cargando ajuste", "danger");
     }
 };
+
+
+
+
+
+
+window.exportarVentaPDF = async function (idVenta) {
+
+    try {
+        showToast("Generando PDF...", "info");
+
+        const resp = await fetch(
+            `/Ventas_Electrodomesticos/GetDetalleVenta?idVenta=${encodeURIComponent(idVenta)}`
+        );
+
+        const json = await resp.json();
+
+        if (!json || json.success === false || !json.data) {
+            showToast("No se pudo obtener la venta", "danger");
+            return;
+        }
+
+        const venta = json.data;
+
+        generarPdfVenta(venta);
+
+    } catch (e) {
+        console.error(e);
+        showToast("Error generando el PDF", "danger");
+    }
+};
+
+function generarPdfVenta(venta) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p", "mm", "a4");
+
+    const money = v =>
+        Number(v || 0).toLocaleString("es-AR", {
+            style: "currency",
+            currency: "ARS"
+        });
+
+    // ===== Helpers fechas =====
+    const parseFechaVenc = (x) => {
+        // backend suele venir ISO/Date
+        const m = moment(x);
+        return m.isValid() ? m : moment(String(x), "DD/MM/YYYY", true);
+    };
+
+    const hoy = moment().startOf("day");
+
+    let y = 14;
+
+    /* ================= HEADER ================= */
+    doc.setFontSize(16);
+    doc.text("VENTA ELECTRODOMÉSTICOS", 105, y, { align: "center" });
+    y += 8;
+
+    doc.setFontSize(10);
+    doc.text(`Venta Nº: ${venta.IdVenta}`, 10, y);
+    doc.text(`Fecha: ${venta.FechaVenta ? moment(venta.FechaVenta).format("DD/MM/YYYY") : ""}`, 150, y);
+    y += 6;
+
+    doc.text(`Cliente: ${venta.ClienteNombre || ""}`, 10, y);
+    y += 8;
+
+    /* ================= TOTALES ================= */
+    const totalVenta = Number(venta.ImporteTotal || venta.Total || 0);
+
+    const cuotasVenta = Array.isArray(venta.Cuotas) ? venta.Cuotas : [];
+
+    const totalPagado = cuotasVenta.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
+    const restante = Math.max(totalVenta - totalPagado, 0);
+
+    doc.setFontSize(12);
+    doc.text("Resumen", 10, y);
+    y += 5;
+
+    doc.setFontSize(10);
+    doc.text(`Total venta: ${money(totalVenta)}`, 10, y); y += 5;
+    doc.text(`Total pagado: ${money(totalPagado)}`, 10, y); y += 5;
+    doc.text(`Restante: ${money(restante)}`, 10, y); y += 8;
+
+    /* ================= PLAN DE CUOTAS ================= */
+    doc.setFontSize(12);
+    doc.text("Plan de cuotas", 10, y);
+    y += 3;
+
+    // ===== Detectar "PRÓXIMA" =====
+    // Regla:
+    // 1) primera NO pagada con vencimiento <= hoy (la que corresponde pagar hoy/atrasada)
+    // 2) si no hay, la NO pagada con vencimiento más cercano futuro
+    const cuotasNorm = cuotasVenta.map(c => {
+        const vencM = parseFechaVenc(c.FechaVencimiento).startOf("day");
+        const totalCuota =
+            Number(c.MontoOriginal || 0) +
+            Number(c.MontoRecargos || 0) -
+            Number(c.MontoDescuentos || 0);
+
+        const pagado = Number(c.MontoPagado || 0);
+        const restanteCuota = (c.MontoRestante != null)
+            ? Number(c.MontoRestante)
+            : Math.max(totalCuota - pagado, 0);
+
+        const estadoRaw = (c.Estado || "Pendiente").trim();
+
+        return {
+            c,
+            vencM,
+            totalCuota,
+            pagado,
+            restanteCuota,
+            estadoRaw,
+            numero: Number(c.NumeroCuota || 0)
+        };
+    });
+
+    const noPagadas = cuotasNorm
+        .filter(x =>
+            x.estadoRaw !== "Pagada" &&
+            x.restanteCuota > 0.0001 &&
+            x.vencM.isAfter(hoy, "day")   // 👈 SOLO FUTURAS
+        )
+        .sort((a, b) => a.vencM.valueOf() - b.vencM.valueOf());
+
+    let proximaNumero = noPagadas.length
+        ? noPagadas[0].numero   // la futura más cercana
+        : null;
+
+    // ===== Armar body + meta por fila =====
+    const filasMeta = [];
+
+    const body = cuotasNorm
+        .sort((a, b) => a.numero - b.numero)
+        .map(x => {
+
+            let estadoTxt = x.estadoRaw;
+            let estadoTipo = "pendiente"; // pagada | vencida | proxima | pendiente
+
+            if (x.estadoRaw === "Pagada" || x.restanteCuota <= 0.0001) {
+                estadoTxt = "Pagada";
+                estadoTipo = "pagada";
+            } else {
+                // vencida?
+                if (hoy.isAfter(x.vencM, "day")) {
+                    const dias = hoy.diff(x.vencM, "days");
+                    estadoTxt = `Vencida - ${dias} días`;
+                    estadoTipo = "vencida";
+                } else {
+                    estadoTxt = "Pendiente";
+                    estadoTipo = "pendiente";
+                }
+
+                // proxima?
+                if (proximaNumero != null && x.numero === proximaNumero) {
+                    estadoTxt = "Próxima";
+                    estadoTipo = "proxima";
+                }
+            }
+
+            filasMeta.push({
+                estadoTipo,
+                // fila amarilla SOLO si es proxima
+                rowFill: (estadoTipo === "proxima") ? [255, 243, 205] : null // amarillo suave
+            });
+
+            return [
+                String(x.numero),
+                x.vencM.isValid() ? x.vencM.format("DD/MM/YYYY") : "",
+                money(x.totalCuota),
+                money(x.pagado),
+                money(x.restanteCuota),
+                estadoTxt
+            ];
+        });
+
+    doc.autoTable({
+        startY: y,
+        head: [["#", "Vencimiento", "Total", "Pagado", "Restante", "Estado"]],
+        body,
+        theme: "grid",
+        styles: { fontSize: 9, valign: "middle" },
+
+        // ✅ FIX: el header NO se pinta raro
+        headStyles: {
+            fillColor: [22, 160, 133],   // verde header (como tu diseño)
+            textColor: [255, 255, 255],
+            fontStyle: "bold"
+        },
+
+        // ✅ Pintar SOLO lo que corresponde (estado o fila próxima)
+        didParseCell: function (data) {
+            // Ignorar el header totalmente
+            if (data.section === "head") return;
+
+            const meta = filasMeta[data.row.index];
+            if (!meta) return;
+
+            // 1) Si es "próxima", pintar TODA la fila amarilla
+            if (meta.rowFill) {
+                data.cell.styles.fillColor = meta.rowFill;
+            }
+
+            // 2) Columna Estado: SOLO pintar el texto (sin borde raro)
+            const colEstado = 5; // índice en el body
+            if (data.column.index === colEstado) {
+                if (meta.estadoTipo === "pagada") {
+                    data.cell.styles.textColor = [25, 135, 84]; // verde
+                    data.cell.styles.fontStyle = "bold";
+                }
+                else if (meta.estadoTipo === "vencida") {
+                    data.cell.styles.textColor = [220, 53, 69]; // rojo
+                    data.cell.styles.fontStyle = "bold";
+                }
+                else if (meta.estadoTipo === "proxima") {
+                    data.cell.styles.textColor = [33, 37, 41]; // negro prolijo
+                    data.cell.styles.fontStyle = "bold";
+                }
+                else {
+                    // pendiente normal
+                    data.cell.styles.textColor = [33, 37, 41];
+                }
+            }
+        }
+    });
+
+    /* ================= FOOTER ================= */
+    const fileName = `Venta_${venta.IdVenta}_${moment().format("YYYYMMDD_HHmm")}.pdf`;
+    doc.save(fileName);
+}

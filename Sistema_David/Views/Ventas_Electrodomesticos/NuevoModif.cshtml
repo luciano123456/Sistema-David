@@ -250,7 +250,7 @@
                     <button id="btnLimpiarCuotas" class="btn btn-outline-light btn-sm">
                         <i class="fa fa-eraser"></i> Limpiar
                     </button>
-                    <button id="btnExportarPdf" class="btn btn-primary btn-sm">
+                    <button id="btnExportarPdf" onclick="exportarPdfDesdeNuevoModif()" class="btn btn-primary btn-sm">
                         <i class="fa fa-file-pdf-o"></i> Exportar PDF
                     </button>
 
@@ -472,148 +472,9 @@
         </div>
     </div>
 
+    <!-- ============================= MODALES (PARTIAL) ============================= -->
+    @Html.Partial("_CobroModal_Partial")
 
-    <!-- MODAL COBRO -->
-    <div class="modal fade" id="mdCobro" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content ve-modal">
-
-                <div class="modal-header">
-                    <h5 class="modal-title text-white"><i class="fa fa-money text-accent me-2"></i> Cobrar cuota</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-
-                    <div class="row g-3">
-                        <div class="col-12 col-md-4">
-                            <label class="form-label fw-semibold">Restante</label>
-                            <input id="cobroRestante" class="form-control ve-input" type="text" readonly />
-                        </div>
-
-                        <div class="col-12 col-md-4">
-                            <label class="form-label fw-semibold">Importe a cobrar</label>
-                            <input id="cobroImporte" class="form-control ve-input text-end" type="text" placeholder="$ 0,00">
-                        </div>
-
-                        <div class="col-12 col-md-4">
-                            <label class="form-label fw-semibold">Observación</label>
-                            <input id="cobroObs" class="form-control ve-input" type="text" placeholder="Detalle del cobro (opcional)">
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="modal-footer justify-content-between">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button id="btnConfirmarCobro" class="btn btn-success">Confirmar</button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- MODAL AJUSTE -->
-    <div class="modal fade" id="mdAjuste" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content ve-modal">
-
-                <div class="modal-header">
-                    <h5 class="modal-title text-white"><i class="fa fa-sliders text-accent me-2"></i> Ajustar cuota</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-
-                    <div class="row g-3">
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label fw-semibold">Recargo</label>
-                            <div class="input-group">
-                                <input id="ajRecargo" class="form-control ve-input text-end" type="text" placeholder="Ej: 10">
-                                <div id="ajRecargoTipoWrap" class="btn-group ve-type-toggle">
-                                    <button class="btn btn-outline-light active" data-value="%">%</button>
-                                    <button class="btn btn-outline-light" data-value="$">$</button>
-                                </div>
-                                <select id="ajRecargoTipo" class="d-none">
-                                    <option value="%">%</option>
-                                    <option value="$">$</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label fw-semibold">Descuento</label>
-                            <div class="input-group">
-                                <input id="ajDescuento" class="form-control ve-input text-end" type="text" placeholder="Ej: 5">
-                                <div id="ajDescuentoTipoWrap" class="btn-group ve-type-toggle">
-                                    <button class="btn btn-outline-light active" data-value="%">%</button>
-                                    <button class="btn btn-outline-light" data-value="$">$</button>
-                                </div>
-                                <select id="ajDescuentoTipo" class="d-none">
-                                    <option value="%">%</option>
-                                    <option value="$">$</option>
-                                </select>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="form-text mt-2">
-                        El ajuste no puede dejar la cuota por debajo de lo ya pagado.
-                    </div>
-
-                </div>
-
-                <div class="modal-footer justify-content-between">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button id="btnConfirmarAjuste" class="btn btn-primary">Aplicar</button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- MODAL HISTORIAL -->
-    <div class="modal fade" id="mdHistorial" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content ve-modal">
-
-                <div class="modal-header">
-                    <h5 class="modal-title text-white"><i class="fa fa-list text-accent me-2"></i> Historial de cuota</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-
-                    <div class="table-responsive">
-                        <table class="table ve-table align-middle">
-                            <thead>
-                                <tr>
-                                    <th style="width:60px">#</th>
-                                    <th>Fecha</th>
-                                    <th class="text-end">Importe</th>
-                                    <th>Medio</th>
-                                    <th>Observación</th>
-                                </tr>
-                            </thead>
-                            <tbody id="histBody"></tbody>
-                        </table>
-                    </div>
-
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-
-            </div>
-        </div>
-    </div>
 
 </body>
 
@@ -628,8 +489,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
 
     <!-- jsPDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    
 
     <!-- TU JS -->
     <script src="~/JavaScript/Ventas_Electrodomesticos_NuevoModif.js?v=11.0"></script>

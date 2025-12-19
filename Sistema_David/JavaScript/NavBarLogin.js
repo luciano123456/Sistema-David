@@ -1,4 +1,5 @@
 ﻿let listaVacia = false;
+let tipoVentas = localStorage.getItem("tipoSistemaVentas");
 
 const MODULOS_VENTA = {
     indumentaria: {
@@ -9,10 +10,9 @@ const MODULOS_VENTA = {
     electro: {
         listado: "/Ventas_Electrodomesticos/Historial",
         nuevomodif: "/Ventas_Electrodomesticos/NuevoModif",
-        cobranza: "/Ventas_Electrodomesticos/Cobranza"
+        cobranza: "/Ventas_Electrodomesticos/Cobros"
     }
 };
-
 
 document.addEventListener("DOMContentLoaded", async function () {
 
@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     // 🔥 AGREGADO — MODO DE VENTAS
     // ============================
 
-    let tipoVentas = localStorage.getItem("tipoSistemaVentas");
+
 
     // Si no está seleccionado aún → mostrar modal
     if (!tipoVentas) {
@@ -82,6 +82,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         btn.addEventListener("click", function () {
             let tipo = this.dataset.tipo; // "electro" o "normal"
             localStorage.setItem("tipoSistemaVentas", tipo);
+
+            const a = document.getElementById("btnCambiarTipoVentas");
+            const label = (tipo === "electro") ? "Electrodomésticos" : "Indumentaria";
+
+            const textNode = [...a.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+            if (textNode) textNode.nodeValue = ` ${label}`;
+
 
             // ✅ Redirige si estás dentro de ventas
             redireccionarSiCorresponde(tipo);
@@ -321,3 +328,10 @@ function verificarRoles(idRol) {
         document.getElementById("seccionClientesCero").removeAttribute("hidden");
     }
 }
+
+
+          const a = document.getElementById("btnCambiarTipoVentas");
+            const label = (tipoVentas === "electro") ? "Electrodomésticos" : "Indumentaria";
+
+            const textNode = [...a.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+            if (textNode) textNode.nodeValue = ` ${label}`;

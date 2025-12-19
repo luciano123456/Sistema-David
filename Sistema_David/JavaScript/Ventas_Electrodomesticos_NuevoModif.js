@@ -16,7 +16,50 @@
 ; (() => {
 
     let diasVencimientoVenta = null; // 🔥 define la regla de toda la venta
+    let idxProductoEditando = null; // null = nuevo, number = editando
 
+
+
+
+    function calcularMaxPermitidoProducto(idProducto) {
+        const opt = $('#selProducto option:selected');
+        const stockTotal = Number(opt.data('stock')) || 0;
+
+        // Cantidad ya usada en la venta del MISMO producto (excepto el que estoy editando)
+        let usadoEnVenta = 0;
+
+        productos.forEach((p, i) => {
+            if (Number(p.id) === Number(idProducto)) {
+                if (idxProductoEditando !== null && i === idxProductoEditando) return;
+                usadoEnVenta += Number(p.cant || 0);
+            }
+        });
+
+        // Máximo que puedo poner en el modal
+        const max = Math.max(0, stockTotal - usadoEnVenta);
+        return { stockTotal, usadoEnVenta, max };
+    }
+
+    function aplicarMaxCantidadModal() {
+        const idSel = Number($('#selProducto').val() || 0);
+        if (!idSel) return;
+
+        const { max } = calcularMaxPermitidoProducto(idSel);
+
+        // max mínimo 1 para que no se rompa el input, pero si max=0 igual bloqueamos guardado
+        $('#cantidadProducto')
+            .attr('max', Math.max(1, max))
+            .attr('min', 1);
+
+        const actual = Number($('#cantidadProducto').val() || 1);
+        if (max > 0 && actual > max) $('#cantidadProducto').val(max);
+    }
+
+
+    $('#mdProducto').on('hidden.bs.modal', function () {
+        idxProductoEditando = null;
+        setModoModalProducto('nuevo');
+    });
 
     /* ====================== HELPERS ====================== */
 
@@ -349,10 +392,24 @@
     }
 
     async function abrirModalProducto() {
+
+        // seguridad: si no existe el modal, corto
+        const modalEl = document.getElementById('mdProducto');
+        if (!modalEl) {
+            console.error("No existe #mdProducto en el DOM");
+            showToast("No se encontró el modal de producto (#mdProducto).", "danger");
+            return;
+        }
+
+        // reset UI
         $('#msgStock')
             .removeClass('text-danger text-warning text-success')
             .text('');
-        $('#cantidadProducto').val(1);
+
+        // si estoy agregando, default 1 (si edito, lo setea editarProducto)
+        if (typeof idxProductoEditando === "undefined" || idxProductoEditando === null) {
+            $('#cantidadProducto').val(1);
+        }
 
         try {
             const res = await $.ajax({
@@ -369,33 +426,69 @@
             if (!list.length) {
                 $sel.append(`<option value="">No hay productos</option>`);
                 $('#msgStock').addClass('text-warning').text('No tenés productos disponibles.');
+                $('#imgProducto').attr('src', '/Content/imagenes/default-image.jpg');
+
+                // botón disabled si no hay productos
+                $('#btnGuardarProducto').prop('disabled', true);
+
             } else {
+
+                // lleno combo
                 for (const p of list) {
                     $sel.append(`
-    <option value="${p.IdProducto}"
-            data-precio="${p.PrecioVenta}"
-            data-stock="${p.Cantidad}"
-            data-diasvenc="${p.DiasVencimiento || 0}">
-        ${p.Producto}
-    </option>
-`);
+                    <option value="${p.IdProducto}"
+                            data-precio="${p.PrecioVenta}"
+                            data-stock="${p.Cantidad}"
+                            data-diasvenc="${p.DiasVencimiento || 0}">
+                        ${p.Producto}
+                    </option>
+                `);
                 }
 
+                // si estoy editando, preselecciono el producto del item editado
+                if (typeof idxProductoEditando !== "undefined" && idxProductoEditando !== null && productos[idxProductoEditando]) {
+                    $sel.val(productos[idxProductoEditando].id);
+                }
+
+                // imagen + info
                 await cargarImagenProducto($sel.val());
                 renderInfoStock();
 
-                $('#selProducto').off('change').on('change', async e => {
-                    await cargarImagenProducto(e.target.value);
+                // habilito botón
+                $('#btnGuardarProducto').prop('disabled', false);
+
+                // change handler
+                $('#selProducto').off('change').on('change', async function () {
+                    await cargarImagenProducto(this.value);
                     renderInfoStock();
+
+                    // si tenés aplicarMaxCantidadModal, la uso (no rompe si no existe)
+                    if (typeof aplicarMaxCantidadModal === "function") {
+                        aplicarMaxCantidadModal();
+                    }
                 });
+
+                // set max si existe helper
+                if (typeof aplicarMaxCantidadModal === "function") {
+                    aplicarMaxCantidadModal();
+                }
             }
 
-            new bootstrap.Modal('#mdProducto').show();
+            // 🔥 texto del botón según modo
+            const editando = (typeof idxProductoEditando !== "undefined" && idxProductoEditando !== null);
+            $('#btnGuardarProducto')
+                .text(editando ? 'Guardar' : 'Añadir');
 
-        } catch {
+            // mostrar modal (Bootstrap 5 correcto)
+            const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static' });
+            bsModal.show();
+
+        } catch (err) {
+            console.error(err);
             showTip($('#btnAbrirProducto')[0], 'No se pudo abrir productos', 'danger');
         }
     }
+
 
     function renderInfoStock() {
         const opt = $('#selProducto option:selected');
@@ -435,75 +528,106 @@
             return;
         }
 
-        const cant = Math.max(1, +$('#cantidadProducto').val() || 1);
-        const stock = +opt.data('stock') || 0;
-        if (cant > stock) {
-            showTip($('#cantidadProducto')[0], 'Stock insuficiente', 'danger');
-            return;
-        }
+        const id = Number(opt.val());
+        const nombre = opt.text();
+        const precio = Number(opt.data('precio')) || 0;
 
+        const cant = Math.max(1, Number($('#cantidadProducto').val() || 1));
         const diasProd = Number(opt.data('diasvenc')) || 0;
 
         if (diasProd <= 0) {
-            showToast(
-                'Este producto no está preparado para un plan de cuotas. ' +
-                'No tiene días de vencimiento configurados.',
-                'danger'
-            );
+            showToast('Este producto no está preparado para un plan de cuotas.', 'danger');
             return;
         }
 
-        // 🔥 VALIDACIÓN DE DÍAS DE VENCIMIENTO
+        // 🔥 VALIDACIÓN DÍAS DE VENCIMIENTO
         if (diasVencimientoVenta === null) {
             diasVencimientoVenta = diasProd;
 
-            // setear fecha límite automáticamente
             const fVenta = moment($('#fechaVenta').val());
             const fLim = fVenta.clone().add(diasVencimientoVenta, 'days');
             $('#fechaLimite').val(fLim.format('YYYY-MM-DD'));
 
         } else if (diasProd !== diasVencimientoVenta) {
             showToast(
-                `Este producto tiene ${diasProd} días de vencimiento.
-            La venta está configurada para ${diasVencimientoVenta} días.`,
+                `Este producto tiene ${diasProd} días. La venta está configurada para ${diasVencimientoVenta}.`,
                 'danger'
             );
             return;
         }
 
-        const id = +opt.val();
-        const nombre = opt.text();
-        const precio = +opt.data('precio') || 0;
+        // ✅ VALIDACIÓN STOCK REAL (TOTAL)
+        const { stockTotal, usadoEnVenta, max } = calcularMaxPermitidoProducto(id);
+
+        if (max <= 0) {
+            showTip($('#cantidadProducto')[0], `Stock insuficiente. Stock total: ${stockTotal}`, 'danger');
+            return;
+        }
+
+        if (cant > max) {
+            showTip($('#cantidadProducto')[0], `Stock insuficiente. Máximo permitido: ${max}`, 'danger');
+            $('#cantidadProducto').val(max);
+            return;
+        }
+
         const total = precio * cant;
 
-        const idx = productos.findIndex(p => p.id === id);
+        // ===============================
+        // EDITAR ITEM EXISTENTE
+        // ===============================
+        if (idxProductoEditando !== null) {
 
-        if (idx > -1) {
-            if (productos[idx].cant + cant > stock) {
-                showTip($('#cantidadProducto')[0], 'Stock insuficiente', 'danger');
-                return;
-            }
-            productos[idx].cant += cant;
-            productos[idx].total += total;
-        } else {
-            productos.push({
+            productos[idxProductoEditando] = {
                 id,
                 nombre,
                 cant,
                 total,
                 diasVencimiento: diasProd
-            });
+            };
+
+            idxProductoEditando = null;
+
+        } else {
+            // ===============================
+            // AGREGAR: si ya existe, acumulo pero sin pasar stock total
+            // ===============================
+            const idxExist = productos.findIndex(p => Number(p.id) === id);
+
+            if (idxExist > -1) {
+
+                // max permitido en este caso es stockTotal - (cantidad ya usada por ese mismo producto)
+                const yaUsado = productos[idxExist].cant;
+                const maxAdd = Math.max(0, stockTotal - yaUsado);
+
+                if (cant > maxAdd) {
+                    showTip($('#cantidadProducto')[0], `Stock insuficiente. Máximo a agregar: ${maxAdd}`, 'danger');
+                    return;
+                }
+
+                productos[idxExist].cant += cant;
+                productos[idxExist].total += (precio * cant);
+
+            } else {
+                productos.push({
+                    id,
+                    nombre,
+                    cant,
+                    total,
+                    diasVencimiento: diasProd
+                });
+            }
         }
 
         bootstrap.Modal.getInstance($('#mdProducto')[0]).hide();
 
         renderProductos();
 
-        // 🔁 regenerar plan automáticamente
-        if (!modoEdicion) {
-            generarPlanCuotas();
-        }
+        if (!modoEdicion) generarPlanCuotas();
+
+        showToast("Producto guardado correctamente.", "success");
     }
+
+
 
     function renderProductos() {
 
@@ -521,11 +645,31 @@
             return;
         }
 
-        productos.forEach(p => {
+        productos.forEach((p, idx) => {
 
             const imgUrl = p.id
                 ? `/Productos/ObtenerImagen/${p.id}?v=${Date.now()}`
                 : `/Content/imagenes/default-image.jpg`;
+
+            const acciones = !modoEdicion
+                ? `
+                <button class="btn btn-sm btn-danger me-1"
+                        onclick="eliminarProducto(${idx})">
+                    <i class="fa fa-trash"></i>
+                </button>
+                <button class="btn btn-sm btn-warning"
+                        onclick="editarProducto(${idx})">
+                    <i class="fa fa-pencil"></i>
+                </button>
+              `
+                : `
+                <button class="btn btn-sm btn-danger" disabled>
+                    <i class="fa fa-trash"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" disabled>
+                    <i class="fa fa-pencil"></i>
+                </button>
+              `;
 
             $tb.append(`
             <tr>
@@ -534,7 +678,7 @@
                          height="45"
                          width="45"
                          class="img-thumbnail"
-                         style="background-color: transparent; cursor: pointer;"
+                         style="cursor:pointer"
                          onerror="this.src='/Content/imagenes/default-image.jpg'"
                          onclick="openModal('${imgUrl}')">
                 </td>
@@ -544,12 +688,7 @@
                 <td class="text-end">${fmt(p.total)}</td>
 
                 <td class="text-center">
-                    <button class="btn btn-sm btn-danger" disabled>
-                        <i class="fa fa-trash"></i>
-                    </button>
-                    <button class="btn btn-sm btn-warning" disabled>
-                        <i class="fa fa-pencil"></i>
-                    </button>
+                    ${acciones}
                 </td>
             </tr>
         `);
@@ -557,6 +696,61 @@
 
         actualizarKpis();
     }
+
+    window.eliminarProducto = async function (idx) {
+
+        if (modoEdicion) {
+            showToast("No se pueden eliminar productos en una venta ya registrada.", "warn");
+            return;
+        }
+
+        const p = productos[idx];
+        if (!p) return;
+
+        const ok = await showConfirm(`¿Eliminar "${p.nombre}" de la venta?`);
+        if (!ok) return;
+
+        productos.splice(idx, 1);
+
+        if (!productos.length) {
+            diasVencimientoVenta = null;
+            cuotas = [];
+            renderCuotas();
+        }
+
+        renderProductos();
+
+        if (productos.length) {
+            generarPlanCuotas();
+        }
+
+        showToast("Producto eliminado.", "success");
+    };
+
+    window.editarProducto = function (idx) {
+
+        if (modoEdicion) {
+            showToast("No se pueden editar productos en una venta ya registrada.", "warn");
+            return;
+        }
+
+        const p = productos[idx];
+        if (!p) return;
+
+        idxProductoEditando = idx;
+
+        abrirModalProducto().then(() => {
+            // Cantidad actual del item
+            $('#cantidadProducto').val(p.cant);
+
+            // Forzar max correcto (stock total - otros iguales)
+            aplicarMaxCantidadModal();
+
+            setModoModalProducto('editar');
+        });
+    };
+
+
 
     function actualizarKpis() {
 
@@ -627,10 +821,6 @@
             $('#fechaLimite').prop('disabled', true);
         }
 
-        // acciones por cuota (en tabla)
-        $('#tblCuotas tbody').on('click', '.btn-cobrar', onCobrarClick);
-        $('#tblCuotas tbody').on('click', '.btn-ajustar', onAjustarClick);
-        $('#tblCuotas tbody').on('click', '.btn-hist', onHistorialClick);
     }
 
     function rangeHours(a, b) {
@@ -735,15 +925,27 @@
         for (const c of pendientes) {
             const acciones = modoEdicion
                 ? `
-                    <button class="btn btn-warning btn-cobrar me-2" data-bs-toggle="tooltip" title="Cobrar">
-                        <i class="fa fa-money"></i>
-                    </button>
-                    <button class="btn btn-info btn-ajustar me-2" data-bs-toggle="tooltip" title="Recargo/Descuento">
-                        <i class="fa fa-flash"></i>
-                    </button>
-                    <button class="btn btn-secondary btn-hist" data-bs-toggle="tooltip" title="Historial">
-                        <i class="fa fa-clock-o"></i>
-                    </button>
+                    <div class="btn-group">
+
+    <button class="btn btn-accion btn-cobrar me-1"
+        onclick="abrirCobroDesdeNuevoModif(${idVenta}, ${c.idCuota})"
+        title="Cobrar">
+        <i class="fa fa-money"></i>
+    </button>
+
+    <button class="btn btn-accion btn-ajuste me-1"
+        onclick="abrirAjusteDesdeNuevoModif(${idVenta}, ${c.idCuota})"
+        title="Ajustar">
+        <i class="fa fa-bolt"></i>
+    </button>
+
+    <button class="btn btn-accion btn-historial"
+        onclick="abrirHistorialDesdeNuevoModif(${idVenta}, ${c.idCuota})"
+        title="Historial">
+        <i class="fa fa-eye"></i>
+    </button>
+
+</div>
                   `
                 : `
                     <button class="btn btn-warning btn-cobrar me-2" disabled>
@@ -858,10 +1060,13 @@
                     <span class="badge bg-success">Pagada</span>
                 </td>
                 <td class="text-center">
-                    <button class="btn btn-secondary btn-sm"
-                            onclick="verHistPorNumero(${c.n})">
-                        <i class="fa fa-clock-o"></i>
-                    </button>
+<button class="btn btn-accion btn-historial btn-sm"
+    onclick="abrirHistorialDesdeNuevoModif(${idVenta}, ${c.idCuota})"
+    title="Historial">
+    <i class="fa fa-eye"></i>
+</button>
+
+
                 </td>
             </tr>
         `);
@@ -1036,68 +1241,6 @@
 
     /* ====================== HISTORIAL POR CUOTA ====================== */
 
-    function onHistorialClick(e) {
-        const n = +$(e.currentTarget).closest('tr').data('n');
-        const idx = cuotas.findIndex(c => c.n === n);
-        if (idx < 0) return;
-        pintarHistorial(cuotas[idx]);
-    }
-
-    window.verHistPorNumero = function (n) {
-        const c = cuotas.find(x => x.n === n);
-        if (!c) {
-            showToast("No se encontró la cuota.", "danger");
-            return;
-        }
-        pintarHistorial(c);
-    };
-
-    function pintarHistorial(c) {
-        const $hb = $('#histBody').empty();
-
-        if (!c.hist || !c.hist.length) {
-            $hb.append(`
-            <tr>
-                <td colspan="5" class="text-center text-muted">Sin movimientos</td>
-            </tr>
-        `);
-        } else {
-
-            c.hist.forEach((h, i) => {
-                $hb.append(`
-                <tr data-i="${i}" data-idpago="${h.idPago}">
-                    <td>${i + 1}</td>
-                    <td>${h.fecha}</td>
-                    <td class="text-end">${fmt(h.importe)}</td>
-                    <td>${h.obs || ''}</td>
-                    <td class="text-center">
-                        <button class="btn btn-danger btn-sm btn-del-pago">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `);
-            });
-        }
-
-        // Evento eliminar pago
-        $('#histBody .btn-del-pago').on('click', function () {
-            const $tr = $(this).closest('tr');
-            const idxHist = Number($tr.data('i'));
-            const idPago = Number($tr.data('idpago'));
-
-            if (!idPago) {
-                showToast("No se pudo obtener el ID del pago.", "danger");
-                return;
-            }
-
-            eliminarPago(idPago);
-        });
-
-        new bootstrap.Modal('#mdHistorial').show();
-    }
-
-
 
     async function eliminarPago(idPago) {
         if (!idPago) return;
@@ -1259,13 +1402,16 @@
     async function registrarVentaNueva() {
 
         if (!cliente)
-            return showTip($('#dni')[0], "Elegí un cliente.", "danger");
+            return showToast("Elegí un cliente.", "danger");
+
 
         if (!productos.length)
-            return showTip($('#btnAbrirProducto')[0], "Agregá al menos un producto.", "danger");
+            return showToast("Agregá al menos un producto.", "danger");
 
         if (!cuotas.length)
-            return showTip($('#btnGenerarCuotas')[0], "Generá el plan de cuotas.", "danger");
+            return showToast("Generá el plan de cuotas.", "danger");
+
+    
 
         let total = productos.reduce((a, b) => a + b.total, 0);
         let entrega = parseMoney($('#entrega').val());
@@ -1571,4 +1717,274 @@ function openModal(imageSrc) {
     document.getElementById('modalImage').src = imageSrc;
     // Muestra el modal
     $('#imageModal').modal('show');
+}
+
+
+function setModoModalProducto(modo) {
+    const $btn = $('#btnGuardarProducto');
+
+    if (modo === 'editar') {
+        $btn
+            .text('Guardar')
+            .removeClass('btn-primary')
+            .addClass('btn-success');
+    } else {
+        $btn
+            .text('Añadir')
+            .removeClass('btn-success')
+            .addClass('btn-primary');
+    }
+}
+
+
+window.abrirHistorialDesdeNuevoModif = function (idVenta, idCuota) {
+
+    if (typeof window.abrirHistorialDesdeCobros !== "function") {
+        showToast("Historial no disponible", "danger");
+        return;
+    }
+
+    window.abrirHistorialDesdeCobros(idVenta, idCuota);
+};
+
+
+window.abrirCobroDesdeNuevoModif = function (idVenta, idCuota) {
+
+    if (typeof window.abrirModalCobro !== "function") {
+        showToast("Cobro no disponible", "danger");
+        return;
+    }
+
+    window.abrirModalCobro(idVenta, idCuota);
+};
+
+window.abrirAjusteDesdeNuevoModif = function (idVenta, idCuota) {
+
+    if (typeof window.abrirAjusteDesdeCobros !== "function") {
+        showToast("Ajuste no disponible", "danger");
+        return;
+    }
+
+    window.abrirAjusteDesdeCobros(idVenta, idCuota);
+};
+
+
+window.exportarPdfDesdeNuevoModif = function () {
+
+    if (typeof window.exportarVentaPDF !== "function") {
+        showToast("Exportación PDF no disponible", "danger");
+        return;
+    }
+
+    if (!window.ventaActual && !window.idVenta) {
+        showToast("No hay venta cargada para exportar", "warn");
+        return;
+    }
+
+    var ventaId = document.getElementById("idVenta").value;
+
+    // 🔥 El partial ya sabe qué venta exportar
+    window.exportarVentaPDF(ventaId);
+};
+
+function generarPdfVenta(venta) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p", "mm", "a4");
+
+    const money = v =>
+        Number(v || 0).toLocaleString("es-AR", {
+            style: "currency",
+            currency: "ARS"
+        });
+
+    // ===== Helpers fechas =====
+    const parseFechaVenc = (x) => {
+        // backend suele venir ISO/Date
+        const m = moment(x);
+        return m.isValid() ? m : moment(String(x), "DD/MM/YYYY", true);
+    };
+
+    const hoy = moment().startOf("day");
+
+    let y = 14;
+
+    /* ================= HEADER ================= */
+    doc.setFontSize(16);
+    doc.text("VENTA ELECTRODOMÉSTICOS", 105, y, { align: "center" });
+    y += 8;
+
+    doc.setFontSize(10);
+    doc.text(`Venta Nº: ${venta.IdVenta}`, 10, y);
+    doc.text(`Fecha: ${venta.FechaVenta ? moment(venta.FechaVenta).format("DD/MM/YYYY") : ""}`, 150, y);
+    y += 6;
+
+    doc.text(`Cliente: ${venta.ClienteNombre || ""}`, 10, y);
+    y += 8;
+
+    /* ================= TOTALES ================= */
+    const totalVenta = Number(venta.ImporteTotal || venta.Total || 0);
+
+    const cuotasVenta = Array.isArray(venta.Cuotas) ? venta.Cuotas : [];
+
+    const totalPagado = cuotasVenta.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
+    const restante = Math.max(totalVenta - totalPagado, 0);
+
+    doc.setFontSize(12);
+    doc.text("Resumen", 10, y);
+    y += 5;
+
+    doc.setFontSize(10);
+    doc.text(`Total venta: ${money(totalVenta)}`, 10, y); y += 5;
+    doc.text(`Total pagado: ${money(totalPagado)}`, 10, y); y += 5;
+    doc.text(`Restante: ${money(restante)}`, 10, y); y += 8;
+
+    /* ================= PLAN DE CUOTAS ================= */
+    doc.setFontSize(12);
+    doc.text("Plan de cuotas", 10, y);
+    y += 3;
+
+    // ===== Detectar "PRÓXIMA" =====
+    // Regla:
+    // 1) primera NO pagada con vencimiento <= hoy (la que corresponde pagar hoy/atrasada)
+    // 2) si no hay, la NO pagada con vencimiento más cercano futuro
+    const cuotasNorm = cuotasVenta.map(c => {
+        const vencM = parseFechaVenc(c.FechaVencimiento).startOf("day");
+        const totalCuota =
+            Number(c.MontoOriginal || 0) +
+            Number(c.MontoRecargos || 0) -
+            Number(c.MontoDescuentos || 0);
+
+        const pagado = Number(c.MontoPagado || 0);
+        const restanteCuota = (c.MontoRestante != null)
+            ? Number(c.MontoRestante)
+            : Math.max(totalCuota - pagado, 0);
+
+        const estadoRaw = (c.Estado || "Pendiente").trim();
+
+        return {
+            c,
+            vencM,
+            totalCuota,
+            pagado,
+            restanteCuota,
+            estadoRaw,
+            numero: Number(c.NumeroCuota || 0)
+        };
+    });
+
+    const noPagadas = cuotasNorm
+        .filter(x => x.estadoRaw !== "Pagada" && x.restanteCuota > 0.0001)
+        .sort((a, b) => a.vencM.valueOf() - b.vencM.valueOf());
+
+    let proximaNumero = null;
+
+    if (noPagadas.length) {
+        const candidatasHoyOAntes = noPagadas.filter(x => x.vencM.isSameOrBefore(hoy, "day"));
+        if (candidatasHoyOAntes.length) {
+            proximaNumero = candidatasHoyOAntes[0].numero; // la más vieja impaga
+        } else {
+            proximaNumero = noPagadas[0].numero; // la futura más cercana
+        }
+    }
+
+    // ===== Armar body + meta por fila =====
+    const filasMeta = [];
+
+    const body = cuotasNorm
+        .sort((a, b) => a.numero - b.numero)
+        .map(x => {
+
+            let estadoTxt = x.estadoRaw;
+            let estadoTipo = "pendiente"; // pagada | vencida | proxima | pendiente
+
+            if (x.estadoRaw === "Pagada" || x.restanteCuota <= 0.0001) {
+                estadoTxt = "Pagada";
+                estadoTipo = "pagada";
+            } else {
+                // vencida?
+                if (hoy.isAfter(x.vencM, "day")) {
+                    const dias = hoy.diff(x.vencM, "days");
+                    estadoTxt = `Vencida - ${dias} días`;
+                    estadoTipo = "vencida";
+                } else {
+                    estadoTxt = "Pendiente";
+                    estadoTipo = "pendiente";
+                }
+
+                // proxima?
+                if (proximaNumero != null && x.numero === proximaNumero) {
+                    estadoTxt = "Próxima";
+                    estadoTipo = "proxima";
+                }
+            }
+
+            filasMeta.push({
+                estadoTipo,
+                // fila amarilla SOLO si es proxima
+                rowFill: (estadoTipo === "proxima") ? [255, 243, 205] : null // amarillo suave
+            });
+
+            return [
+                String(x.numero),
+                x.vencM.isValid() ? x.vencM.format("DD/MM/YYYY") : "",
+                money(x.totalCuota),
+                money(x.pagado),
+                money(x.restanteCuota),
+                estadoTxt
+            ];
+        });
+
+    doc.autoTable({
+        startY: y,
+        head: [["#", "Vencimiento", "Total", "Pagado", "Restante", "Estado"]],
+        body,
+        theme: "grid",
+        styles: { fontSize: 9, valign: "middle" },
+
+        // ✅ FIX: el header NO se pinta raro
+        headStyles: {
+            fillColor: [22, 160, 133],   // verde header (como tu diseño)
+            textColor: [255, 255, 255],
+            fontStyle: "bold"
+        },
+
+        // ✅ Pintar SOLO lo que corresponde (estado o fila próxima)
+        didParseCell: function (data) {
+            // Ignorar el header totalmente
+            if (data.section === "head") return;
+
+            const meta = filasMeta[data.row.index];
+            if (!meta) return;
+
+            // 1) Si es "próxima", pintar TODA la fila amarilla
+            if (meta.rowFill) {
+                data.cell.styles.fillColor = meta.rowFill;
+            }
+
+            // 2) Columna Estado: SOLO pintar el texto (sin borde raro)
+            const colEstado = 5; // índice en el body
+            if (data.column.index === colEstado) {
+                if (meta.estadoTipo === "pagada") {
+                    data.cell.styles.textColor = [25, 135, 84]; // verde
+                    data.cell.styles.fontStyle = "bold";
+                }
+                else if (meta.estadoTipo === "vencida") {
+                    data.cell.styles.textColor = [220, 53, 69]; // rojo
+                    data.cell.styles.fontStyle = "bold";
+                }
+                else if (meta.estadoTipo === "proxima") {
+                    data.cell.styles.textColor = [33, 37, 41]; // negro prolijo
+                    data.cell.styles.fontStyle = "bold";
+                }
+                else {
+                    // pendiente normal
+                    data.cell.styles.textColor = [33, 37, 41];
+                }
+            }
+        }
+    });
+
+    /* ================= FOOTER ================= */
+    const fileName = `Venta_${venta.IdVenta}_${moment().format("YYYYMMDD_HHmm")}.pdf`;
+    doc.save(fileName);
 }
