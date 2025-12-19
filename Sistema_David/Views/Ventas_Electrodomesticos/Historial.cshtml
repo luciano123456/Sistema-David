@@ -51,6 +51,46 @@
     .ve-accordion-item .accordion-button i {
         margin-right: .5rem;
     }
+
+    .btn-accion {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: none;
+    }
+
+        .btn-accion i {
+            font-size: 14px;
+        }
+
+    .btn-editar {
+        background: rgba(88,166,255,0.15);
+        color: #58a6ff;
+    }
+
+    .btn-eliminar {
+        background: rgba(255,107,107,0.18);
+        color: #ff6b6b;
+    }
+
+    .btn-pdf {
+        background: rgba(255,82,82,0.2);
+        color: #ff5252;
+    }
+
+    .btn-historial {
+        background: rgba(180,180,180,0.15);
+        color: #cfcfcf;
+    }
+
+    .btn-accion:hover {
+        filter: brightness(1.2);
+    }
+
 </style>
 
 <body class="ve-dark">
@@ -108,9 +148,6 @@
                         <i id="iconFiltros" class="fa fa-chevron-down"></i> Filtros
                     </button>
 
-                    <button id="btnExportarPdfGeneral" class="btn btn-primary btn-sm" disabled>
-                        <i class="fa fa-file-pdf-o"></i> Exportar PDF
-                    </button>
                 </div>
             </div>
 
