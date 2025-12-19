@@ -31,18 +31,41 @@ namespace Sistema_David.Controllers
             }
         }
 
-        /* ================= HISTORIAL ================= */
-        public ActionResult GetHistorialVentas(DateTime? fechaDesde, DateTime? fechaHasta, string estado)
-        {
-            var data = Ventas_ElectrodomesticosModel.ListarHistorial(fechaDesde, fechaHasta, estado);
 
-            return Json(new
+        /* ================= HISTORIAL ================= */
+        public ActionResult GetHistorialVentas(DateTime? fechaDesde, DateTime? fechaHasta, string estado, int idVendedor)
+        {
+            try
             {
-                success = true,
-                data = data.Filas,
-                kpis = data.Kpis
-            }, JsonRequestBehavior.AllowGet);
+                VM_HistorialVentasResp data;
+
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+
+                if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
+                {
+                    data = Ventas_ElectrodomesticosModel.ListarHistorial(fechaDesde, fechaHasta, estado, usuarioSesion.Id);
+                }
+                else
+                {
+                    data = Ventas_ElectrodomesticosModel.ListarHistorial(fechaDesde, fechaHasta, estado, idVendedor);
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    data = data.Filas,
+                    kpis = data.Kpis
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al obtener historial de ventas: " + ex.Message },
+                    JsonRequestBehavior.AllowGet);
+            }
         }
+
+
+
 
         /* ================= CUOTAS A COBRAR ================= */
         public ActionResult ListarCuotasACobrar(DateTime? fechaDesde, DateTime? fechaHasta, int? idCliente, int? idVendedor, string estado)
@@ -147,7 +170,10 @@ namespace Sistema_David.Controllers
             }
         }
 
-        /* ================= RECARGO / DESCUENTO ================= */
+        /* ================= RECARGO / DESCUENTO (LEGACY) =================
+         * Sigue existiendo para no romper nada, pero ya no se usará para
+         * descuentos. Solo recargos con el nuevo esquema (múltiples recargos).
+         * ================================================================= */
         [HttpPost]
         public ActionResult ActualizarRecargoDescuentoCuota(int idCuota, decimal? recargo, decimal? descuento)
         {
@@ -163,6 +189,50 @@ namespace Sistema_David.Controllers
             }
         }
 
+        /* ================= RECARGOS NUEVA TABLA ================= */
+
+        [HttpPost]
+        public ActionResult AgregarRecargoCuota(VM_Ventas_Electrodomesticos_RecargoCuota model)
+        {
+            try
+            {
+                if (model == null || model.IdCuota <= 0)
+                    return Json(new { success = false, message = "Datos inválidos" });
+
+                if (model.UsuarioOperador <= 0 && SessionHelper.GetUsuarioSesion() != null)
+                    model.UsuarioOperador = SessionHelper.GetUsuarioSesion().Id;
+
+                var idRecargo = Ventas_ElectrodomesticosModel.AgregarRecargoCuota(model);
+
+                return Json(new { success = true, idRecargo });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al agregar recargo: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public ActionResult EliminarRecargoCuota(int idRecargo)
+        {
+            try
+            {
+                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var msg = Ventas_ElectrodomesticosModel.EliminarRecargoCuota(idRecargo, usuario);
+
+                return Json(new
+                {
+                    success = msg == "OK",
+                    message = msg
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al eliminar recargo: " + ex.Message });
+            }
+        }
+
+        /* ================= ELIMINAR PAGO ================= */
         [HttpPost]
         public ActionResult EliminarPago(int idPago)
         {

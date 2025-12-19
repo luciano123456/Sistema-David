@@ -19,6 +19,7 @@ namespace Sistema_David.Models.DB
         {
             this.Ventas_Electrodomesticos_Historial = new HashSet<Ventas_Electrodomesticos_Historial>();
             this.Ventas_Electrodomesticos_Pagos_Detalle = new HashSet<Ventas_Electrodomesticos_Pagos_Detalle>();
+            this.Ventas_Electrodomesticos_Cuotas_Recargos = new HashSet<Ventas_Electrodomesticos_Cuotas_Recargos>();
         }
     
         public int Id { get; set; }
@@ -43,5 +44,7 @@ namespace Sistema_David.Models.DB
         public virtual ICollection<Ventas_Electrodomesticos_Historial> Ventas_Electrodomesticos_Historial { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Pagos_Detalle> Ventas_Electrodomesticos_Pagos_Detalle { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Ventas_Electrodomesticos_Cuotas_Recargos> Ventas_Electrodomesticos_Cuotas_Recargos { get; set; }
     }
 }

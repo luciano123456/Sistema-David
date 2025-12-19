@@ -1,16 +1,13 @@
 ﻿/* ===========================================================
- * Ventas_Electrodomesticos_Cobros.js — v800.0 FINAL
- * Basado en Historial (columna 0 acordeón)
- * - Cuotas pendientes + cuotas finalizadas (igual historial)
- * - Cobros por cuota (tabla y acordeón)
- * - Cobro adelantado solo si cuotas anteriores están pagadas
+ * Ventas_Electrodomesticos_Cobros.js — v800.1 FINAL
+ * Sin cambios estructurales, solo integrando partials
  * =========================================================== */
 
 let VC = {};
 let tabla = null;
 let cuotasCache = [];
-let ventaSeleccionada = null;      // detalle actual (GetDetalleVenta)
-let ventaAcordeonAbierta = null;   // IdVenta con acordeón abierto
+let ventaSeleccionada = null;
+let ventaAcordeonAbierta = null;
 
 /* ===========================================================
    HELPERS
@@ -86,7 +83,6 @@ VC.closeModal = function (id) {
     if (m) m.hide();
 };
 
-// Extraer número de texto tipo "Ahora=600.00"
 VC.extraerNumero = function (texto) {
     if (!texto) return 0;
     const match = String(texto).match(/([0-9]+([.,][0-9]+)?)/);
@@ -101,7 +97,6 @@ VC.extraerNumero = function (texto) {
 $(document).ready(async function () {
     try { moment.locale("es"); } catch { }
 
-    // Fechas: hoy / hoy
     const hoy = moment().format("YYYY-MM-DD");
     $("#f_desde").val(hoy);
     $("#f_hasta").val(hoy);
@@ -113,7 +108,7 @@ $(document).ready(async function () {
 
 VC.initEventos = function () {
 
-    // Toggle filtros
+    // Mostrar / Ocultar filtros
     $("#btnToggleFiltros").on("click", () => {
         const form = $("#formFiltros");
         form.toggleClass("d-none");
@@ -127,58 +122,45 @@ VC.initEventos = function () {
     $("#aj_confirmar").on("click", VC.confirmarAjuste);
 };
 
-
 /* ===========================================================
-   CARGAR SELECTS CLIENTE + VENDEDOR (Select2)
+   SELECTS CLIENTES / VENDEDORES
 =========================================================== */
 
 VC.cargarCombos = async function () {
-    // CLIENTES
+
+    /* CLIENTES */
     try {
-        const respCli = await $.getJSON("/Clientes/GetClientes");
+        const resp = await $.getJSON("/Clientes/GetClientesElectrodomesticos");
         const ddl = $("#f_cliente").empty();
         ddl.append(`<option value="">Todos</option>`);
-        (respCli.data || []).forEach(c => {
+        (resp.data || []).forEach(c => {
             ddl.append(`<option value="${c.Id}">${c.Nombre} ${c.Apellido}</option>`);
         });
     } catch (e) {
         console.error("Error cargando clientes", e);
     }
 
-    // COBRADORES / VENDEDORES
+    /* VENDEDORES/COBRADORES */
     try {
-        const respVen = await $.getJSON("/Usuarios/ListarCobradores");
+        const resp = await $.getJSON("/Usuarios/ListarCobradores");
         const ddl = $("#f_vendedor").empty();
         ddl.append(`<option value="">Todos</option>`);
-        (respVen.data || []).forEach(v => {
+        (resp.data || []).forEach(v => {
             ddl.append(`<option value="${v.Id}">${v.Nombre}</option>`);
         });
     } catch (e) {
         console.error("Error cargando cobradores", e);
     }
 
-    // Select2 una vez que tenemos opciones
-    $("#f_cliente").select2({
-        width: "100%",
-        placeholder: "Todos",
-        allowClear: true
-    });
-
-    $("#f_vendedor").select2({
-        width: "100%",
-        placeholder: "Todos",
-        allowClear: true
-    });
+    $("#f_cliente").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
+    $("#f_vendedor").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
 };
-
 
 /* ===========================================================
    FILTROS
 =========================================================== */
 
-VC.aplicarFiltros = function () {
-    VC.cargarTabla();
-};
+VC.aplicarFiltros = () => VC.cargarTabla();
 
 VC.limpiarFiltros = function () {
     const hoy = moment().format("YYYY-MM-DD");
@@ -191,31 +173,62 @@ VC.limpiarFiltros = function () {
     VC.cargarTabla();
 };
 
-
 /* ===========================================================
-   TABLA PRINCIPAL (CUOTAS)
+   TABLA PRINCIPAL
 =========================================================== */
 
 VC.cargarTabla = async function () {
 
-    let resp = null;
+    let respFiltrado = null;
+    let respVencidas = null;
+
+    const paramsBase = {
+        idCliente: $("#f_cliente").val() || null,
+        idVendedor: $("#f_vendedor").val() || null
+    };
 
     try {
-        resp = await $.getJSON("/Ventas_Electrodomesticos/ListarCuotasACobrar", {
+        // 1) Lo que pidió el usuario (con fechas y estado si aplica)
+        respFiltrado = await $.getJSON("/Ventas_Electrodomesticos/ListarCuotasACobrar", {
             fechaDesde: $("#f_desde").val() || null,
             fechaHasta: $("#f_hasta").val() || null,
-            idCliente: $("#f_cliente").val() || null,
-            idVendedor: $("#f_vendedor").val() || null,
+            idCliente: paramsBase.idCliente,
+            idVendedor: paramsBase.idVendedor,
             estado: $("#f_estado").val() || null
         });
+
+        // 2) VENCIDAS SI O SI (sin filtro de fecha) -> esto es lo que me pediste
+        respVencidas = await $.getJSON("/Ventas_Electrodomesticos/ListarCuotasACobrar", {
+            fechaDesde: null,
+            fechaHasta: null,
+            idCliente: paramsBase.idCliente,
+            idVendedor: paramsBase.idVendedor,
+            estado: "Vencida"
+        });
+
     } catch (e) {
-        console.error("Error cargando cuotas", e);
+        console.error(e);
         VC.toast("Error cargando cuotas", "danger");
         return;
     }
 
-    // Siempre ocultar pagadas en la grilla principal
-    cuotasCache = (resp.data || []).filter(x => x.Estado !== "Pagada");
+    // Unificar sin duplicados (IdCuota) y fuera Pagadas
+    const map = new Map();
+    const a = (respFiltrado?.data || []);
+    const b = (respVencidas?.data || []);
+
+    [...a, ...b].forEach(x => {
+        if (!x) return;
+        if (x.Estado === "Pagada") return;
+        map.set(x.IdCuota, x);
+    });
+
+    cuotasCache = Array.from(map.values());
+
+    // (opcional visual) setear atraso calculado en el objeto para debug/uso futuro
+    cuotasCache.forEach(c => {
+        c.__DiasAtraso = calcularDiasAtraso(c.FechaVencimiento);
+    });
 
     if (tabla) {
         tabla.clear().rows.add(cuotasCache).draw();
@@ -228,75 +241,136 @@ VC.cargarTabla = async function () {
         pageLength: 50,
         responsive: true,
         language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+
+        // NO toco tus columnas ni el HTML. Solo agrego el coloreo por atraso.
         rowCallback: function (row, d) {
-            if (ventaSeleccionada && d && d.IdVenta === ventaSeleccionada.IdVenta) {
+
+            // limpiar clases previas
+            $(row)
+                .removeClass("fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja");
+
+            const dias = calcularDiasAtraso(d.FechaVencimiento);
+
+            if (dias > 0) {
+                $(row).addClass("fila-atrasada");
+
+                if (dias >= 15)
+                    $(row).addClass("fila-atrasada-roja");
+                else if (dias >= 10)
+                    $(row).addClass("fila-atrasada-naranja");
+                else
+                    $(row).addClass("fila-atrasada-amarilla");
+            }
+
+            if (ventaSeleccionada && d.IdVenta === ventaSeleccionada.IdVenta) {
                 $(row).addClass("venta-seleccionada");
             }
         },
+
+        // Orden “natural”: primero vencimiento (más viejo primero). Si querés “atrasadas arriba” sin agregar columna,
+        // se puede, pero ahí sí hay que meter columna oculta o plugin de orden.
+        order: [[4, "asc"], [1, "asc"]],
+
         columns: [
+
+            /* Columna 0 - Acordeón */
             {
-                data: null,
-                className: "details-control text-center",
-                orderable: false,
+                data: null, className: "details-control text-center", orderable: false,
                 width: "40px",
                 render: () => `
                     <button class="btn btn-link p-0 text-accent btn-row-detail" title="Ver detalle venta">
                         <i class="fa fa-chevron-down"></i>
-                    </button>
-                `
+                    </button>`
             },
+
             { data: "NumeroCuota" },
             { data: "ClienteNombre" },
             { data: "VendedorNombre" },
+
             {
                 data: "FechaVencimiento",
-                render: x => x ? moment(x).format("DD/MM/YYYY") : ""
+                render: d => {
+                    if (!d) return "";
+
+                    const dias = calcularDiasAtraso(d);
+                    const fecha = moment(d).format("DD/MM/YYYY");
+
+                    if (dias <= 0) {
+                        return `<span>${fecha}</span>`;
+                    }
+
+                    return `
+            <div class="text-danger fw-bold">
+                ${fecha}
+                <div class="small opacity-75">
+                    ${dias} día${dias > 1 ? "s" : ""} de atraso
+                </div>
+            </div>`;
+                }
             },
+
+
             { data: "TotalCuota", render: VC.fmt },
             { data: "MontoPagado", render: VC.fmt },
             { data: "MontoRestante", render: VC.fmt },
+
             {
                 data: "Estado",
-                render: st => `
-                    <span class="badge
-                    ${st === "Pendiente" ? "bg-warning text-dark" :
-                        st === "Vencida" ? "bg-danger" :
-                            "bg-success"
-                    }">${st}</span>
-                `
+                render: (st, _, row) => {
+
+                    const dias = calcularDiasAtraso(row.FechaVencimiento);
+
+                    if (dias > 0) {
+                        let cls = "bg-warning text-dark";
+
+                        if (dias >= 15) cls = "bg-danger";
+                        else if (dias >= 10) cls = "bg-orange";
+
+                        return `
+                <span class="badge ${cls}">
+                    Vencida · ${dias} día${dias > 1 ? "s" : ""}
+                </span>`;
+                    }
+
+                    return `
+            <span class="badge bg-success">
+                Al día
+            </span>`;
+                }
             },
+
             {
-                data: null,
-                className: "text-center",
-                orderable: false,
+                data: null, className: "text-center", orderable: false,
                 render: d => `
-    <div class="btn-group">
-        <button class="btn btn-accion btn-cobrar me-1"
-            onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta}, ${d.MontoRestante})"
-            title="Cobrar">
-            <i class="fa fa-money"></i>
-        </button>
+<div class="btn-group">
 
-        <button class="btn btn-accion btn-ajuste me-1"
-            onclick="VC.abrirAjuste(${d.IdCuota})"
-            title="Ajustar">
-            <i class="fa fa-bolt"></i>
-        </button>
+    <button class="btn btn-accion btn-cobrar me-1"
+        onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta}, ${d.MontoRestante})"
+        title="Cobrar">
+        <i class="fa fa-money"></i>
+    </button>
 
-        <button class="btn btn-accion btn-historial"
-            onclick="VC.verHistorial(${d.IdCuota}, ${d.IdVenta})"
-            title="Historial">
-            <i class="fa fa-eye"></i>
-        </button>
-    </div>
-`
+    <button class="btn btn-accion btn-ajuste me-1"
+        onclick="VC.abrirAjuste(${d.IdCuota})"
+        title="Ajustar">
+        <i class="fa fa-bolt"></i>
+    </button>
 
+   <button class="btn btn-accion btn-historial"
+    onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})"
+    title="Historial">
+    <i class="fa fa-eye"></i>
+</button>
+
+
+</div>`
             }
         ]
     });
 
-    // Click en flecha de acordeón (columna 0)
+    /* Click acordeón */
     $("#vc_tabla tbody").on("click", "button.btn-row-detail", async function (e) {
+
         e.stopPropagation();
 
         const tr = $(this).closest("tr");
@@ -307,7 +381,6 @@ VC.cargarTabla = async function () {
         if (!data) return;
 
         if (row.child.isShown()) {
-            // Cerrar este
             row.child.hide();
             tr.removeClass("shown venta-seleccionada");
             icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
@@ -316,7 +389,6 @@ VC.cargarTabla = async function () {
             return;
         }
 
-        // Cerrar cualquiera abierto
         tabla.rows().every(function () {
             if (this.child.isShown()) {
                 this.child.hide();
@@ -326,19 +398,20 @@ VC.cargarTabla = async function () {
             }
         });
 
-        // Abrir este
         row.child(VC.formarAcordeonVenta(data)).show();
         tr.addClass("shown venta-seleccionada");
         icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
+
         ventaAcordeonAbierta = data.IdVenta;
 
-        // Cargar detalle real
         await VC.cargarDetalleVenta(data.IdVenta);
     });
 };
 
+/* ===========================================================
+   REABRIR ACORDEÓN TRAS RECARGA
+=========================================================== */
 
-// Reabrir acordeón después de recargar tabla
 VC.reabrirAcordeon = function () {
     if (!ventaAcordeonAbierta) return;
 
@@ -351,12 +424,12 @@ VC.reabrirAcordeon = function () {
     });
 };
 
-
 /* ===========================================================
-   ACORDEÓN DETALLE VENTA (MISMO ESTILO HISTORIAL)
+   ACORDEÓN DETALLE - PLANTILLA HTML
 =========================================================== */
 
 VC.formarAcordeonVenta = function (rowData) {
+
     const idV = rowData.IdVenta;
 
     return `
@@ -365,6 +438,7 @@ VC.formarAcordeonVenta = function (rowData) {
             <h5 class="text-accent fw-bold mb-2">
                 <i class="fa fa-shopping-bag me-2"></i> Productos
             </h5>
+
             <div class="table-responsive mb-4">
                 <table class="table ve-table">
                     <thead>
@@ -383,6 +457,7 @@ VC.formarAcordeonVenta = function (rowData) {
             <h5 class="text-accent fw-bold mt-4 mb-2">
                 <i class="fa fa-calendar me-2"></i> Cuotas pendientes
             </h5>
+
             <div class="table-responsive mb-4">
                 <table class="table ve-table">
                     <thead>
@@ -404,6 +479,7 @@ VC.formarAcordeonVenta = function (rowData) {
 
             <div class="accordion mt-3" id="accFin_${idV}">
                 <div class="accordion-item ve-accordion-item">
+
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button"
                                 data-bs-toggle="collapse"
@@ -413,8 +489,10 @@ VC.formarAcordeonVenta = function (rowData) {
                             <span class="badge bg-secondary ms-2" id="qFin_${idV}">0</span>
                         </button>
                     </h2>
+
                     <div id="colFin_${idV}" class="accordion-collapse collapse"
                          data-bs-parent="#accFin_${idV}">
+
                         <div class="accordion-body p-0">
                             <div class="table-responsive">
                                 <table class="table ve-table mb-0">
@@ -431,7 +509,9 @@ VC.formarAcordeonVenta = function (rowData) {
                                 </table>
                             </div>
                         </div>
+
                     </div>
+
                 </div>
             </div>
 
@@ -439,12 +519,12 @@ VC.formarAcordeonVenta = function (rowData) {
     `;
 };
 
-
 /* ===========================================================
-   DETALLE VENTA (GetDetalleVenta)
+   DETALLE VENTA
 =========================================================== */
 
 VC.cargarDetalleVenta = async function (idVenta) {
+
     try {
         const resp = await $.getJSON("/Ventas_Electrodomesticos/GetDetalleVenta", { idVenta });
 
@@ -457,21 +537,22 @@ VC.cargarDetalleVenta = async function (idVenta) {
 
         VC.renderProductos(ventaSeleccionada);
         VC.renderCuotas(ventaSeleccionada);
+
     } catch (e) {
         console.error("Error detalle venta", e);
         VC.toast("Error obteniendo detalle", "danger");
     }
 };
 
-
 /* ===========================================================
    RENDER PRODUCTOS
 =========================================================== */
 
 VC.renderProductos = function (v) {
+
     const tb = $(`#tbProd_${v.IdVenta}`).empty();
 
-    if (!v.Items || !v.Items.length) {
+    if (!v.Items?.length) {
         tb.append(`<tr><td colspan="3" class="text-center text-muted">Sin productos</td></tr>`);
         return;
     }
@@ -487,45 +568,43 @@ VC.renderProductos = function (v) {
     });
 };
 
-
 /* ===========================================================
    RENDER CUOTAS (PENDIENTES + FINALIZADAS)
 =========================================================== */
 
 VC.renderCuotas = function (v) {
+
     const tbPend = $(`#tbCuotasPend_${v.IdVenta}`).empty();
     const tbPag = $(`#tbCuotasPag_${v.IdVenta}`).empty();
     const lblFin = $(`#qFin_${v.IdVenta}`);
 
-    if (!v.Cuotas || !v.Cuotas.length) {
+    if (!v.Cuotas?.length) {
         tbPend.append(`<tr><td colspan="9" class="text-center text-muted">Sin cuotas</td></tr>`);
         lblFin.text("0");
         return;
     }
 
-    const hoy = moment().startOf("day");
-    let cuotaHoyId = null;
     let countFin = 0;
-
-    // Buscar la primera cuota pendiente/vencida con fecha <= hoy
-    for (let c of v.Cuotas) {
-        if ((c.Estado === "Pendiente" || c.Estado === "Vencida") &&
-            c.FechaVencimiento &&
-            moment(c.FechaVencimiento).startOf("day").isSameOrBefore(hoy)) {
-            cuotaHoyId = c.Id;
-            break;
-        }
-    }
+    const hoy = moment().startOf("day");
 
     v.Cuotas.forEach(c => {
-        const total = (c.MontoOriginal || 0) + (c.MontoRecargos || 0) - (c.MontoDescuentos || 0);
 
+        const total = (c.MontoOriginal || 0) + (c.MontoRecargos || 0) - (c.MontoDescuentos || 0);
+        const fechaVto = moment(c.FechaVencimiento).startOf("day");
+        const diasAtraso = hoy.diff(fechaVto, "days");
+
+        const estaVencida = diasAtraso > 0 && c.Estado !== "Pagada";
+        const venceHoy = diasAtraso === 0 && c.Estado !== "Pagada" && Number(c.MontoRestante || 0) > 0.0001;
+
+        /* =======================
+           CUOTAS PAGADAS
+        ======================= */
         if (c.Estado === "Pagada") {
             countFin++;
             tbPag.append(`
                 <tr>
                     <td>${c.NumeroCuota}</td>
-                    <td>${c.FechaVencimiento ? moment(c.FechaVencimiento).format("DD/MM/YYYY") : ""}</td>
+                    <td>${fechaVto.format("DD/MM/YYYY")}</td>
                     <td class="text-end">${VC.fmt(total)}</td>
                     <td class="text-end">${VC.fmt(c.MontoPagado)}</td>
                     <td class="text-center">
@@ -539,54 +618,71 @@ VC.renderCuotas = function (v) {
             return;
         }
 
-        // Cuotas pendientes / vencidas
-        const esHoy = c.Id === cuotaHoyId;
-        const rowStyle = esHoy
-            ? `style="background: rgba(255, 193, 7, 0.15); border-left: 3px solid #ffc107;"`
-            : "";
-        const badgeHoy = esHoy
-            ? `<span class="badge bg-warning text-dark ms-2">HOY</span>`
-            : "";
+        /* =======================
+           ESTILOS / ESTADO
+        ======================= */
+
+        let rowClass = "";
+        let vtoClass = "";
+        let estadoHtml = `<span class="badge bg-warning text-dark">Pendiente</span>`;
+
+        if (estaVencida) {
+            rowClass = "fila-atrasada";
+            vtoClass = "text-danger fw-bold";
+            estadoHtml = `
+                <span class="badge bg-danger">
+                    Vencida · ${diasAtraso} día${diasAtraso !== 1 ? "s" : ""}
+                </span>
+            `;
+        }
+        else if (venceHoy) {
+            rowClass = "fila-aldia";
+            vtoClass = "text-success fw-bold";
+            estadoHtml = `<span class="badge bg-success">Vence hoy</span>`;
+        }
 
         tbPend.append(`
-            <tr ${rowStyle}>
-                <td>${c.NumeroCuota} ${badgeHoy}</td>
-                <td>${c.FechaVencimiento ? moment(c.FechaVencimiento).format("DD/MM/YYYY") : ""}</td>
+            <tr class="${rowClass}">
+                <td>${c.NumeroCuota}</td>
+
+                <td class="${vtoClass}">
+                    ${fechaVto.format("DD/MM/YYYY")}
+                    ${estaVencida
+                ? `<div class="small text-danger">${diasAtraso} días de atraso</div>`
+                : (venceHoy ? `<div class="small text-success">Vence hoy</div>` : ``)}
+                </td>
+
                 <td class="text-end">${VC.fmt(c.MontoOriginal)}</td>
                 <td class="text-end">${VC.fmt(c.MontoRecargos)}</td>
                 <td class="text-end">${VC.fmt(c.MontoDescuentos)}</td>
                 <td class="text-end">${VC.fmt(c.MontoPagado)}</td>
-                <td class="text-end fw-bold">${VC.fmt(c.MontoRestante)}</td>
-                <td>
-                    <span class="badge ${c.Estado === "Pendiente" ? "bg-warning text-dark" :
-                c.Estado === "Vencida" ? "bg-danger" :
-                    "bg-success"
-            }">${c.Estado}</span>
-                </td>
+                <td class="text-end">${VC.fmt(c.MontoRestante)}</td>
+
+                <td>${estadoHtml}</td>
+
                 <td class="text-center">
-    <div class="btn-group">
+                    <div class="btn-group">
 
-        <button class="btn btn-accion btn-cobrar me-1"
-            onclick="VC.abrirCobro(${c.Id}, ${v.IdVenta}, ${c.MontoRestante})"
-            title="Cobrar">
-            <i class="fa fa-money"></i>
-        </button>
+                        <button class="btn btn-accion btn-cobrar me-1"
+                            onclick="VC.abrirCobro(${c.Id}, ${v.IdVenta}, ${c.MontoRestante})"
+                            title="Cobrar">
+                            <i class="fa fa-money"></i>
+                        </button>
 
-        <button class="btn btn-accion btn-ajuste me-1"
-            onclick="VC.abrirAjuste(${c.Id})"
-            title="Ajustar">
-            <i class="fa fa-bolt"></i>
-        </button>
+                        <button class="btn btn-accion btn-ajuste me-1"
+                            onclick="VC.abrirAjuste(${c.Id})"
+                            title="Ajustar">
+                            <i class="fa fa-bolt"></i>
+                        </button>
 
-        <button class="btn btn-accion btn-historial"
-            onclick="VC.verHistorial(${c.Id}, ${v.IdVenta})"
-            title="Historial">
-            <i class="fa fa-eye"></i>
-        </button>
+                        <button class="btn btn-accion btn-historial"
+                            onclick="VC.verHistorial(${c.Id}, ${v.IdVenta})"
+                            title="Historial">
+                            <i class="fa fa-eye"></i>
+                        </button>
 
-    </div>
-</td>
-
+                    </div>
+                </td>
             </tr>
         `);
     });
@@ -594,74 +690,55 @@ VC.renderCuotas = function (v) {
     lblFin.text(countFin);
 
     if (!tbPag.children().length) {
-        tbPag.append(`<tr><td colspan="5" class="text-center text-muted">Sin cuotas finalizadas</td></tr>`);
+        tbPag.append(`
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    Sin cuotas finalizadas
+                </td>
+            </tr>
+        `);
     }
 };
 
-
 /* ===========================================================
-   REGLA: COBRO ADELANTADO
-   - Se puede cobrar cuota N solo si TODAS las cuotas anteriores
-     (NumeroCuota < N) tienen MontoRestante = 0
+   COBRO ADELANTADO
 =========================================================== */
 
 VC.puedeCobrarCuota = function (ventaDet, idCuota) {
-    if (!ventaDet || !ventaDet.Cuotas) return false;
+
+    if (!ventaDet?.Cuotas) return false;
 
     const cuotas = ventaDet.Cuotas;
-    const cuotaActual = cuotas.find(c => c.Id === idCuota);
-    if (!cuotaActual) return false;
+    const actual = cuotas.find(c => c.Id === idCuota);
+    if (!actual) return false;
 
-    const numActual = Number(cuotaActual.NumeroCuota || 0);
+    const numActual = Number(actual.NumeroCuota);
 
-    const tienePrevImpaga = cuotas.some(c => {
-        const num = Number(c.NumeroCuota || 0);
-        const restante = Number(c.MontoRestante || 0);
-        return num < numActual && restante > 0.0001;
-    });
+    const prevImpagas = cuotas.some(c =>
+        c.NumeroCuota < numActual && Number(c.MontoRestante) > 0.0001
+    );
 
-    return !tienePrevImpaga;
+    return !prevImpagas;
 };
-
 
 /* ===========================================================
    MODAL COBRO
 =========================================================== */
 
-VC.abrirCobro = async function (idCuota, idVenta, restante) {
-    try {
-        let ventaDet = null;
+VC.abrirCobro = function (idCuota, idVenta, montoRestante) {
 
-        if (ventaSeleccionada && ventaSeleccionada.IdVenta === idVenta) {
-            ventaDet = ventaSeleccionada;
-        } else {
-            const resp = await $.getJSON("/Ventas_Electrodomesticos/GetDetalleVenta", { idVenta });
-            if (!resp.success) {
-                VC.toast(resp.message || "Error obteniendo venta", "danger");
-                return;
-            }
-            ventaDet = resp.data;
-        }
-
-        if (!VC.puedeCobrarCuota(ventaDet, idCuota)) {
-            VC.toast("No se puede cobrar esta cuota hasta completar las cuotas anteriores.", "danger");
-            return;
-        }
-
-        $("#md_cuotaId").val(idCuota);
-        $("#md_restante").val(VC.fmt(restante));
-        $("#md_importe").val(VC.fmt(restante));
-        $("#md_obs").val("");
-
-        VC.openModal("mdCobro");
-
-    } catch (e) {
-        console.error("Error abrir cobro", e);
-        VC.toast("Error preparando cobro", "danger");
+    // Delegamos TODO al partial
+    if (typeof window.abrirModalCobro !== "function") {
+        console.error("abrirModalCobro no está disponible");
+        return;
     }
+
+    // Llamada REAL al modal del partial
+    window.abrirModalCobro(idVenta, idCuota);
 };
 
 VC.confirmarCobro = async function () {
+
     const idCuota = Number($("#md_cuotaId").val());
     const importe = VC.parseMoney($("#md_importe").val());
     const obs = $("#md_obs").val();
@@ -671,7 +748,6 @@ VC.confirmarCobro = async function () {
         return;
     }
 
-    // Buscar cuota en cache para saber IdVenta
     const cuota = cuotasCache.find(x => x.IdCuota === idCuota);
     if (!cuota) {
         VC.toast("Cuota no encontrada", "danger");
@@ -684,7 +760,9 @@ VC.confirmarCobro = async function () {
         MedioPago: "EFECTIVO",
         ImporteTotal: importe,
         Observacion: obs,
-        Aplicaciones: [{ IdCuota: idCuota, ImporteAplicado: importe }]
+        Aplicaciones: [
+            { IdCuota: idCuota, ImporteAplicado: importe }
+        ]
     };
 
     try {
@@ -703,26 +781,23 @@ VC.confirmarCobro = async function () {
         VC.toast("Pago registrado", "success");
         VC.closeModal("mdCobro");
 
-        // Recargar tabla
         await VC.cargarTabla();
 
-        // Si el acordeón estaba abierto para esa venta, recargar detalle
-        if (ventaAcordeonAbierta === cuota.IdVenta) {
+        if (ventaAcordeonAbierta === cuota.IdVenta)
             await VC.cargarDetalleVenta(cuota.IdVenta);
-        }
 
     } catch (e) {
-        console.error("Error registrar pago", e);
-        VC.toast("Error al registrar pago", "danger");
+        VC.toast("Error registrando pago", "danger");
+        console.error(e);
     }
 };
-
 
 /* ===========================================================
    MODAL AJUSTE
 =========================================================== */
 
 VC.abrirAjuste = function (idCuota) {
+
     $("#aj_cuotaId").val(idCuota);
     $("#aj_recargo").val("");
     $("#aj_descuento").val("");
@@ -763,7 +838,7 @@ VC.confirmarAjuste = async function () {
         });
 
         if (!resp.success) {
-            VC.toast(resp.message || "Error al ajustar", "danger");
+            VC.toast(resp.message || "Error al ajustar cuota", "danger");
             return;
         }
 
@@ -776,17 +851,17 @@ VC.confirmarAjuste = async function () {
             await VC.cargarDetalleVenta(cuota.IdVenta);
 
     } catch (e) {
-        console.error(e);
         VC.toast("Error ajustando cuota", "danger");
+        console.error(e);
     }
 };
-
 
 /* ===========================================================
    HISTORIAL DE UNA CUOTA
 =========================================================== */
 
 VC.verHistorial = async function (idCuota, idVenta) {
+
     try {
         const resp = await $.getJSON("/Ventas_Electrodomesticos/GetDetalleVenta", { idVenta });
 
@@ -810,33 +885,98 @@ VC.verHistorial = async function (idCuota, idVenta) {
                         <td>${moment(h.FechaCambio).format("DD/MM/YYYY HH:mm")}</td>
                         <td class="text-end">${VC.fmt(VC.extraerNumero(h.ValorNuevo))}</td>
                         <td>${h.Observacion || ""}</td>
-                    </tr>
-                `);
+                    </tr>`);
             });
         }
 
         VC.openModal("mdHistorial");
 
     } catch (e) {
-        console.error("Error historial cuota", e);
         VC.toast("Error obteniendo historial", "danger");
+        console.error(e);
     }
 };
 
-window.VC = VC;
+/* ===========================================================
+   TOGGLES % / $
+=========================================================== */
 
 $(document).on("click", ".ajTipo", function () {
 
-    const target = $(this).data("target");   // id del hidden
-    const value = $(this).data("value");     // "%" o "$"
+    const target = $(this).data("target");
+    const value = $(this).data("value");
 
-    // Grupo de botones
     const group = $(this).parent();
-
-    // Activar visualmente este botón y desactivar el resto
     group.find(".ajTipo").removeClass("active");
+
     $(this).addClass("active");
 
-    // Escribir tipo en el hidden correspondiente
     $("#" + target).val(value);
 });
+
+/* ===========================================================
+   EXPORT API
+=========================================================== */
+
+window.VC = VC;
+
+/* ===========================================================
+   ATRASO (helper) - lo agrego porque si falta te rompe
+=========================================================== */
+function calcularDiasAtraso(fechaVto) {
+    if (!fechaVto) return 0;
+
+    // 1) Hoy a 00:00 local
+    const hoy = moment().startOf("day");
+
+    // 2) Parse robusto
+    let f = null;
+
+    // Caso ASP.NET: "/Date(176...)/"
+    if (typeof fechaVto === "string") {
+        const m = fechaVto.match(/\/Date\((\d+)\)\//);
+        if (m && m[1]) {
+            f = moment(Number(m[1])).startOf("day");
+        }
+    }
+
+    // Caso ISO "2025-12-08T00:00:00"
+    if (!f || !f.isValid()) {
+        const mi = moment(fechaVto, moment.ISO_8601, true);
+        if (mi.isValid()) f = mi.startOf("day");
+    }
+
+    // Caso string "DD/MM/YYYY" o "DD/MM/YYYY HH:mm:ss"
+    if (!f || !f.isValid()) {
+        const mdmy = moment(fechaVto, ["DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY HH:mm"], true);
+        if (mdmy.isValid()) f = mdmy.startOf("day");
+    }
+
+    // Caso Date real
+    if ((!f || !f.isValid()) && fechaVto instanceof Date) {
+        f = moment(fechaVto).startOf("day");
+    }
+
+    // Si sigue inválida, NO mientas con "Al día": devolvé 0 pero logueá
+    if (!f || !f.isValid()) {
+        console.warn("FechaVencimiento inválida:", fechaVto);
+        return 0;
+    }
+
+    const diff = hoy.diff(f, "days");
+    return diff > 0 ? diff : 0;
+}
+
+
+
+
+
+VC.abrirHistorialPartial = function (idVenta, idCuota) {
+
+    if (typeof window.abrirHistorialDesdeCobros !== "function") {
+        VC.toast("Historial no disponible", "danger");
+        return;
+    }
+
+    window.abrirHistorialDesdeCobros(idVenta, idCuota);
+};

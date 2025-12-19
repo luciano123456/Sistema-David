@@ -21,6 +21,7 @@ namespace Sistema_David.Models.Modelo
         public Nullable<decimal> PrecioVenta { get; set; }
         public Nullable<decimal> Total { get; set; }
         public Nullable<int> PorcVenta { get; set; }
+        public Nullable<int> DiasVencimiento { get; set; }
 
         public virtual Categorias Categorias { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

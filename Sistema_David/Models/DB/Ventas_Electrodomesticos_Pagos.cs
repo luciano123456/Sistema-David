@@ -28,10 +28,16 @@ namespace Sistema_David.Models.DB
         public string Observacion { get; set; }
         public int UsuarioCreacion { get; set; }
         public System.DateTime FechaCreacion { get; set; }
+        public Nullable<int> ClienteAusente { get; set; }
+        public string Imagen { get; set; }
+        public Nullable<int> IdCuentaBancaria { get; set; }
+        public string TipoInteres { get; set; }
+        public Nullable<int> ActualizoUbicacion { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Pagos_Detalle> Ventas_Electrodomesticos_Pagos_Detalle { get; set; }
         public virtual Ventas_Electrodomesticos Ventas_Electrodomesticos { get; set; }
         public virtual Usuarios Usuarios { get; set; }
+        public virtual CuentasBancarias CuentasBancarias { get; set; }
     }
 }

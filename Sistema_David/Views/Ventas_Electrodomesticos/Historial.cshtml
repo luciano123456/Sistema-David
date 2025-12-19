@@ -104,7 +104,7 @@
                         <i class="fa fa-plus-square"></i> Nueva Venta
                     </a>
 
-                    <button id="btnToggleFiltros" class="btn btn-outline-light btn-sm">
+                    <button id="btnToggleFiltros" hidden class="btn btn-outline-light btn-sm">
                         <i id="iconFiltros" class="fa fa-chevron-down"></i> Filtros
                     </button>
 
@@ -117,20 +117,27 @@
             <div class="ve-card-body">
 
                 <!-- ===== FILTROS ===== -->
-                <form id="formFiltros" class="d-none mb-3">
-                    <div class="row g-3">
+                <form id="formFiltros" class="d-none mb-4" hidden>
+                    <div class="row g-4">
 
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Desde</label>
                             <input id="txtFechaDesde" type="date" class="form-control ve-input">
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Hasta</label>
                             <input id="txtFechaHasta" type="date" class="form-control ve-input">
                         </div>
 
+
                         <div class="col-md-3">
+                            <label class="form-label">Vendedor</label>
+                            <select id="filtroVendedor" class="form-select ve-input">
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
                             <label class="form-label">Estado</label>
                             <select id="filtroEstado" class="form-select ve-input">
                                 <option value="">Todos</option>
@@ -138,6 +145,7 @@
                                 <option value="Cancelada">Cancelada</option>
                             </select>
                         </div>
+
 
                         <div class="col-md-3 d-flex gap-2 align-items-end">
                             <button type="button" class="btn btn-primary flex-fill" onclick="aplicarFiltros()">
@@ -157,7 +165,7 @@
                         <thead>
                             <tr>
                                 <th style="width:40px"></th>
-                                <th>ID</th>
+                                <th>Nro</th>
                                 <th>Fecha</th>
                                 <th>Cliente</th>
                                 <th>Total</th>
@@ -176,136 +184,9 @@
 
     </div>
 
-    <!-- ============================= MODALES ============================= -->
-    <!-- COBRO -->
-    <div class="modal fade" id="mdCobro" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content ve-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title text-white">
-                        <i class="fa fa-money text-accent me-2"></i> Cobrar cuota
-                    </h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
 
-                <div class="modal-body">
-                    <input id="cobroIdCuota" type="hidden">
+    @Html.Partial("_CobroModal_Partial")
 
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Restante</label>
-                            <input id="cobroRestante" class="form-control ve-input" readonly />
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Importe</label>
-                            <input id="cobroImporte" class="form-control ve-input text-end" />
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Observación</label>
-                            <input id="cobroObs" class="form-control ve-input" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer justify-content-between">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button id="btnConfirmarCobro" class="btn btn-success">Confirmar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- AJUSTE -->
-    <div class="modal fade" id="mdAjuste" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content ve-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title text-white">
-                        <i class="fa fa-sliders text-accent me-2"></i> Ajustar cuota
-                    </h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                    <input id="ajIdCuota" type="hidden">
-
-                    <div class="row g-3">
-
-                        <div class="col-md-6">
-                            <label class="form-label">Recargo</label>
-                            <div class="input-group">
-                                <input id="ajRecargo" class="form-control ve-input text-end" />
-                                <div id="ajRecargoTipoWrap" class="btn-group ve-type-toggle">
-                                    <button class="btn btn-outline-light active" data-value="%">%</button>
-                                    <button class="btn btn-outline-light" data-value="$">$</button>
-                                </div>
-                                <select id="ajRecargoTipo" class="d-none">
-                                    <option value="%">%</option>
-                                    <option value="$">$</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Descuento</label>
-                            <div class="input-group">
-                                <input id="ajDescuento" class="form-control ve-input text-end" />
-                                <div id="ajDescuentoTipoWrap" class="btn-group ve-type-toggle">
-                                    <button class="btn btn-outline-light active" data-value="%">%</button>
-                                    <button class="btn btn-outline-light" data-value="$">$</button>
-                                </div>
-                                <select id="ajDescuentoTipo" class="d-none">
-                                    <option value="%">%</option>
-                                    <option value="$">$</option>
-                                </select>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="modal-footer justify-content-between">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button id="btnConfirmarAjuste" class="btn btn-primary">Aplicar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- HISTORIAL -->
-    <div class="modal fade" id="mdHistorial" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content ve-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title text-white">
-                        <i class="fa fa-list text-accent me-2"></i> Historial
-                    </h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                    <table class="table ve-table align-middle">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Fecha</th>
-                                <th class="text-end">Importe</th>
-                                <th>Obs</th>
-                            </tr>
-                        </thead>
-                        <tbody id="histBody"></tbody>
-                    </table>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 
 @section scripts {

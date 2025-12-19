@@ -1,0 +1,280 @@
+﻿<link href="~/Estilos/Ventas_Electrodomesticos.css" rel="stylesheet" />
+
+<div id="partialCobros">
+
+    <!-- =====================================================
+         MODAL COBRO
+    ====================================================== -->
+    <div class="modal fade" id="mdCobro" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content ve-modal">
+
+                <!-- HEADER -->
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold text-white">
+                        <i class="fa fa-money text-warning me-2"></i>
+                        Registrar cobro
+                    </h5>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
+                </div>
+
+                <!-- BODY -->
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <form class="row g-3" onsubmit="return false;">
+
+                            <!-- HIDDEN -->
+                            <input type="hidden" id="cb_idVenta">
+                            <input type="hidden" id="cb_idCuota">
+                            <input type="hidden" id="cb_montoRestante">
+                            <input type="hidden" id="cb_clienteAusente" value="0">
+                            <input type="hidden" id="cb_actualizoUbicacion" value="0">
+                            <input type="hidden" id="cb_imagenBase64">
+
+                            <!-- VALOR CUOTA -->
+                            <div class="col-12">
+                                <div id="cb_valorCuotaBox"
+                                     class="alert alert-warning text-center fw-bold mb-0">
+                                    Valor de la cuota: $0
+                                </div>
+                            </div>
+
+                            <!-- IMPORTE -->
+                            <div class="col-6 col-lg-3">
+                                <label class="form-label small fw-semibold">Importe</label>
+                                <input id="cb_importe" type="number" step="0.01"
+                                       class="form-control ve-input text-end">
+                            </div>
+
+                            <!-- FECHA -->
+                            <div class="col-6 col-lg-3">
+                                <label class="form-label small fw-semibold">Fecha de cobro</label>
+                                <input id="cb_fecha" type="date"
+                                       class="form-control ve-input" disabled>
+                            </div>
+
+                            <!-- MÉTODO -->
+                            <div class="col-6 col-lg-3">
+                                <label class="form-label small fw-semibold">Método de pago</label>
+                                <select id="cb_metodo" class="form-select ve-input">
+                                    <option value="">Seleccionar</option>
+                                    <option value="EFECTIVO">EFECTIVO</option>
+                                    <option value="TRANSFERENCIA PROPIA">TRANSFERENCIA PROPIA</option>
+                                    <option value="TRANSFERENCIA A TERCEROS">TRANSFERENCIA A TERCEROS</option>
+                                </select>
+                            </div>
+
+                            <!-- CUENTA -->
+                            <div class="col-6 col-lg-3" id="cb_wrapCuenta" hidden>
+                                <label class="form-label small fw-semibold">Cuenta bancaria</label>
+                                <select id="cb_cuenta" class="form-select ve-input"></select>
+                            </div>
+
+                            <!-- OBSERVACIÓN -->
+                            <div class="col-12 col-lg-3" id="cb_wrapObs">
+                                <label class="form-label small fw-semibold">Observación</label>
+                                <input id="cb_obs" type="text" class="form-control ve-input">
+                            </div>
+
+                            <!-- BOTONES -->
+                            <div class="col-12 d-flex justify-content-center gap-3 mt-3">
+                                <button id="cb_btnRecargo" type="button"
+                                        class="btn btn-warning fw-bold px-4">
+                                    <i class="fa fa-plus-circle me-1"></i> Recargo
+                                </button>
+
+                                <button type="button" id="cb_btnHistorial"
+                                        class="btn btn-secondary fw-bold px-4">
+                                    <i class="fa fa-clock-o me-1"></i> Historial
+                                </button>
+                            </div>
+
+                            <!-- CASITAS -->
+                            <div class="col-12 text-center mt-2">
+                                <div class="fw-semibold mb-2">Estado del cliente</div>
+
+                                <div class="d-flex justify-content-center gap-4" style="font-size:42px;">
+                                    <i id="cb_casaRoja" class="fa fa-home text-danger d-none" role="button" title="Cliente ausente"></i>
+                                    <i id="cb_casaNeutral" class="fa fa-home text-secondary" role="button" title="Elegir estado"></i>
+                                    <i id="cb_casaVerde" class="fa fa-home text-success d-none" role="button" title="Actualizó ubicación"></i>
+                                </div>
+                            </div>
+
+                            <!-- PROGRESS -->
+                            <div class="col-12" id="progressBarContainerCobro" hidden>
+                                <div class="border rounded p-3 mt-3 ve-glass">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span id="total-labelCobro" class="fw-bold text-white">Total: $0</span>
+                                        <span id="cobrosPendientesCobro" class="fw-bold text-warning">Pendientes: $0</span>
+                                    </div>
+
+                                    <div class="progress ve-progress">
+                                        <div id="progressBarCobro" class="progress-bar"></div>
+                                        <span id="progressPercentageCobro" class="ve-progress-text"></span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span id="entregas-labelCobro" class="text-white">Entregas: $0</span>
+                                        <span id="restante-labelCobro" class="text-white">Restante: $0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- COMPROBANTE (ACORDEÓN) -->
+                            <div class="col-12" id="cb_wrapComprobante" hidden>
+                                <div class="cb-comprobante-card">
+
+                                    <div class="cb-comprobante-header d-flex align-items-center justify-content-between">
+                                        <div class="cb-comprobante-title">
+                                            <i class="fa fa-image"></i>
+                                            Comprobante de transferencia
+                                        </div>
+
+                                        <button id="cb_btnToggleComprobante" type="button" class="cb-btn-ver">
+                                            <i id="cb_iconToggleComp" class="fa fa-eye me-1"></i>
+                                            <span id="cb_txtToggleComp">Ver</span>
+                                        </button>
+                                    </div>
+
+                                    <div id="cb_comprobanteBody" class="cb-comprobante-body d-none">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <label class="btn btn-outline-light btn-sm mb-0">
+                                                <i class="fa fa-upload me-1"></i>
+                                                Seleccionar archivo
+                                                <input id="cb_comprobante" type="file" hidden accept="image/*">
+                                            </label>
+
+                                            <button id="cb_btnLimpiarComp" type="button" class="btn btn-outline-danger btn-sm">
+                                                <i class="fa fa-trash me-1"></i> Quitar
+                                            </button>
+                                        </div>
+
+                                        <div class="cb-preview mt-3">
+                                            <img id="cb_comprobantePreview" class="d-none"
+                                                 style="max-height:60vh; width:100%; object-fit:contain; border-radius:12px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ERROR -->
+                            <div class="col-12">
+                                <div id="cb_error" class="alert alert-danger d-none mb-0"></div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer border-top">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">
+                        Cancelar
+                    </button>
+                    <button id="cb_confirmarBtn" type="button"
+                            class="btn btn-success fw-bold">
+                        <i class="fa fa-check"></i> Confirmar cobro
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         MODAL RECARGO
+    ====================================================== -->
+    <div class="modal fade" id="mdAjuste" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content ve-modal">
+
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-white">
+                        <i class="fa fa-plus-circle text-warning me-2"></i>
+                        Aplicar recargo
+                    </h5>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="aj_idCuota">
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Valor</label>
+                            <input id="aj_valor" class="form-control ve-input text-end">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Observacion</label>
+                            <input id="aj_obs" class="form-control ve-input ">
+                        </div>
+
+                        <div class="col-md-4 d-flex align-items-end gap-2">
+                            <button id="aj_tipo_porc" type="button" class="btn btn-outline-light btn-recargo w-50">%</button>
+                            <button id="aj_tipo_fijo" type="button" class="btn btn-outline-light btn-recargo w-50">$</button>
+
+                        </div>
+                    </div>
+
+                    <div id="aj_errorBox" class="alert alert-danger d-none mt-3 mb-0"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">
+                        Cancelar
+                    </button>
+                    <button id="aj_btnAplicar" type="button" class="btn btn-warning fw-bold">
+                        Aplicar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         MODAL HISTORIAL CUOTA
+    ====================================================== -->
+    <div class="modal fade" id="mdHistorialCuota" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content ve-modal">
+
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-white">
+                        <i class="fa fa-clock-o text-info me-2"></i>
+                        Historial de la cuota
+                    </h5>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
+                </div>
+
+                <div class="modal-body">
+                    <table class="table ve-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Fecha</th>
+                                <th>Campo</th>
+                                <th class="text-end">Importe Pagado</th>
+                                <th class="text-end">Importe Actual</th>
+                                <th>Obs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="histCuotaBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">
+                        Cerrar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="~/JavaScript/_CobroModal_Partial.js"></script>

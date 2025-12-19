@@ -436,6 +436,9 @@
     <Compile Include="Models\DB\Ventas_Electrodomesticos_Cuotas.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\DB\Ventas_Electrodomesticos_Cuotas_Recargos.cs">
+      <DependentUpon>DB.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\DB\Ventas_Electrodomesticos_Detalle.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
@@ -606,6 +609,7 @@
     <Content Include="Imagenes\User.png" />
     <Content Include="JavaScript\bundle.js" />
     <Content Include="JavaScript\ClientesCero.js" />
+    <Content Include="JavaScript\_CobroModal_Partial.js" />
     <Content Include="JavaScript\ClientesEditar.js" />
     <Content Include="JavaScript\Ventas_Electrodomesticos_Cobros.js" />
     <Content Include="JavaScript\Ventas_Electrodomesticos_Historial.js" />
@@ -743,6 +747,9 @@
     <Content Include="Views\Ventas\Index.cshtml" />
     <Content Include="Views\Ventas\Informacion.cshtml" />
     <Content Include="Views\Ventas\Nuevo.cshtml" />
+    <Content Include="Views\Ventas_Electrodomesticos\Cobros.cshtml" />
+    <Content Include="Views\Ventas_Electrodomesticos\Historial.cshtml" />
+    <Content Include="Views\Ventas_Electrodomesticos\NuevoModif.cshtml" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -764,9 +771,7 @@
     <Content Include="Views\Recorrido\Index.cshtml" />
     <Content Include="Views\Stock\General.cshtml" />
     <Content Include="Views\Utils\Modals.cshtml" />
-    <Content Include="Views\Ventas_Electrodomesticos\NuevoModif.cshtml" />
-    <Content Include="Views\Ventas_Electrodomesticos\Cobros.cshtml" />
-    <Content Include="Views\Ventas_Electrodomesticos\Historial.cshtml" />
+    <Content Include="Views\Ventas_Electrodomesticos\_CobroModal_Partial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

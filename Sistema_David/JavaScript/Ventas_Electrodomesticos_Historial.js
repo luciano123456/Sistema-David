@@ -6,6 +6,7 @@ let gridVentas = null;
 let ventasCache = [];
 let ventaSeleccionada = null;
 let rowAbierto = null;
+let userSession;
 
 /* ------------ HELPERS ------------ */
 
@@ -87,11 +88,11 @@ function closeModalById(id) {
 /* ------------ LOAD ------------ */
 
 $(document).ready(() => {
-    cargarTabla();
 
+    iniciarFiltros();
+
+ 
     $("#btnToggleFiltros").on("click", toggleFiltros);
-    $("#btnConfirmarCobro").on("click", confirmarCobro);
-    $("#btnConfirmarAjuste").on("click", confirmarAjuste);
 });
 
 /* ------------ FILTROS ------------ */
@@ -102,12 +103,51 @@ function toggleFiltros() {
     $("#iconFiltros").toggleClass("fa-chevron-down fa-chevron-up");
 }
 
+async function iniciarFiltros() {
+
+    userSession = JSON.parse(localStorage.getItem('usuario'));
+
+    await cargarUsuarios()
+
+    if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
+        $("#formFiltros").removeAttr("hidden");
+        $("#btnToggleFiltros").removeAttr("hidden");
+    }
+
+    var FechaDesde, FechaHasta;
+
+    if (userSession.IdRol == 1) {
+        FechaDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
+        FechaHasta = moment().format('YYYY-MM-DD');
+    } else {
+        FechaDesde = moment().format('YYYY-MM-DD');
+        FechaHasta = moment().format('YYYY-MM-DD');
+    }
+
+    $("#txtFechaDesde").val(FechaDesde);
+    $("#txtFechaHasta").val(FechaHasta);
+
+    cargarTabla();
+
+}
+
 function aplicarFiltros() { cargarTabla(); }
 
-function limpiarFiltros() {
-    $("#txtFechaDesde").val("");
-    $("#txtFechaHasta").val("");
+async function limpiarFiltros() {
+
+    
+    if (userSession.IdRol == 1) {
+        var FechaDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
+        var FechaHasta = moment().format('YYYY-MM-DD');
+        $("#txtFechaDesde").val(FechaDesde);
+        $("#txtFechaHasta").val(FechaHasta);
+    } else {
+        $("#txtFechaDesde").val("");
+        $("#txtFechaHasta").val("");
+    }
+
     $("#filtroEstado").val("");
+    $("#filtroVendedor").val("");
     cargarTabla();
 }
 
@@ -117,13 +157,15 @@ async function cargarTabla() {
     const desde = $("#txtFechaDesde").val();
     const hasta = $("#txtFechaHasta").val();
     const estado = $("#filtroEstado").val();
+    const vendedor = $("#filtroVendedor").val();
 
     let resp;
     try {
         resp = await $.getJSON("/Ventas_Electrodomesticos/GetHistorialVentas", {
             fechaDesde: desde || null,
             fechaHasta: hasta || null,
-            estado
+            estado: estado,
+            IdVendedor: vendedor
         });
     } catch (e) {
         console.error("Error cargando ventas", e);
@@ -154,6 +196,20 @@ function renderTabla(data) {
         responsive: true,
         language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
         rowCallback: function (row, d) {
+
+            // mismas clases que cobros
+            $(row)
+                .removeClass("fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja venta-seleccionada");
+
+            const vencidas = Number(d.CuotasVencidas || 0);
+
+            if (vencidas > 0) {
+                // En historial: si tiene cuotas vencidas, la venta se pinta “roja” como cobros
+                $(row).addClass("fila-atrasada fila-atrasada-naranja");
+            } else {
+                $(row).addClass("fila-aldia");
+            }
+
             if (ventaSeleccionada?.IdVenta === d.IdVenta) {
                 $(row).addClass("venta-seleccionada");
             }
@@ -179,15 +235,32 @@ function renderTabla(data) {
             { data: "Total", render: fmt },
             { data: "Pagado", render: fmt },
             { data: "Pendiente", render: fmt },
-            { data: "CuotasVencidas" },
             {
-                data: "Estado",
-                render: st => `
-                    <span class="badge ${st === "Cancelada" ? "bg-danger" :
-                        st === "Activa" ? "bg-warning text-dark" :
-                            "bg-secondary"
-                    }">${st}</span>
-                `
+                data: "CuotasVencidas",
+                className: "text-center",
+                render: (v) => {
+                    const n = Number(v || 0);
+
+                    if (n > 0) {
+                        return `<span class="badge bg-danger">Cuotas atrasadas: ${n}</span>`;
+                    }
+
+                    return `<span class="badge bg-success">Sin vencidas</span>`;
+                }
+            },
+            {
+                data: null,
+                render: (row) => {
+
+                    const vencidas = Number(row.CuotasVencidas || 0);
+
+                    if (vencidas > 0) {
+                        // equivalente al “Vencida” en cobros, pero a nivel venta
+                        return `<span class="badge bg-danger">Atrasada</span>`;
+                    }
+
+                    return `<span class="badge bg-success">Al día</span>`;
+                }
             },
             {
                 data: "IdVenta",
@@ -252,7 +325,7 @@ function formarAcordeon(v) {
                         <tr>
                             <th>Producto</th>
                             <th class="text-end">Cant.</th>
-                            <th class="text-end">PU</th>
+                            <th class="text-end">P.Unitario</th>
                         </tr>
                     </thead>
                     <tbody id="tbProd_${v.IdVenta}">
@@ -286,9 +359,11 @@ function formarAcordeon(v) {
             <div class="accordion mt-3" id="accFin_${v.IdVenta}">
                 <div class="accordion-item ve-accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#colFin_${v.IdVenta}">
+                        <button class="accordion-button collapsed js-fin-toggle"
+                                type="button"
+                                data-bs-target="#colFin_${v.IdVenta}"
+                                aria-expanded="false"
+                                aria-controls="colFin_${v.IdVenta}">
                             <i class="fa fa-check-circle text-success me-2"></i>
                             Cuotas finalizadas
                             <span class="badge bg-secondary ms-2" id="qFin_${v.IdVenta}">0</span>
@@ -317,8 +392,7 @@ function formarAcordeon(v) {
             </div>
 
             <div class="text-end mt-3">
-                <button class="btn btn-primary btn-sm"
-                        onclick="exportarPdfVenta(${v.IdVenta})">
+                <button class="btn btn-primary btn-sm" onclick="exportarPdfVenta(${v.IdVenta})">
                     <i class="fa fa-file-pdf-o me-1"></i> PDF de esta venta
                 </button>
             </div>
@@ -379,26 +453,46 @@ function renderProductos(v) {
 /* ------------ CUOTAS ------------ */
 
 function renderCuotas(v) {
+
     const tbPend = $(`#tbCuotasPend_${v.IdVenta}`).empty();
     const tbPag = $(`#tbCuotasPag_${v.IdVenta}`).empty();
+    const lblFin = $(`#qFin_${v.IdVenta}`);
 
     if (!v.Cuotas?.length) {
         tbPend.append(`<tr><td colspan="9" class="text-center text-muted">Sin cuotas</td></tr>`);
-        $("#qFin_" + v.IdVenta).text("0");
+        lblFin.text("0");
         return;
     }
 
     let countFin = 0;
+    const hoy = moment().startOf("day");
 
     v.Cuotas.forEach(c => {
-        const total = c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos;
 
+        const total = (c.MontoOriginal || 0) + (c.MontoRecargos || 0) - (c.MontoDescuentos || 0);
+        const fechaVto = moment(c.FechaVencimiento).startOf("day");
+        const diasAtraso = hoy.diff(fechaVto, "days");
+
+        const estaVencida =
+            diasAtraso > 0 &&
+            c.Estado !== "Pagada" &&
+            Number(c.MontoRestante || 0) > 0.0001;
+
+        const venceHoy =
+            !estaVencida &&
+            c.Estado !== "Pagada" &&
+            fechaVto.isSame(hoy, "day") &&
+            Number(c.MontoRestante || 0) > 0.0001;
+
+        /* =========================
+           CUOTAS PAGADAS
+        ========================= */
         if (c.Estado === "Pagada") {
             countFin++;
             tbPag.append(`
                 <tr>
                     <td>${c.NumeroCuota}</td>
-                    <td>${moment(c.FechaVencimiento).format("DD/MM/YYYY")}</td>
+                    <td>${fechaVto.format("DD/MM/YYYY")}</td>
                     <td class="text-end">${fmt(total)}</td>
                     <td class="text-end">${fmt(c.MontoPagado)}</td>
                     <td class="text-center">
@@ -412,195 +506,103 @@ function renderCuotas(v) {
             return;
         }
 
+        /* =========================
+           ESTILOS IGUAL A COBROS
+        ========================= */
+
+        let rowClass = "";
+        let estadoHtml = `<span class="badge bg-warning text-dark">Pendiente</span>`;
+        let vtoHtml = fechaVto.format("DD/MM/YYYY");
+
+        if (estaVencida) {
+
+            rowClass = "fila-atrasada";
+
+            let cls = "bg-warning text-dark";
+            if (diasAtraso >= 15) cls = "bg-danger";
+            else if (diasAtraso >= 10) cls = "bg-orange";
+
+            vtoHtml = `
+                <div class="text-danger fw-bold">
+                    ${fechaVto.format("DD/MM/YYYY")}
+                    <div class="small opacity-75">
+                        ${diasAtraso} día${diasAtraso !== 1 ? "s" : ""} de atraso
+                    </div>
+                </div>
+            `;
+
+            estadoHtml = `
+                <span class="badge ${cls}">
+                    Vencida · ${diasAtraso} día${diasAtraso !== 1 ? "s" : ""}
+                </span>
+            `;
+        }
+        else if (venceHoy) {
+
+            rowClass = "fila-aldia";
+
+            vtoHtml = `
+                <div class="text-success fw-bold">
+                    ${fechaVto.format("DD/MM/YYYY")}
+                    <div class="small opacity-75">Vence hoy</div>
+                </div>
+            `;
+
+            estadoHtml = `<span class="badge bg-success">Vence hoy</span>`;
+        }
+
         tbPend.append(`
-            <tr>
+            <tr class="${rowClass}">
                 <td>${c.NumeroCuota}</td>
-                <td>${moment(c.FechaVencimiento).format("DD/MM/YYYY")}</td>
+                <td>${vtoHtml}</td>
+
                 <td class="text-end">${fmt(c.MontoOriginal)}</td>
                 <td class="text-end">${fmt(c.MontoRecargos)}</td>
                 <td class="text-end">${fmt(c.MontoDescuentos)}</td>
                 <td class="text-end">${fmt(c.MontoPagado)}</td>
                 <td class="text-end fw-bold">${fmt(c.MontoRestante)}</td>
-                <td>
-                    <span class="badge ${c.Estado === "Pendiente"
-                ? "bg-warning text-dark"
-                : "bg-success"}">${c.Estado}</span>
-                </td>
+
+                <td>${estadoHtml}</td>
+
                 <td class="text-center">
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-success"
-                            onclick="abrirCobro(${c.Id}, ${v.IdVenta}, ${c.MontoRestante})"
-                            title="Cobrar">
-                            <i class="fa fa-money"></i>
-                        </button>
-                        <button class="btn btn-info"
-                            onclick="abrirAjuste(${c.Id})"
-                            title="Recargo / Descuento">
-                            <i class="fa fa-sliders"></i>
-                        </button>
-                        <button class="btn btn-secondary"
-                            onclick="verHistorial(${c.Id}, ${v.IdVenta})"
-                            title="Historial">
-                            <i class="fa fa-clock-o"></i>
-                        </button>
+                    <div class="btn-group">
+                       <button class="btn btn-accion btn-cobrar me-1"
+        onclick="Historial.abrirCobro(${v.IdVenta}, ${c.Id})"
+        title="Cobrar">
+    <i class="fa fa-money"></i>
+</button>
+
+<button class="btn btn-accion btn-ajuste me-1"
+        onclick="Historial.abrirAjuste(${v.IdVenta}, ${c.Id})"
+        title="Ajustar">
+    <i class="fa fa-bolt"></i>
+</button>
+
+<button class="btn btn-accion btn-historial"
+        onclick="Historial.abrirHistorial(${v.IdVenta}, ${c.Id})"
+        title="Historial">
+    <i class="fa fa-eye"></i>
+</button>
+
                     </div>
                 </td>
             </tr>
         `);
     });
 
-    $("#qFin_" + v.IdVenta).text(countFin);
-}
+    lblFin.text(countFin);
 
-/* ------------ COBRO ------------ */
-
-function abrirCobro(idCuota, idVenta, restante) {
-    $("#cobroIdCuota").val(idCuota);
-    $("#cobroRestante").val(fmt(restante));
-    $("#cobroImporte").val(fmt(restante));
-    $("#cobroObs").val("");
-
-    openModalById("mdCobro");
-}
-
-async function confirmarCobro() {
-    if (!ventaSeleccionada) return;
-
-    const idCuota = Number($("#cobroIdCuota").val());
-    const importe = parseMoney($("#cobroImporte").val());
-    const obs = $("#cobroObs").val();
-
-    if (!idCuota || importe <= 0) {
-        showToast("Importe inválido", "danger");
-        return;
-    }
-
-    const payload = {
-        IdVenta: ventaSeleccionada.IdVenta,
-        FechaPago: moment().format("YYYY-MM-DD"),
-        MedioPago: "EFECTIVO",
-        ImporteTotal: importe,
-        Observacion: obs,
-        Aplicaciones: [{ IdCuota: idCuota, ImporteAplicado: importe }]
-    };
-
-    try {
-        const resp = await $.ajax({
-            url: "/Ventas_Electrodomesticos/RegistrarPago",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(payload)
-        });
-
-        if (!resp.success) {
-            showToast(resp.message, "danger");
-            return;
-        }
-
-        showToast("Pago registrado", "success");
-        closeModalById("mdCobro");
-        await recargarDetalle(ventaSeleccionada.IdVenta);
-
-    } catch {
-        showToast("Error al registrar pago", "danger");
+    if (!tbPag.children().length) {
+        tbPag.append(`
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    Sin cuotas finalizadas
+                </td>
+            </tr>
+        `);
     }
 }
 
-/* ------------ AJUSTE ------------ */
-
-function abrirAjuste(idCuota) {
-    $("#ajIdCuota").val(idCuota);
-    $("#ajRecargo").val("");
-    $("#ajDescuento").val("");
-
-    openModalById("mdAjuste");
-}
-
-async function confirmarAjuste() {
-    const idCuota = Number($("#ajIdCuota").val());
-    if (!idCuota || !ventaSeleccionada) return;
-
-    const recInput = parseMoney($("#ajRecargo").val());
-    const desInput = parseMoney($("#ajDescuento").val());
-
-    const cuota = ventaSeleccionada.Cuotas?.find(c => c.Id === idCuota);
-    if (!cuota) {
-        showToast("Cuota no encontrada", "danger");
-        return;
-    }
-
-    let recargo = recInput;
-    let descuento = desInput;
-
-    try {
-        const resp = await $.post("/Ventas_Electrodomesticos/ActualizarRecargoDescuentoCuota", {
-            idCuota,
-            recargo,
-            descuento
-        });
-
-        if (!resp.success) {
-            showToast(resp.message, "danger");
-            return;
-        }
-
-        showToast("Ajuste actualizado", "success");
-        closeModalById("mdAjuste");
-        await recargarDetalle(ventaSeleccionada.IdVenta);
-
-    } catch {
-        showToast("Error al ajustar cuota", "danger");
-    }
-}
-
-/* ------------ HISTORIAL ------------ */
-
-async function verHistorial(idCuota, idVenta) {
-    const resp = await $.getJSON("/Ventas_Electrodomesticos/GetDetalleVenta", { idVenta });
-    if (!resp.success) {
-        showToast(resp.message, "danger");
-        return;
-    }
-
-    const venta = resp.data;
-    const movimientos = (venta.Historial || []).filter(h => h.IdCuota === idCuota);
-
-    const tb = $("#histBody").empty();
-
-    if (!movimientos.length) {
-        tb.append(`<tr><td colspan="4" class="text-center text-muted">Sin movimientos</td></tr>`);
-    } else {
-        movimientos.forEach((h, i) => {
-            tb.append(`
-                <tr>
-                    <td>${i + 1}</td>
-                    <td>${moment(h.FechaCambio).format("DD/MM/YYYY HH:mm")}</td>
-                    <td class="text-end">${fmt(h.ValorNuevo || 0)}</td>
-                    <td>${h.Observacion || ""}</td>
-                </tr>
-            `);
-        });
-    }
-
-    openModalById("mdHistorial");
-}
-
-/* ------------ RECARGAR DETALLE ------------ */
-
-async function recargarDetalle(idVenta) {
-    const resp = await $.getJSON("/Ventas_Electrodomesticos/GetDetalleVenta", { idVenta });
-    if (!resp.success) {
-        showToast(resp.message, "danger");
-        return;
-    }
-
-    ventaSeleccionada = resp.data;
-    renderProductos(ventaSeleccionada);
-    renderCuotas(ventaSeleccionada);
-    remarcarVentaSeleccionada();
-}
-
-/* ------------ EDITAR / ELIMINAR ------------ */
 
 function editarVenta(id) {
     window.location.href = "/Ventas_Electrodomesticos/NuevoModif/" + id;
@@ -630,3 +632,138 @@ async function eliminarVenta(id) {
 function exportarPdfVenta(idVenta) {
     window.location.href = `/Ventas_Electrodomesticos/Cobros?idVenta=${idVenta}`;
 }
+
+
+async function cargarUsuarios() {
+    try {
+        var url = "/Ventas/ListarVendedores";
+
+        let value = JSON.stringify({
+        });
+
+        let options = {
+            type: "POST",
+            url: url,
+            async: true,
+            data: value,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        let result = await MakeAjax(options);
+
+        if (result != null) {
+            selectUsuarios = document.getElementById("filtroVendedor");
+
+
+            $('#filtroVendedor option').remove();
+
+            if (userSession.IdRol == 1 || userSession.IdRol == 4) { //ROL ADMINISTRADOR, COMPROBANTES
+                option = document.createElement("option");
+                option.value = -1;
+                option.text = "Todos";
+                selectUsuarios.appendChild(option);
+            }
+
+            for (i = 0; i < result.data.length; i++) {
+                option = document.createElement("option");
+                option.value = result.data[i].Id;
+                option.text = result.data[i].Nombre;
+                selectUsuarios.appendChild(option);
+            }
+
+
+        }
+    } catch (error) {
+        $('.datos-error').text('Ha ocurrido un error.')
+        $('.datos-error').removeClass('d-none')
+    }
+}
+
+
+function calcularDiasAtraso(fechaVto) {
+    if (!fechaVto) return 0;
+
+    const hoy = moment().startOf("day");
+    let f = null;
+
+    // ASP.NET: "/Date(176...)/"
+    if (typeof fechaVto === "string") {
+        const m = fechaVto.match(/\/Date\((\d+)\)\//);
+        if (m && m[1]) f = moment(Number(m[1])).startOf("day");
+    }
+
+    // ISO
+    if (!f || !f.isValid()) {
+        const mi = moment(fechaVto, moment.ISO_8601, true);
+        if (mi.isValid()) f = mi.startOf("day");
+    }
+
+    // DD/MM/YYYY
+    if (!f || !f.isValid()) {
+        const mdmy = moment(fechaVto, ["DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY HH:mm"], true);
+        if (mdmy.isValid()) f = mdmy.startOf("day");
+    }
+
+    // Date
+    if ((!f || !f.isValid()) && fechaVto instanceof Date) {
+        f = moment(fechaVto).startOf("day");
+    }
+
+    if (!f || !f.isValid()) {
+        console.warn("FechaVencimiento inválida:", fechaVto);
+        return 0;
+    }
+
+    const diff = hoy.diff(f, "days");
+    return diff > 0 ? diff : 0;
+}
+
+
+// FIX: acordeón de "Cuotas finalizadas" dentro del child-row (DataTables)
+$(document).on("click", ".js-fin-toggle", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const targetSel = $(this).attr("data-bs-target");
+    if (!targetSel) return;
+
+    const el = document.querySelector(targetSel);
+    if (!el || !window.bootstrap?.Collapse) return;
+
+    const inst = bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+    inst.toggle();
+});
+
+
+
+// ===========================================================
+// HISTORIAL → PARTIAL (DELEGACIÓN TOTAL)
+// ===========================================================
+
+window.Historial = {
+
+    abrirCobro(idVenta, idCuota) {
+        if (typeof window.abrirModalCobro !== "function") {
+            showToast("Cobro no disponible", "danger");
+            return;
+        }
+        window.abrirModalCobro(idVenta, idCuota);
+    },
+
+    abrirAjuste(idVenta, idCuota) {
+        if (typeof window.abrirAjusteDesdeCobros !== "function") {
+            showToast("Ajuste no disponible", "danger");
+            return;
+        }
+        window.abrirAjusteDesdeCobros(idVenta, idCuota);
+    },
+
+    abrirHistorial(idVenta, idCuota) {
+        if (typeof window.abrirHistorialDesdeCobros !== "function") {
+            showToast("Historial no disponible", "danger");
+            return;
+        }
+        window.abrirHistorialDesdeCobros(idVenta, idCuota);
+    }
+};

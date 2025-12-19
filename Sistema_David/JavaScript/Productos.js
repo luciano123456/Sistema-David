@@ -47,6 +47,7 @@ async function configurarDataTable() {
             { "data": "Total" },
             { "data": "PrecioVenta" },
             { "data": "PorcVenta" },
+            { "data": "DiasVencimiento" },
             { "data": "Activo", "visible": false },
             {
                 "data": "Id",
@@ -230,6 +231,7 @@ const editarProducto = async id => {
             document.getElementById("PrecioCompra").value = result.Producto.PrecioCompra;
             document.getElementById("PrecioVenta").value = result.Producto.PrecioVenta;
             document.getElementById("PorcVenta").value = result.Producto.PorcVenta;
+            document.getElementById("DiasVencimiento").value = result.Producto.DiasVencimiento;
             document.getElementById("btnRegistrarModificar").textContent = "Modificar"; 
             document.getElementById("productoModalLabel").textContent = "Modificar " + document.getElementById("Nombre").value;
 
@@ -288,7 +290,8 @@ async function registrarProducto() {
             Stock: document.getElementById("Stock").value,
             PrecioCompra: document.getElementById("PrecioCompra").value,
             PrecioVenta: document.getElementById("PrecioVenta").value,
-            PorcVenta: document.getElementById("PorcVenta").value
+            PorcVenta: document.getElementById("PorcVenta").value,
+            DiasVencimiento: document.getElementById("DiasVencimiento").value
         });
 
         let options = {
@@ -331,7 +334,9 @@ async function modificarProducto() {
             Stock: document.getElementById("Stock").value,
             PrecioCompra: document.getElementById("PrecioCompra").value,
             PrecioVenta: document.getElementById("PrecioVenta").value,
-            PorcVenta: document.getElementById("PorcVenta").value
+            PorcVenta: document.getElementById("PorcVenta").value,
+            DiasVencimiento: document.getElementById("DiasVencimiento").value
+
         });
 
         let options = {
@@ -373,6 +378,7 @@ function abrirmodal() {
     document.getElementById("PrecioCompra").value = ""
     document.getElementById("PrecioVenta").value = ""
     document.getElementById("PorcVenta").value = ""
+    document.getElementById("DiasVencimiento").value = ""
     cargarCategorias();
     document.getElementById("btnRegistrarModificar").textContent = "Registrar";
     document.getElementById("productoModalLabel").textContent = "Registrar nuevo producto";

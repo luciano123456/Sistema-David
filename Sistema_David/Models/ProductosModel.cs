@@ -30,6 +30,7 @@ namespace Sistema_David.Models
                                   p.PrecioCompra,
                                   p.PrecioVenta,
                                   Total = p.PrecioCompra * p.Stock,
+                                  p.DiasVencimiento,
                                   p.Activo,
                               })
                               .AsEnumerable() // Materializa antes de mapear a Producto
@@ -44,6 +45,7 @@ namespace Sistema_David.Models
                                   PrecioCompra = x.PrecioCompra,
                                   PrecioVenta = x.PrecioVenta,
                                   Total = x.PrecioVenta * x.Stock,
+                                  DiasVencimiento = x.DiasVencimiento,
                                   Activo = x.Activo ?? 0, // Maneja nulos si Activo es nullable
                               })
                               .ToList();
@@ -94,6 +96,7 @@ namespace Sistema_David.Models
                                   p.PrecioVenta,
                                   p.PorcVenta,
                                   Total = p.PrecioCompra * p.Stock,
+                                  p.DiasVencimiento,
                                   p.Activo
                               })
                               .AsEnumerable() // Materializa antes de mapear a Producto
@@ -109,6 +112,7 @@ namespace Sistema_David.Models
                                   PrecioVenta = x.PrecioVenta,
                                   Total = x.Total,
                                   PorcVenta = x.PorcVenta,
+                                  DiasVencimiento = x.DiasVencimiento,
                                   Activo = x.Activo ?? 0 // Maneja valores nulos en Activo
                               })
                               .ToList();
@@ -274,6 +278,7 @@ namespace Sistema_David.Models
                         prod.PrecioCompra = model.PrecioCompra;
                         prod.PrecioVenta = model.PrecioVenta;
                         prod.PorcVenta = model.PorcVenta;
+                        prod.DiasVencimiento = model.DiasVencimiento;
                         prod.Activo = 1;
                         db.Productos.Add(prod);
                         db.SaveChanges();
@@ -309,6 +314,7 @@ namespace Sistema_David.Models
                         producto.PrecioCompra = model.PrecioCompra;
                         producto.PrecioVenta = model.PrecioVenta;
                         producto.PorcVenta = model.PorcVenta;
+                        producto.DiasVencimiento = model.DiasVencimiento;
 
 
                         db.Entry(producto).State = System.Data.Entity.EntityState.Modified;
@@ -371,6 +377,7 @@ namespace Sistema_David.Models
                     producto.PrecioCompra = result.PrecioCompra;
                     producto.PrecioVenta = result.PrecioVenta;
                     producto.PorcVenta = result.PorcVenta;
+                    producto.DiasVencimiento = result.DiasVencimiento;
                     producto.Activo = (int)result.Activo; 
                     producto.Imagen = result.Imagen;
                     return producto;

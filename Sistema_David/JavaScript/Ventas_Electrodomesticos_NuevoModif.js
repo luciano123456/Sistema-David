@@ -15,6 +15,9 @@
 
 ; (() => {
 
+    let diasVencimientoVenta = null; // 🔥 define la regla de toda la venta
+
+
     /* ====================== HELPERS ====================== */
 
     const $D = s => document.querySelector(s);
@@ -165,6 +168,11 @@
 
     $(document).ready(() => {
 
+        if (!modoEdicion) {
+            $('#fechaLimite').prop('readonly', true);
+        }
+
+
         // 1) obtener idVenta desde hidden
         idVenta = obtenerIdVentaDesdeUrl();
         modoEdicion = idVenta > 0;
@@ -207,6 +215,7 @@
             cargarVentaExistente(idVenta);
         }
     });
+
 
     function obtenerIdVentaDesdeUrl() {
         const partes = window.location.pathname.split('/');
@@ -363,11 +372,13 @@
             } else {
                 for (const p of list) {
                     $sel.append(`
-                        <option value="${p.IdProducto}"
-                                data-precio="${p.PrecioVenta}"
-                                data-stock="${p.Cantidad}">
-                            ${p.Producto}
-                        </option>`);
+    <option value="${p.IdProducto}"
+            data-precio="${p.PrecioVenta}"
+            data-stock="${p.Cantidad}"
+            data-diasvenc="${p.DiasVencimiento || 0}">
+        ${p.Producto}
+    </option>
+`);
                 }
 
                 await cargarImagenProducto($sel.val());
@@ -417,13 +428,46 @@
     }
 
     function guardarProductoDesdeModal() {
+
         const opt = $('#selProducto option:selected');
-        if (!opt.val()) { showTip($('#selProducto')[0], 'Elegí un producto', 'warn'); return; }
+        if (!opt.val()) {
+            showTip($('#selProducto')[0], 'Elegí un producto', 'warn');
+            return;
+        }
 
         const cant = Math.max(1, +$('#cantidadProducto').val() || 1);
         const stock = +opt.data('stock') || 0;
         if (cant > stock) {
             showTip($('#cantidadProducto')[0], 'Stock insuficiente', 'danger');
+            return;
+        }
+
+        const diasProd = Number(opt.data('diasvenc')) || 0;
+
+        if (diasProd <= 0) {
+            showToast(
+                'Este producto no está preparado para un plan de cuotas. ' +
+                'No tiene días de vencimiento configurados.',
+                'danger'
+            );
+            return;
+        }
+
+        // 🔥 VALIDACIÓN DE DÍAS DE VENCIMIENTO
+        if (diasVencimientoVenta === null) {
+            diasVencimientoVenta = diasProd;
+
+            // setear fecha límite automáticamente
+            const fVenta = moment($('#fechaVenta').val());
+            const fLim = fVenta.clone().add(diasVencimientoVenta, 'days');
+            $('#fechaLimite').val(fLim.format('YYYY-MM-DD'));
+
+        } else if (diasProd !== diasVencimientoVenta) {
+            showToast(
+                `Este producto tiene ${diasProd} días de vencimiento.
+            La venta está configurada para ${diasVencimientoVenta} días.`,
+                'danger'
+            );
             return;
         }
 
@@ -433,6 +477,7 @@
         const total = precio * cant;
 
         const idx = productos.findIndex(p => p.id === id);
+
         if (idx > -1) {
             if (productos[idx].cant + cant > stock) {
                 showTip($('#cantidadProducto')[0], 'Stock insuficiente', 'danger');
@@ -441,53 +486,98 @@
             productos[idx].cant += cant;
             productos[idx].total += total;
         } else {
-            productos.push({ id, nombre, cant, total, img: $('#imgProducto').attr('src') });
+            productos.push({
+                id,
+                nombre,
+                cant,
+                total,
+                diasVencimiento: diasProd
+            });
         }
 
         bootstrap.Modal.getInstance($('#mdProducto')[0]).hide();
 
         renderProductos();
 
-        // si ya hay cuotas (NUEVA venta), regenerar
-        if (!modoEdicion && cuotas.length > 0) {
+        // 🔁 regenerar plan automáticamente
+        if (!modoEdicion) {
             generarPlanCuotas();
         }
     }
 
     function renderProductos() {
+
         const $tb = $('#tblProductos tbody').empty();
 
-        for (const p of productos) {
+        if (!productos.length) {
             $tb.append(`
-                <tr>
-                    <td><img src="${p.img}" style="width:80px;height:60px;object-fit:cover"></td>
-                    <td>${p.nombre}</td>
-                    <td class="text-end">${p.cant}</td>
-                    <td class="text-end">${fmt(p.total)}</td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-danger" disabled>
-                            <i class="fa fa-trash"></i>
-                        </button>
-                        <button class="btn btn-sm btn-warning" disabled>
-                            <i class="fa fa-pencil"></i>
-                        </button>
-                    </td>
-                </tr>
-            `);
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    No hay productos cargados
+                </td>
+            </tr>
+        `);
+            actualizarKpis();
+            return;
         }
+
+        productos.forEach(p => {
+
+            const imgUrl = p.id
+                ? `/Productos/ObtenerImagen/${p.id}?v=${Date.now()}`
+                : `/Content/imagenes/default-image.jpg`;
+
+            $tb.append(`
+            <tr>
+                <td class="text-center">
+                    <img src="${imgUrl}"
+                         height="45"
+                         width="45"
+                         class="img-thumbnail"
+                         style="background-color: transparent; cursor: pointer;"
+                         onerror="this.src='/Content/imagenes/default-image.jpg'"
+                         onclick="openModal('${imgUrl}')">
+                </td>
+
+                <td>${p.nombre}</td>
+                <td class="text-end">${p.cant}</td>
+                <td class="text-end">${fmt(p.total)}</td>
+
+                <td class="text-center">
+                    <button class="btn btn-sm btn-danger" disabled>
+                        <i class="fa fa-trash"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning" disabled>
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                </td>
+            </tr>
+        `);
+        });
 
         actualizarKpis();
     }
 
     function actualizarKpis() {
-        const total = productos.reduce((acc, p) => acc + (p.total || 0), 0);
-        const entrega = parseMoney($("#entrega").val());
-        const restante = Math.max(0, total - entrega);
 
-        $("#kpiTotal").text(fmt(total));
+        const totalProductos = productos.reduce(
+            (acc, p) => acc + (p.total || 0), 0
+        );
+
+        const entrega = parseMoney($("#entrega").val());
+        const pagadoCuotas = calcularPagadoEnCuotas();
+
+        const restante = Math.max(
+            0,
+            totalProductos - entrega - pagadoCuotas
+        );
+
+        $("#kpiTotal").text(fmt(totalProductos));
         $("#kpiEntrega").text(fmt(entrega));
+        $("#kpiEntregaCuotas").text(fmt(pagadoCuotas));
         $("#kpiRestante").text(fmt(restante));
     }
+
 
     /* ====================== PLAN DE CUOTAS ====================== */
 
@@ -631,7 +721,7 @@
 
         if (hoy.isAfter(v, 'day')) {
             const dif = hoy.diff(v, 'days');
-            return `<span class="badge bg-danger">Retrasada (${dif}d)</span>`;
+            return `<span class="badge bg-danger">Vencida - ${dif} dias</span>`;
         }
 
         return `<span class="badge bg-warning text-dark">Pendiente</span>`;
@@ -692,10 +782,16 @@
         renderFinalizadas();
     }
 
-    
+
     function renderFinalizadas() {
+
+        // 🔒 Guardar estado actual del acordeón (abierto / cerrado)
+        const col = document.getElementById('colFinalizadas');
+        const estabaAbierto = col && col.classList.contains('show');
+
         if (!Array.isArray(cuotas) || !cuotas.length) {
             $('#qFinalizadas').text('0');
+
             const $tbf = $('#tblFinalizadas tbody').empty();
             $tbf.append(`
             <tr>
@@ -704,13 +800,20 @@
                 </td>
             </tr>
         `);
+
+            // 🔁 Restaurar estado del acordeón
+            if (estabaAbierto && col) {
+                const inst = bootstrap.Collapse.getOrCreateInstance(col, { toggle: false });
+                inst.show();
+            }
+
             return;
         }
 
-        // Filtrar solo las pagadas según tu estructura actual de cuotas
+        // Filtrar solo las pagadas
         const finalizadas = cuotas.filter(c => c.estado === "Pagada");
 
-        // 🔥 Actualizar badge correcto (HTML: id="qFinalizadas")
+        // Badge
         $('#qFinalizadas').text(finalizadas.length);
 
         const $tbf = $('#tblFinalizadas tbody').empty();
@@ -723,11 +826,19 @@
                 </td>
             </tr>
         `);
+
+            // 🔁 Restaurar estado del acordeón
+            if (estabaAbierto && col) {
+                const inst = bootstrap.Collapse.getOrCreateInstance(col, { toggle: false });
+                inst.show();
+            }
+
             return;
         }
 
         finalizadas.forEach(c => {
-            // monto pagado = total - restante, o suma del historial si querés ser más preciso
+
+            // monto pagado
             const pagado = (c.hist && c.hist.length)
                 ? c.hist
                     .filter(h => h.tipo === 'pago')
@@ -747,15 +858,41 @@
                     <span class="badge bg-success">Pagada</span>
                 </td>
                 <td class="text-center">
-                   <button class="btn btn-secondary btn-sm"
-        onclick="verHistPorNumero(${c.n})">
-    <i class="fa fa-clock-o"></i>
-</button>
+                    <button class="btn btn-secondary btn-sm"
+                            onclick="verHistPorNumero(${c.n})">
+                        <i class="fa fa-clock-o"></i>
+                    </button>
                 </td>
             </tr>
         `);
         });
+
+        // 🔁 Restaurar estado del acordeón si estaba abierto
+        if (estabaAbierto && col) {
+            const inst = bootstrap.Collapse.getOrCreateInstance(col, { toggle: false });
+            inst.show();
+        }
     }
+
+    $(document).on("click", "#btnFinalizadas", function (e) {
+        e.preventDefault();
+
+        const $btn = $(this);
+        const $panel = $("#colFinalizadas");
+
+        const abierto = $panel.is(":visible");
+
+        if (abierto) {
+            // 🔽 CERRAR
+            $panel.slideUp(180);
+            $btn.addClass("collapsed").attr("aria-expanded", "false");
+        } else {
+            // 🔼 ABRIR
+            $panel.slideDown(180);
+            $btn.removeClass("collapsed").attr("aria-expanded", "true");
+        }
+    });
+
 
     /* ====================== COBRAR (EDICIÓN) ====================== */
 
@@ -1256,7 +1393,6 @@
 
             const v = json.data;
 
-            // ========== CLIENTE ==========
             cliente = {
                 Id: v.IdCliente,
                 Nombre: v.ClienteNombre,
@@ -1273,18 +1409,20 @@
             $("#bDireccion").html(`<i class="fa fa-map-marker"></i> ${cliente.Direccion || "—"}`);
             $("#bTelefono").html(`<i class="fa fa-phone"></i> ${cliente.Telefono || "—"}`);
 
-            const estado = (cliente.Estado || "").toLowerCase();
-            const $b = $("#bEstado");
-            $b.removeClass("ok warn danger");
-            if (estado.includes("muy")) {
-                $b.addClass("ok").html(`<i class="fa fa-circle"></i> Muy Bueno`);
-            } else if (estado.includes("regular")) {
-                $b.addClass("warn").html(`<i class="fa fa-circle"></i> Regular`);
+            const estadoCli = (cliente.Estado || "").toLowerCase();
+            const $bEstado = $("#bEstado").removeClass("ok warn danger");
+
+            if (estadoCli.includes("muy")) {
+                $bEstado.addClass("ok").html(`<i class="fa fa-circle"></i> Muy Bueno`);
+            } else if (estadoCli.includes("regular")) {
+                $bEstado.addClass("warn").html(`<i class="fa fa-circle"></i> Regular`);
             } else {
-                $b.addClass("danger").html(`<i class="fa fa-circle"></i> Inhabilitado`);
+                $bEstado.addClass("danger").html(`<i class="fa fa-circle"></i> Inhabilitado`);
             }
 
-            // ========== DATOS PRINCIPALES ==========
+            /* =====================================================
+               DATOS PRINCIPALES
+            ===================================================== */
             $("#fechaVenta").val(moment(v.FechaVenta).format("YYYY-MM-DD"));
             $("#observacion").val(v.Observacion || "");
             $("#entrega").val(fmt(v.Entrega || 0));
@@ -1292,7 +1430,7 @@
             $("#forma").val(v.FormaCuotas || "diaria");
             $("#cantCuotas").val(v.CantidadCuotas || 0);
 
-            if (v.Cuotas?.length > 0) {
+            if (Array.isArray(v.Cuotas) && v.Cuotas.length > 0) {
                 $("#fechaPrimerCobro").val(
                     moment(v.Cuotas[0].FechaVencimiento).format("YYYY-MM-DD")
                 );
@@ -1301,42 +1439,32 @@
                 );
             }
 
-            // ========== PRODUCTOS ==========
+            /* =====================================================
+               PRODUCTOS (CARGA DE ESTADO, NO RENDER DIRECTO)
+            ===================================================== */
             productos = [];
-            const tbProd = $("#tblProductos tbody").empty();
 
             (v.Items || []).forEach(item => {
                 productos.push({
                     id: item.IdProducto,
                     nombre: item.Producto,
-                    cant: item.Cantidad,
-                    total: item.Cantidad * item.PrecioUnitario,
-                    img: "/Content/imagenes/default-image.jpg"
+                    cant: Number(item.Cantidad),
+                    total: Number(item.Cantidad * item.PrecioUnitario)
                 });
-
-                tbProd.append(`
-                    <tr>
-                        <td><img src="/Content/imagenes/default-image.jpg" style="width:80px;height:60px;object-fit:cover"></td>
-                        <td>${item.Producto}</td>
-                        <td class="text-end">${item.Cantidad}</td>
-                        <td class="text-end">${fmt(item.Cantidad * item.PrecioUnitario)}</td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-danger" disabled>
-                                <i class="fa fa-trash"></i>
-                            </button>
-                            <button class="btn btn-sm btn-warning" disabled>
-                                <i class="fa fa-pencil"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `);
             });
 
-            actualizarKpis();
+            // 🔥 Render único y centralizado
+            renderProductos();
 
-            // ========== CUOTAS + HISTORIAL (PAGOS + HISTORIAL) ==========
+            // Guardar días de vencimiento de la venta (si aplica)
+            if (productos.length) {
+                diasVencimientoVenta = productos[0].diasVencimiento || null;
+            }
+
             armarCuotasDesdeBackend(v);
             renderCuotas();
+
+            actualizarKpis();
 
             $("#btnRegistrarVenta").html(`<i class="fa fa-save"></i> Guardar cambios`);
 
@@ -1347,6 +1475,26 @@
             showToast("Error inesperado al cargar la venta.", "danger");
         }
     }
+
+
+    function calcularPagadoEnCuotas() {
+        if (!Array.isArray(cuotas)) return 0;
+
+        let totalPagado = 0;
+
+        cuotas.forEach(c => {
+            if (Array.isArray(c.hist)) {
+                c.hist.forEach(h => {
+                    if (h.tipo === 'pago') {
+                        totalPagado += Number(h.importe || 0);
+                    }
+                });
+            }
+        });
+
+        return totalPagado;
+    }
+
 
     function armarCuotasDesdeBackend(v) {
         cuotas = [];
@@ -1411,4 +1559,16 @@
         });
     }
 
+
+
 })();
+
+
+
+
+function openModal(imageSrc) {
+    // Cambia el src de la imagen del modal
+    document.getElementById('modalImage').src = imageSrc;
+    // Muestra el modal
+    $('#imageModal').modal('show');
+}

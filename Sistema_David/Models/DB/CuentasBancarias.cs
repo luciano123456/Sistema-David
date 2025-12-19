@@ -19,6 +19,7 @@ namespace Sistema_David.Models.DB
         {
             this.InformacionVentas = new HashSet<InformacionVentas>();
             this.ComprobantesImagenes = new HashSet<ComprobantesImagenes>();
+            this.Ventas_Electrodomesticos_Pagos = new HashSet<Ventas_Electrodomesticos_Pagos>();
         }
     
         public int Id { get; set; }
@@ -33,5 +34,7 @@ namespace Sistema_David.Models.DB
         public virtual ICollection<InformacionVentas> InformacionVentas { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ComprobantesImagenes> ComprobantesImagenes { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Ventas_Electrodomesticos_Pagos> Ventas_Electrodomesticos_Pagos { get; set; }
     }
 }

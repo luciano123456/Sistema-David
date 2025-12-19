@@ -21,7 +21,7 @@ namespace Sistema_David.Models
                 bool vistaStock = usuario != null && usuario.VistaStock == 1;
 
                 var stocks = (from d in db.StockUsuarios
-                              .SqlQuery("SELECT s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.Estado, u.VistaStock, s.IdCategoria FROM StockUsuarios s INNER JOIN Usuarios u ON u.Id = s.IdUsuario INNER JOIN Productos p ON p.Id = s.IdProducto")
+                              .SqlQuery("SELECT s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.Estado, u.VistaStock, s.IdCategoria, p.DiasVencimiento FROM StockUsuarios s INNER JOIN Usuarios u ON u.Id = s.IdUsuario INNER JOIN Productos p ON p.Id = s.IdProducto")
                               select new VMStockUsuario
                               {
                                   Id = d.Id,
@@ -32,6 +32,7 @@ namespace Sistema_David.Models
                                   Producto = d.Productos.Nombre,
                                   PrecioVenta = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta : 0,
                                   Total = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta * d.Cantidad : 0,
+                                  DiasVencimiento = d.Productos.DiasVencimiento,
                                   Estado = d.Estado
                               })
                              .Where(x => x.IdUsuario == id)

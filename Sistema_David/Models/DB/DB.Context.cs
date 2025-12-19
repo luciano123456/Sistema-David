@@ -58,5 +58,6 @@ namespace Sistema_David.Models.DB
         public virtual DbSet<Ventas_Electrodomesticos> Ventas_Electrodomesticos { get; set; }
         public virtual DbSet<Usuarios> Usuarios { get; set; }
         public virtual DbSet<Ventas_Electrodomesticos_Cuotas> Ventas_Electrodomesticos_Cuotas { get; set; }
+        public virtual DbSet<Ventas_Electrodomesticos_Cuotas_Recargos> Ventas_Electrodomesticos_Cuotas_Recargos { get; set; }
     }
 }

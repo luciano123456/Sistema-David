@@ -173,7 +173,7 @@ namespace Sistema_David.Controllers
             {
                 var result = CuentasBancariasModel.Lista(metodopago, activo);
 
-                return Json(result);
+                    return Json(result);
             }
             catch (Exception ex)
             {

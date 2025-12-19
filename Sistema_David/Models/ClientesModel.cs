@@ -36,6 +36,26 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
+        public static List<VMCliente> ListaClientesElectrodomesticos()
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                      FROM Clientes c 
+                      INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
+                      INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
+					  INNER JOIN Zonas z on c.IdZona = z.Id
+                      INNER JOIN (
+                        SELECT idCliente, COALESCE(SUM(Restante), 0) AS Saldo 
+                        FROM Ventas_Electrodomesticos GROUP BY idCliente
+                      ) s ON s.idCliente = c.Id";
+
+                var result = db.Database.SqlQuery<VMCliente>(query).ToList();
+
+                return result;
+            }
+        }
+
         public static List<VMCliente> ListaClientes(int idVendedor, string Nombre, string Apellido, string Dni, int idZona)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
