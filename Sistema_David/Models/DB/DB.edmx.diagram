@@ -83,6 +83,9 @@
         <AssociationConnector Association="Sistema_DavidModel.FK_VEC_VE" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VEH_VEC" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VEPD_Cuota" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas_Recargos" Width="1.5" PointX="21" PointY="18.875" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Recargo_Cuota" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

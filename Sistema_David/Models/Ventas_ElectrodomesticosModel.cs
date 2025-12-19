@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Globalization;
 using System.Linq;
 using Sistema_David.Models.DB;
 using Sistema_David.Models.Modelo;
@@ -30,12 +29,10 @@ namespace Sistema_David.Models
             }
         }
 
-
-
         /* ===========================================================
          * HISTORIAL
          * =========================================================== */
-        public static VM_HistorialVentasResp ListarHistorial(DateTime? desde, DateTime? hasta, string estado)
+        public static VM_HistorialVentasResp ListarHistorial(DateTime? desde, DateTime? hasta, string estado, int idVendedor)
         {
             using (var db = new Sistema_DavidEntities())
             {
@@ -58,8 +55,12 @@ namespace Sistema_David.Models
                 if (!string.IsNullOrWhiteSpace(estado))
                     q = q.Where(v => v.Estado == estado);
 
+                if (idVendedor > 0)
+                    q = q.Where(v => v.IdVendedor == idVendedor);
+
                 var ventas = q.ToList();
                 var rows = new List<VM_HistorialVentasRow>();
+                var hoy = DateTime.Today;
 
                 foreach (var v in ventas)
                 {
@@ -83,8 +84,11 @@ namespace Sistema_David.Models
                                 : (cuotas.Sum(c => c.MontoPagado)
                                     / cuotas.Sum(c => (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos)))
                                 * 100,
+
+                       
+
                         CuotasVencidas = cuotas.Count(c =>
-                            c.Estado != "Pagada" && c.FechaVencimiento < DateTime.Now),
+                            c.Estado != "Pagada" && c.FechaVencimiento.Date < hoy),
                         Estado = v.Estado
                     };
 
@@ -140,8 +144,8 @@ namespace Sistema_David.Models
         }
 
         /* ===========================================================
- * ELIMINAR PAGO (REVERSA COMPLETA)
- * =========================================================== */
+         * ELIMINAR PAGO (REVERSA COMPLETA)
+         * =========================================================== */
         public static string EliminarPago(int idPago, int usuario)
         {
             using (var db = new Sistema_DavidEntities())
@@ -220,7 +224,6 @@ namespace Sistema_David.Models
                 }
             }
         }
-
 
         /* ===========================================================
          * ESTADO DE LA VENTA
@@ -350,7 +353,8 @@ namespace Sistema_David.Models
                 var v = db.Ventas_Electrodomesticos
                     .Include(x => x.Clientes)
                     .Include(x => x.Ventas_Electrodomesticos_Detalle)
-                    .Include(x => x.Ventas_Electrodomesticos_Cuotas)
+                    .Include(x => x.Ventas_Electrodomesticos_Cuotas
+                    .Select(c => c.Ventas_Electrodomesticos_Cuotas_Recargos))
                     .Include(x => x.Ventas_Electrodomesticos_Pagos.Select(p => p.Ventas_Electrodomesticos_Pagos_Detalle))
                     .Include(x => x.Ventas_Electrodomesticos_Historial)
                     .FirstOrDefault(x => x.Id == idVenta);
@@ -367,7 +371,7 @@ namespace Sistema_David.Models
                     ClienteDireccion = v.Clientes?.Direccion,
                     ClienteTelefono = v.Clientes?.Telefono,
                     ClienteEstado = ClientesModel.InformacionCliente(v.IdCliente).Estado,
-                    ClienteDNI = v.Clientes?.Dni,   // ajustá el nombre de campo si no es Dni
+                    ClienteDNI = v.Clientes?.Dni,
 
                     // ================= HEADER VENTA =================
                     IdVenta = v.Id,
@@ -398,28 +402,48 @@ namespace Sistema_David.Models
                         Producto = i.Producto,
                         Cantidad = i.Cantidad,
                         PrecioUnitario = i.PrecioUnitario
-                        // Subtotal se calcula en la VM (Cantidad * PrecioUnitario)
                     })
                     .ToList();
 
                 // ================= CUOTAS =================
                 vm.Cuotas = v.Ventas_Electrodomesticos_Cuotas
-                    .OrderBy(c => c.NumeroCuota)
-                    .Select(c => new VM_Ventas_Electrodomesticos_Cuota
-                    {
-                        Id = c.Id,
-                        NumeroCuota = c.NumeroCuota,
-                        FechaVencimiento = c.FechaVencimiento,
-                        MontoOriginal = c.MontoOriginal,
-                        MontoRecargos = c.MontoRecargos,
-                        MontoDescuentos = c.MontoDescuentos,
-                        MontoPagado = c.MontoPagado,
-                        MontoRestante = c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos - c.MontoPagado,
-                        Estado = c.Estado
-                    })
-                    .ToList();
+     .OrderBy(c => c.NumeroCuota)
+     .Select(c => new VM_Ventas_Electrodomesticos_Cuota
+     {
+         Id = c.Id,
+         NumeroCuota = c.NumeroCuota,
+         FechaVencimiento = c.FechaVencimiento,
 
-                // ================= PAGOS (obj genérico) =================
+         MontoOriginal = c.MontoOriginal,
+         MontoRecargos = c.MontoRecargos,
+         MontoDescuentos = c.MontoDescuentos,
+         MontoPagado = c.MontoPagado,
+
+         MontoRestante =
+             c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos - c.MontoPagado,
+
+         Estado = c.Estado,
+
+         // 🔥 RECARGOS INDIVIDUALES
+         Recargos = c.Ventas_Electrodomesticos_Cuotas_Recargos
+             .OrderBy(r => r.Fecha)
+             .Select(r => new VM_Ventas_Electrodomesticos_RecargoCuotaDetalle
+             {
+                 Id = r.Id,
+                 IdCuota = r.IdCuota,
+                 Fecha = r.Fecha,
+                 Tipo = r.Tipo,
+                 Valor = r.Valor,
+                 ImporteCalculado = r.ImporteCalculado,
+                 Observacion = r.Observacion,
+                 UsuarioCreacion = r.UsuarioCreacion
+             })
+             .ToList()
+     })
+     .ToList();
+
+
+                // ================= PAGOS =================
                 vm.Pagos = v.Ventas_Electrodomesticos_Pagos
                     .OrderByDescending(p => p.FechaPago)
                     .Select(p => new
@@ -430,6 +454,11 @@ namespace Sistema_David.Models
                         p.MedioPago,
                         p.ImporteTotal,
                         p.Observacion,
+                        p.ClienteAusente,
+                        p.Imagen,
+                        p.IdCuentaBancaria,
+                        p.TipoInteres,
+                        p.ActualizoUbicacion,
                         Detalles = p.Ventas_Electrodomesticos_Pagos_Detalle
                             .Select(d => new
                             {
@@ -442,7 +471,7 @@ namespace Sistema_David.Models
                     })
                     .ToList();
 
-                // ================= HISTORIAL (obj genérico) =================
+                // ================= HISTORIAL =================
                 vm.Historial = v.Ventas_Electrodomesticos_Historial
                     .OrderByDescending(h => h.FechaCambio)
                     .Select(h => new
@@ -462,7 +491,6 @@ namespace Sistema_David.Models
                 return vm;
             }
         }
-
 
         /* ===========================================================
          * REGISTRAR PAGO
@@ -489,7 +517,14 @@ namespace Sistema_David.Models
                         ImporteTotal = R2(m.ImporteTotal),
                         Observacion = m.Observacion,
                         UsuarioCreacion = m.UsuarioOperador,
-                        FechaCreacion = DateTime.Now
+                        FechaCreacion = DateTime.Now,
+
+                        // NUEVOS CAMPOS
+                        ClienteAusente = m.ClienteAusente,
+                        Imagen = m.Imagen,
+                        IdCuentaBancaria = m.IdCuentaBancaria,
+                        TipoInteres = m.TipoInteres,
+                        ActualizoUbicacion = m.ActualizoUbicacion
                     };
 
                     db.Ventas_Electrodomesticos_Pagos.Add(pago);
@@ -529,7 +564,10 @@ namespace Sistema_David.Models
                         cuota.FechaModificacion = DateTime.Now;
 
                         Audit(db, venta.Id, cuota.Id, m.UsuarioOperador,
-                            "PagoCuota", $"Antes={pagAnt}", $"Ahora={cuota.MontoPagado}");
+                            "PagoCuota",
+                            $"Antes={pagAnt}",
+                            $"Ahora={cuota.MontoPagado}",
+                            $"Pago #{pago.Id} | ClienteAusente={m.ClienteAusente} | TipoInteres={m.TipoInteres} | Cuenta={m.IdCuentaBancaria} | ActualizoUbicacion={m.ActualizoUbicacion}");
 
                         totalAplicado += aplicar;
                     }
@@ -540,7 +578,10 @@ namespace Sistema_David.Models
                     RecalcularEstadoVenta(db, venta, m.UsuarioOperador);
 
                     Audit(db, venta.Id, null, m.UsuarioOperador,
-                        "RegistrarPago", null, $"Pago #{pago.Id} por {pago.ImporteTotal}");
+                        "RegistrarPago",
+                        null,
+                        $"Pago #{pago.Id} por {pago.ImporteTotal}",
+                        $"ClienteAusente={m.ClienteAusente} | TipoInteres={m.TipoInteres} | Cuenta={m.IdCuentaBancaria} | ActualizoUbicacion={m.ActualizoUbicacion} | Imagen={(string.IsNullOrEmpty(m.Imagen) ? "-" : m.Imagen)}");
 
                     db.SaveChanges();
                     tx.Commit();
@@ -603,7 +644,7 @@ namespace Sistema_David.Models
         }
 
         /* ===========================================================
-         * RECARGO / DESCUENTO
+         * RECARGO / DESCUENTO (LEGACY)
          * =========================================================== */
         public static void ActualizarRecargoDescuentoCuota(int idCuota,
             decimal? recargo, decimal? descuento, int usuario)
@@ -620,8 +661,10 @@ namespace Sistema_David.Models
                     if (c == null)
                         throw new Exception("Cuota inexistente");
 
-                    if (recargo.HasValue) c.MontoRecargos = R2(recargo.Value);
-                    if (descuento.HasValue) c.MontoDescuentos = R2(descuento.Value);
+                    // Ya no se usa descuento "on the fly" desde ajustes nuevos.
+                    // Este método queda por compatibilidad.
+                    if (recargo.HasValue)
+                        c.MontoRecargos = R2(recargo.Value);
 
                     var total = c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos;
                     c.MontoRestante = R2(total - c.MontoPagado);
@@ -631,7 +674,7 @@ namespace Sistema_David.Models
                     c.FechaModificacion = DateTime.Now;
 
                     Audit(db, c.IdVenta, c.Id, usuario,
-                        "Recargo/Descuento", null, null);
+                        "Recargo/Descuento (legacy)", null, null);
 
                     RecalcularEstadoVenta(db, c.Ventas_Electrodomesticos, usuario);
 
@@ -642,6 +685,148 @@ namespace Sistema_David.Models
                 {
                     tx.Rollback();
                     throw;
+                }
+            }
+        }
+
+        /* ===========================================================
+         * NUEVOS MÉTODOS: RECARGOS CUOTAS (MULTIPLES)
+         * =========================================================== */
+
+        public static int AgregarRecargoCuota(VM_Ventas_Electrodomesticos_RecargoCuota m)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var cuota = db.Ventas_Electrodomesticos_Cuotas
+                        .Include(c => c.Ventas_Electrodomesticos)
+                        .FirstOrDefault(c => c.Id == m.IdCuota);
+
+                    if (cuota == null)
+                        throw new Exception("Cuota inexistente");
+
+                    var tipo = (m.Tipo ?? "").Trim();
+                    if (tipo != "Fijo" && tipo != "Porcentaje")
+                        throw new Exception("Tipo de recargo inválido. Debe ser 'Fijo' o 'Porcentaje'.");
+
+                    var baseCalculo = cuota.MontoOriginal;
+                    decimal importeCalc;
+
+                    if (tipo == "Fijo")
+                    {
+                        importeCalc = R2(m.Valor);
+                    }
+                    else // Porcentaje
+                    {
+                        importeCalc = R2(baseCalculo * m.Valor / 100m);
+                    }
+
+                    var rec = new Ventas_Electrodomesticos_Cuotas_Recargos
+                    {
+                        IdCuota = cuota.Id,
+                        Fecha = m.Fecha ?? DateTime.Now,
+                        Tipo = tipo,
+                        Valor = R2(m.Valor),
+                        ImporteCalculado = importeCalc,
+                        Observacion = m.Observacion,
+                        UsuarioCreacion = m.UsuarioOperador,
+                        FechaCreacion = DateTime.Now
+                    };
+
+                    db.Ventas_Electrodomesticos_Cuotas_Recargos.Add(rec);
+                    db.SaveChanges();
+
+                    // Recalcular MontoRecargos acumulado
+                    var totalRecargos = db.Ventas_Electrodomesticos_Cuotas_Recargos
+                        .Where(r => r.IdCuota == cuota.Id)
+                        .Select(r => r.ImporteCalculado)
+                        .DefaultIfEmpty(0m)
+                        .Sum();
+
+                    cuota.MontoRecargos = R2(totalRecargos);
+
+                    var total = cuota.MontoOriginal + cuota.MontoRecargos - cuota.MontoDescuentos;
+                    cuota.MontoRestante = R2(total - cuota.MontoPagado);
+                    cuota.Estado = cuota.MontoRestante > 0 ? "Pendiente" : "Pagada";
+                    cuota.UsuarioModificacion = m.UsuarioOperador;
+                    cuota.FechaModificacion = DateTime.Now;
+
+                    Audit(db, cuota.IdVenta, cuota.Id, m.UsuarioOperador,
+                        "RecargoCuota",
+                        null,
+                        $"Tipo={tipo}; Valor={m.Valor}; Importe={importeCalc}",
+                        m.Observacion);
+
+                    RecalcularEstadoVenta(db, cuota.Ventas_Electrodomesticos, m.UsuarioOperador);
+
+                    db.SaveChanges();
+                    tx.Commit();
+
+                    return rec.Id;
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        public static string EliminarRecargoCuota(int idRecargo, int usuario)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var rec = db.Ventas_Electrodomesticos_Cuotas_Recargos
+                        .Include(r => r.Ventas_Electrodomesticos_Cuotas.Ventas_Electrodomesticos)
+                        .FirstOrDefault(r => r.Id == idRecargo);
+
+                    if (rec == null)
+                        return "Recargo no encontrado";
+
+                    var cuota = rec.Ventas_Electrodomesticos_Cuotas;
+                    var venta = cuota.Ventas_Electrodomesticos;
+
+                    var infoAnt = $"Tipo={rec.Tipo}; Valor={rec.Valor}; Importe={rec.ImporteCalculado}";
+
+                    db.Ventas_Electrodomesticos_Cuotas_Recargos.Remove(rec);
+                    db.SaveChanges();
+
+                    var totalRecargos = db.Ventas_Electrodomesticos_Cuotas_Recargos
+                        .Where(r => r.IdCuota == cuota.Id)
+                        .Select(r => r.ImporteCalculado)
+                        .DefaultIfEmpty(0m)
+                        .Sum();
+
+                    cuota.MontoRecargos = R2(totalRecargos);
+
+                    var total = cuota.MontoOriginal + cuota.MontoRecargos - cuota.MontoDescuentos;
+                    cuota.MontoRestante = R2(total - cuota.MontoPagado);
+                    cuota.Estado = cuota.MontoRestante > 0 ? "Pendiente" : "Pagada";
+                    cuota.UsuarioModificacion = usuario;
+                    cuota.FechaModificacion = DateTime.Now;
+
+                    Audit(db, cuota.IdVenta, cuota.Id, usuario,
+                        "EliminarRecargoCuota",
+                        infoAnt,
+                        $"RecargosTotales={cuota.MontoRecargos}",
+                        "Se eliminó un recargo individual");
+
+                    RecalcularEstadoVenta(db, venta, usuario);
+
+                    db.SaveChanges();
+                    tx.Commit();
+
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error al eliminar recargo: " + ex.Message;
                 }
             }
         }
@@ -706,9 +891,6 @@ namespace Sistema_David.Models
                     if (venta == null)
                         return "Venta no encontrada";
 
-                    // Como dijiste que NO se edita nada desde el frontend,
-                    // solo actualizamos campos simples:
-
                     venta.FechaVenta = m.FechaVenta;
                     venta.Observacion = m.Observacion;
                     venta.IdVendedor = m.IdVendedor;
@@ -733,7 +915,7 @@ namespace Sistema_David.Models
          * LISTAR CUOTAS A COBRAR
          * =========================================================== */
         public static List<VM_Ventas_Electrodomesticos_CuotaCobroRow>
-     ListarCuotasACobrar(VM_Ventas_Electrodomesticos_FiltroCobros f)
+            ListarCuotasACobrar(VM_Ventas_Electrodomesticos_FiltroCobros f)
         {
             using (var db = new Sistema_DavidEntities())
             {
@@ -806,6 +988,5 @@ namespace Sistema_David.Models
                 return rows;
             }
         }
-
     }
 }

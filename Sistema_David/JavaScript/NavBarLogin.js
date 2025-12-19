@@ -1,5 +1,19 @@
 ﻿let listaVacia = false;
 
+const MODULOS_VENTA = {
+    indumentaria: {
+        listado: "/Ventas",
+        nuevomodif: "/Ventas/Nuevo",
+        cobranza: "/Cobranzas/Index"
+    },
+    electro: {
+        listado: "/Ventas_Electrodomesticos/Historial",
+        nuevomodif: "/Ventas_Electrodomesticos/NuevoModif",
+        cobranza: "/Ventas_Electrodomesticos/Cobranza"
+    }
+};
+
+
 document.addEventListener("DOMContentLoaded", async function () {
 
     var userSession = JSON.parse(localStorage.getItem('usuario'));
@@ -66,8 +80,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Click en opciones del modal
     document.querySelectorAll(".select-tipo")?.forEach(btn => {
         btn.addEventListener("click", function () {
-            let tipo = this.dataset.tipo;
+            let tipo = this.dataset.tipo; // "electro" o "normal"
             localStorage.setItem("tipoSistemaVentas", tipo);
+
+            // ✅ Redirige si estás dentro de ventas
+            redireccionarSiCorresponde(tipo);
 
             let modal = bootstrap.Modal.getInstance(document.getElementById("modalTipoVentas"));
             modal?.hide();
@@ -120,6 +137,40 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
 });
+
+
+function detectarContextoVentas() {
+    const path = (window.location.pathname || "").toLowerCase();
+
+    const esElectro = path.includes("electrodomesticos");
+
+    const esVentas =
+        path.includes("/ventas") ||
+        path.includes("/ventas_electrodomesticos") ||
+        path.includes("/cobranzas");
+
+    if (!esVentas) return null;
+
+    let seccion = "listado";
+
+    if (path.includes("nuevo")) seccion = "nuevomodif";
+    else if (path.includes("cobranza") || path.includes("cobros")) seccion = "cobranza";
+
+    return {
+        tipoActual: esElectro ? "electro" : "indumentaria",
+        seccion
+    };
+}
+
+function redireccionarSiCorresponde(nuevoTipo) {
+    const ctx = detectarContextoVentas();
+    if (!ctx) return;
+
+    if (ctx.tipoActual === nuevoTipo) return;
+
+    const destino = MODULOS_VENTA[nuevoTipo]?.[ctx.seccion];
+    if (destino) window.location.href = destino;
+}
 
 
 // ===============================

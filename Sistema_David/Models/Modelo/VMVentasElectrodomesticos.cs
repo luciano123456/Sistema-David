@@ -38,7 +38,15 @@ namespace Sistema_David.Models.ViewModels
         public object Kpis { get; set; }
     }
 
-   
+    public class VM_RecargoCuota
+    {
+        public int Id { get; set; }
+        public int IdCuota { get; set; }
+        public decimal Monto { get; set; }
+        public string Observacion { get; set; }
+        public int Usuario { get; set; }
+    }
+
 
 
     // ====== Crear Venta ======
@@ -82,12 +90,32 @@ namespace Sistema_David.Models.ViewModels
     {
         public int IdVenta { get; set; }
         public DateTime FechaPago { get; set; }
-        public string MedioPago { get; set; } // "Efectivo"|"Transferencia"|"Cuenta"
+        public string MedioPago { get; set; }
         public decimal ImporteTotal { get; set; }
         public string Observacion { get; set; }
-        public List<VM_Ventas_Electrodomesticos_PagoAplicacion> Aplicaciones { get; set; } = new List<VM_Ventas_Electrodomesticos_PagoAplicacion>();
+
+        public int UsuarioOperador { get; set; }
+
+        // NUEVOS
+        public int ClienteAusente { get; set; }
+        public string Imagen { get; set; }
+        public int? IdCuentaBancaria { get; set; }
+        public string TipoInteres { get; set; }
+        public int ActualizoUbicacion { get; set; }
+
+        public List<VM_Ventas_Electrodomesticos_PagoAplicacion> Aplicaciones { get; set; }
+    }
+
+    public class VM_Ventas_Electrodomesticos_RecargoCuota
+    {
+        public int IdCuota { get; set; }
+        public DateTime? Fecha { get; set; }
+        public string Tipo { get; set; } // "Fijo" | "Porcentaje"
+        public decimal Valor { get; set; }
+        public string Observacion { get; set; }
         public int UsuarioOperador { get; set; }
     }
+
 
     // ====== Detalle para la vista ======
     public class VM_Ventas_Electrodomesticos_Cuota
@@ -95,12 +123,17 @@ namespace Sistema_David.Models.ViewModels
         public int Id { get; set; }
         public int NumeroCuota { get; set; }
         public DateTime FechaVencimiento { get; set; }
+
         public decimal MontoOriginal { get; set; }
         public decimal MontoRecargos { get; set; }
         public decimal MontoDescuentos { get; set; }
         public decimal MontoPagado { get; set; }
         public decimal? MontoRestante { get; set; }
         public string Estado { get; set; }
+
+        // 🔥 NUEVO
+        public List<VM_Ventas_Electrodomesticos_RecargoCuotaDetalle> Recargos { get; set; }
+            = new List<VM_Ventas_Electrodomesticos_RecargoCuotaDetalle>();
     }
 
     public class VM_Ventas_Electrodomesticos_Detalle
@@ -197,6 +230,17 @@ namespace Sistema_David.Models.ViewModels
         public string Observacion { get; set; }
     }
 
+    public class VM_Ventas_Electrodomesticos_RecargoCuotaDetalle
+    {
+        public int Id { get; set; }
+        public int IdCuota { get; set; }
+        public DateTime Fecha { get; set; }
+        public string Tipo { get; set; }          // Fijo | Porcentaje
+        public decimal Valor { get; set; }         // Valor ingresado
+        public decimal ImporteCalculado { get; set; }
+        public string Observacion { get; set; }
+        public int UsuarioCreacion { get; set; }
+    }
 
 
 

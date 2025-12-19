@@ -414,6 +414,20 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="UsuarioModificacion" Type="int" />
           <Property Name="FechaModificacion" Type="datetime" />
         </EntityType>
+        <EntityType Name="Ventas_Electrodomesticos_Cuotas_Recargos">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="IdCuota" Type="int" Nullable="false" />
+          <Property Name="Fecha" Type="datetime" Nullable="false" />
+          <Property Name="Tipo" Type="varchar" MaxLength="10" Nullable="false" />
+          <Property Name="Valor" Type="decimal" Precision="20" Scale="2" Nullable="false" />
+          <Property Name="ImporteCalculado" Type="decimal" Precision="20" Scale="2" Nullable="false" />
+          <Property Name="Observacion" Type="varchar" MaxLength="500" />
+          <Property Name="UsuarioCreacion" Type="int" Nullable="false" />
+          <Property Name="FechaCreacion" Type="datetime" Nullable="false" />
+        </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Detalle">
           <Key>
             <PropertyRef Name="Id" />
@@ -452,6 +466,11 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="Observacion" Type="varchar" MaxLength="500" />
           <Property Name="UsuarioCreacion" Type="int" Nullable="false" />
           <Property Name="FechaCreacion" Type="datetime" Nullable="false" />
+          <Property Name="ClienteAusente" Type="int" />
+          <Property Name="Imagen" Type="varchar(max)" />
+          <Property Name="IdCuentaBancaria" Type="int" />
+          <Property Name="TipoInteres" Type="varchar" MaxLength="255" />
+          <Property Name="ActualizoUbicacion" Type="int" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Pagos_Detalle">
           <Key>
@@ -550,6 +569,20 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
             </Principal>
             <Dependent Role="ProductosVenta">
               <PropertyRef Name="IdVenta" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Recargo_Cuota">
+          <End Role="Ventas_Electrodomesticos_Cuotas" Type="Self.Ventas_Electrodomesticos_Cuotas" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Ventas_Electrodomesticos_Cuotas_Recargos" Type="Self.Ventas_Electrodomesticos_Cuotas_Recargos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ventas_Electrodomesticos_Cuotas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Ventas_Electrodomesticos_Cuotas_Recargos">
+              <PropertyRef Name="IdCuota" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -927,6 +960,18 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias">
+          <End Role="CuentasBancarias" Type="Self.CuentasBancarias" Multiplicity="0..1" />
+          <End Role="Ventas_Electrodomesticos_Pagos" Type="Self.Ventas_Electrodomesticos_Pagos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CuentasBancarias">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Ventas_Electrodomesticos_Pagos">
+              <PropertyRef Name="IdCuentaBancaria" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_Ventas_Usuarios">
           <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="1" />
           <End Role="Ventas" Type="Self.Ventas" Multiplicity="*" />
@@ -1027,6 +1072,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <EntitySet Name="Ventas" EntityType="Self.Ventas" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Ventas_Electrodomesticos" EntityType="Self.Ventas_Electrodomesticos" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Ventas_Electrodomesticos_Cuotas" EntityType="Self.Ventas_Electrodomesticos_Cuotas" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Ventas_Electrodomesticos_Cuotas_Recargos" EntityType="Self.Ventas_Electrodomesticos_Cuotas_Recargos" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Ventas_Electrodomesticos_Detalle" EntityType="Self.Ventas_Electrodomesticos_Detalle" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Ventas_Electrodomesticos_Historial" EntityType="Self.Ventas_Electrodomesticos_Historial" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Ventas_Electrodomesticos_Pagos" EntityType="Self.Ventas_Electrodomesticos_Pagos" Schema="dbo" store:Type="Tables" />
@@ -1086,6 +1132,10 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <AssociationSet Name="FK_ProductosVenta_Ventas" Association="Self.FK_ProductosVenta_Ventas">
             <End Role="Ventas" EntitySet="Ventas" />
             <End Role="ProductosVenta" EntitySet="ProductosVenta" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Recargo_Cuota" Association="Self.FK_Recargo_Cuota">
+            <End Role="Ventas_Electrodomesticos_Cuotas" EntitySet="Ventas_Electrodomesticos_Cuotas" />
+            <End Role="Ventas_Electrodomesticos_Cuotas_Recargos" EntitySet="Ventas_Electrodomesticos_Cuotas_Recargos" />
           </AssociationSet>
           <AssociationSet Name="FK_Recorridos_Usuarios" Association="Self.FK_Recorridos_Usuarios">
             <End Role="Usuarios" EntitySet="Usuarios" />
@@ -1210,6 +1260,10 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <AssociationSet Name="FK_Ventas_Clientes" Association="Self.FK_Ventas_Clientes">
             <End Role="Clientes" EntitySet="Clientes" />
             <End Role="Ventas" EntitySet="Ventas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias" Association="Self.FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias">
+            <End Role="CuentasBancarias" EntitySet="CuentasBancarias" />
+            <End Role="Ventas_Electrodomesticos_Pagos" EntitySet="Ventas_Electrodomesticos_Pagos" />
           </AssociationSet>
           <AssociationSet Name="FK_Ventas_Usuarios" Association="Self.FK_Ventas_Usuarios">
             <End Role="Usuarios" EntitySet="Usuarios" />
@@ -1519,6 +1573,15 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <AssociationSet Name="FK_VEPD_Cuota" Association="Sistema_DavidModel.FK_VEPD_Cuota">
             <End Role="Ventas_Electrodomesticos_Cuotas" EntitySet="Ventas_Electrodomesticos_Cuotas" />
             <End Role="Ventas_Electrodomesticos_Pagos_Detalle" EntitySet="Ventas_Electrodomesticos_Pagos_Detalle" />
+          </AssociationSet>
+          <EntitySet Name="Ventas_Electrodomesticos_Cuotas_Recargos" EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas_Recargos" />
+          <AssociationSet Name="FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias" Association="Sistema_DavidModel.FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias">
+            <End Role="CuentasBancarias" EntitySet="CuentasBancarias" />
+            <End Role="Ventas_Electrodomesticos_Pagos" EntitySet="Ventas_Electrodomesticos_Pagos" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Recargo_Cuota" Association="Sistema_DavidModel.FK_Recargo_Cuota">
+            <End Role="Ventas_Electrodomesticos_Cuotas" EntitySet="Ventas_Electrodomesticos_Cuotas" />
+            <End Role="Ventas_Electrodomesticos_Cuotas_Recargos" EntitySet="Ventas_Electrodomesticos_Cuotas_Recargos" />
           </AssociationSet>
           </EntityContainer>
         <EntityType Name="Zonas">
@@ -1885,6 +1948,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="MontoPagar" Type="Decimal" Precision="20" Scale="2" />
           <Property Name="FechaMontoPagar" Type="DateTime" Precision="3" />
           <NavigationProperty Name="ComprobantesImagenes" Relationship="Sistema_DavidModel.FK_ComprobantesImagenes_CuentasBancarias" FromRole="CuentasBancarias" ToRole="ComprobantesImagenes" />
+          <NavigationProperty Name="Ventas_Electrodomesticos_Pagos" Relationship="Sistema_DavidModel.FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias" FromRole="CuentasBancarias" ToRole="Ventas_Electrodomesticos_Pagos" />
         </EntityType>
         <Association Name="FK_InformacionVentas_Ventas1">
           <End Type="Sistema_DavidModel.CuentasBancarias" Role="CuentasBancarias" Multiplicity="0..1" />
@@ -2083,6 +2147,12 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <NavigationProperty Name="Ventas_Electrodomesticos_Pagos_Detalle" Relationship="Sistema_DavidModel.FK_VEPD_Pago" FromRole="Ventas_Electrodomesticos_Pagos" ToRole="Ventas_Electrodomesticos_Pagos_Detalle" />
           <NavigationProperty Name="Ventas_Electrodomesticos" Relationship="Sistema_DavidModel.FK_VEP_VE" FromRole="Ventas_Electrodomesticos_Pagos" ToRole="Ventas_Electrodomesticos" />
           <NavigationProperty Name="Usuarios" Relationship="Sistema_DavidModel.FK_VEP_UsrCrea" FromRole="Ventas_Electrodomesticos_Pagos" ToRole="Usuarios" />
+          <Property Name="ClienteAusente" Type="Int32" />
+          <Property Name="Imagen" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="IdCuentaBancaria" Type="Int32" />
+          <Property Name="TipoInteres" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="ActualizoUbicacion" Type="Int32" />
+          <NavigationProperty Name="CuentasBancarias" Relationship="Sistema_DavidModel.FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias" FromRole="Ventas_Electrodomesticos_Pagos" ToRole="CuentasBancarias" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Pagos_Detalle">
           <Key>
@@ -2488,6 +2558,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <NavigationProperty Name="Ventas_Electrodomesticos" Relationship="Sistema_DavidModel.FK_VEC_VE" FromRole="Ventas_Electrodomesticos_Cuotas" ToRole="Ventas_Electrodomesticos" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Historial" Relationship="Sistema_DavidModel.FK_VEH_VEC" FromRole="Ventas_Electrodomesticos_Cuotas" ToRole="Ventas_Electrodomesticos_Historial" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Pagos_Detalle" Relationship="Sistema_DavidModel.FK_VEPD_Cuota" FromRole="Ventas_Electrodomesticos_Cuotas" ToRole="Ventas_Electrodomesticos_Pagos_Detalle" />
+          <NavigationProperty Name="Ventas_Electrodomesticos_Cuotas_Recargos" Relationship="Sistema_DavidModel.FK_Recargo_Cuota" FromRole="Ventas_Electrodomesticos_Cuotas" ToRole="Ventas_Electrodomesticos_Cuotas_Recargos" />
         </EntityType>
         <Association Name="FK_VEC_UsrCrea">
           <End Type="Sistema_DavidModel.Usuarios" Role="Usuarios" Multiplicity="1" />
@@ -2545,6 +2616,47 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
               <PropertyRef Name="Id" />
             </Principal>
             <Dependent Role="Ventas_Electrodomesticos_Pagos_Detalle">
+              <PropertyRef Name="IdCuota" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Ventas_Electrodomesticos_Cuotas_Recargos">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="IdCuota" Type="Int32" Nullable="false" />
+          <Property Name="Fecha" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="Tipo" Type="String" Nullable="false" MaxLength="10" FixedLength="false" Unicode="false" />
+          <Property Name="Valor" Type="Decimal" Nullable="false" Precision="20" Scale="2" />
+          <Property Name="ImporteCalculado" Type="Decimal" Nullable="false" Precision="20" Scale="2" />
+          <Property Name="Observacion" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Name="UsuarioCreacion" Type="Int32" Nullable="false" />
+          <Property Name="FechaCreacion" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Ventas_Electrodomesticos_Cuotas" Relationship="Sistema_DavidModel.FK_Recargo_Cuota" FromRole="Ventas_Electrodomesticos_Cuotas_Recargos" ToRole="Ventas_Electrodomesticos_Cuotas" />
+        </EntityType>
+        <Association Name="FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias">
+          <End Type="Sistema_DavidModel.CuentasBancarias" Role="CuentasBancarias" Multiplicity="0..1" />
+          <End Type="Sistema_DavidModel.Ventas_Electrodomesticos_Pagos" Role="Ventas_Electrodomesticos_Pagos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CuentasBancarias">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Ventas_Electrodomesticos_Pagos">
+              <PropertyRef Name="IdCuentaBancaria" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Recargo_Cuota">
+          <End Type="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas" Role="Ventas_Electrodomesticos_Cuotas" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas_Recargos" Role="Ventas_Electrodomesticos_Cuotas_Recargos" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ventas_Electrodomesticos_Cuotas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Ventas_Electrodomesticos_Cuotas_Recargos">
               <PropertyRef Name="IdCuota" />
             </Dependent>
           </ReferentialConstraint>
@@ -2926,6 +3038,11 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <EntitySetMapping Name="Ventas_Electrodomesticos_Pagos">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas_Electrodomesticos_Pagos">
               <MappingFragment StoreEntitySet="Ventas_Electrodomesticos_Pagos">
+                <ScalarProperty Name="ActualizoUbicacion" ColumnName="ActualizoUbicacion" />
+                <ScalarProperty Name="TipoInteres" ColumnName="TipoInteres" />
+                <ScalarProperty Name="IdCuentaBancaria" ColumnName="IdCuentaBancaria" />
+                <ScalarProperty Name="Imagen" ColumnName="Imagen" />
+                <ScalarProperty Name="ClienteAusente" ColumnName="ClienteAusente" />
                 <ScalarProperty Name="FechaCreacion" ColumnName="FechaCreacion" />
                 <ScalarProperty Name="UsuarioCreacion" ColumnName="UsuarioCreacion" />
                 <ScalarProperty Name="Observacion" ColumnName="Observacion" />
@@ -3045,6 +3162,21 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
                 <ScalarProperty Name="FechaVencimiento" ColumnName="FechaVencimiento" />
                 <ScalarProperty Name="NumeroCuota" ColumnName="NumeroCuota" />
                 <ScalarProperty Name="IdVenta" ColumnName="IdVenta" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Ventas_Electrodomesticos_Cuotas_Recargos">
+            <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas_Recargos">
+              <MappingFragment StoreEntitySet="Ventas_Electrodomesticos_Cuotas_Recargos">
+                <ScalarProperty Name="FechaCreacion" ColumnName="FechaCreacion" />
+                <ScalarProperty Name="UsuarioCreacion" ColumnName="UsuarioCreacion" />
+                <ScalarProperty Name="Observacion" ColumnName="Observacion" />
+                <ScalarProperty Name="ImporteCalculado" ColumnName="ImporteCalculado" />
+                <ScalarProperty Name="Valor" ColumnName="Valor" />
+                <ScalarProperty Name="Tipo" ColumnName="Tipo" />
+                <ScalarProperty Name="Fecha" ColumnName="Fecha" />
+                <ScalarProperty Name="IdCuota" ColumnName="IdCuota" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>

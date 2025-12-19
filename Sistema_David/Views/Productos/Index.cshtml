@@ -44,6 +44,7 @@
                                 <th class="text-center">Total</th>
                                 <th class="text-center">Precio Venta</th>
                                 <th class="text-center">Porc. Venta</th>
+                                <th class="text-center">Dias Vencimiento</th>
                                 <th class="text-center">Activo</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
@@ -126,6 +127,12 @@
                         <div class="col-6">
                             <label for="PorcVenta" class="form-label text-nowrap small  text-black">Porcentaje de Venta</label>
                             <input type="text" id="PorcVenta" class="form-control form-control-sm text-dark text-nowrap" />
+                        </div>
+
+
+                        <div class="col-6">
+                            <label for="DiasVencimiento" class="form-label text-nowrap small  text-black">Dias de vencimiento</label>
+                            <input type="text" id="DiasVencimiento" class="form-control form-control-sm text-dark text-nowrap" />
                         </div>
 
                         <div class="col-12">
@@ -261,5 +268,5 @@
 <script src="~/Scripts/xlsx.full.min.js.js"></script>
 
 @section scripts{
-    <script src="~/JavaScript/Productos.js?v=1.7"></script>
+    <script src="~/JavaScript/Productos.js?v=1.8"></script>
     }
