@@ -253,6 +253,53 @@ namespace Sistema_David.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult EnvWhatssapInformacionVenta(int id)
+        {
+            var data = Ventas_ElectrodomesticosModel.ObtenerVenta(id);
+
+            if (data == null)
+                return Json(null);
+
+            return Json(new
+            {
+                Venta = data,
+                Cliente = new
+                {
+                    data.ClienteNombre,
+                    data.ClienteTelefono
+                }
+            });
+        }
+
+
+        [HttpPost]
+        public ActionResult EnvWhatssapElectro(int id, string descripcion)
+        {
+            var idVenta = Ventas_ElectrodomesticosModel
+                .ResolverIdVentaDesdeMovimiento(id, descripcion);
+
+            if (!idVenta.HasValue)
+                return Json(null);
+
+            var data = Ventas_ElectrodomesticosModel.ObtenerVenta(idVenta.Value);
+
+            if (data == null)
+                return Json(null);
+
+            return Json(new
+            {
+                Venta = data,
+                Cliente = new
+                {
+                    data.ClienteNombre,
+                    data.ClienteTelefono
+                }
+            });
+        }
+
+
+
         /* ================= ELIMINAR VENTA ================= */
         [HttpPost]
         public ActionResult EliminarVenta(int id)

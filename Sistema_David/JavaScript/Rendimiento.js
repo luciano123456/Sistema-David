@@ -645,8 +645,9 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                 { "data": "CapitalFinal" },
 
                 {
-                    "data": "ProximoCobro",
-                    "render": function (data) {
+                    data: "ProximoCobro",
+                    render: function (data) {
+                        if (!data) return "";   // 🔥 ESTA LÍNEA ES LA CLAVE
                         return moment(data).format("DD/MM/YYYY");
                     }
                 },
@@ -664,7 +665,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         let iconColorClass = row.whatssap === 1 ? 'text-success' : 'text-danger';
                         var iconColor = userSession.IdRol == 2 ? "red" : "white"; // Color del icono basado en el rol
                         var disabled = userSession.IdRol == 2 ? "disabled" : ""; // Desactivar el botón basado en el rol
-                        var iconWhatssap = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>"
+                        var iconWhatssap = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ", " + JSON.stringify(row.Descripcion || "") + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>"
                         var iconEliminar = row.Descripcion && userSession.IdRol == 1 && !row.Descripcion.includes("Venta") ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarInformacion(" + data + ")' title='Eliminar' style='color: " + iconColor + ";' " + disabled + "><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>" : '';
                         return iconWhatssap + iconEliminar;
 
@@ -1073,172 +1074,394 @@ function ocultarFiltros() {
     }
 }
 
-async function enviarWhatssap(id) {
+async function enviarWhatssap(id, descripcion) {
 
     try {
-        var url = "/Ventas/EnvWhatssapInformacionVenta";
 
-        let value = JSON.stringify({
-            id: id,
-            mensaje: ""
-        });
+        const esElectro = descripcion
+            ?.toLowerCase()
+            .includes("electrodomesticos");
 
-        let options = {
-            type: "POST",
-            url: url,
-            async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
-        };
-
-        let result = await MakeAjax(options);
-
-
-        if (result != null) {
-
-
-            var fecha = moment(result.InformacionVenta.Fecha).format('DD/MM/YYYY');
-            var fechaHora = moment(result.InformacionVenta.Fecha).format('HH:mm');
-            var fechaCobro = moment(result.Venta.FechaCobro).format('DD/MM/YYYY');
-
-            const horaActual = new Date().getHours();
-
-            let saludo;
-
-            // Determinamos el saludo segun la hora
-
-
-
-
-            if (horaActual > 5 && horaActual < 12) {
-                saludo = "Buenos días";
-            } else if (horaActual > 5 && horaActual < 20) {
-                saludo = "Buenas tardes";
-            } else {
-                saludo = "Buenas noches";
-            }
-
-
-
-            if (result.InformacionVenta.Descripcion != null) {
-
-                const table = $('#grdRendimiento').DataTable();
-                table.ajax.reload();
-
-                if (result.InformacionVenta.Descripcion.includes("Venta")) {
-                    var totalVenta = result.InformacionVenta.Entrega + result.InformacionVenta.Restante;
-                    mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} hemos registrado una venta por $${totalVenta} pesos. Con una cantidad de ${result.ProductosVenta.length} productos:`;
-
-
-                    for (var i = 0; i < result.ProductosVenta.length; i++) {
-                        mensaje += ` ${result.ProductosVenta[i].Cantidad} ${result.ProductosVenta[i].Producto}`;
-                    }
-
-                    mensaje += `. Entrega de $${result.InformacionVenta.Entrega} pesos. El monto restante de la venta es de $${result.InformacionVenta.Restante} pesos, su primer fecha de cobro es ${fechaCobro}.`;
-
-                } else {
-                    mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} hemos registrado un cobro por ${formatNumber(result.InformacionVenta.Entrega)} pesos.`;
-
-
-                    if (result.InformacionVenta.Interes > 0) {
-                        mensaje += ` Se ha agregado un interes de ${formatNumber(result.InformacionVenta.Interes)} pesos. `
-                    }
-
-                    if (result.InformacionVenta.Restante > 0) {
-                        mensaje += ` El monto restante de la venta es de ${formatNumber(result.InformacionVenta.Restante)} pesos, su nueva fecha de cobro es ${fechaCobro}.`
-                    }
-
-                    var saldo = 0;
-
-                    if (result.InformacionVenta.Deuda > 0) {
-                        saldo = result.InformacionVenta.Deuda;
-                    } else {
-                        saldo = result.Cliente.Saldo;
-                    }
-
-                    if (result.Cliente.Saldo > 0) {
-                        mensaje += ` Saldo total de todas sus ventas es de ${formatNumber(saldo)} pesos.`
-                    } else {
-                        mensaje += ` No le queda saldo pendiente de sus ventas. `
-                    }
-
-                    mensaje += " Muchas gracias por confiar en Indumentaria DG"
-
-                }
-            }
-
-            if (result.InformacionVenta.ClienteAusente == 1) {
-                const table = $('#grdClientesAusentes').DataTable();
-                table.ajax.reload();
-
-                mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro y el cobrador no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
-                if (userSession.IdRol != 2) {
-                    CantidadClientesAusentes();
-                }
-
-
-            }
-
-            if (result.InformacionVenta.ClienteAusente == 1 && result.InformacionVenta.Descripcion != null && result.InformacionVenta.Descripcion.includes("Cobranza")) {
-                mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} hemos visitado su casa para realizar un cobro y el cobrador no pudo encontrarlo en su domicilio. Su nueva fecha de cobro es ${fechaCobro}`;
-            }
-            if (result.InformacionVenta.ClienteAusente == 0 && result.InformacionVenta.Entrega == 0 && result.InformacionVenta.Descripcion != null && result.InformacionVenta.Descripcion.includes("Cobranza")) {
-                mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. Le informamos que el día ${fecha} hemos hecho un cambio de fecha de cobro en su venta. Su nueva fecha de cobro es ${fechaCobro}`;
-            }
-
-            if (result.InformacionVenta.TipoInteres === "VISITA CON CAMBIO") {
-                mensaje = `${saludo}, ${result.Cliente.Nombre} ${result.Cliente.Apellido}. El día ${fecha} el cobrador pasó por su domicilio. Al reprogramarse el pago, se aplicó un recargo de ${formatNumber(result.InformacionVenta.Interes)} por la visita realizada. Su nueva fecha de cobro es ${fechaCobro}. El saldo pendiente de esta venta es ${formatNumber(result.InformacionVenta.Restante)}. El saldo total de todas sus ventas es ${formatNumber(result.Cliente.Saldo)}. Le recordamos que en caso de avisar previamente por WhatsApp, no se aplica el recargo. Muchas gracias.`;
-            }
-
-            else if (result.InformacionVenta.TipoInteres === "INTERES DE 30 DIAS") {
-                mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} se cumplieron 30 días desde la venta realizada, y aún no se cubrió el 50% de arreglo acordado. Por este motivo, se aplicó un pequeño recargo de ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
-                    `• *Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n` +
-                    `• *Próxima visita de cobro:* ${fechaCobro}\n` +
-                    `• *Total acumulado de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
-                    `Ante cualquier consulta, no dude en comunicarse con nosotros.`;
-
-            }
-
-
-            else if (result.InformacionVenta.TipoInteres === "INTERES DE 60 DIAS") {
-                mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} su cuenta superó los 60 días de plazo máximo para abonar. Por este motivo, se han generado los siguientes cargos:\n\n` +
-                    `*Interés aplicado:* ${formatNumber(result.InformacionVenta.Interes)}\n\n` +
-                    `*Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n\n` +
-                    `*Saldo total de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
-                    `⚠️ *Próxima visita de cobro:* ${fechaCobro}\n\n` +
-                    `Muchas gracias por confiar en INDUMENTARIADG.`;
-            }
-
-
-            else if (result.InformacionVenta.TipoInteres === "PROMESA DE PAGO") {
-                mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} estuvimos esperando su promesa de pago mediante transferencia. ` +
-                    `Al no haber recibido el comprobante y estando próximos al cierre de jornada, se ha agregado un interés de ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
-
-                    `🗒️ *Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n` +
-                    `📄 *Saldo total de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
-
-                    `📅 *El pago ha sido reprogramado para el día siguiente:* ${fechaCobro}\n\n` +
-
-                    `Muchas gracias.`;
-            }
-
-
-
-            const mensajeCodificado = encodeURIComponent(mensaje);
-            const urlwsp = `https://api.whatsapp.com/send?phone=+549${result.Cliente.Telefono}&text=${mensajeCodificado}`;
-            //const urlwsp = `https://api.whatsapp.com/send?phone=++54 9 3777 53-5622&text=${mensajeCodificado}`;
-
-            window.open(urlwsp, '_blank');
-            $('.datos-error').removeClass('d-none');
+        if (esElectro) {
+            await enviarWhatssapElectro(id, descripcion);
         } else {
-            $('.datos-error').text('Ha ocurrido un error en los datos.')
-            $('.datos-error').removeClass('d-none')
+            await enviarWhatssapNormalDesdeApi(id);
         }
+
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.')
         $('.datos-error').removeClass('d-none')
     }
+}
+
+
+async function enviarWhatssapNormalDesdeApi(id) {
+
+    const result = await MakeAjax({
+        type: "POST",
+        url: "/Ventas/EnvWhatssapInformacionVenta",
+        async: true,
+        data: JSON.stringify({ id, mensaje: "" }),
+        contentType: "application/json",
+        dataType: "json"
+    });
+
+    if (!result) {
+        mostrarError("No se pudo obtener la información.");
+        return;
+    }
+
+    enviarWhatssapNormal(result);
+}
+
+async function enviarWhatssapElectro(idMovimiento, descripcion) {
+
+    const base = await MakeAjax({
+        type: "POST",
+        url: "/Ventas_Electrodomesticos/EnvWhatssapElectro",
+        async: true,
+        data: JSON.stringify({
+            id: idMovimiento,
+            descripcion: descripcion
+        }),
+        contentType: "application/json",
+        dataType: "json"
+    });
+
+    if (!base) {
+        mostrarError("No se pudo obtener la venta de electrodomésticos.");
+        return;
+    }
+
+    const mensaje = armarMensajeWhatsappElectro(base, descripcion);
+    abrirWhatsapp(base.Cliente.Telefono, mensaje);
+}
+
+function obtenerTipoMensajeElectro(descripcion = "") {
+    const d = descripcion.toLowerCase();
+
+    if (d.includes("venta")) return "venta";
+    if (d.includes("cobranza")) return "cobro";
+    if (d.includes("recargo")) return "recargo";
+
+    return "venta"; // fallback seguro
+}
+
+
+function armarMensajeWhatsappElectro(base, descripcion) {
+
+    if (!base || !base.Venta || !base.Cliente)
+        return "";
+
+    const v = base.Venta;
+    const tipo = obtenerTipoMensajeElectro(descripcion);
+
+    const nombreCliente = (v.ClienteNombre || "").trim();
+    const fechaVenta = v.FechaVenta ? moment(v.FechaVenta).format("DD/MM/YYYY") : "";
+
+    const total = formatNumber(v.ImporteTotal);
+    const entrega = formatNumber(v.Entrega || 0);
+    const saldo = formatNumber(v.Restante || 0);
+
+    // ===============================
+    // PRODUCTOS
+    // ===============================
+    let productos = "";
+    if (Array.isArray(v.Items) && v.Items.length) {
+        productos = v.Items
+            .slice(0, 3)
+            .map(i => `• ${i.Cantidad || 1} x ${i.Producto}`)
+            .join("\n");
+
+        if (v.Items.length > 3) {
+            productos += `\n• y otros ${v.Items.length - 3} productos`;
+        }
+    }
+
+    // ===============================
+    // PRÓXIMA CUOTA
+    // ===============================
+    let proximaCuota = null;
+    if (Array.isArray(v.Cuotas)) {
+        proximaCuota = v.Cuotas
+            .filter(c => (c.MontoRestante || 0) > 0)
+            .sort((a, b) =>
+                new Date(a.FechaVencimiento) - new Date(b.FechaVencimiento)
+            )[0];
+    }
+
+    let textoCuota = "—";
+    if (proximaCuota) {
+        textoCuota =
+            `Cuota ${proximaCuota.NumeroCuota} – ` +
+            `${moment(proximaCuota.FechaVencimiento).format("DD/MM/YYYY")} – ` +
+            `${formatNumber(proximaCuota.MontoRestante)}`;
+    }
+
+    // ===============================
+    // SALUDO
+    // ===============================
+    const h = new Date().getHours();
+    const saludo =
+        h >= 5 && h < 12 ? "Buenos días" :
+            h >= 12 && h < 20 ? "Buenas tardes" :
+                "Buenas noches";
+
+    // ===============================
+    // MENSAJES POR TIPO
+    // ===============================
+
+    /* ================= VENTA ================= */
+    if (tipo === "venta") {
+        return `${saludo} ${nombreCliente} 😊
+
+🛒 *VENTA DE ELECTRODOMÉSTICOS*
+Le informamos que el día ${fechaVenta} hemos registrado una nueva venta.
+
+📦 *Productos adquiridos:*
+${productos}
+
+💰 *Total:* ${total}
+💵 *Entrega:* ${entrega}
+📉 *Saldo pendiente:* ${saldo}
+
+📆 *Próxima cuota a vencer:*
+${textoCuota}
+
+Muchas gracias por su compra 🙌
+Ante cualquier consulta, quedamos a disposición.`;
+    }
+
+    /* ================= COBRO ================= */
+    if (tipo === "cobro") {
+
+        // ===============================
+        // CUOTA PAGADA
+        // ===============================
+        let cuotaPagada = null;
+
+        if (Array.isArray(v.Cuotas)) {
+            cuotaPagada = v.Cuotas
+                .filter(c => (c.MontoPagado || 0) > 0 && (c.MontoRestante || 0) === 0)
+                .sort((a, b) =>
+                    new Date(b.FechaVencimiento) - new Date(a.FechaVencimiento)
+                )[0];
+        }
+
+        const nroCuota = cuotaPagada?.NumeroCuota ?? "";
+        const importePagado = formatNumber(v.UltimoPago || cuotaPagada?.MontoPagado || 0);
+
+        // ===============================
+        // CUOTAS RESTANTES
+        // ===============================
+        const cuotasRestantes = Array.isArray(v.Cuotas)
+            ? v.Cuotas.filter(c => (c.MontoRestante || 0) > 0).length
+            : 0;
+
+        return `${saludo} ${nombreCliente} 👋
+
+💳 *COBRO REGISTRADO – ELECTRODOMÉSTICOS*
+
+Se ha registrado correctamente el pago de la *Cuota ${nroCuota}*.
+
+💰 *Importe abonado:* ${importePagado}
+📉 *Saldo pendiente total:* ${saldo}
+📊 *Cuotas restantes:* ${cuotasRestantes}
+
+📆 *Próxima cuota a vencer:*
+${textoCuota}
+
+Muchas gracias por su pago 🙌
+Ante cualquier consulta, quedamos a disposición.`;
+    }
+
+
+    /* ================= RECARGO ================= */
+    if (tipo === "recargo") {
+
+        const recargo = formatNumber(v.UltimoRecargo || 0);
+
+        return `${saludo} ${nombreCliente} ⚠️
+
+📌 *RECARGO APLICADO – ELECTRODOMÉSTICOS*
+Le informamos que se ha aplicado un recargo sobre su plan de pagos.
+
+💲 *Importe del recargo:* ${recargo}
+📉 *Saldo actualizado:* ${saldo}
+
+📆 *Próxima cuota:*
+${textoCuota}
+
+Ante cualquier duda o consulta, quedamos a disposición.`;
+    }
+
+    return "";
+}
+
+function enviarWhatssapNormal(result) {
+
+    var fecha = moment(result.InformacionVenta.Fecha).format('DD/MM/YYYY');
+    var fechaHora = moment(result.InformacionVenta.Fecha).format('HH:mm');
+    var fechaCobro = moment(result.Venta.FechaCobro).format('DD/MM/YYYY');
+
+    const horaActual = new Date().getHours();
+    let saludo;
+
+    if (horaActual > 5 && horaActual < 12) {
+        saludo = "Buenos días";
+    } else if (horaActual > 5 && horaActual < 20) {
+        saludo = "Buenas tardes";
+    } else {
+        saludo = "Buenas noches";
+    }
+
+    let mensaje = "";
+
+    // ==============================
+    // 🔹 VENTA / COBRANZA
+    // ==============================
+    if (result.InformacionVenta.Descripcion != null) {
+
+        const table = $('#grdRendimiento').DataTable();
+        table.ajax.reload();
+
+        if (result.InformacionVenta.Descripcion.includes("Venta")) {
+
+            var totalVenta = result.InformacionVenta.Entrega + result.InformacionVenta.Restante;
+
+            mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
+                `Le informamos que el día ${fecha} hemos registrado una venta por $${totalVenta} pesos. ` +
+                `Con una cantidad de ${result.ProductosVenta.length} productos:`;
+
+            for (var i = 0; i < result.ProductosVenta.length; i++) {
+                mensaje += ` ${result.ProductosVenta[i].Cantidad} ${result.ProductosVenta[i].Producto}`;
+            }
+
+            mensaje += `. Entrega de $${result.InformacionVenta.Entrega} pesos. ` +
+                `El monto restante de la venta es de $${result.InformacionVenta.Restante} pesos, ` +
+                `su primer fecha de cobro es ${fechaCobro}.`;
+
+        } else {
+
+            mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
+                `Le informamos que el día ${fecha} hemos registrado un cobro por ${formatNumber(result.InformacionVenta.Entrega)} pesos.`;
+
+            if (result.InformacionVenta.Interes > 0) {
+                mensaje += ` Se ha agregado un interes de ${formatNumber(result.InformacionVenta.Interes)} pesos. `;
+            }
+
+            if (result.InformacionVenta.Restante > 0) {
+                mensaje += ` El monto restante de la venta es de ${formatNumber(result.InformacionVenta.Restante)} pesos, ` +
+                    `su nueva fecha de cobro es ${fechaCobro}.`;
+            }
+
+            var saldo = result.InformacionVenta.Deuda > 0
+                ? result.InformacionVenta.Deuda
+                : result.Cliente.Saldo;
+
+            if (saldo > 0) {
+                mensaje += ` Saldo total de todas sus ventas es de ${formatNumber(saldo)} pesos.`;
+            } else {
+                mensaje += ` No le queda saldo pendiente de sus ventas. `;
+            }
+
+            mensaje += " Muchas gracias por confiar en Indumentaria DG";
+        }
+    }
+
+    // ==============================
+    // 🔹 CLIENTE AUSENTE
+    // ==============================
+    if (result.InformacionVenta.ClienteAusente == 1) {
+
+        const table = $('#grdClientesAusentes').DataTable();
+        table.ajax.reload();
+
+        mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
+            `Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro ` +
+            `y el cobrador no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
+
+        if (userSession.IdRol != 2) {
+            CantidadClientesAusentes();
+        }
+    }
+
+    if (result.InformacionVenta.ClienteAusente == 1 &&
+        result.InformacionVenta.Descripcion?.includes("Cobranza")) {
+
+        mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
+            `Le informamos que el día ${fecha} hemos visitado su casa para realizar un cobro ` +
+            `y el cobrador no pudo encontrarlo en su domicilio. Su nueva fecha de cobro es ${fechaCobro}`;
+    }
+
+    if (result.InformacionVenta.ClienteAusente == 0 &&
+        result.InformacionVenta.Entrega == 0 &&
+        result.InformacionVenta.Descripcion?.includes("Cobranza")) {
+
+        mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
+            `Le informamos que el día ${fecha} hemos hecho un cambio de fecha de cobro en su venta. ` +
+            `Su nueva fecha de cobro es ${fechaCobro}`;
+    }
+
+    // ==============================
+    // 🔹 INTERESES
+    // ==============================
+    if (result.InformacionVenta.TipoInteres === "VISITA CON CAMBIO") {
+        mensaje = `${saludo}, ${result.Cliente.Nombre} ${result.Cliente.Apellido}. ` +
+            `El día ${fecha} el cobrador pasó por su domicilio. Al reprogramarse el pago, ` +
+            `se aplicó un recargo de ${formatNumber(result.InformacionVenta.Interes)}. ` +
+            `Su nueva fecha de cobro es ${fechaCobro}. ` +
+            `Saldo pendiente: ${formatNumber(result.InformacionVenta.Restante)}. ` +
+            `Saldo total: ${formatNumber(result.Cliente.Saldo)}.`;
+    }
+
+    else if (result.InformacionVenta.TipoInteres === "INTERES DE 30 DIAS") {
+        mensaje = `${saludo}, ${result.Cliente.Nombre}. ` +
+            `Se cumplieron 30 días desde la venta. ` +
+            `Interés aplicado: ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
+            `• Saldo pendiente: ${formatNumber(result.InformacionVenta.Restante)}\n` +
+            `• Próxima visita: ${fechaCobro}\n` +
+            `• Total acumulado: ${formatNumber(result.Cliente.Saldo)}`;
+    }
+
+    else if (result.InformacionVenta.TipoInteres === "INTERES DE 60 DIAS") {
+        mensaje = `${saludo}, ${result.Cliente.Nombre}. ` +
+            `Su cuenta superó los 60 días.\n\n` +
+            `• Interés: ${formatNumber(result.InformacionVenta.Interes)}\n` +
+            `• Saldo pendiente: ${formatNumber(result.InformacionVenta.Restante)}\n` +
+            `• Total acumulado: ${formatNumber(result.Cliente.Saldo)}\n` +
+            `• Próxima visita: ${fechaCobro}`;
+    }
+
+    else if (result.InformacionVenta.TipoInteres === "PROMESA DE PAGO") {
+        mensaje = `${saludo}, ${result.Cliente.Nombre}. ` +
+            `No se recibió el comprobante prometido.\n\n` +
+            `• Interés aplicado: ${formatNumber(result.InformacionVenta.Interes)}\n` +
+            `• Saldo pendiente: ${formatNumber(result.InformacionVenta.Restante)}\n` +
+            `• Total acumulado: ${formatNumber(result.Cliente.Saldo)}\n` +
+            `• Nueva fecha: ${fechaCobro}`;
+    }
+
+    // ==============================
+    // 🔹 ENVIAR WHATSAPP
+    // ==============================
+    const mensajeCodificado = encodeURIComponent(mensaje);
+    const urlwsp = `https://api.whatsapp.com/send?phone=+549${result.Cliente.Telefono}&text=${mensajeCodificado}`;
+    window.open(urlwsp, '_blank');
+}
+
+
+function obtenerSaludo() {
+    const h = new Date().getHours();
+    if (h >= 6 && h < 12) return "Buenos días";
+    if (h >= 12 && h < 20) return "Buenas tardes";
+    return "Buenas noches";
+}
+
+function abrirWhatsapp(telefono, mensaje) {
+    const msg = encodeURIComponent(mensaje);
+    const url = `https://api.whatsapp.com/send?phone=+549${telefono}&text=${msg}`;
+    window.open(url, '_blank');
 }
 
 

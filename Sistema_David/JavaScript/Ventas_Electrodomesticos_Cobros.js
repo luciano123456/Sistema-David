@@ -234,7 +234,8 @@ VC.cargarTabla = async function () {
     tabla = $("#vc_tabla").DataTable({
         data: cuotasCache,
         pageLength: 50,
-        responsive: true,
+        responsive: false,   // 🔥 CLAVE
+        scrollX: true,       // 🔥 permite scroll horizontal en móvil
         language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
 
         // NO toco tus columnas ni el HTML. Solo agrego el coloreo por atraso.
@@ -345,7 +346,7 @@ VC.cargarTabla = async function () {
     </button>
 
     <button class="btn btn-accion btn-ajuste me-1"
-        onclick="VC.abrirAjuste(${d.IdCuota})"
+        onclick="VC.abrirAjuste( ${d.IdVenta}, ${d.IdCuota})"
         title="Ajustar">
         <i class="fa fa-bolt"></i>
     </button>
@@ -676,7 +677,7 @@ VC.renderCuotas = function (v) {
                         </button>
 
                         <button class="btn btn-accion btn-ajuste me-1"
-                            onclick="VC.abrirAjuste(${c.Id})"
+                            onclick="VC.abrirAjuste( ${v.IdVenta}, ${c.Id})"
                             title="Ajustar">
                             <i class="fa fa-bolt"></i>
                         </button>
@@ -745,7 +746,7 @@ VC.abrirCobro = function (idCuota, idVenta) {
     window.abrirModalCobro(idVenta, idCuota);
 };
 
-VC.abrirAjuste = function (idCuota) {
+VC.abrirAjuste = function (ventaAcordeonAbierta, idCuota) {
     window.abrirAjusteDesdeCobros(ventaAcordeonAbierta, idCuota);
 };
 
