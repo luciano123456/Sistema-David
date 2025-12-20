@@ -750,6 +750,7 @@
     <Content Include="Views\Ventas_Electrodomesticos\Cobros.cshtml" />
     <Content Include="Views\Ventas_Electrodomesticos\Historial.cshtml" />
     <Content Include="Views\Ventas_Electrodomesticos\NuevoModif.cshtml" />
+    <Content Include="Views\Ventas_Electrodomesticos\_CobroModal_Partial.cshtml" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -771,7 +772,6 @@
     <Content Include="Views\Recorrido\Index.cshtml" />
     <Content Include="Views\Stock\General.cshtml" />
     <Content Include="Views\Utils\Modals.cshtml" />
-    <Content Include="Views\Ventas_Electrodomesticos\_CobroModal_Partial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -343,6 +343,38 @@ namespace Sistema_David.Models
             }
         }
 
+        public static int? ResolverIdVentaDesdeMovimiento(int idMovimiento, string descripcion)
+        {
+            if (string.IsNullOrWhiteSpace(descripcion))
+                return null;
+
+            using (var db = new Sistema_DavidEntities())
+            {
+                if (descripcion.Contains("Venta"))
+                    return idMovimiento;
+
+                if (descripcion.Contains("Cobranza"))
+                {
+                    return db.Ventas_Electrodomesticos_Pagos
+                        .Where(p => p.Id == idMovimiento)
+                        .Select(p => (int?)p.IdVenta)
+                        .FirstOrDefault();
+                }
+
+                if (descripcion.Contains("Recargo"))
+                {
+                    return db.Ventas_Electrodomesticos_Cuotas_Recargos
+                        .Where(r => r.Id == idMovimiento)
+                        .Select(r => (int?)r.Ventas_Electrodomesticos_Cuotas.IdVenta)
+                        .FirstOrDefault();
+                }
+
+                return null;
+            }
+        }
+
+
+
         /* ===========================================================
          * OBTENER DETALLE
          * =========================================================== */
