@@ -185,8 +185,13 @@ function resetCobroModal() {
 
     qs("cb_cuenta").innerHTML = "";
 
+    // 🔒 FIX: estado inicial limpio (sin método)
+    qs("cb_wrapCuenta").hidden = true;
+    qs("cb_wrapComprobante").hidden = true;
+    qs("progressBarContainerCobro").hidden = true;
     clearProgress();
     clearComprobante();
+
     setComprobanteOpen(false);
 
     resetCasas();
@@ -201,6 +206,12 @@ function resetCobroModal() {
 /* ===================== ABRIR MODAL COBRO (GLOBAL) ===================== */
 window.abrirModalCobro = async function (idVenta, idCuota) {
     resetCobroModal();
+
+    qs("cb_metodo").value = "";
+    qs("cb_wrapCuenta").hidden = true;
+    qs("cb_wrapComprobante").hidden = true;
+    clearProgress();
+
 
     try {
         const resp = await fetch(`/Ventas_Electrodomesticos/GetDetalleVenta?idVenta=${encodeURIComponent(idVenta)}`);
@@ -264,6 +275,10 @@ window.abrirModalCobro = async function (idVenta, idCuota) {
                 ${cliente ? `<div class="small text-white-50 mt-1">${cliente}</div>` : ""}
             `;
         }
+
+        toggleModoReprogramacion();
+        aplicarModoCobroUI();
+
 
         getModal("mdCobro").show();
     } catch (e) {
@@ -566,7 +581,50 @@ async function confirmarCobro() {
     }
 
     const importe = Number(qs("cb_importe").value || 0);
-    if (!importe || importe <= 0) {
+    const fecha = qs("cb_fecha").value;
+    const obs = qs("cb_obs").value || "";
+
+    // =============================
+    // 🔁 CAMBIO DE FECHA (IMPORTE = 0)
+    // =============================
+    if (importe === 0) {
+
+        if (!fecha) {
+            setCbError("Seleccioná una fecha válida.");
+            return;
+        }
+
+        const payload = {
+            IdCuota: cuotaActual.Id,
+            NuevaFecha: fecha,
+            Observacion: obs
+        };
+
+        try {
+            const resp = await fetch("/Ventas_Electrodomesticos/ReprogramarCobroCuota", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const json = await resp.json();
+            if (!json || json.success === false) {
+                setCbError(json?.message || "Error al cambiar la fecha.");
+                return;
+            }
+
+            location.reload();
+            return;
+        } catch {
+            setCbError("Error de conexión al cambiar la fecha.");
+            return;
+        }
+    }
+
+    // =============================
+    // 💰 COBRO NORMAL
+    // =============================
+    if (importe <= 0) {
         setCbError("Importe inválido.");
         return;
     }
@@ -579,15 +637,18 @@ async function confirmarCobro() {
 
     const payload = {
         IdVenta: ventaActual.IdVenta,
-        FechaPago: qs("cb_fecha").value || todayISO(),
+        FechaPago: fecha,
         MedioPago: medio,
         ImporteTotal: importe,
-        Observacion: qs("cb_obs").value || "",
+        Observacion: obs,
         ClienteAusente: qs("cb_clienteAusente").value === "1",
         ActualizoUbicacion: qs("cb_actualizoUbicacion").value === "1",
-        IdCuentaBancaria: esTransferencia(medio) ? Number(qs("cb_cuenta").value || 0) || null : null,
-        TipoInteres: null,
-        Imagen: esTransferencia(medio) ? (qs("cb_imagenBase64").value || null) : null,
+        IdCuentaBancaria: esTransferencia(medio)
+            ? Number(qs("cb_cuenta").value || 0) || null
+            : null,
+        Imagen: esTransferencia(medio)
+            ? (qs("cb_imagenBase64").value || null)
+            : null,
         Aplicaciones: [
             { IdCuota: cuotaActual.Id, ImporteAplicado: importe }
         ]
@@ -615,6 +676,11 @@ async function confirmarCobro() {
 /* ===================== EVENTS (SEGUROS) ===================== */
 document.addEventListener("DOMContentLoaded", () => {
 
+    qs("cb_importe")?.addEventListener("input", () => {
+        aplicarModoCobroUI();
+    });
+
+
     // Fecha default (por si abrís modal sin abrirModalCobro en alguna pantalla)
     if (qs("cb_fecha")) qs("cb_fecha").value = todayISO();
 
@@ -635,6 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         await cargarCuentasTotales();
     });
+
 
     // Cambio cuenta
     qs("cb_cuenta")?.addEventListener("change", () => {
@@ -1094,4 +1161,72 @@ function generarPdfVenta(venta) {
     /* ================= FOOTER ================= */
     const fileName = `Venta_${venta.IdVenta}_${moment().format("YYYYMMDD_HHmm")}.pdf`;
     doc.save(fileName);
+}
+
+function toggleModoReprogramacion() {
+
+    const importe = Number(qs("cb_importe").value || 0);
+    const esReprogramacion = importe <= 0;
+
+    // Fecha
+    qs("cb_fecha").disabled = !esReprogramacion;
+
+    // Ocultar grupos de pago
+    safeToggle(qs("cb_metodo")?.closest(".col-6, .col-lg-3"), !esReprogramacion);
+    safeToggle(qs("cb_wrapCuenta"), !esReprogramacion);
+    safeToggle(qs("cb_wrapObs"), !esReprogramacion);
+    safeToggle(qs("cb_wrapComprobante"), !esReprogramacion);
+    safeToggle(qs("progressBarContainerCobro"), !esReprogramacion);
+
+    // Casitas
+    safeToggle(qs("cb_casaNeutral")?.parentElement?.parentElement, !esReprogramacion);
+
+    // Botones secundarios
+    safeToggle(qs("cb_btnRecargo"), !esReprogramacion);
+    safeToggle(qs("cb_btnHistorial"), !esReprogramacion);
+
+    // Botón principal
+    const btn = qs("cb_confirmarBtn");
+    if (!btn) return;
+
+    if (esReprogramacion) {
+        btn.classList.remove("btn-success");
+        btn.classList.add("btn-warning");
+        btn.innerHTML = `<i class="fa fa-calendar"></i> Reprogramar cobro`;
+    } else {
+        btn.classList.add("btn-success");
+        btn.classList.remove("btn-warning");
+        btn.innerHTML = `<i class="fa fa-check"></i> Confirmar cobro`;
+    }
+}
+
+
+qs("cb_importe")?.addEventListener("input", toggleModoReprogramacion);
+
+function esCambioFecha() {
+    const importe = Number(qs("cb_importe").value || 0);
+    return importe === 0;
+}
+
+function aplicarModoCobroUI() {
+    const cambioFecha = esCambioFecha();
+
+    // Fecha SIEMPRE editable en cambio de fecha
+    qs("cb_fecha").disabled = false;
+
+    // Observación siempre visible
+    qs("cb_wrapObs").hidden = false;
+
+    // 🔴 Ocultar TODO lo de cobro si es cambio de fecha
+    qs("cb_metodo").closest(".col-6")?.classList.toggle("d-none", cambioFecha);
+    qs("cb_wrapCuenta").hidden = true;
+    qs("cb_wrapComprobante").hidden = true;
+    qs("progressBarContainerCobro").hidden = true;
+
+    if (cambioFecha) {
+        qs("cb_metodo").value = "";
+        clearComprobante();
+        clearProgress();
+        setComprobanteOpen(false);
+    }
 }

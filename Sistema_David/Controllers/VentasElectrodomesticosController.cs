@@ -68,7 +68,16 @@ namespace Sistema_David.Controllers
 
 
         /* ================= CUOTAS A COBRAR ================= */
-        public ActionResult ListarCuotasACobrar(DateTime? fechaDesde, DateTime? fechaHasta, int? idCliente, int? idVendedor, string estado)
+        public ActionResult ListarCuotasACobrar(
+    DateTime? fechaDesde,
+    DateTime? fechaHasta,
+    int? idCliente,
+    int? idVendedor,
+    string estado,
+    int? idZona,
+    string turno,
+    string franjaHoraria
+)
         {
             try
             {
@@ -78,7 +87,12 @@ namespace Sistema_David.Controllers
                     FechaHasta = fechaHasta,
                     IdCliente = idCliente,
                     IdVendedor = idVendedor,
-                    EstadoCuota = estado
+                    EstadoCuota = estado,
+
+                    // ✅ nuevos (agregalos al VM filtro también)
+                    IdZona = idZona,
+                    Turno = turno,
+                    FranjaHoraria = franjaHoraria
                 };
 
                 var data = Ventas_ElectrodomesticosModel.ListarCuotasACobrar(filtro);
@@ -86,10 +100,32 @@ namespace Sistema_David.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { data = new List<object>(), error = ex.Message },
-                    JsonRequestBehavior.AllowGet);
+                return Json(new { data = new List<object>(), error = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
+
+        public ActionResult ListarCobrosPendientes(int? idCliente, int? idVendedor)
+        {
+            var filtro = new VM_Ventas_Electrodomesticos_FiltroCobros
+            {
+                IdCliente = idCliente,
+                IdVendedor = idVendedor
+            };
+
+            var data = Ventas_ElectrodomesticosModel.ListarCobrosPendientes(filtro);
+            return Json(new { data }, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public ActionResult MarcarCobroPendienteResuelto(int idCuota)
+        {
+            var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+
+            var msg = Ventas_ElectrodomesticosModel.MarcarCobroPendienteResuelto(idCuota, usuario);
+            return Json(new { success = msg == "OK", message = msg });
+        }
+
+
 
         /* ================= CREAR VENTA ================= */
         [HttpPost]
@@ -315,5 +351,26 @@ namespace Sistema_David.Controllers
                 return Json(new { success = false, message = "Error al eliminar venta: " + ex.Message });
             }
         }
+
+        /* ================= CAMBIAR FECHA DE COBRO (COBRO PENDIENTE) ================= */
+        [HttpPost]
+        public ActionResult ReprogramarCobroCuota(int idCuota, DateTime nuevaFecha, string observacion)
+        {
+            try
+            {
+                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+
+                var msg = Ventas_ElectrodomesticosModel
+                    .ReprogramarCobroCuota(idCuota, nuevaFecha, usuario, observacion);
+
+                return Json(new { success = msg == "OK", message = msg });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
     }
 }

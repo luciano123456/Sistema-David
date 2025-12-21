@@ -36,6 +36,8 @@ namespace Sistema_David.Models.DB
         public System.DateTime FechaCreacion { get; set; }
         public Nullable<int> UsuarioModificacion { get; set; }
         public Nullable<System.DateTime> FechaModificacion { get; set; }
+        public Nullable<System.DateTime> FechaCobro { get; set; }
+        public Nullable<int> CobroPendiente { get; set; }
     
         public virtual Usuarios Usuarios { get; set; }
         public virtual Usuarios Usuarios1 { get; set; }

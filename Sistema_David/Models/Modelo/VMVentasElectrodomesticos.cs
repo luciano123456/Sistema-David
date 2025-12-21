@@ -30,6 +30,8 @@ namespace Sistema_David.Models.ViewModels
         public decimal Recargos { get; set; }
         public decimal Descuentos { get; set; }
         public string Estado { get; set; }
+        public Nullable<System.DateTime> FechaCobro { get; set; }
+        public Nullable<int> CobroPendiente { get; set; }
     }
 
     public class VM_HistorialVentasResp
@@ -72,6 +74,8 @@ namespace Sistema_David.Models.ViewModels
         public decimal? DescuentoFijo { get; set; }
 
         public string Observacion { get; set; }
+        public string FranjaHoraria { get; set; }
+        public string Turno { get; set; }
 
         public List<VM_Ventas_Electrodomesticos_Item> Items { get; set; }
         public List<VM_Ventas_Electrodomesticos_CuotaPlan> Cuotas { get; set; }
@@ -163,6 +167,10 @@ namespace Sistema_David.Models.ViewModels
         public decimal Entrega { get; set; }
         public decimal Restante { get; set; }
 
+        public string FranjaHoraria { get; set; }
+        public string Turno { get; set; }
+
+
         public List<VM_Ventas_Electrodomesticos_Item> Items { get; set; }
             = new List<VM_Ventas_Electrodomesticos_Item>();
         public List<VM_Ventas_Electrodomesticos_Cuota> Cuotas { get; set; }
@@ -181,6 +189,11 @@ namespace Sistema_David.Models.ViewModels
         public int? IdCliente { get; set; }
         public int? IdVendedor { get; set; }
         public string EstadoCuota { get; set; } // "Pendiente"|"Vencida"|"Pagada"|null
+
+        // ✅ NUEVOS
+        public int? IdZona { get; set; }
+        public string Turno { get; set; }         // "mañana"/"tarde" (o "M"/"T")
+        public string FranjaHoraria { get; set; } // "08-09"
     }
 
     public class FiltroHistorialVentas
@@ -198,6 +211,7 @@ namespace Sistema_David.Models.ViewModels
         public int IdVenta { get; set; }
         public int NumeroCuota { get; set; }
         public DateTime FechaVencimiento { get; set; }
+        public DateTime FechaCobro { get; set; }
         public decimal TotalCuota { get; set; }
         public decimal MontoPagado { get; set; }
         public decimal MontoRestante { get; set; }
@@ -208,6 +222,18 @@ namespace Sistema_David.Models.ViewModels
 
         public int IdVendedor { get; set; }
         public string VendedorNombre { get; set; } // ★ OPCIONAL (útil para filtros)
+
+        // ✅ NUEVOS
+        public int? IdZona { get; set; }
+        public string ZonaNombre { get; set; }
+
+        public string ClienteDireccion { get; set; }
+        public string ClienteLatitud { get; set; }
+        public string ClienteLongitud { get; set; }
+
+        public string Turno { get; set; }          // en DB: "mañana"/"tarde" o ya "M"/"T"
+        public string FranjaHoraria { get; set; }  // "08-09", etc
+
     }
 
 

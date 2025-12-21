@@ -133,6 +133,30 @@
                             </select>
                         </div>
 
+                        <div class="col-md-2">
+                            <label class="form-label">Zona</label>
+                            <select id="f_zona" class="form-select ve-input">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Turno</label>
+                            <select id="f_turno" class="form-select ve-input">
+                                <option value="">Todos</option>
+                                <option value="mañana">M</option>
+                                <option value="tarde">T</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Franja</label>
+                            <select id="f_franja" class="form-select ve-input">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+
+
                         <div class="col-md-3">
                             <label class="form-label">Vendedor / Cobrador</label>
                             <select id="f_vendedor" class="form-select ve-input">
@@ -166,10 +190,19 @@
                     <table id="vc_tabla" class="table ve-table align-middle nowrap w-100">
                         <thead>
                             <tr>
-                                <th style="width:40px;"></th> @* Columna 0: flecha acordeón *@
+                                <th style="width:40px;"></th>  @* Columna 0: flecha acordeón *@
                                 <th>N° Cuota</th>
+                                <th>Fecha Cobro</th>
                                 <th>Cliente</th>
                                 <th>Vendedor</th>
+
+                                <!-- 🔥 NUEVAS -->
+                                <th>Zona</th>
+                                <th>Dirección</th>
+                                <th class="text-center" style="width:70px;">Turno</th>
+                                <th style="width:110px;">Franja</th>
+
+                                <!-- EXISTENTES -->
                                 <th>Vencimiento</th>
                                 <th>Total cuota</th>
                                 <th>Pagado</th>
@@ -180,6 +213,41 @@
                         </thead>
                     </table>
                 </div>
+
+                <hr class="my-4">
+
+                <h4 class="text-warning fw-bold mb-3">
+                    <i class="fa fa-clock-o me-2"></i> Cobros pendientes
+                </h4>
+
+                <div class="table-responsive">
+                    <table id="vc_tabla_pendientes" class="table ve-table align-middle nowrap w-100">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;"></th>  @* Columna 0: flecha acordeón *@
+                                <th>N° Cuota</th>
+                                <th>Fecha Cobro</th>
+                                <th>Cliente</th>
+                                <th>Vendedor</th>
+
+                                <!-- 🔥 NUEVAS -->
+                                <th>Zona</th>
+                                <th>Dirección</th>
+                                <th class="text-center" style="width:70px;">Turno</th>
+                                <th style="width:110px;">Franja</th>
+
+                                <!-- EXISTENTES -->
+                                <th>Vencimiento</th>
+                                <th>Total cuota</th>
+                                <th>Pagado</th>
+                                <th>Restante</th>
+                                <th>Estado</th>
+                                <th class="text-center" style="width:160px;">Acciones</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
 
             </div>
         </section>
@@ -208,5 +276,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=1.4"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=1.5"></script>
 }

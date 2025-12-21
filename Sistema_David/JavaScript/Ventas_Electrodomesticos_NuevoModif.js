@@ -1404,6 +1404,12 @@
         if (!cliente)
             return showToast("Elegí un cliente.", "danger");
 
+        if (!$('#turno').val())
+            return showToast("Seleccioná un turno.", "warn");
+
+        if (!$('#franja').val())
+            return showToast("Seleccioná una franja horaria.", "warn");
+
 
         if (!productos.length)
             return showToast("Agregá al menos un producto.", "danger");
@@ -1424,6 +1430,8 @@
             Entrega: entrega,
             Restante: total - entrega,
             Observacion: $('#observacion').val(),
+            Turno: $('#turno').val(),
+            FranjaHoraria: $('#franja').val(),
 
             FormaCuotas: $('#forma').val(),
             CantidadCuotas: parseInt($('#cantCuotas').val() || 0),
@@ -1482,6 +1490,13 @@
         if (!productos.length)
             return showTip($('#btnAbrirProducto')[0], "No se encontraron productos en la venta.", "danger");
 
+        if (!$('#turno').val())
+            return showToast("Seleccioná un turno.", "warn");
+
+        if (!$('#franja').val())
+            return showToast("Seleccioná una franja horaria.", "warn");
+
+
         let total = productos.reduce((a, b) => a + b.total, 0);
         let entrega = parseMoney($('#entrega').val());
 
@@ -1494,6 +1509,8 @@
             Entrega: entrega,
             Restante: total - entrega,
             Observacion: $('#observacion').val(),
+            Turno: $('#turno').val(),
+            FranjaHoraria: $('#franja').val(),
             UsuarioOperador: userSession.Id
             // NO mandamos Items/Cuotas para no romper lo existente
         };
