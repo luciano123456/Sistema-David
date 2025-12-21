@@ -33,6 +33,7 @@ namespace Sistema_David.Models.DB
         public Nullable<int> IdCuentaBancaria { get; set; }
         public string TipoInteres { get; set; }
         public Nullable<int> ActualizoUbicacion { get; set; }
+        public Nullable<System.DateTime> FechaVencimiento { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Pagos_Detalle> Ventas_Electrodomesticos_Pagos_Detalle { get; set; }

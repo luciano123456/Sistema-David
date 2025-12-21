@@ -85,7 +85,7 @@ namespace Sistema_David.Models
                                     / cuotas.Sum(c => (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos)))
                                 * 100,
 
-                       
+
 
                         CuotasVencidas = cuotas.Count(c =>
                             c.Estado != "Pagada" && c.FechaVencimiento.Date < hoy),
@@ -282,7 +282,9 @@ namespace Sistema_David.Models
                         Restante = R2(restante),
                         Observacion = m.Observacion,
                         UsuarioCreacion = m.UsuarioOperador,
-                        FechaCreacion = DateTime.Now
+                        FechaCreacion = DateTime.Now,
+                        FranjaHoraria = m.FranjaHoraria,
+                        Turno = m.Turno
                     };
 
                     db.Ventas_Electrodomesticos.Add(venta);
@@ -320,7 +322,9 @@ namespace Sistema_David.Models
                             MontoRestante = total,
                             Estado = "Pendiente",
                             UsuarioCreacion = m.UsuarioOperador,
-                            FechaCreacion = DateTime.Now
+                            FechaCreacion = DateTime.Now,
+                            CobroPendiente = 0,
+                            FechaCobro = c.FechaVencimiento,
                         });
                     }
 
@@ -421,6 +425,10 @@ namespace Sistema_David.Models
                     FechaVencimiento = v.FechaVencimiento,
                     Estado = v.Estado,
                     Observacion = v.Observacion,
+
+                    FranjaHoraria = v.FranjaHoraria,
+                    Turno = v.Turno,
+
 
                     Entrega = (decimal)v.Entrega,
                     Restante = (decimal)v.Restante
@@ -926,6 +934,8 @@ namespace Sistema_David.Models
                     venta.FechaVenta = m.FechaVenta;
                     venta.Observacion = m.Observacion;
                     venta.IdVendedor = m.IdVendedor;
+                    venta.FranjaHoraria = m.FranjaHoraria;
+                    venta.Turno = m.Turno;
 
                     venta.UsuarioModificacion = m.UsuarioOperador;
                     venta.FechaModificacion = DateTime.Now;
@@ -943,75 +953,91 @@ namespace Sistema_David.Models
             }
         }
 
+
         /* ===========================================================
-         * LISTAR CUOTAS A COBRAR
-         * =========================================================== */
+ * LISTAR COBROS PENDIENTES
+ * (MISMAS COLUMNAS QUE COBROS, SIN FILTROS)
+ * =========================================================== */
         public static List<VM_Ventas_Electrodomesticos_CuotaCobroRow>
-            ListarCuotasACobrar(VM_Ventas_Electrodomesticos_FiltroCobros f)
+        ListarCobrosPendientes(VM_Ventas_Electrodomesticos_FiltroCobros f)
         {
             using (var db = new Sistema_DavidEntities())
             {
-                var q = db.Ventas_Electrodomesticos_Cuotas
-                    .Include(c => c.Ventas_Electrodomesticos)
-                    .AsQueryable();
+                var q =
+                    from c in db.Ventas_Electrodomesticos_Cuotas
+                    join v in db.Ventas_Electrodomesticos
+                        on c.IdVenta equals v.Id
+                    join cli in db.Clientes
+                        on v.IdCliente equals cli.Id
+                    join z in db.Zonas
+                        on cli.IdZona equals z.Id into zonasJoin
+                    from z in zonasJoin.DefaultIfEmpty()
+                    join u in db.Usuarios
+                        on v.IdVendedor equals u.Id into vendedoresJoin
+                    from u in vendedoresJoin.DefaultIfEmpty()
+                    where c.CobroPendiente == 1
+                    select new
+                    {
+                        Cuota = c,
+                        Venta = v,
+                        Cliente = cli,
+                        Zona = z,
+                        Vendedor = u
+                    };
 
-                var desde = f.FechaDesde?.Date;
-                var hasta = f.FechaHasta?.Date;
-
-                if (desde.HasValue)
-                    q = q.Where(c =>
-                        DbFunctions.TruncateTime(c.FechaVencimiento) >= desde.Value);
-
-                if (hasta.HasValue)
-                    q = q.Where(c =>
-                        DbFunctions.TruncateTime(c.FechaVencimiento) <= hasta.Value);
-
+                // 👉 filtros MINIMOS que ya usabas
                 if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
-                    q = q.Where(c => c.Ventas_Electrodomesticos.IdCliente == f.IdCliente.Value);
+                    q = q.Where(x => x.Venta.IdCliente == f.IdCliente.Value);
 
                 if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
-                    q = q.Where(c => c.Ventas_Electrodomesticos.IdVendedor == f.IdVendedor.Value);
+                    q = q.Where(x => x.Venta.IdVendedor == f.IdVendedor.Value);
 
-                if (!string.IsNullOrEmpty(f.EstadoCuota))
-                {
-                    if (f.EstadoCuota == "Vencida")
+                var rows = q
+                    .ToList()
+                    .Select(x => new VM_Ventas_Electrodomesticos_CuotaCobroRow
                     {
-                        var hoy = DateTime.Today;
+                        IdCuota = x.Cuota.Id,
+                        IdVenta = x.Cuota.IdVenta,
+                        NumeroCuota = x.Cuota.NumeroCuota,
 
-                        q = q.Where(c =>
-                            c.Estado != "Pagada" &&
-                            DbFunctions.TruncateTime(c.FechaVencimiento) < hoy);
-                    }
-                    else
-                    {
-                        q = q.Where(c => c.Estado == f.EstadoCuota);
-                    }
-                }
+                        FechaVencimiento = x.Cuota.FechaVencimiento,
+                        FechaCobro = (DateTime)x.Cuota.FechaCobro,
 
-                var rows = q.ToList()
-                    .Select(c => new VM_Ventas_Electrodomesticos_CuotaCobroRow
-                    {
-                        IdCuota = c.Id,
-                        IdVenta = c.IdVenta,
-                        NumeroCuota = c.NumeroCuota,
-                        FechaVencimiento = c.FechaVencimiento,
-                        TotalCuota = R2(c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos),
-                        MontoPagado = R2(c.MontoPagado),
-                        MontoRestante = R2(
-                            (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado
+                        TotalCuota = R2(
+                            x.Cuota.MontoOriginal +
+                            x.Cuota.MontoRecargos -
+                            x.Cuota.MontoDescuentos
                         ),
-                        Estado = c.Estado,
 
-                        IdCliente = c.Ventas_Electrodomesticos.IdCliente,
-                        ClienteNombre =
-                            (c.Ventas_Electrodomesticos.Clientes.Nombre + " " +
-                             c.Ventas_Electrodomesticos.Clientes.Apellido).Trim(),
+                        MontoPagado = R2(x.Cuota.MontoPagado),
 
-                        IdVendedor = c.Ventas_Electrodomesticos.IdVendedor,
-                        VendedorNombre =
-                            c.Ventas_Electrodomesticos.Usuarios != null
-                                ? c.Ventas_Electrodomesticos.Usuarios.Nombre
-                                : null
+                        MontoRestante = R2(
+                            (x.Cuota.MontoOriginal +
+                             x.Cuota.MontoRecargos -
+                             x.Cuota.MontoDescuentos) -
+                            x.Cuota.MontoPagado
+                        ),
+
+                        Estado = x.Cuota.Estado,
+
+                        // ===== CLIENTE =====
+                        IdCliente = x.Venta.IdCliente,
+                        ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido).Trim(),
+                        ClienteDireccion = x.Cliente.Direccion,
+                        ClienteLatitud = x.Cliente.Latitud,
+                        ClienteLongitud = x.Cliente.Longitud,
+
+                        // ===== ZONA =====
+                        IdZona = x.Cliente.IdZona,
+                        ZonaNombre = x.Zona != null ? x.Zona.Nombre : null,
+
+                        // ===== VENDEDOR =====
+                        IdVendedor = x.Venta.IdVendedor,
+                        VendedorNombre = x.Vendedor != null ? x.Vendedor.Nombre : null,
+
+                        // ===== TURNO / FRANJA =====
+                        Turno = x.Venta.Turno,
+                        FranjaHoraria = x.Venta.FranjaHoraria
                     })
                     .OrderBy(r => r.FechaVencimiento)
                     .ThenBy(r => r.NumeroCuota)
@@ -1020,5 +1046,254 @@ namespace Sistema_David.Models
                 return rows;
             }
         }
+
+
+
+
+
+
+        public static string MarcarCobroPendienteResuelto(int idCuota, int usuario)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var cuota = db.Ventas_Electrodomesticos_Cuotas
+                        .FirstOrDefault(c => c.Id == idCuota);
+
+                    if (cuota == null)
+                        return "Cuota no encontrada";
+
+                    cuota.CobroPendiente = 0;
+                    cuota.UsuarioModificacion = usuario;
+                    cuota.FechaModificacion = DateTime.Now;
+
+                    Audit(
+                        db,
+                        cuota.IdVenta,
+                        cuota.Id,
+                        usuario,
+                        "CobroPendiente",
+                        "1",
+                        "0",
+                        "Cobro pendiente resuelto"
+                    );
+
+                    db.SaveChanges();
+                    tx.Commit();
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error: " + ex.Message;
+                }
+            }
+        }
+
+
+
+        /* ===========================================================
+         * LISTAR CUOTAS A COBRAR
+         * =========================================================== */
+        public static List<VM_Ventas_Electrodomesticos_CuotaCobroRow>
+        ListarCuotasACobrar(VM_Ventas_Electrodomesticos_FiltroCobros f)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var q =
+                    from c in db.Ventas_Electrodomesticos_Cuotas
+                    join v in db.Ventas_Electrodomesticos
+                        on c.IdVenta equals v.Id
+                    join cli in db.Clientes
+                        on v.IdCliente equals cli.Id
+                    join z in db.Zonas
+                        on cli.IdZona equals z.Id into zonasJoin
+                    from z in zonasJoin.DefaultIfEmpty()
+                    join u in db.Usuarios
+                        on v.IdVendedor equals u.Id into vendedoresJoin
+                    from u in vendedoresJoin.DefaultIfEmpty()
+                    where c.CobroPendiente <= 0
+                    select new
+                    {
+                        Cuota = c,
+                        Venta = v,
+                        Cliente = cli,
+                        Zona = z,
+                        Vendedor = u
+                    };
+
+                var desde = f.FechaDesde?.Date;
+                var hasta = f.FechaHasta?.Date;
+
+                /* =========================
+                   FILTRO POR FECHA DE COBRO
+                ========================= */
+                if (desde.HasValue)
+                    q = q.Where(x =>
+                        DbFunctions.TruncateTime(x.Cuota.FechaCobro) >= desde.Value);
+
+                if (hasta.HasValue)
+                    q = q.Where(x =>
+                        DbFunctions.TruncateTime(x.Cuota.FechaCobro) <= hasta.Value);
+
+                if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
+                    q = q.Where(x =>
+                        x.Venta.IdCliente == f.IdCliente.Value);
+
+                if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
+                    q = q.Where(x =>
+                        x.Venta.IdVendedor == f.IdVendedor.Value);
+
+                /* =========================
+                   FILTROS NUEVOS
+                ========================= */
+                if (f.IdZona.HasValue && f.IdZona.Value > 0)
+                    q = q.Where(x =>
+                        x.Cliente.IdZona == f.IdZona.Value);
+
+                if (!string.IsNullOrWhiteSpace(f.Turno))
+                    q = q.Where(x =>
+                        x.Venta.Turno == f.Turno);
+
+                if (!string.IsNullOrWhiteSpace(f.FranjaHoraria))
+                    q = q.Where(x =>
+                        x.Venta.FranjaHoraria == f.FranjaHoraria);
+
+                /* =========================
+                   ESTADO CUOTA
+                ========================= */
+                if (!string.IsNullOrEmpty(f.EstadoCuota))
+                {
+                    if (f.EstadoCuota == "Vencida")
+                    {
+                        var hoy = DateTime.Today;
+
+                        q = q.Where(x =>
+                            x.Cuota.Estado != "Pagada" &&
+                            DbFunctions.TruncateTime(x.Cuota.FechaCobro) < hoy);
+                    }
+                    else
+                    {
+                        q = q.Where(x => x.Cuota.Estado == f.EstadoCuota);
+                    }
+                }
+
+                var rows = q
+                    .ToList()
+                    .Select(x => new VM_Ventas_Electrodomesticos_CuotaCobroRow
+                    {
+                        IdCuota = x.Cuota.Id,
+                        IdVenta = x.Cuota.IdVenta,
+                        NumeroCuota = x.Cuota.NumeroCuota,
+
+                        FechaVencimiento = x.Cuota.FechaVencimiento,
+                        FechaCobro = (DateTime)x.Cuota.FechaCobro,
+
+                        TotalCuota = R2(
+                            x.Cuota.MontoOriginal +
+                            x.Cuota.MontoRecargos -
+                            x.Cuota.MontoDescuentos
+                        ),
+
+                        MontoPagado = R2(x.Cuota.MontoPagado),
+
+                        MontoRestante = R2(
+                            (x.Cuota.MontoOriginal +
+                             x.Cuota.MontoRecargos -
+                             x.Cuota.MontoDescuentos) -
+                            x.Cuota.MontoPagado
+                        ),
+
+                        Estado = x.Cuota.Estado,
+
+                        IdCliente = x.Venta.IdCliente,
+                        ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido).Trim(),
+
+                        IdVendedor = x.Venta.IdVendedor,
+                        VendedorNombre = x.Vendedor != null ? x.Vendedor.Nombre : null,
+
+                        // 🔥 ZONA / DIRECCIÓN / MAPA
+                        IdZona = x.Cliente.IdZona,
+                        ZonaNombre = x.Zona != null ? x.Zona.Nombre : null,
+
+                        ClienteDireccion = x.Cliente.Direccion,
+                        ClienteLatitud = x.Cliente.Latitud,
+                        ClienteLongitud = x.Cliente.Longitud,
+
+                        // 🔥 TURNO / FRANJA
+                        Turno = x.Venta.Turno,
+                        FranjaHoraria = x.Venta.FranjaHoraria
+                    })
+                    .OrderBy(r => r.FechaVencimiento)
+                    .ThenBy(r => r.NumeroCuota)
+                    .ToList();
+
+                return rows;
+            }
+        }
+
+
+
+        public static string ReprogramarCobroCuota(int idCuota, DateTime nuevaFecha, int usuario, string observacion)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var cuota = db.Ventas_Electrodomesticos_Cuotas
+                        .Include(c => c.Ventas_Electrodomesticos)
+                        .FirstOrDefault(c => c.Id == idCuota);
+
+                    if (cuota == null)
+                        return "Cuota no encontrada";
+
+                    var fechaAnterior = cuota.FechaCobro;
+
+                    cuota.FechaCobro = nuevaFecha.Date;
+                    cuota.CobroPendiente = 1;
+                    cuota.UsuarioModificacion = usuario;
+                    cuota.FechaModificacion = DateTime.Now;
+
+                    Audit(
+                         db,
+                         cuota.IdVenta,
+                         cuota.Id,
+                         usuario,
+                         "ReprogramarCobro",
+                         fechaAnterior?.ToString("dd/MM/yyyy") ?? "(sin fecha)",
+                         nuevaFecha.ToString("dd/MM/yyyy"),
+                         string.IsNullOrWhiteSpace(observacion)
+                             ? "Cobro pendiente"
+                             : observacion
+                     );
+
+                    db.SaveChanges();
+                    tx.Commit();
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error al reprogramar cobro: " + ex.Message;
+                }
+            }
+        }
+
+        private static string NormalizarTurno(string turno)
+        {
+            if (string.IsNullOrWhiteSpace(turno)) return null;
+
+            turno = turno.Trim().ToLower();
+            if (turno.StartsWith("m")) return "M";
+            if (turno.StartsWith("t")) return "T";
+
+            return turno.ToUpper();
+        }
+
+
+
     }
 }

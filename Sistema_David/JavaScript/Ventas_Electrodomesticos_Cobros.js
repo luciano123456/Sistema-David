@@ -13,6 +13,35 @@ let ventaAcordeonAbierta = null;
    HELPERS
 =========================================================== */
 
+VC.turnoMT = function (t) {
+    if (!t) return "";
+    const x = String(t).toLowerCase();
+    if (x.startsWith("m")) return "M";
+    if (x.startsWith("t")) return "T";
+    return t;
+};
+
+VC.renderDireccion = function (_, __, row) {
+    const dir = row.ClienteDireccion || "—";
+    const lat = row.ClienteLatitud;
+    const lng = row.ClienteLongitud;
+
+    if (!lat || !lng) return `<span>${dir}</span>`;
+
+    const url = `https://www.google.com/maps?q=${lat},${lng}`;
+
+    return `
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <span class="text-truncate" style="max-width:220px">${dir}</span>
+            <a class="btn btn-sm btn-outline-light"
+               href="${url}" target="_blank" title="Ver en mapa">
+                <i class="fa fa-map-marker"></i>
+            </a>
+        </div>
+    `;
+};
+
+
 VC.fmt = n => {
     try {
         const v = Number(n || 0);
@@ -147,6 +176,23 @@ VC.cargarCombos = async function () {
         console.error("Error cargando cobradores", e);
     }
 
+    /* =========================
+   ZONAS
+========================= */
+    try {
+        const resp = await $.getJSON("/Clientes/ListarZonas"); // endpoint real
+        const ddl = $("#f_zona").empty();
+        ddl.append(`<option value="">Todas</option>`);
+        (resp.data || []).forEach(z => {
+            ddl.append(`<option value="${z.Id}">${z.Nombre}</option>`);
+        });
+    } catch (e) {
+        console.error("Error cargando zonas", e);
+    }
+
+    $("#f_zona").select2({ width: "100%", allowClear: true, placeholder: "Todas" });
+
+
     $("#f_cliente").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
     $("#f_vendedor").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
 };
@@ -179,27 +225,47 @@ VC.cargarTabla = async function () {
 
     const paramsBase = {
         idCliente: $("#f_cliente").val() || null,
-        idVendedor: $("#f_vendedor").val() || null
+        idVendedor: $("#f_vendedor").val() || null,
+
+        // 🔥 NUEVOS
+        idZona: $("#f_zona").val() || null,
+        turno: $("#f_turno").val() || null,
+        franjaHoraria: $("#f_franja").val() || null
     };
+
 
     try {
         // 1) Lo que pidió el usuario (con fechas y estado si aplica)
-        respFiltrado = await $.getJSON("/Ventas_Electrodomesticos/ListarCuotasACobrar", {
+        respFiltrado = await $.getJSON(
+            "/Ventas_Electrodomesticos/ListarCuotasACobrar",
+            {
+                fechaDesde: $("#f_desde").val() || null,
+                fechaHasta: $("#f_hasta").val() || null,
+                idCliente: paramsBase.idCliente,
+                idVendedor: paramsBase.idVendedor,
+                estado: $("#f_estado").val() || null,
+
+                // 🔥 NUEVOS
+                idZona: paramsBase.idZona,
+                turno: paramsBase.turno,
+                franjaHoraria: paramsBase.franjaHoraria
+            }
+        );
+
+
+        // 2) VENCIDAS SI O SI (sin filtro de fecha) -> esto es lo que me pediste
+        respVencidas = await $.getJSON("/Ventas_Electrodomesticos/ListarCuotasACobrar", {
             fechaDesde: $("#f_desde").val() || null,
             fechaHasta: $("#f_hasta").val() || null,
             idCliente: paramsBase.idCliente,
             idVendedor: paramsBase.idVendedor,
-            estado: $("#f_estado").val() || null
-        });
-
-        // 2) VENCIDAS SI O SI (sin filtro de fecha) -> esto es lo que me pediste
-        respVencidas = await $.getJSON("/Ventas_Electrodomesticos/ListarCuotasACobrar", {
-            fechaDesde: null,
-            fechaHasta: null,
-            idCliente: paramsBase.idCliente,
-            idVendedor: paramsBase.idVendedor,
+            idZona: paramsBase.idZona,
+            turno: paramsBase.turno,
+            franjaHoraria: paramsBase.franjaHoraria,
             estado: "Vencida"
         });
+
+        await VC.cargarCobrosPendientes();
 
     } catch (e) {
         console.error(e);
@@ -265,7 +331,7 @@ VC.cargarTabla = async function () {
 
         // Orden “natural”: primero vencimiento (más viejo primero). Si querés “atrasadas arriba” sin agregar columna,
         // se puede, pero ahí sí hay que meter columna oculta o plugin de orden.
-        order: [[4, "asc"], [1, "asc"]],
+        order: [[7, "asc"], [1, "asc"]],
 
         columns: [
 
@@ -280,8 +346,49 @@ VC.cargarTabla = async function () {
             },
 
             { data: "NumeroCuota" },
+
+            {
+                data: "FechaCobro",
+                render: d => {
+                    if (!d) return "";
+
+                    const dias = calcularDiasAtraso(d);
+                    const fecha = moment(d).format("DD/MM/YYYY");
+
+                    if (dias <= 0) {
+                        return `<span>${fecha}</span>`;
+                    }
+
+                    return `
+            <div class="text-danger fw-bold">
+                ${fecha}
+                <div class="small opacity-75">
+                    ${dias} día${dias > 1 ? "s" : ""} de atraso
+                </div>
+            </div>`;
+                }
+            },
+
             { data: "ClienteNombre" },
             { data: "VendedorNombre" },
+
+            { data: "ZonaNombre", title: "Zona" },
+
+            {
+                data: null,
+                title: "Dirección",
+                orderable: false,
+                render: VC.renderDireccion
+            },
+
+            {
+                data: "Turno",
+                title: "Turno",
+                className: "text-center",
+                render: d => VC.turnoMT(d)
+            },
+
+            { data: "FranjaHoraria", title: "Franja" },
 
             {
                 data: "FechaVencimiento",
@@ -877,4 +984,211 @@ $(document).on("click", ".js-fin-toggle", function (e) {
         panel.slideDown(180);
         btn.removeClass("collapsed").attr("aria-expanded", "true");
     }
+});
+
+
+VC.cargarCobrosPendientes = async function () {
+
+    const resp = await $.getJSON(
+        "/Ventas_Electrodomesticos/ListarCobrosPendientes",
+        {
+            idCliente: $("#f_cliente").val() || null,
+            idVendedor: $("#f_vendedor").val() || null
+        }
+    );
+
+    $("#vc_tabla_pendientes").DataTable({
+        destroy: true,
+        data: resp.data || [],
+        paging: false,
+        searching: false,
+        info: false,
+
+        columns: [
+
+            /* Columna 0 - Acordeón */
+            {
+                data: null, className: "details-control text-center", orderable: false,
+                width: "40px",
+                render: () => `
+                    <button class="btn btn-link p-0 text-accent btn-row-detail" title="Ver detalle venta">
+                        <i class="fa fa-chevron-down"></i>
+                    </button>`
+            },
+
+            { data: "NumeroCuota" },
+
+            {
+                data: "FechaCobro",
+                render: d => {
+                    if (!d) return "";
+
+                    const dias = calcularDiasAtraso(d);
+                    const fecha = moment(d).format("DD/MM/YYYY");
+
+                    if (dias <= 0) {
+                        return `<span>${fecha}</span>`;
+                    }
+
+                    return `
+            <div class="text-danger fw-bold">
+                ${fecha}
+                <div class="small opacity-75">
+                    ${dias} día${dias > 1 ? "s" : ""} de atraso
+                </div>
+            </div>`;
+                }
+            },
+
+            { data: "ClienteNombre" },
+            { data: "VendedorNombre" },
+
+            { data: "ZonaNombre", title: "Zona" },
+
+            {
+                data: null,
+                title: "Dirección",
+                orderable: false,
+                render: VC.renderDireccion
+            },
+
+            {
+                data: "Turno",
+                title: "Turno",
+                className: "text-center",
+                render: d => VC.turnoMT(d)
+            },
+
+            { data: "FranjaHoraria", title: "Franja" },
+
+            {
+                data: "FechaVencimiento",
+                render: d => {
+                    if (!d) return "";
+
+                    const dias = calcularDiasAtraso(d);
+                    const fecha = moment(d).format("DD/MM/YYYY");
+
+                    if (dias <= 0) {
+                        return `<span>${fecha}</span>`;
+                    }
+
+                    return `
+            <div class="text-danger fw-bold">
+                ${fecha}
+                <div class="small opacity-75">
+                    ${dias} día${dias > 1 ? "s" : ""} de atraso
+                </div>
+            </div>`;
+                }
+            },
+
+
+            { data: "TotalCuota", render: VC.fmt },
+            { data: "MontoPagado", render: VC.fmt },
+            { data: "MontoRestante", render: VC.fmt },
+
+            {
+                data: "Estado",
+                render: (st, _, row) => {
+
+                    const dias = calcularDiasAtraso(row.FechaVencimiento);
+
+                    if (dias > 0) {
+                        let cls = "bg-warning text-dark";
+
+                        if (dias >= 15) cls = "bg-danger";
+                        else if (dias >= 10) cls = "bg-orange";
+
+                        return `
+                <span class="badge ${cls}">
+                    Vencida · ${dias} día${dias > 1 ? "s" : ""}
+                </span>`;
+                    }
+
+                    return `
+            <span class="badge bg-success">
+                Al día
+            </span>`;
+                }
+            },
+            {
+                data: null,
+                className: "text-center",
+                render: d => `
+<div class="btn-group">
+
+    <button class="btn btn-accion btn-cobrar me-1"
+        onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})"
+        title="Cobrar">
+        <i class="fa fa-money"></i>
+    </button>
+
+    <button class="btn btn-accion btn-ajuste me-1"
+        onclick="VC.abrirAjuste(${d.IdVenta}, ${d.IdCuota})"
+        title="Ajustar">
+        <i class="fa fa-bolt"></i>
+    </button>
+
+    <button class="btn btn-accion btn-historial me-1"
+        onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})"
+        title="Historial">
+        <i class="fa fa-eye"></i>
+    </button>
+
+    <!-- ✅ MARCAR COBRO REALIZADO -->
+    <button class="btn btn-accion btn-success"
+        onclick="VC.resolverCobroPendiente(${d.IdCuota})"
+        title="Aceptar cambio de fecha">
+        <i class="fa fa-check"></i>
+    </button>
+
+</div>
+`
+
+            }
+        ]
+    });
+};
+
+
+VC.resolverCobroPendiente = async function (idCuota) {
+
+    if (!confirm("¿Marcar este cobro pendiente como resuelto?")) return;
+
+    const resp = await $.post(
+        "/Ventas_Electrodomesticos/MarcarCobroPendienteResuelto",
+        { idCuota }
+    );
+
+    if (resp.success) {
+        VC.toast("Cobro pendiente resuelto", "success");
+        VC.cargarTabla();
+        VC.cargarCobrosPendientes();
+    } else {
+        VC.toast(resp.message || "Error", "danger");
+    }
+};
+
+
+function rangeHours(a, b) {
+    const out = [];
+    for (let i = a; i < b; i++) {
+        out.push(
+            `${String(i).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
+        );
+    }
+    return out;
+}
+
+$(document).on("change", "#f_turno", function () {
+    const t = $("#f_turno").val();
+    const franjas =
+        t === "mañana" ? rangeHours(8, 15)
+            : t === "tarde" ? rangeHours(15, 21)
+                : [];
+
+    const ddl = $("#f_franja").empty();
+    ddl.append(`<option value="">Todas</option>`);
+    franjas.forEach(h => ddl.append(`<option value="${h}">${h}</option>`));
 });

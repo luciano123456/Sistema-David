@@ -191,6 +191,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="Orden" Type="int" />
           <Property Name="IdVenta" Type="int" />
           <Property Name="IdCliente" Type="int" />
+          <Property Name="Tipo" Type="varchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="Roles">
           <Key>
@@ -413,6 +414,8 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="FechaCreacion" Type="datetime" Nullable="false" />
           <Property Name="UsuarioModificacion" Type="int" />
           <Property Name="FechaModificacion" Type="datetime" />
+          <Property Name="FechaCobro" Type="datetime" />
+          <Property Name="CobroPendiente" Type="int" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Cuotas_Recargos">
           <Key>
@@ -471,6 +474,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="IdCuentaBancaria" Type="int" />
           <Property Name="TipoInteres" Type="varchar" MaxLength="255" />
           <Property Name="ActualizoUbicacion" Type="int" />
+          <Property Name="FechaVencimiento" Type="datetime" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Pagos_Detalle">
           <Key>
@@ -1689,6 +1693,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <NavigationProperty Name="Recorridos" Relationship="Sistema_DavidModel.FK_RecorridosCobranzas_Recorridos" FromRole="RecorridosCobranzas" ToRole="Recorridos" />
           <NavigationProperty Name="Ventas" Relationship="Sistema_DavidModel.FK_RecorridosCobranzas_Ventas" FromRole="RecorridosCobranzas" ToRole="Ventas" />
           <NavigationProperty Name="Clientes" Relationship="Sistema_DavidModel.FK_RecorridosCobranzas_Clientes" FromRole="RecorridosCobranzas" ToRole="Clientes" />
+          <Property Name="Tipo" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="Recorridos">
           <Key>
@@ -2153,6 +2158,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="TipoInteres" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
           <Property Name="ActualizoUbicacion" Type="Int32" />
           <NavigationProperty Name="CuentasBancarias" Relationship="Sistema_DavidModel.FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias" FromRole="Ventas_Electrodomesticos_Pagos" ToRole="CuentasBancarias" />
+          <Property Name="FechaVencimiento" Type="DateTime" Precision="3" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Pagos_Detalle">
           <Key>
@@ -2559,6 +2565,8 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <NavigationProperty Name="Ventas_Electrodomesticos_Historial" Relationship="Sistema_DavidModel.FK_VEH_VEC" FromRole="Ventas_Electrodomesticos_Cuotas" ToRole="Ventas_Electrodomesticos_Historial" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Pagos_Detalle" Relationship="Sistema_DavidModel.FK_VEPD_Cuota" FromRole="Ventas_Electrodomesticos_Cuotas" ToRole="Ventas_Electrodomesticos_Pagos_Detalle" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Cuotas_Recargos" Relationship="Sistema_DavidModel.FK_Recargo_Cuota" FromRole="Ventas_Electrodomesticos_Cuotas" ToRole="Ventas_Electrodomesticos_Cuotas_Recargos" />
+          <Property Name="FechaCobro" Type="DateTime" Precision="3" />
+          <Property Name="CobroPendiente" Type="Int32" />
         </EntityType>
         <Association Name="FK_VEC_UsrCrea">
           <End Type="Sistema_DavidModel.Usuarios" Role="Usuarios" Multiplicity="1" />
@@ -2760,6 +2768,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <EntitySetMapping Name="RecorridosCobranzas">
             <EntityTypeMapping TypeName="Sistema_DavidModel.RecorridosCobranzas">
               <MappingFragment StoreEntitySet="RecorridosCobranzas">
+                <ScalarProperty Name="Tipo" ColumnName="Tipo" />
                 <ScalarProperty Name="IdCliente" ColumnName="IdCliente" />
                 <ScalarProperty Name="IdVenta" ColumnName="IdVenta" />
                 <ScalarProperty Name="Orden" ColumnName="Orden" />
@@ -3038,6 +3047,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <EntitySetMapping Name="Ventas_Electrodomesticos_Pagos">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas_Electrodomesticos_Pagos">
               <MappingFragment StoreEntitySet="Ventas_Electrodomesticos_Pagos">
+                <ScalarProperty Name="FechaVencimiento" ColumnName="FechaVencimiento" />
                 <ScalarProperty Name="ActualizoUbicacion" ColumnName="ActualizoUbicacion" />
                 <ScalarProperty Name="TipoInteres" ColumnName="TipoInteres" />
                 <ScalarProperty Name="IdCuentaBancaria" ColumnName="IdCuentaBancaria" />
@@ -3149,6 +3159,8 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <EntitySetMapping Name="Ventas_Electrodomesticos_Cuotas">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas">
               <MappingFragment StoreEntitySet="Ventas_Electrodomesticos_Cuotas">
+                <ScalarProperty Name="CobroPendiente" ColumnName="CobroPendiente" />
+                <ScalarProperty Name="FechaCobro" ColumnName="FechaCobro" />
                 <ScalarProperty Name="FechaModificacion" ColumnName="FechaModificacion" />
                 <ScalarProperty Name="UsuarioModificacion" ColumnName="UsuarioModificacion" />
                 <ScalarProperty Name="FechaCreacion" ColumnName="FechaCreacion" />

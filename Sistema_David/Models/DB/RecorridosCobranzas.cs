@@ -20,6 +20,7 @@ namespace Sistema_David.Models.DB
         public Nullable<int> Orden { get; set; }
         public Nullable<int> IdVenta { get; set; }
         public Nullable<int> IdCliente { get; set; }
+        public string Tipo { get; set; }
     
         public virtual Recorridos Recorridos { get; set; }
         public virtual Ventas Ventas { get; set; }
