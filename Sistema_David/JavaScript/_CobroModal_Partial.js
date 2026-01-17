@@ -55,44 +55,91 @@ function safeToggleClass(el, className, enabled) {
 /* ===================== PROGRESS ===================== */
 function clearProgress() {
     const cont = qs("progressBarContainerCobro");
-    if (cont) cont.hidden = true;
+    const bar = qs("progressBarCobro");
+    const pct = qs("progressPercentageCobro");
 
-    if (qs("progressBarCobro")) qs("progressBarCobro").style.width = "0%";
-    if (qs("progressPercentageCobro")) qs("progressPercentageCobro").innerText = "";
+    if (bar) {
+        bar.style.width = "0%";
+        bar.className = "progress-bar";
+    }
 
-    if (qs("total-labelCobro")) qs("total-labelCobro").innerText = "Total: $0";
-    if (qs("cobrosPendientesCobro")) qs("cobrosPendientesCobro").innerText = "Pendientes: $0";
-    if (qs("entregas-labelCobro")) qs("entregas-labelCobro").innerText = "Entregas: $0";
-    if (qs("restante-labelCobro")) qs("restante-labelCobro").innerText = "Restante: $0";
+    pct && (pct.innerText = "");
+
+    qs("total-labelCobro") && (qs("total-labelCobro").innerText = "Total: $0");
+    qs("entregas-labelCobro") && (qs("entregas-labelCobro").innerText = "Entregas: $0");
+    qs("restante-labelCobro") && (qs("restante-labelCobro").innerText = "Restante: $0");
+    qs("cobrosPendientesCobro") && (qs("cobrosPendientesCobro").innerText = "Pendientes: $0");
+
+    cont && (cont.hidden = true);
 }
 
 function renderProgress(accountData) {
+
     const cont = qs("progressBarContainerCobro");
     const bar = qs("progressBarCobro");
     const pct = qs("progressPercentageCobro");
 
     if (!cont || !bar) return;
 
-    const total = Number(accountData?.MontoPagar || 0);
-    const entregas = Number(accountData?.Entrega || 0);
+    /* ===============================
+       1️⃣ SIN CUENTA → OCULTAR TODO
+    =============================== */
+    if (!accountData) {
+        clearProgress();
+        cont.hidden = true;
+        return;
+    }
+
+    const total = Number(accountData.MontoPagar || 0);
+    const entregas = Number(accountData.Entrega || 0);
     const restante = Math.max(total - entregas, 0);
 
+    /* ===============================
+       2️⃣ SIN TOTAL → OCULTAR
+    =============================== */
     if (total <= 0) {
         clearProgress();
+        cont.hidden = true;
         return;
     }
 
     cont.hidden = false;
 
-    const porcentaje = Math.min((entregas / total) * 100, 100);
-    bar.style.width = `${porcentaje}%`;
+    /* ===============================
+       3️⃣ LABELS (igual sistema viejo)
+    =============================== */
+    qs("total-labelCobro") && (qs("total-labelCobro").innerText = `Total: ${money(total)}`);
+    qs("entregas-labelCobro") && (qs("entregas-labelCobro").innerText = `Entregas: ${money(entregas)}`);
+    qs("restante-labelCobro") && (qs("restante-labelCobro").innerText = `Restante: ${money(restante)}`);
+    qs("cobrosPendientesCobro") && (qs("cobrosPendientesCobro").innerText = `Pendientes: ${money(restante)}`);
 
-    if (qs("total-labelCobro")) qs("total-labelCobro").innerText = `Total: ${money(total)}`;
-    if (qs("entregas-labelCobro")) qs("entregas-labelCobro").innerText = `Entregas: ${money(entregas)}`;
-    if (qs("restante-labelCobro")) qs("restante-labelCobro").innerText = `Restante: ${money(restante)}`;
-    if (qs("cobrosPendientesCobro")) qs("cobrosPendientesCobro").innerText = `Pendientes: ${money(restante)}`;
+    /* ===============================
+       4️⃣ PROGRESO
+    =============================== */
+    const porcentaje = Math.min(Math.round((entregas / total) * 100), 100);
 
-    if (pct) pct.innerText = porcentaje >= 100 ? "✔ Completado" : `${Math.round(porcentaje)}%`;
+    bar.style.width = porcentaje + "%";
+
+    if (pct) {
+        pct.innerText = porcentaje >= 100
+            ? "✔ Completado"
+            : porcentaje + "%";
+    }
+
+    /* ===============================
+       5️⃣ COLORES (CSS viejo)
+    =============================== */
+    bar.classList.remove("low", "medium", "high", "full");
+
+    if (porcentaje >= 100) {
+        bar.classList.add("full");
+    } else if (porcentaje >= 70) {
+        bar.classList.add("high");
+    } else if (porcentaje >= 30) {
+        bar.classList.add("medium");
+    } else {
+        bar.classList.add("low");
+    }
 }
 
 /* ===================== COMPROBANTE (ACORDEÓN) ===================== */
@@ -379,7 +426,6 @@ async function aplicarRecargo() {
         return;
     }
 
-    // ✅ NUEVO: Observación
     const observacion = (qs("aj_obs")?.value || "").trim();
     const obsFinal = observacion.length ? observacion : null;
 
@@ -388,7 +434,7 @@ async function aplicarRecargo() {
             IdCuota: cuotaActual.Id,
             Tipo: tipoRecargo, // "Fijo" | "Porcentaje"
             Valor: valor,
-            Observacion: obsFinal, // ✅ acá va
+            Observacion: obsFinal,
             Fecha: null
         };
 
@@ -404,10 +450,32 @@ async function aplicarRecargo() {
             return;
         }
 
+        // 🔒 cerrar modal ajuste
         getModal("mdAjuste").hide();
+
+        // 🔄 refrescar datos en pantalla
         await recargarVentaYCuota();
+        actualizarGrillaCobros();
+
+        // ===================================================
+        // 📲 WHATSAPP (MISMO FLUJO QUE COBRO)
+        // ===================================================
+        if (userSession?.IdRol === 1 || userSession?.IdRol === 4) {
+
+            const enviar = await confirmarModal(
+                "Recargo aplicado correctamente. ¿Deseas notificar al cliente por WhatsApp?"
+            );
+
+            if (enviar) {
+                await preguntarWhatsappDespuesCobro(
+                    json.idRecargo,     // 🔥 ESTE ES EL MOVIMIENTO
+                    "Recargo"           // 🔥 CLAVE PARA EL MENSAJE
+                );
+            }
+        }
 
     } catch (e) {
+        console.error(e);
         setAjError("Error de conexión al aplicar recargo.");
     }
 }
@@ -571,7 +639,6 @@ function abrirHistorialCuota() {
 }
 
 
-/* ===================== CONFIRMAR COBRO ===================== */
 async function confirmarCobro() {
     setCbError(null);
 
@@ -584,9 +651,9 @@ async function confirmarCobro() {
     const fecha = qs("cb_fecha").value;
     const obs = qs("cb_obs").value || "";
 
-    // =============================
-    // 🔁 CAMBIO DE FECHA (IMPORTE = 0)
-    // =============================
+    /* =============================
+       🔁 CAMBIO DE FECHA
+    ============================= */
     if (importe === 0) {
 
         if (!fecha) {
@@ -613,17 +680,19 @@ async function confirmarCobro() {
                 return;
             }
 
-            location.reload();
+            getModal("mdCobro").hide();
+            actualizarGrillaCobros();
             return;
+
         } catch {
             setCbError("Error de conexión al cambiar la fecha.");
             return;
         }
     }
 
-    // =============================
-    // 💰 COBRO NORMAL
-    // =============================
+    /* =============================
+       💰 COBRO NORMAL (SIN CONFIRMAR)
+    ============================= */
     if (importe <= 0) {
         setCbError("Importe inválido.");
         return;
@@ -667,11 +736,35 @@ async function confirmarCobro() {
             return;
         }
 
-        location.reload();
+        /* =============================
+           ✅ COBRO OK
+        ============================= */
+        getModal("mdCobro").hide();
+        actualizarGrillaCobros();
+
+        /* =============================
+           📲 WHATSAPP (POST-COBRO, IGUAL COBRANZAS)
+        ============================= */
+        if (userSession?.IdRol === 1 || userSession?.IdRol === 4) {
+
+            const enviar = await confirmarModal(
+                "Cobranza realizada con éxito. ¿Deseas enviar el comprobante al cliente vía WhatsApp?"
+            );
+
+            if (enviar) {
+                await preguntarWhatsappDespuesCobro(
+                    json.idMovimiento || json.idPago,
+                    "Cobranza"
+                );
+
+            }
+        }
+
     } catch {
         setCbError("Error de conexión al registrar el pago.");
     }
 }
+
 
 /* ===================== EVENTS (SEGUROS) ===================== */
 document.addEventListener("DOMContentLoaded", () => {
@@ -1003,7 +1096,12 @@ function generarPdfVenta(venta) {
 
     const cuotasVenta = Array.isArray(venta.Cuotas) ? venta.Cuotas : [];
 
-    const totalPagado = cuotasVenta.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
+    const totalEntrega = venta.Entrega;
+
+    const totalCuotas = cuotasVenta.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
+
+    const totalPagado = totalEntrega + totalCuotas;
+
     const restante = Math.max(totalVenta - totalPagado, 0);
 
     doc.setFontSize(12);
@@ -1158,6 +1256,47 @@ function generarPdfVenta(venta) {
         }
     });
 
+    /* ================= MENSAJE FINAL + GARANTÍA ================= */
+
+    let yFinal = doc.lastAutoTable.finalY + 20;
+
+    // Separador
+    doc.setDrawColor(220);
+    doc.line(10, yFinal - 6, 200, yFinal - 6);
+
+    /* --- Atención al cliente (izquierda) --- */
+    doc.setFontSize(10);
+    doc.setFont(undefined, "bold");
+    doc.text("¿Alguna pregunta?", 10, yFinal);
+
+    doc.setFontSize(9);
+    doc.setFont(undefined, "normal");
+    doc.text("Envianos un WhatsApp al +54 9 3777 71-0884", 10, yFinal + 6);
+
+    /* --- Garantía (debajo, ancho cómodo) --- */
+    const garantiaX = 10;
+    const garantiaY = yFinal + 16;
+    const garantiaW = 130; // ancho del bloque para que no se vaya de largo
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, "bold");
+    doc.text("Garantía de productos", garantiaX, garantiaY);
+
+    doc.setFontSize(8.7);
+    doc.setFont(undefined, "normal");
+
+    const garantiaTexto =
+        "Todos los productos cuentan con garantía. La misma cubre únicamente fallas de fabricación.\n" +
+        "La garantía no cubre daños por mal uso, golpes, humedad, manipulación indebida o desgaste normal.";
+
+    doc.text(doc.splitTextToSize(garantiaTexto, garantiaW), garantiaX, garantiaY + 6);
+
+    /* --- Gracias (derecha) --- */
+    doc.setFontSize(22);
+    doc.setFont(undefined, "bold");
+    doc.text("¡Gracias!", 200, yFinal + 10, { align: "right" });
+
+
     /* ================= FOOTER ================= */
     const fileName = `Venta_${venta.IdVenta}_${moment().format("YYYYMMDD_HHmm")}.pdf`;
     doc.save(fileName);
@@ -1230,3 +1369,404 @@ function aplicarModoCobroUI() {
         setComprobanteOpen(false);
     }
 }
+
+
+async function preguntarWhatsappDespuesCobro(idMovimiento, descripcion) {
+
+    try {
+        const base = await MakeAjax({
+            type: "POST",
+            url: "/Ventas_Electrodomesticos/EnvWhatssapElectro",
+            async: true,
+            data: JSON.stringify({
+                id: idMovimiento,
+                descripcion: descripcion // ✅ AHORA DINÁMICO
+            }),
+            contentType: "application/json",
+            dataType: "json"
+        });
+
+        if (!base || !base.Venta || !base.Cliente || !base.Cliente.ClienteTelefono) {
+            return;
+        }
+
+        const mensaje = armarMensajeWhatsappElectro(
+            base,
+            descripcion,
+            idMovimiento
+        );
+
+        if (!mensaje) return;
+
+        abrirWhatsapp(base.Cliente.ClienteTelefono, mensaje);
+
+    } catch (e) {
+        console.warn("No se pudo enviar WhatsApp", e);
+    }
+}
+
+async function enviarWhatssapElectro(idMovimiento, descripcion) {
+
+    const base = await MakeAjax({
+        type: "POST",
+        url: "/Ventas_Electrodomesticos/EnvWhatssapElectro",
+        async: true,
+        data: JSON.stringify({
+            id: idMovimiento,
+            descripcion: descripcion
+        }),
+        contentType: "application/json",
+        dataType: "json"
+    });
+
+    if (!base) {
+        mostrarError("No se pudo obtener la venta de electrodomésticos.");
+        return;
+    }
+
+    const mensaje = armarMensajeWhatsappElectro(base, descripcion);
+    abrirWhatsapp(base.Cliente.Telefono, mensaje);
+}
+
+function obtenerTipoMensajeElectro(descripcion = "") {
+    const d = String(descripcion).toLowerCase();
+
+    if (d === "cobro") return "cobro";
+    if (d === "recargo") return "recargo";
+    if (d === "venta") return "venta";
+
+    if (d.includes("cobranza")) return "cobro";
+    if (d.includes("recargo")) return "recargo";
+    if (d.includes("venta")) return "venta";
+
+    // ❌ antes devolvía "venta"
+    return "cobro"; // ✅ seguro por defecto
+}
+
+
+
+function abrirWhatsapp(telefono, mensaje) {
+
+    const tel = normalizarTelefonoAR(telefono);
+    if (!tel) {
+        console.warn("Teléfono inválido:", telefono);
+        return;
+    }
+
+    const msg = encodeURIComponent(mensaje);
+    const url = `https://api.whatsapp.com/send?phone=${tel}&text=${msg}`;
+    window.open(url, "_blank");
+}
+
+function normalizarTelefonoAR(tel) {
+    if (!tel) return "";
+
+    let limpio = String(tel).replace(/\D/g, "");
+
+    // quitar 0 inicial
+    if (limpio.startsWith("0")) {
+        limpio = limpio.slice(1);
+    }
+
+    // quitar 549 si ya viene
+    if (limpio.startsWith("549")) {
+        limpio = limpio.slice(3);
+    }
+
+    // quitar 54 si viene
+    if (limpio.startsWith("54")) {
+        limpio = limpio.slice(2);
+    }
+
+    // devolver con prefijo correcto
+    return "549" + limpio;
+}
+
+
+
+function armarMensajeWhatsappElectro(base, descripcion, idPago) {
+
+    if (!base || !base.Venta || !base.Cliente)
+        return "";
+
+    const v = base.Venta;
+
+    const tipo = obtenerTipoMensajeElectro(descripcion);
+
+    const nombreCliente = (v.ClienteNombre || "").trim();
+    const saldo = formatNumber(v.Restante || 0);
+
+    /* ===============================
+       SALUDO
+    =============================== */
+    const h = new Date().getHours();
+    const saludo =
+        h >= 5 && h < 12 ? "Buenos días" :
+            h >= 12 && h < 20 ? "Buenas tardes" :
+                "Buenas noches";
+
+    /* ===============================
+       PRÓXIMA CUOTA REAL
+    =============================== */
+    let textoCuota = "—";
+
+    if (Array.isArray(v.Cuotas)) {
+        const hoy = moment().startOf("day");
+
+        const proxima = v.Cuotas
+            .filter(c =>
+                (c.MontoRestante || 0) > 0 &&
+                moment(c.FechaVencimiento).isSameOrAfter(hoy, "day")
+            )
+            .sort((a, b) =>
+                new Date(a.FechaVencimiento) - new Date(b.FechaVencimiento)
+            )[0];
+
+        if (proxima) {
+            textoCuota =
+                `Cuota ${proxima.NumeroCuota} – ` +
+                `${moment(proxima.FechaVencimiento).format("DD/MM/YYYY")} – ` +
+                `${formatNumber(proxima.MontoRestante)}`;
+        }
+    }
+
+    /* =====================================================
+       ======================= VENTA =======================
+       ===================================================== */
+    if (tipo === "venta") {
+
+        const fechaVenta = v.FechaVenta
+            ? moment(v.FechaVenta).format("DD/MM/YYYY")
+            : "";
+
+        const total = formatNumber(v.ImporteTotal || 0);
+        const entrega = formatNumber(v.Entrega || 0);
+
+        let productos = "";
+        if (Array.isArray(v.Items) && v.Items.length) {
+            productos = v.Items
+                .slice(0, 3)
+                .map(i => `• ${i.Cantidad || 1} x ${i.Producto}`)
+                .join("\n");
+
+            if (v.Items.length > 3) {
+                productos += `\n• y otros ${v.Items.length - 3} productos`;
+            }
+        }
+
+        return `${saludo} ${nombreCliente} 😊
+
+🛒 *VENTA DE ELECTRODOMÉSTICOS*
+Le informamos que el día ${fechaVenta} hemos registrado una nueva venta.
+
+📦 *Productos adquiridos:*
+${productos}
+
+💰 *Total:* ${total}
+💵 *Entrega:* ${entrega}
+📉 *Saldo pendiente:* ${saldo}
+
+📆 *Próxima cuota a vencer:*
+${textoCuota}
+
+Muchas gracias por su compra 🙌
+Ante cualquier consulta, quedamos a disposición.`;
+    }
+
+    /* =====================================================
+       ======================= COBRO =======================
+       ===================================================== */
+    if (tipo === "cobro") {
+
+        if (!Array.isArray(v.Pagos) || !v.Pagos.length)
+            return "";
+
+        // 🔥 PAGO REAL (EL QUE ACABÁS DE HACER)
+        const pago = v.Pagos.find(p => Number(p.Id) === Number(idPago));
+        if (!pago || !Array.isArray(pago.Detalles) || !pago.Detalles.length)
+            return "";
+
+        // 🔥 DETALLE REAL
+        const det = pago.Detalles[0];
+
+        // 🔥 CUOTA REAL PAGADA
+        const cuota = Array.isArray(v.Cuotas)
+            ? v.Cuotas.find(c => Number(c.Id) === Number(det.IdCuota))
+            : null;
+
+        const nroCuota = cuota?.NumeroCuota ?? "?";
+        const importePagado = formatNumber(det.ImporteAplicado || 0);
+
+        // 🔥 CUOTAS RESTANTES REALES
+        const cuotasRestantes = Array.isArray(v.Cuotas)
+            ? v.Cuotas.filter(c => (c.MontoRestante || 0) > 0).length
+            : 0;
+
+        return `${saludo} ${nombreCliente} 👋
+
+💳 *COBRO REGISTRADO – ELECTRODOMÉSTICOS*
+
+Se ha registrado correctamente el pago de la *Cuota ${nroCuota}*.
+
+💰 *Importe abonado:* ${importePagado}
+📉 *Saldo pendiente total:* ${saldo}
+📊 *Cuotas restantes:* ${cuotasRestantes}
+
+📆 *Próxima cuota a vencer:*
+${textoCuota}
+
+Muchas gracias por su pago 🙌
+Ante cualquier consulta, quedamos a disposición.`;
+    }
+
+    /* =====================================================
+       ===================== RECARGO =======================
+       ===================================================== */
+    /* =====================================================
+    ===================== RECARGO =======================
+    ===================================================== */
+    if (tipo === "recargo") {
+
+        const ultimoRecargo = obtenerUltimoRecargoReal(v);
+
+        if (!ultimoRecargo) return "";
+
+        const importeRecargo = formatNumber(ultimoRecargo.Importe);
+
+        const saldoFinal = v.Restante + ultimoRecargo.Importe;
+
+        const cuotaAfectada =
+            `Cuota ${ultimoRecargo.NumeroCuota} – ` +
+            `${moment(ultimoRecargo.FechaVencimiento).format("DD/MM/YYYY")}`;
+
+        return `${saludo} ${nombreCliente} ⚠️
+
+📌 *RECARGO APLICADO – ELECTRODOMÉSTICOS*
+Le informamos que se ha aplicado un recargo sobre su plan de pagos.
+
+💲 *Importe del recargo:* ${importeRecargo}
+📉 *Saldo actualizado:* ${formatNumber(saldoFinal)}
+
+📆 *Cuota afectada:*
+${cuotaAfectada}
+
+📆 *Próxima cuota:*
+${textoCuota}
+
+Ante cualquier duda o consulta, quedamos a disposición.`;
+    }
+
+
+    return "";
+}
+
+
+function obtenerSaludo() {
+    const h = new Date().getHours();
+    if (h >= 6 && h < 12) return "Buenos días";
+    if (h >= 12 && h < 20) return "Buenas tardes";
+    return "Buenas noches";
+}
+
+function actualizarGrillaCobros() {
+
+    // 🔹 Pantalla COBROS ELECTRO
+    if (window.VC && typeof VC.cargarTabla === "function") {
+        VC.cargarTabla();              // tabla principal
+        if (typeof VC.cargarCobrosPendientes === "function") {
+            VC.cargarCobrosPendientes(); // 🔥 pendientes
+        }
+        return;
+    }
+
+    // 🔹 Otras pantallas (fallbacks)
+    if (window.gridCobros && typeof gridCobros.ajax?.reload === "function") {
+        gridCobros.ajax.reload(null, false);
+    }
+
+    if (window.gridCobrosPendientes && typeof gridCobrosPendientes.ajax?.reload === "function") {
+        gridCobrosPendientes.ajax.reload(null, false);
+    }
+
+    if (window.gridRendimiento && typeof gridRendimiento.ajax?.reload === "function") {
+        gridRendimiento.ajax.reload(null, false);
+    }
+}
+
+
+function obtenerInfoUltimoCobro(v) {
+
+    if (!v || !Array.isArray(v.Historial) || !Array.isArray(v.Cuotas))
+        return null;
+
+    // 1️⃣ Último movimiento de PAGO DE CUOTA
+    const ultimoPago = v.Historial
+        .filter(h =>
+            h.Campo === "PagoCuota" &&
+            Number(h.ValorNuevo) > Number(h.ValorAnterior)
+        )
+        .sort((a, b) =>
+            new Date(b.FechaCambio) - new Date(a.FechaCambio)
+        )[0];
+
+    if (!ultimoPago)
+        return null;
+
+    // 2️⃣ Importe REAL pagado en este cobro
+    const antes = Number(
+        String(ultimoPago.ValorAnterior || "0").replace("Antes=", "")
+    );
+
+    const ahora = Number(
+        String(ultimoPago.ValorNuevo || "0").replace("Ahora=", "")
+    );
+
+    const importePagado = ahora - antes;
+
+    // 3️⃣ Cuota afectada
+    const idCuota = Number(ultimoPago.IdCuota);
+    const cuota = v.Cuotas.find(c => Number(c.Id) === idCuota);
+
+    if (!cuota)
+        return null;
+
+    // 4️⃣ Cuotas restantes
+    const cuotasRestantes = v.Cuotas.filter(c =>
+        Number(c.MontoRestante || 0) > 0.0001
+    ).length;
+
+    return {
+        NumeroCuota: cuota.NumeroCuota,
+        ImportePagado: importePagado,
+        CuotasRestantes: cuotasRestantes
+    };
+}
+
+
+function obtenerUltimoRecargoReal(v) {
+
+    if (!v || !Array.isArray(v.Cuotas)) return null;
+
+    const recargos = [];
+
+    v.Cuotas.forEach(c => {
+        if (Array.isArray(c.Recargos)) {
+            c.Recargos.forEach(r => {
+                recargos.push({
+                    NumeroCuota: c.NumeroCuota,
+                    FechaVencimiento: c.FechaVencimiento,
+                    Importe: Number(r.ImporteCalculado || 0),
+                    Fecha: r.Fecha
+                });
+            });
+        }
+    });
+
+    if (!recargos.length) return null;
+
+    return recargos.sort(
+        (a, b) => new Date(b.Fecha) - new Date(a.Fecha)
+    )[0];
+}
+
+

@@ -75,7 +75,7 @@ namespace Sistema_David.Models
                         Fecha = v.FechaVenta,
                         Cliente = v.Clientes?.Nombre,
                         Total = v.ImporteTotal,
-                        Pagado = cuotas.Sum(c => c.MontoPagado),
+                        Pagado = (decimal)(cuotas.Sum(c => c.MontoPagado) + v.Entrega),
                         Pendiente = cuotas.Sum(c =>
                             (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado),
                         PorcentajePago =
@@ -262,6 +262,32 @@ namespace Sistema_David.Models
             {
                 try
                 {
+                    /* ===============================
+                     * 1️⃣ VALIDAR STOCK
+                     * =============================== */
+
+                    foreach (var it in m.Items)
+                    {
+                        var stockUser = db.StockUsuarios
+                            .FirstOrDefault(s =>
+                                s.IdUsuario == m.IdVendedor &&
+                                s.IdProducto == it.IdProducto);
+
+                        if (stockUser == null || stockUser.Cantidad < it.Cantidad)
+                            throw new Exception($"Stock insuficiente para {it.Producto}");
+                    }
+
+                    /* ===============================
+                     * 🔥 CALCULAR RECARGOS / DESCUENTOS
+                     * =============================== */
+
+                    decimal totalRecargos = m.Cuotas?.Sum(c => R2(c.MontoRecargos)) ?? 0;
+                    decimal totalDescuentos = m.Cuotas?.Sum(c => R2(c.MontoDescuentos)) ?? 0;
+
+                    /* ===============================
+                     * 2️⃣ CREAR VENTA
+                     * =============================== */
+
                     decimal entrega = m.Entrega ?? 0;
                     decimal restante = Math.Max(0, m.ImporteTotal - entrega);
 
@@ -270,82 +296,118 @@ namespace Sistema_David.Models
                         FechaVenta = m.FechaVenta,
                         IdCliente = m.IdCliente,
                         IdVendedor = m.IdVendedor,
+
                         ImporteTotal = R2(m.ImporteTotal),
+                        ImporteRecargos = R2(totalRecargos),      // 🔥 CLAVE
+                        ImporteDescuentos = R2(totalDescuentos),  // 🔥 CLAVE
                         ImporteInteres = 0,
-                        ImporteRecargos = R2(m.RecargoFijo ?? 0),
-                        ImporteDescuentos = R2(m.DescuentoFijo ?? 0),
+
+                        Entrega = R2(entrega),
+                        Restante = R2(restante),
+
                         FormaCuotas = m.FormaCuotas,
                         CantidadCuotas = m.CantidadCuotas,
                         FechaVencimiento = m.FechaVencimiento,
+
+                        RecargoTipo = m.RecargoTipo,
+                        RecargoValor = m.RecargoValor,
+
+                        DescuentoTipo = m.DescuentoTipo,
+                        DescuentoValor = m.DescuentoValor,
+
                         Estado = "Activa",
-                        Entrega = R2(entrega),
-                        Restante = R2(restante),
                         Observacion = m.Observacion,
                         UsuarioCreacion = m.UsuarioOperador,
                         FechaCreacion = DateTime.Now,
-                        FranjaHoraria = m.FranjaHoraria,
-                        Turno = m.Turno
+                        Turno = m.Turno,
+                        FranjaHoraria = m.FranjaHoraria
                     };
 
                     db.Ventas_Electrodomesticos.Add(venta);
                     db.SaveChanges();
 
-                    /* ITEMS */
+                    /* ===============================
+                     * 3️⃣ DESCONTAR STOCK + DETALLE
+                     * =============================== */
+
                     foreach (var it in m.Items)
                     {
-                        db.Ventas_Electrodomesticos_Detalle.Add(new Ventas_Electrodomesticos_Detalle
-                        {
-                            IdVenta = venta.Id,
-                            IdProducto = it.IdProducto,
-                            Producto = it.Producto,
-                            Cantidad = it.Cantidad,
-                            PrecioUnitario = it.PrecioUnitario,
-                            Subtotal = it.Subtotal
-                        });
+                        var stockUser = db.StockUsuarios.First(s =>
+                            s.IdUsuario == m.IdVendedor &&
+                            s.IdProducto == it.IdProducto);
+
+                        stockUser.Cantidad -= (int)it.Cantidad;
+
+                        if (stockUser.Cantidad <= 0)
+                            db.StockUsuarios.Remove(stockUser);
+                        else
+                            db.Entry(stockUser).State = EntityState.Modified;
+
+                        var prod = db.Productos.First(p => p.Id == it.IdProducto);
+                        prod.Stock -= (int?)it.Cantidad;
+                        db.Entry(prod).State = EntityState.Modified;
+
+                        db.Ventas_Electrodomesticos_Detalle.Add(
+                            new Ventas_Electrodomesticos_Detalle
+                            {
+                                IdVenta = venta.Id,
+                                IdProducto = it.IdProducto,
+                                Producto = it.Producto,
+                                Cantidad = it.Cantidad,
+                                PrecioUnitario = it.PrecioUnitario,
+                                Subtotal = it.Subtotal
+                            }
+                        );
                     }
+
                     db.SaveChanges();
 
-                    /* CUOTAS */
+                    /* ===============================
+                     * 4️⃣ CREAR CUOTAS
+                     * =============================== */
+
                     foreach (var c in m.Cuotas)
                     {
-                        decimal total = R2(c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos);
+                        var totalCuota = R2(
+                            c.MontoOriginal +
+                            c.MontoRecargos -
+                            c.MontoDescuentos
+                        );
 
-                        db.Ventas_Electrodomesticos_Cuotas.Add(new Ventas_Electrodomesticos_Cuotas
-                        {
-                            IdVenta = venta.Id,
-                            NumeroCuota = c.NumeroCuota,
-                            FechaVencimiento = c.FechaVencimiento,
-                            MontoOriginal = R2(c.MontoOriginal),
-                            MontoRecargos = R2(c.MontoRecargos),
-                            MontoDescuentos = R2(c.MontoDescuentos),
-                            MontoPagado = 0,
-                            MontoRestante = total,
-                            Estado = "Pendiente",
-                            UsuarioCreacion = m.UsuarioOperador,
-                            FechaCreacion = DateTime.Now,
-                            CobroPendiente = 0,
-                            FechaCobro = c.FechaVencimiento,
-                        });
+                        db.Ventas_Electrodomesticos_Cuotas.Add(
+                            new Ventas_Electrodomesticos_Cuotas
+                            {
+                                IdVenta = venta.Id,
+                                NumeroCuota = c.NumeroCuota,
+                                FechaVencimiento = c.FechaVencimiento,
+                                MontoOriginal = R2(c.MontoOriginal),
+                                MontoRecargos = R2(c.MontoRecargos),
+                                MontoDescuentos = R2(c.MontoDescuentos),
+                                MontoPagado = 0,
+                                MontoRestante = totalCuota,
+                                Estado = "Pendiente",
+                                FechaCobro = c.FechaVencimiento,
+                                UsuarioCreacion = m.UsuarioOperador,
+                                FechaCreacion = DateTime.Now,
+                                CobroPendiente = 0,
+                                TransferenciaPendiente = 0
+                            }
+                        );
                     }
-
-                    db.SaveChanges();
-
-                    Audit(db, venta.Id, null, m.UsuarioOperador,
-                        "CrearVenta", null,
-                        $"Venta creada. Entrega={venta.Entrega}, Restante={venta.Restante}");
 
                     db.SaveChanges();
                     tx.Commit();
 
                     return venta.Id;
                 }
-                catch (Exception ex)
+                catch
                 {
                     tx.Rollback();
-                    throw new Exception("Error al crear venta: " + ex.Message, ex);
+                    throw;
                 }
             }
         }
+
 
         public static int? ResolverIdVentaDesdeMovimiento(int idMovimiento, string descripcion)
         {
@@ -390,8 +452,9 @@ namespace Sistema_David.Models
                     .Include(x => x.Clientes)
                     .Include(x => x.Ventas_Electrodomesticos_Detalle)
                     .Include(x => x.Ventas_Electrodomesticos_Cuotas
-                    .Select(c => c.Ventas_Electrodomesticos_Cuotas_Recargos))
-                    .Include(x => x.Ventas_Electrodomesticos_Pagos.Select(p => p.Ventas_Electrodomesticos_Pagos_Detalle))
+                        .Select(c => c.Ventas_Electrodomesticos_Cuotas_Recargos))
+                    .Include(x => x.Ventas_Electrodomesticos_Pagos
+                        .Select(p => p.Ventas_Electrodomesticos_Pagos_Detalle))
                     .Include(x => x.Ventas_Electrodomesticos_Historial)
                     .FirstOrDefault(x => x.Id == idVenta);
 
@@ -400,7 +463,7 @@ namespace Sistema_David.Models
 
                 var vm = new VM_Ventas_Electrodomesticos_Detalle
                 {
-                    // ================= CLIENTE =================
+                    /* ================= CLIENTE ================= */
                     ClienteNombre = v.Clientes != null
                         ? ((v.Clientes.Nombre ?? "") + " " + (v.Clientes.Apellido ?? "")).Trim()
                         : null,
@@ -409,7 +472,7 @@ namespace Sistema_David.Models
                     ClienteEstado = ClientesModel.InformacionCliente(v.IdCliente).Estado,
                     ClienteDNI = v.Clientes?.Dni,
 
-                    // ================= HEADER VENTA =================
+                    /* ================= HEADER VENTA ================= */
                     IdVenta = v.Id,
                     FechaVenta = v.FechaVenta,
                     IdCliente = v.IdCliente,
@@ -420,6 +483,12 @@ namespace Sistema_David.Models
                     ImporteRecargos = v.ImporteRecargos,
                     ImporteDescuentos = v.ImporteDescuentos,
 
+                    // 🔥 NUEVOS CAMPOS (CONTRATO DE RECARGO/DESCUENTO)
+                    RecargoTipo = v.RecargoTipo,
+                    RecargoValor = v.RecargoValor,
+                    DescuentoTipo = v.DescuentoTipo,
+                    DescuentoValor = v.DescuentoValor,
+
                     FormaCuotas = v.FormaCuotas,
                     CantidadCuotas = v.CantidadCuotas,
                     FechaVencimiento = v.FechaVencimiento,
@@ -429,12 +498,11 @@ namespace Sistema_David.Models
                     FranjaHoraria = v.FranjaHoraria,
                     Turno = v.Turno,
 
-
-                    Entrega = (decimal)v.Entrega,
-                    Restante = (decimal)v.Restante
+                    Entrega = v.Entrega ?? 0,
+                    Restante = v.Restante ?? 0
                 };
 
-                // ================= ITEMS =================
+                /* ================= ITEMS ================= */
                 vm.Items = v.Ventas_Electrodomesticos_Detalle
                     .Select(i => new VM_Ventas_Electrodomesticos_Item
                     {
@@ -445,45 +513,47 @@ namespace Sistema_David.Models
                     })
                     .ToList();
 
-                // ================= CUOTAS =================
+                /* ================= CUOTAS ================= */
                 vm.Cuotas = v.Ventas_Electrodomesticos_Cuotas
-     .OrderBy(c => c.NumeroCuota)
-     .Select(c => new VM_Ventas_Electrodomesticos_Cuota
-     {
-         Id = c.Id,
-         NumeroCuota = c.NumeroCuota,
-         FechaVencimiento = c.FechaVencimiento,
+                    .OrderBy(c => c.NumeroCuota)
+                    .Select(c => new VM_Ventas_Electrodomesticos_Cuota
+                    {
+                        Id = c.Id,
+                        NumeroCuota = c.NumeroCuota,
+                        FechaVencimiento = c.FechaVencimiento,
 
-         MontoOriginal = c.MontoOriginal,
-         MontoRecargos = c.MontoRecargos,
-         MontoDescuentos = c.MontoDescuentos,
-         MontoPagado = c.MontoPagado,
+                        MontoOriginal = c.MontoOriginal,
+                        MontoRecargos = c.MontoRecargos,
+                        MontoDescuentos = c.MontoDescuentos,
+                        MontoPagado = c.MontoPagado,
 
-         MontoRestante =
-             c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos - c.MontoPagado,
+                        MontoRestante =
+                            c.MontoOriginal +
+                            c.MontoRecargos -
+                            c.MontoDescuentos -
+                            c.MontoPagado,
 
-         Estado = c.Estado,
+                        Estado = c.Estado,
 
-         // 🔥 RECARGOS INDIVIDUALES
-         Recargos = c.Ventas_Electrodomesticos_Cuotas_Recargos
-             .OrderBy(r => r.Fecha)
-             .Select(r => new VM_Ventas_Electrodomesticos_RecargoCuotaDetalle
-             {
-                 Id = r.Id,
-                 IdCuota = r.IdCuota,
-                 Fecha = r.Fecha,
-                 Tipo = r.Tipo,
-                 Valor = r.Valor,
-                 ImporteCalculado = r.ImporteCalculado,
-                 Observacion = r.Observacion,
-                 UsuarioCreacion = r.UsuarioCreacion
-             })
-             .ToList()
-     })
-     .ToList();
+                        // 🔥 RECARGOS INDIVIDUALES
+                        Recargos = c.Ventas_Electrodomesticos_Cuotas_Recargos
+                            .OrderBy(r => r.Fecha)
+                            .Select(r => new VM_Ventas_Electrodomesticos_RecargoCuotaDetalle
+                            {
+                                Id = r.Id,
+                                IdCuota = r.IdCuota,
+                                Fecha = r.Fecha,
+                                Tipo = r.Tipo,
+                                Valor = r.Valor,
+                                ImporteCalculado = r.ImporteCalculado,
+                                Observacion = r.Observacion,
+                                UsuarioCreacion = r.UsuarioCreacion
+                            })
+                            .ToList()
+                    })
+                    .ToList();
 
-
-                // ================= PAGOS =================
+                /* ================= PAGOS ================= */
                 vm.Pagos = v.Ventas_Electrodomesticos_Pagos
                     .OrderByDescending(p => p.FechaPago)
                     .Select(p => new
@@ -511,7 +581,7 @@ namespace Sistema_David.Models
                     })
                     .ToList();
 
-                // ================= HISTORIAL =================
+                /* ================= HISTORIAL ================= */
                 vm.Historial = v.Ventas_Electrodomesticos_Historial
                     .OrderByDescending(h => h.FechaCambio)
                     .Select(h => new
@@ -549,6 +619,26 @@ namespace Sistema_David.Models
                     if (venta == null)
                         throw new Exception("Venta inexistente");
 
+                    // ===============================
+                    // 🔒 RESTANTE TOTAL DE LA VENTA
+                    // ===============================
+                    decimal totalVenta = R2(venta.ImporteTotal);
+                    decimal totalPagado = venta.Ventas_Electrodomesticos_Cuotas
+                        .Sum(c => c.MontoPagado);
+
+                    decimal restanteVenta = R2(totalVenta - totalPagado);
+
+                    if (m.ImporteTotal <= 0)
+                        throw new Exception("Importe inválido");
+
+                    if (R2(m.ImporteTotal) > restanteVenta)
+                        throw new Exception(
+                            $"El importe del cobro ({m.ImporteTotal}) supera el saldo pendiente de la venta ({restanteVenta})"
+                        );
+
+                    // ===============================
+                    // 💰 CREAR PAGO
+                    // ===============================
                     var pago = new Ventas_Electrodomesticos_Pagos
                     {
                         IdVenta = venta.Id,
@@ -559,7 +649,6 @@ namespace Sistema_David.Models
                         UsuarioCreacion = m.UsuarioOperador,
                         FechaCreacion = DateTime.Now,
 
-                        // NUEVOS CAMPOS
                         ClienteAusente = m.ClienteAusente,
                         Imagen = m.Imagen,
                         IdCuentaBancaria = m.IdCuentaBancaria,
@@ -570,58 +659,85 @@ namespace Sistema_David.Models
                     db.Ventas_Electrodomesticos_Pagos.Add(pago);
                     db.SaveChanges();
 
-                    decimal totalAplicado = 0m;
+                    // ===============================
+                    // 🔁 APLICAR EN CASCADA
+                    // ===============================
+                    decimal montoDisponible = R2(m.ImporteTotal);
 
-                    foreach (var ap in m.Aplicaciones.OrderBy(x => x.IdCuota))
+                    var cuotasPendientes = venta.Ventas_Electrodomesticos_Cuotas
+                        .Where(c => c.MontoRestante > 0)
+                        .OrderBy(c => c.NumeroCuota)
+                        .ToList();
+
+                    foreach (var cuota in cuotasPendientes)
                     {
-                        var cuota = db.Ventas_Electrodomesticos_Cuotas
-                            .FirstOrDefault(x => x.Id == ap.IdCuota && x.IdVenta == venta.Id);
+                        if (montoDisponible <= 0)
+                            break;
 
-                        if (cuota == null)
-                            throw new Exception($"Cuota {ap.IdCuota} no encontrada");
-
-                        var restante = (cuota.MontoOriginal + cuota.MontoRecargos - cuota.MontoDescuentos)
+                        decimal restanteCuota =
+                            (cuota.MontoOriginal + cuota.MontoRecargos - cuota.MontoDescuentos)
                             - cuota.MontoPagado;
 
-                        var aplicar = Math.Min(restante, ap.ImporteAplicado);
+                        if (restanteCuota <= 0)
+                            continue;
 
-                        if (aplicar <= 0) continue;
+                        decimal aplicar = Math.Min(restanteCuota, montoDisponible);
 
-                        db.Ventas_Electrodomesticos_Pagos_Detalle.Add(new Ventas_Electrodomesticos_Pagos_Detalle
-                        {
-                            IdPago = pago.Id,
-                            IdCuota = cuota.Id,
-                            ImporteAplicado = R2(aplicar)
-                        });
+                        // 🔹 detalle
+                        db.Ventas_Electrodomesticos_Pagos_Detalle.Add(
+                            new Ventas_Electrodomesticos_Pagos_Detalle
+                            {
+                                IdPago = pago.Id,
+                                IdCuota = cuota.Id,
+                                ImporteAplicado = R2(aplicar)
+                            });
 
                         var pagAnt = cuota.MontoPagado;
+
                         cuota.MontoPagado = R2(cuota.MontoPagado + aplicar);
-                        cuota.MontoRestante = R2((cuota.MontoOriginal + cuota.MontoRecargos - cuota.MontoDescuentos)
-                            - cuota.MontoPagado);
+                        cuota.MontoRestante = R2(
+                            (cuota.MontoOriginal + cuota.MontoRecargos - cuota.MontoDescuentos)
+                            - cuota.MontoPagado
+                        );
 
                         cuota.Estado = cuota.MontoRestante > 0 ? "Pendiente" : "Pagada";
                         cuota.UsuarioModificacion = m.UsuarioOperador;
                         cuota.FechaModificacion = DateTime.Now;
+                        cuota.TransferenciaPendiente = 0;
+                        cuota.CobroPendiente = 0;
 
-                        Audit(db, venta.Id, cuota.Id, m.UsuarioOperador,
+                        Audit(
+                            db,
+                            venta.Id,
+                            cuota.Id,
+                            m.UsuarioOperador,
                             "PagoCuota",
                             $"Antes={pagAnt}",
                             $"Ahora={cuota.MontoPagado}",
-                            $"Pago #{pago.Id} | ClienteAusente={m.ClienteAusente} | TipoInteres={m.TipoInteres} | Cuenta={m.IdCuentaBancaria} | ActualizoUbicacion={m.ActualizoUbicacion}");
+                            $"Pago #{pago.Id} | Aplicado={aplicar}"
+                        );
 
-                        totalAplicado += aplicar;
+                        montoDisponible -= aplicar;
                     }
 
-                    if (totalAplicado <= 0)
-                        throw new Exception("El pago no aplicó a ninguna cuota");
+                    if (montoDisponible > 0)
+                        throw new Exception("Error interno: el pago no se aplicó completamente");
 
+                    // ===============================
+                    // 🔄 REESTADO VENTA
+                    // ===============================
                     RecalcularEstadoVenta(db, venta, m.UsuarioOperador);
 
-                    Audit(db, venta.Id, null, m.UsuarioOperador,
+                    Audit(
+                        db,
+                        venta.Id,
+                        null,
+                        m.UsuarioOperador,
                         "RegistrarPago",
                         null,
                         $"Pago #{pago.Id} por {pago.ImporteTotal}",
-                        $"ClienteAusente={m.ClienteAusente} | TipoInteres={m.TipoInteres} | Cuenta={m.IdCuentaBancaria} | ActualizoUbicacion={m.ActualizoUbicacion} | Imagen={(string.IsNullOrEmpty(m.Imagen) ? "-" : m.Imagen)}");
+                        $"Cuenta={m.IdCuentaBancaria} | ClienteAusente={m.ClienteAusente}"
+                    );
 
                     db.SaveChanges();
                     tx.Commit();
@@ -635,6 +751,7 @@ namespace Sistema_David.Models
                 }
             }
         }
+
 
         /* ===========================================================
          * EDITAR CUOTA INDIVIDUAL
@@ -881,37 +998,107 @@ namespace Sistema_David.Models
             {
                 try
                 {
-                    var v = db.Ventas_Electrodomesticos
-                        .Include(x => x.Ventas_Electrodomesticos_Pagos)
-                        .Include(x => x.Ventas_Electrodomesticos_Cuotas)
-                        .Include(x => x.Ventas_Electrodomesticos_Detalle)
-                        .FirstOrDefault(x => x.Id == idVenta);
+                    var venta = db.Ventas_Electrodomesticos
+                        .Include(v => v.Ventas_Electrodomesticos_Detalle)
+                        .Include(v => v.Ventas_Electrodomesticos_Cuotas
+                            .Select(c => c.Ventas_Electrodomesticos_Cuotas_Recargos))
+                        .Include(v => v.Ventas_Electrodomesticos_Pagos)
+                        .FirstOrDefault(v => v.Id == idVenta);
 
-                    if (v == null)
+                    if (venta == null)
                         return "Venta no encontrada";
 
-                    if (v.Ventas_Electrodomesticos_Pagos.Any())
+                    if (venta.Ventas_Electrodomesticos_Pagos.Any())
                         return "No se puede eliminar: la venta tiene pagos";
 
-                    db.Ventas_Electrodomesticos_Detalle.RemoveRange(v.Ventas_Electrodomesticos_Detalle);
-                    db.Ventas_Electrodomesticos_Cuotas.RemoveRange(v.Ventas_Electrodomesticos_Cuotas);
+                    /* ===============================
+                     * 1️⃣ DEVOLVER STOCK
+                     * =============================== */
+                    foreach (var det in venta.Ventas_Electrodomesticos_Detalle)
+                    {
+                        // 🔼 STOCK GENERAL
+                        var prod = db.Productos.First(p => p.Id == det.IdProducto);
+                        prod.Stock += (int?)det.Cantidad;
+                        db.Entry(prod).State = EntityState.Modified;
 
-                    Audit(db, v.Id, null, usuario,
-                        "EliminarVenta", v.Estado, "Eliminada", "Eliminación total");
+                        // 🔼 STOCK USUARIO
+                        var stockUser = db.StockUsuarios.FirstOrDefault(s =>
+                            s.IdUsuario == venta.IdVendedor &&
+                            s.IdProducto == det.IdProducto);
 
-                    db.Ventas_Electrodomesticos.Remove(v);
+                        if (stockUser != null)
+                        {
+                            stockUser.Cantidad += (int)det.Cantidad;
+                            db.Entry(stockUser).State = EntityState.Modified;
+                        }
+                        else
+                        {
+                            db.StockUsuarios.Add(new StockUsuarios
+                            {
+                                IdUsuario = venta.IdVendedor,
+                                IdProducto = (int)det.IdProducto,
+                                Cantidad = (int)det.Cantidad
+                            });
+                        }
+                    }
+
+                    /* ===============================
+                     * 2️⃣ ELIMINAR RECARGOS DE CUOTAS
+                     * =============================== */
+                    foreach (var cuota in venta.Ventas_Electrodomesticos_Cuotas)
+                    {
+                        if (cuota.Ventas_Electrodomesticos_Cuotas_Recargos.Any())
+                        {
+                            db.Ventas_Electrodomesticos_Cuotas_Recargos
+                                .RemoveRange(cuota.Ventas_Electrodomesticos_Cuotas_Recargos);
+                        }
+                    }
+
+                    /* ===============================
+                     * 3️⃣ ELIMINAR CUOTAS
+                     * =============================== */
+                    db.Ventas_Electrodomesticos_Cuotas
+                        .RemoveRange(venta.Ventas_Electrodomesticos_Cuotas);
+
+                    /* ===============================
+                     * 4️⃣ ELIMINAR DETALLE
+                     * =============================== */
+                    db.Ventas_Electrodomesticos_Detalle
+                        .RemoveRange(venta.Ventas_Electrodomesticos_Detalle);
+
+                    /* ===============================
+                     * 5️⃣ AUDITORÍA
+                     * =============================== */
+                    Audit(
+                        db,
+                        venta.Id,
+                        null,
+                        usuario,
+                        "EliminarVenta",
+                        venta.Estado,
+                        "Eliminada",
+                        "Eliminación total con devolución de stock"
+                    );
+
+                    /* ===============================
+                     * 6️⃣ ELIMINAR VENTA
+                     * =============================== */
+                    db.Ventas_Electrodomesticos.Remove(venta);
+
                     db.SaveChanges();
-
                     tx.Commit();
+
                     return "Venta eliminada con éxito";
                 }
-                catch
+                catch (Exception ex)
                 {
                     tx.Rollback();
-                    throw;
+                    return "Error al eliminar venta: " + ex.Message;
                 }
             }
         }
+
+
 
         /* ===========================================================
          * EDITAR VENTA (SIN RESTRICCIONES DEL BACKEND)
@@ -1047,6 +1234,95 @@ namespace Sistema_David.Models
             }
         }
 
+        public static List<VM_Ventas_Electrodomesticos_CuotaCobroRow>
+      ListarTransferenciasPendientes(VM_Ventas_Electrodomesticos_FiltroCobros f)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var q =
+                    from c in db.Ventas_Electrodomesticos_Cuotas
+                    join v in db.Ventas_Electrodomesticos
+                        on c.IdVenta equals v.Id
+                    join cli in db.Clientes
+                        on v.IdCliente equals cli.Id
+                    join z in db.Zonas
+                        on cli.IdZona equals z.Id into zonasJoin
+                    from z in zonasJoin.DefaultIfEmpty()
+                    join u in db.Usuarios
+                        on v.IdVendedor equals u.Id into vendedoresJoin
+                    from u in vendedoresJoin.DefaultIfEmpty()
+                    where c.TransferenciaPendiente == 1
+                    select new
+                    {
+                        Cuota = c,
+                        Venta = v,
+                        Cliente = cli,
+                        Zona = z,
+                        Vendedor = u
+                    };
+
+                // 👉 filtros MINIMOS que ya usabas
+                if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
+                    q = q.Where(x => x.Venta.IdCliente == f.IdCliente.Value);
+
+                if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
+                    q = q.Where(x => x.Venta.IdVendedor == f.IdVendedor.Value);
+
+                var rows = q
+                    .ToList()
+                    .Select(x => new VM_Ventas_Electrodomesticos_CuotaCobroRow
+                    {
+                        IdCuota = x.Cuota.Id,
+                        IdVenta = x.Cuota.IdVenta,
+                        NumeroCuota = x.Cuota.NumeroCuota,
+
+                        FechaVencimiento = x.Cuota.FechaVencimiento,
+                        FechaCobro = (DateTime)x.Cuota.FechaCobro,
+
+                        TotalCuota = R2(
+                            x.Cuota.MontoOriginal +
+                            x.Cuota.MontoRecargos -
+                            x.Cuota.MontoDescuentos
+                        ),
+
+                        MontoPagado = R2(x.Cuota.MontoPagado),
+
+                        MontoRestante = R2(
+                            (x.Cuota.MontoOriginal +
+                             x.Cuota.MontoRecargos -
+                             x.Cuota.MontoDescuentos) -
+                            x.Cuota.MontoPagado
+                        ),
+
+                        Estado = x.Cuota.Estado,
+
+                        // ===== CLIENTE =====
+                        IdCliente = x.Venta.IdCliente,
+                        ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido).Trim(),
+                        ClienteDireccion = x.Cliente.Direccion,
+                        ClienteLatitud = x.Cliente.Latitud,
+                        ClienteLongitud = x.Cliente.Longitud,
+
+                        // ===== ZONA =====
+                        IdZona = x.Cliente.IdZona,
+                        ZonaNombre = x.Zona != null ? x.Zona.Nombre : null,
+
+                        // ===== VENDEDOR =====
+                        IdVendedor = x.Venta.IdVendedor,
+                        VendedorNombre = x.Vendedor != null ? x.Vendedor.Nombre : null,
+
+                        // ===== TURNO / FRANJA =====
+                        Turno = x.Venta.Turno,
+                        FranjaHoraria = x.Venta.FranjaHoraria
+                    })
+                    .OrderBy(r => r.FechaVencimiento)
+                    .ThenBy(r => r.NumeroCuota)
+                    .ToList();
+
+                return rows;
+            }
+        }
+
 
 
 
@@ -1093,6 +1369,45 @@ namespace Sistema_David.Models
         }
 
 
+        public static string MarcarTransferenciaPendiente(int estado, int idCuota, int usuario)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var cuota = db.Ventas_Electrodomesticos_Cuotas
+                        .FirstOrDefault(c => c.Id == idCuota);
+
+                    if (cuota == null)
+                        return "Cuota no encontrada";
+
+                    cuota.TransferenciaPendiente = estado;
+                    cuota.UsuarioModificacion = usuario;
+                    cuota.FechaModificacion = DateTime.Now;
+
+                    Audit(
+                        db,
+                        cuota.IdVenta,
+                        cuota.Id,
+                        usuario,
+                        "Transferencia Pendiente",
+                        "1",
+                        "0",
+                        "Transferencia Pendiente"
+                    );
+
+                    db.SaveChanges();
+                    tx.Commit();
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error: " + ex.Message;
+                }
+            }
+        }
 
         /* ===========================================================
          * LISTAR CUOTAS A COBRAR
@@ -1114,7 +1429,7 @@ namespace Sistema_David.Models
                     join u in db.Usuarios
                         on v.IdVendedor equals u.Id into vendedoresJoin
                     from u in vendedoresJoin.DefaultIfEmpty()
-                    where c.CobroPendiente <= 0
+                    where c.CobroPendiente <= 0 && c.TransferenciaPendiente <= 0
                     select new
                     {
                         Cuota = c,
@@ -1189,7 +1504,7 @@ namespace Sistema_David.Models
                         NumeroCuota = x.Cuota.NumeroCuota,
 
                         FechaVencimiento = x.Cuota.FechaVencimiento,
-                        FechaCobro = (DateTime)x.Cuota.FechaCobro,
+                        FechaCobro = x.Cuota.FechaCobro,
 
                         TotalCuota = R2(
                             x.Cuota.MontoOriginal +

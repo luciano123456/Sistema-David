@@ -118,10 +118,12 @@ document.addEventListener("DOMContentLoaded", async function () {
                 return;
             }
 
-            if (tipo === "electro")
+            if (tipo === "electro") {
                 window.location.href = "/Ventas_Electrodomesticos/Historial/";
-            else
+            } else {
                 window.location.href = "/Ventas/Index/";
+            }
+
         });
     }
 

@@ -55,7 +55,16 @@ namespace Sistema_David.Controllers
             }, JsonRequestBehavior.AllowGet);
         }
 
+        public ActionResult BuscarStockElectrodomesticos(int id)
+        {
+            var result = StockModel.BuscarStockElectrodomesticos(id);
 
+            return Json(new
+            {
+                data = result.Stocks,
+                vistaStock = result.VistaStock
+            }, JsonRequestBehavior.AllowGet);
+        }
 
         public ActionResult BuscarStockProducto(string producto)
         {

@@ -80,6 +80,7 @@ namespace Sistema_David.Controllers
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
+     
         public ActionResult ListarUserActivos()
         {
             var result = UsuariosModel.ListaActivos();

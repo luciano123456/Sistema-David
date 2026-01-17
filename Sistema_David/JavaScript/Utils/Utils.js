@@ -63,6 +63,7 @@ function formatearMiles(valor) {
     return num.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
+
 function formatearSinMiles(valor) {
     if (!valor) return 0;
 
@@ -72,6 +73,35 @@ function formatearSinMiles(valor) {
     const limpio = valor.replace(/\./g, '').replace(',', '.');
     const num = parseFloat(limpio);
     return isNaN(num) ? 0 : num;
+}
+
+
+function aplicarSeparadorMilesAlEscribir(selector) {
+    document.querySelectorAll(selector).forEach(input => {
+
+        // Al escribir
+        input.addEventListener("input", function () {
+            const antes = this.value;
+            const pos = this.selectionStart;
+
+            // Convertimos a número con tu función y volvemos a formatear con tu función
+            const numero = formatearSinMiles(antes);
+            const formateado = formatearMiles(numero);
+
+            this.value = formateado;
+
+            // Intento simple de mantener el cursor (no perfecto, pero suele andar muy bien)
+            const delta = this.value.length - antes.length;
+            const nuevaPos = Math.max(0, pos + delta);
+            this.setSelectionRange(nuevaPos, nuevaPos);
+        });
+
+        // Al salir del input (por si quedó algo raro)
+        input.addEventListener("blur", function () {
+            const numero = formatearSinMiles(this.value);
+            this.value = numero ? formatearMiles(numero) : "";
+        });
+    });
 }
 
 

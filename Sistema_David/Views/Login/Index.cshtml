@@ -15,12 +15,26 @@
     <link href="~/Estilos/Login.css" rel="stylesheet" />
 </head>
 
+
+
 <body>
+
+    @using System.Configuration
+
+    @{
+        bool ambienteTest = ConfigurationManager.AppSettings["AmbienteTest"] == "1";
+    }
+
+    @if (ambienteTest)
+    {
+        <div class="wm-test-pattern">
+        </div>
+    }
 
     <div class="login-container">
         <!-- Parte izquierda: Imagen con fondo azul oscuro -->
         <div class="left-side">
-            <img src="~/Imagenes/Login.png" alt="Logo" class="logo">
+            <img id="loginLogo" alt="Logo" class="logo">
         </div>
 
         <!-- Parte derecha: Formulario de login -->
@@ -71,7 +85,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/Scripts/jquery-3.4.1.min.js"></script>
-    <script src="~/JavaScript/Login.js?v=1.1"></script>
+    <script src="~/JavaScript/Login.js?v=1.2"></script>
 
 
 

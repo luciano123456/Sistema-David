@@ -103,8 +103,8 @@
                     <span class="ve-card-title">Cuotas a cobrar</span>
                 </div>
 
-                <div class="d-flex flex-wrap gap-2">
-                    <button id="btnToggleFiltros" class="btn btn-outline-light btn-sm">
+                <div class="d-flex flex-wrap gap-2" id="divFiltros">
+                    <button id="btnToggleFiltros" class="btn btn-outline-light btn-sm" hidden>
                         <i id="iconFiltros" class="fa fa-chevron-down"></i> Filtros
                     </button>
                 </div>
@@ -113,7 +113,7 @@
             <div class="ve-card-body">
 
                 <!-- ===== FILTROS ===== -->
-                <form id="formFiltros" class="d-none mb-3">
+                <form id="formFiltros" class="d-none mb-3" hidden>
                     <div class="row g-3">
 
                         <div class="col-md-3">
@@ -191,6 +191,7 @@
                         <thead>
                             <tr>
                                 <th style="width:40px;"></th>  @* Columna 0: flecha acordeón *@
+                                <th>N° Venta</th>
                                 <th>N° Cuota</th>
                                 <th>Fecha Cobro</th>
                                 <th>Cliente</th>
@@ -216,41 +217,445 @@
 
                 <hr class="my-4">
 
-                <h4 class="text-warning fw-bold mb-3">
-                    <i class="fa fa-clock-o me-2"></i> Cobros pendientes
-                </h4>
+                <div id="divCobrosPendientes" hidden>
+                    <h4 class="text-warning fw-bold mb-3">
+                        <i class="fa fa-clock-o me-2"></i> Cobros pendientes
+                    </h4>
 
-                <div class="table-responsive">
-                    <table id="vc_tabla_pendientes" class="table ve-table align-middle nowrap w-100">
-                        <thead>
-                            <tr>
-                                <th style="width:40px;"></th>  @* Columna 0: flecha acordeón *@
-                                <th>N° Cuota</th>
-                                <th>Fecha Cobro</th>
-                                <th>Cliente</th>
-                                <th>Vendedor</th>
+                    <div class="table-responsive">
+                        <table id="vc_tabla_pendientes" class="table ve-table align-middle nowrap w-100">
+                            <thead>
+                                <tr>
 
-                                <!-- 🔥 NUEVAS -->
-                                <th>Zona</th>
-                                <th>Dirección</th>
-                                <th class="text-center" style="width:70px;">Turno</th>
-                                <th style="width:110px;">Franja</th>
+                                    <th>N° Venta</th>
+                                    <th>N° Cuota</th>
+                                    <th>Fecha Cobro</th>
+                                    <th>Cliente</th>
+                                    <th>Vendedor</th>
 
-                                <!-- EXISTENTES -->
-                                <th>Vencimiento</th>
-                                <th>Total cuota</th>
-                                <th>Pagado</th>
-                                <th>Restante</th>
-                                <th>Estado</th>
-                                <th class="text-center" style="width:160px;">Acciones</th>
-                            </tr>
-                        </thead>
-                    </table>
+                                    <!-- 🔥 NUEVAS -->
+                                    <th>Zona</th>
+                                    <th>Dirección</th>
+                                    <th class="text-center" style="width:70px;">Turno</th>
+                                    <th style="width:110px;">Franja</th>
+
+                                    <!-- EXISTENTES -->
+                                    <th>Vencimiento</th>
+                                    <th>Total cuota</th>
+                                    <th>Pagado</th>
+                                    <th>Restante</th>
+                                    <th>Estado</th>
+                                    <th class="text-center" style="width:160px;">Acciones</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+
+                </div>
+
+                <div id="divTransferenciasPendientes" class="mt-5" hidden>
+                    <h4 class="text-danger fw-bold mb-3">
+                        <i class="fa fa-exclamation-circle me-2"></i> Transferencias pendientes
+                    </h4>
+
+                    <div class="table-responsive">
+                        <table id="vc_tabla_transferencias_pendientes" class="table ve-table align-middle nowrap w-100">
+                            <thead>
+                                <tr>
+
+                                    <th>N° Venta</th>
+                                    <th>N° Cuota</th>
+                                    <th>Fecha Cobro</th>
+                                    <th>Cliente</th>
+                                    <th>Vendedor</th>
+
+                                    <!-- 🔥 NUEVAS -->
+                                    <th>Zona</th>
+                                    <th>Dirección</th>
+                                    <th class="text-center" style="width:70px;">Turno</th>
+                                    <th style="width:110px;">Franja</th>
+
+                                    <!-- EXISTENTES -->
+                                    <th>Vencimiento</th>
+                                    <th>Total cuota</th>
+                                    <th>Pagado</th>
+                                    <th>Restante</th>
+                                    <th>Estado</th>
+                                    <th class="text-center" style="width:160px;">Acciones</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+
                 </div>
 
 
             </div>
+
+
         </section>
+
+        <div class="modal fade" id="bankAccountsModal" tabindex="-1" aria-labelledby="bankAccountsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bankAccountsModalLabel">Cuentas Bancarias</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <button id="toggleBloqueadas" class="btn btn-light">
+                            <i class="fa fa-eye text-danger"></i> Ver cuentas inactivas
+                        </button>
+                        <!-- Lista de cuentas bancarias -->
+                        <ul id="accountList" class="list-group mt-3 mb-2" style="max-height: 300px; overflow-y: scroll;"></ul>
+
+
+                        <!-- Inputs de Nombre y CBU -->
+                        <div class="mb-3">
+                            <label for="accountName" class="form-label text-success">Nombre de la Cuenta</label>
+                            <input type="text" class="form-control text-black" style="max-width: 500px" id="accountName" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="accountCBU" class="form-label text-success">CBU</label>
+                            <input type="text" class="form-control text-black" style="max-width: 500px" id="accountCBU" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="accountMonto" class="form-label text-success">Monto a Cobrar</label>
+                            <input type="text" class="form-control text-black" style="max-width: 500px" id="accountMonto" disabled>
+                        </div>
+
+                        <div class="progress-wrapper mt-2" id="divProgressBarBanco">
+
+                            <div class="d-flex justify-content-between">
+                                <span id="total-label" class="text-black">Cobros: $50.000</span>
+                                <span id="pendientes-label" hidden class="text-warning">Pendientes: $50.000</span>
+                            </div>
+
+                            <div class="progress" style="height: 20px; background-color: #e0e0e0; position: relative;">
+                                <div id="progress-bar" class="progress-bar" style="width: 0%; transition: width 0.5s;"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <span id="entregas-label" class="text-black">Entregas: $50.000</span>
+                                <span id="restante-label" class="text-black">Restante: $50.000</span>
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="d-flex justify-content-between  mt-3">
+                            <div class="form-check form-switch d-flex align-items-center" style="margin-right:15px">
+                                <label class="form-check-label text-black" style="margin-right:4rem" for="CuentaPropia">Cuenta Propia</label>
+                                <input class="form-check-input" type="checkbox" id="CuentaPropia" disabled>
+                            </div>
+                            <div class="form-check form-switch d-flex align-items-center" style="margin-right:15px">
+                                <label class="form-check-label text-black" style="margin-right:4rem" for="Activo">Activo</label>
+                                <input class="form-check-input" type="checkbox" id="Activo" disabled>
+                            </div>
+
+                        </div>
+
+                        <div id="detalleVentas">
+                            <!-- Aquí se agregan dinámicamente las ventas con imágenes -->
+                        </div>
+
+
+                        <!-- Botones Añadir y Eliminar -->
+                        <div class="d-flex justify-content-end mt-4">
+
+                            <button id="btnStockPendiente" type="button" class="btn btn-danger me-2" onclick="exportarPdf()">
+                                <i class="fa fa-file-pdf-o"></i> Exportar PDF
+                            </button>
+
+                            <button id="anadirCuenta" type="button" class="btn btn-success" onclick="anadirCuenta()">
+                                <i class="fa fa-plus"></i> Añadir
+                            </button>
+
+                            <button id="canceladdAccount" class="btn btn-danger me-2" onclick="cancelarNuevaCuenta()" hidden>
+                                <i class="fa fa-close"></i> Cancelar
+                            </button>
+
+                            <button type="button" id="addAccount" class="btn btn-primary" hidden>
+                                <i class="fa fa-check"></i> Registrar
+                            </button>
+
+
+                            <button id="editarCuenta" type="button" class="btn btn-warning me-2" onclick="editarCuenta()" hidden>
+                                <i class="fa fa-edit"></i> Editar
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalImagenAmpliada">
+            <img src="" alt="Imagen ampliada">
+        </div>
+
+
+        <!-- Modal -->
+        <div class="modal fade" id="modalComprobantes" tabindex="-1" aria-labelledby="modalComprobantesLabel" aria-hidden="true" style="z-index: 999999;">
+            <input type="text" id="idaccount" class="extra-comprobante d-none">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+
+                        <h5 class="modal-title" id="modalComprobantesLabel">Agregar Comprobantes</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <!-- Casillero 1 -->
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="0">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="1">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="2">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="3">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="4">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="5">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="6">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="7">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="8">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="9">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+
+
+
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="10">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="comprobante-card border rounded p-3 shadow-sm text-center bg-light">
+                                    <h6 class="mb-2 text-black">Comprobante</h6>
+                                    <div class="vista-previa-container">
+                                        <img src="" class="vista-previa" alt="Vista previa" style="display: none;">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label btn btn-outline-primary w-100 mb-1">
+                                            <i class="bi bi-upload me-1"></i> Seleccionar archivo
+                                            <input type="file" accept=".jpg,.jpeg,.png" class="extra-comprobante d-none" data-index="11">
+                                        </label>
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-imagen" style="display: none;">Quitar</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button id="btnCancelarModal" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button id="btnGuardarComprobantes" onclick="guardarComprobantes()" type="button" class="btn btn-primary">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="d-flexv flex-wrap justify-content-end mt-2 mb-4">
+            <div id="btnCuentaBancaria" class="me-2 mb-2" style="display: none">
+                <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirModalCuentasBancarias()" style="background-color: #3e0f00; border-color: #4285F4; color: white;">
+                    <i class="fa fa-university"></i> Cuentas Bancarias
+                </a>
+
+            </div>
+           
+            <div id="btnAsignarCobrador" class="me-2 mb-2" style="display: none;">
+                <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalCobrador()">Asignar Cobrador</a>
+            </div>
+        </div>
 
     </div>
 
@@ -272,9 +677,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <!-- JS de Select2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=1.5"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=1.8"></script>
 }

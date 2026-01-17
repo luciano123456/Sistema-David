@@ -395,6 +395,10 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="P_FechaCobro" Type="datetime" />
           <Property Name="Comprobante" Type="int" />
           <Property Name="Orden" Type="int" />
+          <Property Name="RecargoTipo" Type="varchar" MaxLength="1" />
+          <Property Name="RecargoValor" Type="decimal" Precision="20" Scale="2" />
+          <Property Name="DescuentoTipo" Type="varchar" MaxLength="1" />
+          <Property Name="DescuentoValor" Type="decimal" Precision="20" Scale="2" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Cuotas">
           <Key>
@@ -416,6 +420,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="FechaModificacion" Type="datetime" />
           <Property Name="FechaCobro" Type="datetime" />
           <Property Name="CobroPendiente" Type="int" />
+          <Property Name="TransferenciaPendiente" Type="int" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Cuotas_Recargos">
           <Key>
@@ -2260,6 +2265,10 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <Property Name="Comprobante" Type="Int32" />
           <Property Name="Orden" Type="Int32" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Cuotas" Relationship="Sistema_DavidModel.FK_VEC_VE" FromRole="Ventas_Electrodomesticos" ToRole="Ventas_Electrodomesticos_Cuotas" />
+          <Property Name="RecargoTipo" Type="String" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="RecargoValor" Type="Decimal" Precision="20" Scale="2" />
+          <Property Name="DescuentoTipo" Type="String" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="DescuentoValor" Type="Decimal" Precision="20" Scale="2" />
         </EntityType>
         <Association Name="FK_VE_Clientes">
           <End Type="Sistema_DavidModel.Clientes" Role="Clientes" Multiplicity="1" />
@@ -2567,6 +2576,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <NavigationProperty Name="Ventas_Electrodomesticos_Cuotas_Recargos" Relationship="Sistema_DavidModel.FK_Recargo_Cuota" FromRole="Ventas_Electrodomesticos_Cuotas" ToRole="Ventas_Electrodomesticos_Cuotas_Recargos" />
           <Property Name="FechaCobro" Type="DateTime" Precision="3" />
           <Property Name="CobroPendiente" Type="Int32" />
+          <Property Name="TransferenciaPendiente" Type="Int32" />
         </EntityType>
         <Association Name="FK_VEC_UsrCrea">
           <End Type="Sistema_DavidModel.Usuarios" Role="Usuarios" Multiplicity="1" />
@@ -3106,6 +3116,10 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <EntitySetMapping Name="Ventas_Electrodomesticos">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas_Electrodomesticos">
               <MappingFragment StoreEntitySet="Ventas_Electrodomesticos">
+                <ScalarProperty Name="DescuentoValor" ColumnName="DescuentoValor" />
+                <ScalarProperty Name="DescuentoTipo" ColumnName="DescuentoTipo" />
+                <ScalarProperty Name="RecargoValor" ColumnName="RecargoValor" />
+                <ScalarProperty Name="RecargoTipo" ColumnName="RecargoTipo" />
                 <ScalarProperty Name="Orden" ColumnName="Orden" />
                 <ScalarProperty Name="Comprobante" ColumnName="Comprobante" />
                 <ScalarProperty Name="P_FechaCobro" ColumnName="P_FechaCobro" />
@@ -3159,6 +3173,7 @@ advertencia 6002: La tabla o vista 'Sistema_David.dbo.informacionventas_ult7d' n
           <EntitySetMapping Name="Ventas_Electrodomesticos_Cuotas">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas">
               <MappingFragment StoreEntitySet="Ventas_Electrodomesticos_Cuotas">
+                <ScalarProperty Name="TransferenciaPendiente" ColumnName="TransferenciaPendiente" />
                 <ScalarProperty Name="CobroPendiente" ColumnName="CobroPendiente" />
                 <ScalarProperty Name="FechaCobro" ColumnName="FechaCobro" />
                 <ScalarProperty Name="FechaModificacion" ColumnName="FechaModificacion" />

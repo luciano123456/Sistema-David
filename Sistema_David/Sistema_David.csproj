@@ -601,6 +601,7 @@
     <Content Include="Imagenes\configuraciones.png" />
     <Content Include="Imagenes\excel.png" />
     <Content Include="Imagenes\Login.png" />
+    <Content Include="Imagenes\LoginElectrodomesticos.png" />
     <Content Include="Imagenes\menu.png" />
     <Content Include="Imagenes\productodefault.png" />
     <Content Include="Imagenes\rendimiento-diario.png" />
