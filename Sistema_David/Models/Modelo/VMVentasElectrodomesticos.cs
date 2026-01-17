@@ -59,6 +59,12 @@ namespace Sistema_David.Models.ViewModels
         public int IdVendedor { get; set; }
         public int IdVenta { get; set; }
 
+        public string RecargoTipo { get; set; }       // "%" | "$"
+        public decimal? RecargoValor { get; set; }
+
+        public string DescuentoTipo { get; set; }     // "%" | "$"
+        public decimal? DescuentoValor { get; set; }
+
         public decimal ImporteTotal { get; set; }
 
         public decimal? Entrega { get; set; }
@@ -142,40 +148,57 @@ namespace Sistema_David.Models.ViewModels
 
     public class VM_Ventas_Electrodomesticos_Detalle
     {
+        /* ================= CLIENTE ================= */
         public string ClienteNombre { get; set; }
         public string ClienteDireccion { get; set; }
         public string ClienteTelefono { get; set; }
         public string ClienteEstado { get; set; }
         public string ClienteDNI { get; set; }
 
+        /* ================= VENTA ================= */
         public int IdVenta { get; set; }
         public DateTime FechaVenta { get; set; }
         public int IdCliente { get; set; }
         public int IdVendedor { get; set; }
+
         public decimal ImporteTotal { get; set; }
 
         public decimal ImporteInteres { get; set; }
         public decimal ImporteRecargos { get; set; }
         public decimal ImporteDescuentos { get; set; }
 
+        /* ================= 🔥 RECARGO / DESCUENTO ORIGINAL ================= */
+        public string RecargoTipo { get; set; }        // "%" | "$" | null
+        public decimal? RecargoValor { get; set; }     // 10 | 500 | null
+
+        public string DescuentoTipo { get; set; }      // "%" | "$" | null
+        public decimal? DescuentoValor { get; set; }   // 5 | 300 | null
+
+        /* ================= CUOTAS ================= */
         public string FormaCuotas { get; set; }
         public int? CantidadCuotas { get; set; }
         public DateTime? FechaVencimiento { get; set; }
+
+        /* ================= ESTADO ================= */
         public string Estado { get; set; }
         public string Observacion { get; set; }
 
+        /* ================= PAGOS ================= */
         public decimal Entrega { get; set; }
         public decimal Restante { get; set; }
 
+        /* ================= LOGÍSTICA ================= */
         public string FranjaHoraria { get; set; }
         public string Turno { get; set; }
 
-
+        /* ================= DETALLE ================= */
         public List<VM_Ventas_Electrodomesticos_Item> Items { get; set; }
             = new List<VM_Ventas_Electrodomesticos_Item>();
+
         public List<VM_Ventas_Electrodomesticos_Cuota> Cuotas { get; set; }
             = new List<VM_Ventas_Electrodomesticos_Cuota>();
 
+        /* ================= MOVIMIENTOS ================= */
         public object Pagos { get; set; }
         public object Historial { get; set; }
     }
@@ -211,7 +234,7 @@ namespace Sistema_David.Models.ViewModels
         public int IdVenta { get; set; }
         public int NumeroCuota { get; set; }
         public DateTime FechaVencimiento { get; set; }
-        public DateTime FechaCobro { get; set; }
+        public DateTime? FechaCobro { get; set; }
         public decimal TotalCuota { get; set; }
         public decimal MontoPagado { get; set; }
         public decimal MontoRestante { get; set; }

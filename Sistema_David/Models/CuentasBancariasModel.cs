@@ -51,54 +51,91 @@ namespace Sistema_David.Models.Modelo
         }
 
 
-
         public static List<VMCuentaBancariaConVentas> ListaConTotalesInformacion(string metodopago, int activo)
         {
             try
             {
                 using (Sistema_DavidEntities db = new Sistema_DavidEntities())
                 {
-                    var fechaDesde = DateTime.Today;              // hoy a las 00:00
-                    var fechaHasta = fechaDesde.AddDays(1);       // mañana a las 00:00
+                    var fechaDesde = DateTime.Today;              // hoy 00:00
+                    var fechaHasta = fechaDesde.AddDays(1);       // mañana 00:00
 
-                    // 1. Traer cuentas bancarias sin inicializar la lista
-                    var cuentasBancarias = db.CuentasBancarias
-                        .Where(x =>
-                            ((metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA PROPIA" && x.CuentaPropia == 1) ||
-                             (metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA A TERCEROS" && x.CuentaPropia == 0) ||
-                             string.IsNullOrEmpty(metodopago))
-                            && (x.Activo == activo || activo == -1))
-                        .ToList()
-                        .Select(x => new VMCuentaBancariaConVentas
+                    /* =====================================================
+                     * 1️⃣ CUENTAS BANCARIAS
+                     * ===================================================== */
+                    var cuentas = db.CuentasBancarias
+                      .Where(x =>
+                          (
+                              string.IsNullOrEmpty(metodopago)
+                              || (metodopago.ToUpper() == "TRANSFERENCIA PROPIA" && x.CuentaPropia == 1)
+                              || (metodopago.ToUpper() == "TRANSFERENCIA A TERCEROS" && x.CuentaPropia == 0)
+                          )
+                          && (activo == -1 || x.Activo == activo)
+                      )
+                      .Select(x => new VMCuentaBancariaConVentas
+                      {
+                          Id = x.Id,
+                          Nombre = x.Nombre,
+                          CBU = x.CBU,
+                          CuentaPropia = (int)x.CuentaPropia,
+                          Activo = (int)x.Activo,
+                          MontoPagar = (decimal)x.MontoPagar,
+                          Entrega = 0
+                      })
+                      .ToList();
+
+                    if (!cuentas.Any())
+                        return cuentas;
+
+                    var cuentasIds = cuentas.Select(c => c.Id).ToList();
+
+                    /* =====================================================
+                     * 2️⃣ SISTEMA VIEJO – INFORMACIONVENTAS (DETALLE)
+                     * ===================================================== */
+                    var infoVieja = (
+                        from iv in db.InformacionVentas
+                        join v in db.Ventas on iv.IdVenta equals v.Id
+                        where iv.Descripcion.Contains("Cobranza")
+                              && iv.IdCuentaBancaria != null
+                              && cuentasIds.Contains(iv.IdCuentaBancaria.Value)
+                              && iv.Fecha >= fechaDesde
+                              && iv.Fecha < fechaHasta
+                        select new
                         {
-                            Id = x.Id,
-                            Nombre = x.Nombre,
-                            CBU = x.CBU,
-                            CuentaPropia = (int)x.CuentaPropia,
-                            Activo = (int)x.Activo,
-                            MontoPagar = (decimal)x.MontoPagar,
-                            // InformacionVentas y Entrega se llenan después
+                            iv.Id,
+                            iv.Fecha,
+                            iv.Entrega,
+                            iv.IdCuentaBancaria,
+                            IdCliente = v.idCliente
+                        }
+                    ).ToList();
+
+                    /* =====================================================
+                     * 3️⃣ SISTEMA NUEVO – ELECTRO (SOLO TOTALES)
+                     * ===================================================== */
+                    var entregasElectro = db.Ventas_Electrodomesticos_Pagos
+                        .Where(p =>
+                            p.IdCuentaBancaria != null
+                            && cuentasIds.Contains(p.IdCuentaBancaria.Value)
+                            && p.FechaPago >= fechaDesde
+                            && p.FechaPago < fechaHasta
+                            && p.MedioPago.ToUpper().Contains("TRANSFERENCIA")
+                        )
+                        .GroupBy(p => p.IdCuentaBancaria.Value)
+                        .Select(g => new
+                        {
+                            IdCuenta = g.Key,
+                            Total = g.Sum(x => (decimal?)x.ImporteTotal) ?? 0
                         })
                         .ToList();
 
-                    var informacionVentas = (from iv in db.InformacionVentas
-                                             join v in db.Ventas on iv.IdVenta equals v.Id
-                                             where iv.Descripcion.Contains("Cobranza")
-                                                   && iv.IdCuentaBancaria != null
-                                                   && iv.Fecha >= fechaDesde && iv.Fecha < fechaHasta
-                                             select new
-                                             {
-                                                 iv.Fecha,
-                                                 iv.Entrega,
-                                                 iv.IdCuentaBancaria,
-                                                 IdCliente = v.idCliente,
-                                                 iv.Id,
-                                             }).ToList();
-
-                    // 3. Asignar ventas y entregas a cada cuenta
-                    foreach (var cuenta in cuentasBancarias)
+                    /* =====================================================
+                     * 4️⃣ ARMADO FINAL POR CUENTA
+                     * ===================================================== */
+                    foreach (var cuenta in cuentas)
                     {
-                        var ventas = informacionVentas
+                        // 🔹 Detalle sistema viejo
+                        var ventasViejas = infoVieja
                             .Where(iv => iv.IdCuentaBancaria == cuenta.Id)
                             .Select(iv => new VMInformacionVenta
                             {
@@ -109,18 +146,25 @@ namespace Sistema_David.Models.Modelo
                             })
                             .ToList();
 
-                        cuenta.InformacionVentas = ventas;
-                        cuenta.Entrega = ventas.Sum(v => v.Entrega);
+                        var totalViejo = ventasViejas.Sum(v => v.Entrega);
+
+                        // 🔹 Total electro
+                        var totalElectro = entregasElectro
+                            .FirstOrDefault(x => x.IdCuenta == cuenta.Id)?.Total ?? 0;
+
+                        cuenta.InformacionVentas = ventasViejas;
+                        cuenta.Entrega = totalViejo + totalElectro;
                     }
 
-                    return cuentasBancarias;
+                    return cuentas;
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }
         }
+
 
 
 
@@ -131,17 +175,21 @@ namespace Sistema_David.Models.Modelo
             {
                 using (Sistema_DavidEntities db = new Sistema_DavidEntities())
                 {
-                    var fechaDesde = DateTime.Today;              // hoy a las 00:00
-                    var fechaHasta = fechaDesde.AddDays(1);       // mañana a las 00:00
+                    var fechaDesde = DateTime.Today;        // hoy 00:00
+                    var fechaHasta = fechaDesde.AddDays(1); // mañana 00:00
 
-                    // 1. Traer cuentas bancarias
-                    var cuentasBancarias = db.CuentasBancarias
+                    /* =====================================================
+                     * 1️⃣ CUENTAS BANCARIAS
+                     * ===================================================== */
+                    var cuentas = db.CuentasBancarias
                         .Where(x =>
-                            ((metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA PROPIA" && x.CuentaPropia == 1) ||
-                             (metodopago != null && metodopago.ToUpper() == "TRANSFERENCIA A TERCEROS" && x.CuentaPropia == 0) ||
-                             string.IsNullOrEmpty(metodopago))
-                            && (x.Activo == activo || activo == -1))
-                        .ToList()
+                            (
+                                string.IsNullOrEmpty(metodopago)
+                                || (metodopago.ToUpper() == "TRANSFERENCIA PROPIA" && x.CuentaPropia == 1)
+                                || (metodopago.ToUpper() == "TRANSFERENCIA A TERCEROS" && x.CuentaPropia == 0)
+                            )
+                            && (activo == -1 || x.Activo == activo)
+                        )
                         .Select(x => new VMCuentaBancariaConVentas
                         {
                             Id = x.Id,
@@ -150,33 +198,76 @@ namespace Sistema_David.Models.Modelo
                             CuentaPropia = (int)x.CuentaPropia,
                             Activo = (int)x.Activo,
                             MontoPagar = (decimal)x.MontoPagar,
-                            Entrega = 0 // Se calcula después
+                            Entrega = 0
                         })
                         .ToList();
 
-                    // 2. Traer solo ventas para calcular entrega
-                    var informacionVentas = db.InformacionVentas
-                        .Where(iv => iv.Descripcion.Contains("Cobranza")
-                                     && iv.IdCuentaBancaria != null
-                                      && iv.Fecha >= fechaDesde && iv.Fecha < fechaHasta)
+                    if (!cuentas.Any())
+                        return cuentas;
+
+                    var cuentasIds = cuentas.Select(c => c.Id).ToList();
+
+                    /* =====================================================
+                     * 2️⃣ SISTEMA VIEJO – INFORMACIONVENTAS
+                     * ===================================================== */
+                    var entregasViejas = db.InformacionVentas
+                        .Where(iv =>
+                            iv.Descripcion.Contains("Cobranza") &&
+                            iv.IdCuentaBancaria != null &&
+                            cuentasIds.Contains(iv.IdCuentaBancaria.Value) &&
+                            iv.Fecha >= fechaDesde &&
+                            iv.Fecha < fechaHasta
+                        )
+                        .GroupBy(iv => iv.IdCuentaBancaria.Value)
+                        .Select(g => new
+                        {
+                            IdCuenta = g.Key,
+                            Total = g.Sum(x => (decimal?)x.Entrega) ?? 0
+                        })
                         .ToList();
 
-                    // 3. Calcular solo el total de entregas por cuenta
-                    foreach (var cuenta in cuentasBancarias)
+                    /* =====================================================
+                     * 3️⃣ SISTEMA NUEVO – CUOTAS ELECTRODOMÉSTICOS
+                     * ===================================================== */
+                    var entregasElectro = db.Ventas_Electrodomesticos_Pagos
+                        .Where(p =>
+                            p.IdCuentaBancaria != null &&
+                            cuentasIds.Contains(p.IdCuentaBancaria.Value) &&
+                            p.FechaPago >= fechaDesde &&
+                            p.FechaPago < fechaHasta &&
+                            p.MedioPago.ToUpper().Contains("TRANSFERENCIA")
+                        )
+                        .GroupBy(p => p.IdCuentaBancaria.Value)
+                        .Select(g => new
+                        {
+                            IdCuenta = g.Key,
+                            Total = g.Sum(x => (decimal?)x.ImporteTotal) ?? 0
+                        })
+                        .ToList();
+
+                    /* =====================================================
+                     * 4️⃣ UNIFICAR TOTALES
+                     * ===================================================== */
+                    foreach (var cuenta in cuentas)
                     {
-                        cuenta.Entrega = informacionVentas
-                            .Where(iv => iv.IdCuentaBancaria == cuenta.Id)
-                            .Sum(iv => (decimal?)iv.Entrega) ?? 0;
+                        var viejo = entregasViejas
+                            .FirstOrDefault(x => x.IdCuenta == cuenta.Id)?.Total ?? 0;
+
+                        var electro = entregasElectro
+                            .FirstOrDefault(x => x.IdCuenta == cuenta.Id)?.Total ?? 0;
+
+                        cuenta.Entrega = viejo + electro;
                     }
 
-                    return cuentasBancarias;
+                    return cuentas;
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }
         }
+
 
 
         public static List<VMComprobantesImagenes> ObtenerComprobantes(int idCuenta)

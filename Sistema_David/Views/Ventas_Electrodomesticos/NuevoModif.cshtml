@@ -33,10 +33,10 @@
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button id="btnBuscarClienteModal" class="btn btn-outline-light btn-sm">
+                    <button id="btnBuscarClienteModal" class="btn btn-outline-light btn-sm" hidden>
                         <i class="fa fa-table"></i> Buscar
                     </button>
-                    <button id="btnNuevoCliente" class="btn btn-success btn-sm">
+                    <button id="btnNuevoCliente" class="btn btn-success btn-sm" hidden>
                         <i class="fa fa-user-plus"></i> Nuevo
                     </button>
                 </div>
@@ -51,7 +51,7 @@
                         <label class="form-label fw-semibold">DNI <span class="text-danger">*</span></label>
 
                         <div class="input-group">
-                            <input id="dni" type="text" class="form-control ve-input" placeholder="Ej: 32123456" autocomplete="off" />
+                            <input id="dni" type="text" class="form-control ve-input" placeholder="Nro" autocomplete="off" />
                             <button id="btnBuscarDni" class="btn btn-primary">
                                 <i class="fa fa-search"></i>
                             </button>
@@ -112,7 +112,7 @@
                     <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold">Entrega</label>
                         <input id="entrega" type="text"
-                               class="form-control ve-input text-end"
+                               class="form-control ve-input text-end miles"
                                placeholder="$ 0,00" autocomplete="off" />
                         <div class="form-text">Se descuenta del total de la venta.</div>
                     </div>
@@ -250,7 +250,7 @@
                     <button id="btnLimpiarCuotas" class="btn btn-outline-light btn-sm">
                         <i class="fa fa-eraser"></i> Limpiar
                     </button>
-                    <button id="btnExportarPdf" onclick="exportarPdfDesdeNuevoModif()" class="btn btn-primary btn-sm">
+                    <button id="btnExportarPdf" onclick="exportarPdfDesdeNuevoModif()" class="btn btn-primary btn-sm" hidden>
                         <i class="fa fa-file-pdf-o"></i> Exportar PDF
                     </button>
 
@@ -277,14 +277,14 @@
 
                     <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold">Cantidad (0 = auto)</label>
-                        <input id="cantCuotas" type="number" min="0" class="form-control ve-input" value="0" />
+                        <input id="cantCuotas" type="number" min="0" class="form-control ve-input " value="0" />
                     </div>
 
                     <!-- Recargo -->
                     <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold">Recargo</label>
                         <div class="input-group">
-                            <input id="recargo" type="text" class="form-control ve-input text-end" placeholder="Ej: 10" />
+                            <input id="recargo" type="text" class="form-control ve-input text-end miles" placeholder="Ej: 10" />
                             <div id="recargoTipoWrap" class="btn-group ve-type-toggle">
                                 <button type="button" class="btn btn-outline-light active" data-value="%">%</button>
                                 <button type="button" class="btn btn-outline-light" data-value="$">$</button>
@@ -433,7 +433,7 @@
                                 <label class="form-label fw-semibold">Cantidad</label>
                                 <div class="input-group">
                                     <button class="btn btn-outline-light" id="btnMenos"><i class="fa fa-minus"></i></button>
-                                    <input id="cantidadProducto" class="form-control ve-input text-center" type="number" min="1" value="1" />
+                                    <input id="cantidadProducto" class="form-control ve-input text-center " type="number" min="1" value="1" />
                                     <button class="btn btn-outline-light" id="btnMas"><i class="fa fa-plus"></i></button>
                                 </div>
                             </div>
@@ -492,7 +492,7 @@
     
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_NuevoModif.js?v=1.4"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_NuevoModif.js?v=1.7"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

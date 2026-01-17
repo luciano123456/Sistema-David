@@ -219,7 +219,96 @@
             </div>
         </section>
 
+        <div class="d-flexv flex-wrap justify-content-end mt-2 mb-4">
+            <div id="btnLimite" class="me-2 mb-2" style="display: none">
+                <a class="btn btn-success btnnuevo btn-uniform" onclick="modalLimite()" style="background-color: #f0ad4e; border-color: #4285F4; color: white;">
+                    <i class="fa fa-info"></i> Limites
+                </a>
+
+            </div>
+
+        </div>
+
+
     </div>
+
+    <div class="modal fade" id="modalLimite" tabindex="-1" aria-labelledby="modalLimitesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content modal-limite-pro2">
+
+                <!-- HEADER -->
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="limite-icon">
+                            <i class="fa fa-calendar"></i>
+                        </div>
+                        <div class="lh-sm">
+                            <h5 class="modal-title fw-bold mb-1" id="modalLimitesLabel">
+                                Límite de días — primera cuota
+                            </h5>
+                            <div class="text-muted small">
+                                Configurá el plazo máximo permitido
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- BODY -->
+                <div class="modal-body pt-4">
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase limite-label">
+                            Cantidad de días
+                        </label>
+
+                        <div class="input-group limite-inputgroup">
+                            <span class="input-group-text limite-addon">
+                                <i class="fa fa-clock-o"></i>
+                            </span>
+
+                            <input type="number"
+                                   id="DiasLimite"
+                                   class="form-control limite-input text-black"
+                                   placeholder="Ej: 10"
+                                   min="0"
+                                   inputmode="numeric">
+
+                            <span class="input-group-text limite-addon-end">días</span>
+                        </div>
+
+                        <div class="limite-help mt-2">
+                            <i class="fa fa-info-circle me-1"></i>
+                            Plazo máximo para la primera cuota desde la fecha de venta.
+                        </div>
+                    </div>
+
+                    <!-- ERROR -->
+                    <p id="datos" class="alert alert-danger py-2 px-3 text-center fw-semibold d-none mb-0"></p>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer border-0 pt-0 pb-4">
+                    <div class="d-flex gap-2 w-100">
+                        <button type="button" class="btn btn-outline-secondary btn-lg w-50" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+
+                        <button id="btnRegistrarModificarwsp"
+                                type="button"
+                                class="btn btn-primary btn-lg w-50"
+                                onclick="modificarLimitePrimerCuota()">
+                            <i class="fa fa-save me-2"></i>Guardar
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
 
 
     @Html.Partial("_CobroModal_Partial")
@@ -236,7 +325,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
 
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Historial.js?v=1.4"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Historial.js?v=1.7"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {

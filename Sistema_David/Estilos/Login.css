@@ -97,3 +97,41 @@ body {
         color: #333;
         cursor: pointer;
     }
+
+
+.wm-test-pattern {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    user-select: none;
+    opacity: 1;
+    background-repeat: repeat;
+    background-size: 220px 160px; /* densidad del patrón */
+    transform: rotate(-10deg);
+    transform-origin: center;
+}
+
+/* Patrón: “gotita” + texto repetido */
+.wm-test-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='160'%3E%3Cg fill='none'%3E%3Cpath d='M26 18 C18 32 14 40 14 50 a12 12 0 0 0 24 0 c0-10-4-18-12-32z' fill='rgba(200,0,0,0.10)'/%3E%3Ctext x='60' y='58' font-family='Arial' font-size='16' font-weight='700' fill='rgba(200,0,0,0.12)'%3EAMBIENTE TEST%3C/text%3E%3Ctext x='60' y='88' font-family='Arial' font-size='14' font-weight='700' fill='rgba(200,0,0,0.10)'%3EAMBIENTE TEST%3C/text%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* No imprimir */
+@media print {
+    .wm-test-pattern {
+        display: none !important;
+    }
+}
+
+
+
+    /* Tema Electro */
+body.tema-electro {
+    background: #050e39; /* elegí el color que quieras */
+}
+
+        /* Si querés que solo cambie el panel izquierdo en vez del body */
+        body.tema-electro .left-side {
+            background: #1b1033;
+        }

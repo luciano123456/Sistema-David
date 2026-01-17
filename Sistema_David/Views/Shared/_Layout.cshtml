@@ -11,6 +11,17 @@
 </head>
 
 
+@using System.Configuration
+
+@{
+    bool ambienteTest = ConfigurationManager.AppSettings["AmbienteTest"] == "1";
+}
+
+@if (ambienteTest)
+{
+    <div class="wm-test-pattern">
+    </div>
+}
 
 
 <body>

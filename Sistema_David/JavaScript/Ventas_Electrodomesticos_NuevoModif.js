@@ -15,10 +15,18 @@
 
 ; (() => {
 
+    let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const esVendedor = (userSession && Number(userSession.IdRol) === 2);
+    const esCobrador = (userSession && Number(userSession.IdRol) === 3);
+    let limiteDiasPrimerCuota = null; // 🔒 límite desde tabla Limites
+
+
+
     let diasVencimientoVenta = null; // 🔥 define la regla de toda la venta
     let idxProductoEditando = null; // null = nuevo, number = editando
 
 
+    aplicarSeparadorMilesAlEscribir(".miles");
 
 
     function calcularMaxPermitidoProducto(idProducto) {
@@ -198,7 +206,8 @@
 
     /* ====================== ESTADO GLOBAL ====================== */
 
-    let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+
     let cliente = null;
     let productos = [];   // {id, nombre, cant, total, img}
     let cuotas = [];      // {idCuota, n, venc, original, recargo, desc, total, restante, estado, hist[]}
@@ -211,8 +220,20 @@
 
     $(document).ready(() => {
 
+        cargarLimitePrimerCuota();
+
         if (!modoEdicion) {
             $('#fechaLimite').prop('readonly', true);
+        }
+
+
+        if (esVendedor || esCobrador) {
+            $('#fechaVenta').prop('readonly', true);
+        }
+
+
+        if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+            document.getElementById("btnExportarPdf").removeAttribute("hidden");
         }
 
 
@@ -339,6 +360,11 @@
 
             const c = res?.data || null;
 
+            if (res.data.LimiteVentas == 0) {
+                showTip($('#dni')[0], 'El cliente no posee un scoring crediticio. Avisar a un administrador', 'danger');
+                return;
+            }
+
             if (!c) {
                 $('#msgCliente').removeClass('d-none');
                 $('#wrapBadges').addClass('d-none');
@@ -414,7 +440,7 @@
         try {
             const res = await $.ajax({
                 type: 'POST',
-                url: '/Stock/BuscarStock',
+                url: '/Stock/BuscarStockElectrodomesticos',
                 data: JSON.stringify({ Id: userSession?.Id || 0 }),
                 contentType: 'application/json',
                 dataType: 'json'
@@ -842,59 +868,100 @@
     }
 
     function generarPlanCuotas() {
-        // en edición NUNCA se regenera
+
         if (modoEdicion) {
             showToast("No se puede regenerar cuotas en una venta existente.", "danger");
             return;
         }
 
         const total = productos.reduce((a, b) => a + (b.total || 0), 0);
-        if (total <= 0) { cuotas = []; renderCuotas(); return; }
+        if (total <= 0) {
+            cuotas = [];
+            renderCuotas();
+            return;
+        }
 
         const entrega = parseMoney($('#entrega').val());
         const restante = Math.max(0, total - entrega);
 
         const forma = $('#forma').val();
         const cant = parseInt($('#cantCuotas').val() || 0, 10);
-        const fIni = moment($('#fechaPrimerCobro').val());
-        const fLim = moment($('#fechaLimite').val());
-        const fVenta = moment($('#fechaVenta').val());
 
-        if (!fIni.isValid() || !fLim.isValid() || fLim.isSameOrBefore(fVenta, 'day')) {
-            showTip($('#fechaLimite')[0], 'La fecha límite debe ser posterior a la venta.', 'danger');
+        const fVenta = parseDateStrict($('#fechaVenta').val());
+        const fIni = parseDateStrict($('#fechaPrimerCobro').val());
+        const fLim = parseDateStrict($('#fechaLimite').val());
+
+        if (!fVenta.isValid() || !fIni.isValid() || !fLim.isValid()) {
+            showTip($('#fechaLimite')[0], 'Fechas inválidas.', 'danger');
             return;
         }
 
+        if (!fLim.isAfter(fIni, 'day')) {
+            showTip($('#fechaLimite')[0],
+                'La fecha límite debe ser posterior a la primera cuota.',
+                'danger'
+            );
+            return;
+        }
+
+        // ===============================
+        // 🔢 FECHAS DE CUOTAS
+        // ===============================
         let fechas = [];
+        let cur = fIni.clone();
+
         if (cant > 0) {
-            let cur = fIni.clone();
             for (let i = 0; i < cant; i++) {
                 fechas.push(cur.clone());
                 nextPeriod(cur, forma);
             }
         } else {
-            let cur = fIni.clone();
             while (cur.isSameOrBefore(fLim, 'day')) {
                 fechas.push(cur.clone());
                 nextPeriod(cur, forma);
             }
         }
 
-        if (fechas.length === 0) { cuotas = []; renderCuotas(); return; }
+        if (!fechas.length) {
+            cuotas = [];
+            renderCuotas();
+            return;
+        }
 
-        const porCuota = restante / fechas.length;
+        // ===============================
+        // 🔥 RECARGO / DESCUENTO GLOBAL
+        // ===============================
+        const r = parseMoney($('#recargo').val());
+        const rt = getTipoFromUI('#recargoTipoWrap', '#recargoTipo');
 
+        const d = parseMoney($('#descuento').val());
+        const dt = getTipoFromUI('#descuentoTipoWrap', '#descuentoTipo');
+
+        const basePorCuota = round2(restante / fechas.length);
+
+        let recargoGlobal = rt === '%' ? basePorCuota * r / 100 : r;
+        let descuentoGlobal = dt === '%' ? basePorCuota * d / 100 : d;
+
+        recargoGlobal = round2(recargoGlobal);
+        descuentoGlobal = round2(descuentoGlobal);
+
+        // ===============================
+        // 📦 ARMAR CUOTAS
+        // ===============================
         cuotas = fechas.map((f, i) => {
-            const base = round2(porCuota);
+            const totalCuota = round2(
+                basePorCuota + recargoGlobal - descuentoGlobal
+            );
+
             return {
-                idCuota: 0,           // aún no existe en DB
+                idCuota: 0,
                 n: i + 1,
                 venc: f.format("DD/MM/YYYY"),
-                original: base,
-                recargo: 0,
-                desc: 0,
-                total: base,
-                restante: base,
+                original: basePorCuota,
+                recargo: recargoGlobal,
+                desc: descuentoGlobal,
+                total: totalCuota,
+                restante: totalCuota,
                 estado: "Pendiente",
                 hist: []
             };
@@ -902,6 +969,7 @@
 
         renderCuotas();
     }
+
 
     function badgeEstado(c) {
         if (c.estado === 'Pagada') return `<span class="badge bg-success">Pagada</span>`;
@@ -1192,10 +1260,12 @@
     }
 
     $('#btnConfirmarAjuste').on('click', async () => {
+
         if (!modoEdicion) {
-            showToast('Los ajustes se hacen sobre cuotas de ventas ya registradas.', 'warn');
+            showToast('Los ajustes se hacen sobre ventas existentes.', 'warn');
             return;
         }
+
         if (idxCuotaSel < 0) return;
 
         const c = cuotas[idxCuotaSel];
@@ -1209,19 +1279,38 @@
         let rVal = rt === '%' ? c.original * r / 100 : r;
         let dVal = dt === '%' ? c.original * d / 100 : d;
 
-        const nuevo = round2(Math.max(0, c.original + rVal - dVal));
-        const pagado = c.total - c.restante; // lo que ya tiene pago
+        rVal = round2(rVal);
+        dVal = round2(dVal);
 
-        if (nuevo < pagado) {
-            showTip($('#btnConfirmarAjuste')[0], 'No puede ser menor a lo ya pagado', 'danger');
+        // 🔥 ACUMULAR
+        const nuevoRecargo = round2(c.recargo + rVal);
+        const nuevoDescuento = round2(c.desc + dVal);
+
+        const nuevoTotal = round2(
+            c.original + nuevoRecargo - nuevoDescuento
+        );
+
+        const pagado = round2(c.total - c.restante);
+
+        if (nuevoTotal < pagado) {
+            showTip(
+                $('#btnConfirmarAjuste')[0],
+                'El total no puede ser menor a lo ya pagado.',
+                'danger'
+            );
             return;
         }
 
         try {
-            const resp = await $.post("/Ventas_Electrodomesticos/ActualizarRecargoDescuentoCuota", {
-                idCuota: c.idCuota,
-                recargo: rVal,
-                descuento: dVal
+            const resp = await $.ajax({
+                url: "/Ventas_Electrodomesticos/ActualizarRecargoDescuentoCuota",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    idCuota: c.idCuota,
+                    recargo: nuevoRecargo,
+                    descuento: nuevoDescuento
+                })
             });
 
             if (!resp.success) {
@@ -1229,7 +1318,7 @@
                 return;
             }
 
-            showToast("Ajuste actualizado.", "success");
+            showToast("Ajuste aplicado correctamente.", "success");
             bootstrap.Modal.getInstance($('#mdAjuste')[0]).hide();
 
             await cargarVentaExistente(idVenta);
@@ -1238,6 +1327,7 @@
             showToast("Error al ajustar cuota.", "danger");
         }
     });
+
 
     /* ====================== HISTORIAL POR CUOTA ====================== */
 
@@ -1404,7 +1494,8 @@
         if (!cliente)
             return showToast("Elegí un cliente.", "danger");
 
-        if (!$('#turno').val())
+        
+            if (!$('#turno').val())
             return showToast("Seleccioná un turno.", "warn");
 
         if (!$('#franja').val())
@@ -1436,6 +1527,13 @@
             FormaCuotas: $('#forma').val(),
             CantidadCuotas: parseInt($('#cantCuotas').val() || 0),
             FechaVencimiento: $('#fechaLimite').val(),
+
+            RecargoTipo: getTipoFromUI('#recargoTipoWrap', '#recargoTipo'),
+            RecargoValor: parseMoney($('#recargo').val()) || null,
+
+            DescuentoTipo: getTipoFromUI('#descuentoTipoWrap', '#descuentoTipo'),
+            DescuentoValor: parseMoney($('#descuento').val()) || null,
+
 
             Items: productos.map(p => ({
                 IdProducto: p.id,
@@ -1629,6 +1727,11 @@
 
             actualizarKpis();
 
+         
+
+            // 🔒 BLOQUEAR
+            setRecargoDescuentoReadonlyDesdeVenta(v)
+
             $("#btnRegistrarVenta").html(`<i class="fa fa-save"></i> Guardar cambios`);
 
             showToast("Venta cargada correctamente.", "success");
@@ -1722,6 +1825,239 @@
         });
     }
 
+    $('#cantCuotas').on('input blur', function () {
+
+        let val = parseInt(this.value || 0, 10);
+
+        // 0 = auto → permitido
+        if (val === 0) return;
+
+        const max = calcularMaxCuotasPermitidas();
+        if (!max) return;
+
+        if (val > max) {
+            this.value = max;
+
+            showTip(
+                this,
+                `Máximo permitido para ${$('#forma').val()} días: ${max}`,
+                'warn'
+            );
+        }
+    });
+
+    $('#forma').on('change', function () {
+        const max = calcularMaxCuotasPermitidas();
+        if (!max) return;
+
+        let actual = parseInt($('#cantCuotas').val() || 0, 10);
+
+        if (actual > max && actual !== 0) {
+            $('#cantCuotas').val(max);
+
+            showToast(
+                `La forma seleccionada permite hasta ${max} cuotas.`,
+                'warn'
+            );
+        }
+
+        if (!modoEdicion) generarPlanCuotas();
+    });
+
+
+
+
+    function calcularMaxCuotasPermitidas() {
+        if (!diasVencimientoVenta) return null;
+
+        const forma = ($('#forma').val() || '').toLowerCase();
+
+        let diasPorCuota = 1;
+
+        switch (forma) {
+            case 'diaria':
+                diasPorCuota = 1;
+                break;
+            case 'semanal':
+                diasPorCuota = 7;
+                break;
+            case 'quincenal':
+                diasPorCuota = 15;
+                break;
+            case 'mensual':
+                diasPorCuota = 30;
+                break;
+            default:
+                diasPorCuota = 1;
+        }
+
+        const max = Math.floor(diasVencimientoVenta / diasPorCuota);
+        return Math.max(1, max);
+    }
+
+
+    function parseDateStrict(value) {
+        if (!value) return moment.invalid();
+
+        // Si tu input es type="date", el value viene "YYYY-MM-DD"
+        // Igual dejo fallback por si algún día viene "DD/MM/YYYY"
+        return moment(value, ["YYYY-MM-DD", "DD/MM/YYYY"], true).startOf("day");
+    }
+
+    let fechaPrimerCobroAnterior = null;
+
+    $("#fechaPrimerCobro")
+        .on("focusin", function () {
+            // guardo el valor anterior real ANTES de cambiar
+            fechaPrimerCobroAnterior = this.value;
+        })
+        .on("blur", function () {
+
+            if (!diasVencimientoVenta) return;
+            if (!limiteDiasPrimerCuota) return;
+
+            const rawVenta = $("#fechaVenta").val();
+            const rawIni = this.value;
+
+            // 🔒 si no hay fecha de venta no podés validar
+            if (!rawVenta) {
+                showTip(this, "Primero seleccioná la fecha de venta.", "danger");
+                this.value = fechaPrimerCobroAnterior || "";
+                return;
+            }
+
+            const fVenta = parseDateStrict(rawVenta);
+            const fIni = parseDateStrict(rawIni);
+
+            if (!fVenta.isValid() || !fIni.isValid()) {
+                showTip(this, "Fechas inválidas.", "danger");
+                this.value = fechaPrimerCobroAnterior || "";
+                return;
+            }
+
+            // 🔥 VALIDACIÓN: primer cobro no puede superar límite desde fecha venta
+            const diasDesdeVenta = fIni.diff(fVenta, "days");
+
+            if (diasDesdeVenta > limiteDiasPrimerCuota) {
+                showTip(
+                    this,
+                    `La fecha de primer cobro no puede superar ${limiteDiasPrimerCuota} días desde la fecha de venta.`,
+                    "danger"
+                );
+                this.value = fechaPrimerCobroAnterior || "";
+                return;
+            }
+
+            // ✅ TU FLUJO ORIGINAL (no lo tocamos)
+            const fLim = fIni.clone().add(diasVencimientoVenta, "days");
+            $("#fechaLimite").val(fLim.format("YYYY-MM-DD"));
+
+                generarPlanCuotas();
+            
+        });
+
+
+async function cargarLimitePrimerCuota() {
+    try {
+        const resp = await $.getJSON(
+            "/Limite/BuscarValorLimite",
+            { nombre: "VentasPrimerCuota" }
+        );
+
+        const val = parseInt(resp?.data?.Valor, 10);
+
+        limiteDiasPrimerCuota = (!isNaN(val) && val > 0) ? val : null;
+
+        console.log("✔ Límite primer cuota:", limiteDiasPrimerCuota);
+
+    } catch (err) {
+        console.error("No se pudo cargar límite de primer cuota", err);
+        limiteDiasPrimerCuota = null;
+    }
+    }
+
+
+    function setRecargoDescuentoReadonlyDesdeVenta(v) {
+
+        // 🔒 Solo en edición
+        if (!modoEdicion) return;
+        if (!v) return;
+
+        /* ===============================
+           RECARGO
+        =============================== */
+        const recargoVal = Number(v.RecargoValor);
+        const recargoTipo = v.RecargoTipo;
+
+        if (!isNaN(recargoVal) && recargoVal > 0 && recargoTipo) {
+
+            $('#recargo').val(recargoVal.toFixed(2));
+            $('#recargoTipo').val(recargoTipo);
+            marcarToggleActivo('#recargoTipoWrap', recargoTipo);
+
+        } else {
+            // 👉 0 sin tipo seleccionado
+            $('#recargo').val('0');
+            $('#recargoTipo').val('');
+            limpiarToggle('#recargoTipoWrap');
+        }
+
+        /* ===============================
+           DESCUENTO
+        =============================== */
+        const descVal = Number(v.DescuentoValor);
+        const descTipo = v.DescuentoTipo;
+
+        if (!isNaN(descVal) && descVal > 0 && descTipo) {
+
+            $('#descuento').val(descVal.toFixed(2));
+            $('#descuentoTipo').val(descTipo);
+            marcarToggleActivo('#descuentoTipoWrap', descTipo);
+
+        } else {
+            // 👉 0 sin tipo seleccionado
+            $('#descuento').val('0');
+            $('#descuentoTipo').val('');
+            limpiarToggle('#descuentoTipoWrap');
+        }
+
+        /* ===============================
+           🔒 BLOQUEAR UI
+        =============================== */
+        bloquearRecargoDescuentoUI();
+    }
+
+
+    function limpiarToggle(wrapperSel) {
+        const wrap = document.querySelector(wrapperSel);
+        if (!wrap) return;
+
+        wrap.querySelectorAll('.btn').forEach(b => {
+            b.classList.remove('active');
+        });
+    }
+
+    function marcarToggleActivo(wrapperSel, value) {
+        const $wrap = $(wrapperSel);
+        $wrap.find('.btn').removeClass('active');
+        $wrap.find(`.btn[data-value="${value}"]`).addClass('active');
+    }
+
+
+    function bloquearRecargoDescuentoUI() {
+
+        $('#recargo').prop('readonly', true);
+        $('#descuento').prop('readonly', true);
+
+        $('#recargoTipoWrap button').prop('disabled', true);
+        $('#descuentoTipoWrap button').prop('disabled', true);
+
+        $('#recargoTipo').prop('disabled', true);
+        $('#descuentoTipo').prop('disabled', true);
+
+        $('#recargo').addClass('readonly');
+        $('#descuento').addClass('readonly');
+    }
 
 
 })();
@@ -2005,3 +2341,6 @@ function generarPdfVenta(venta) {
     const fileName = `Venta_${venta.IdVenta}_${moment().format("YYYYMMDD_HHmm")}.pdf`;
     doc.save(fileName);
 }
+
+
+

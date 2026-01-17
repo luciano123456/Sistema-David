@@ -12,6 +12,8 @@ $(document).ready(function () {
         document.getElementById("divStock").removeAttribute("hidden");
         document.getElementById("btnNuevo").removeAttribute("hidden");
     }
+
+    aplicarSeparadorMilesAlEscribir(".miles");
 });
 
 async function configurarDataTable() {
@@ -228,8 +230,8 @@ const editarProducto = async id => {
             document.getElementById("imgProd").value = result.Producto.Imagen;
             document.getElementById("Categorias").value = result.Producto.idCategoria;
             document.getElementById("Stock").value = result.Producto.Stock;
-            document.getElementById("PrecioCompra").value = result.Producto.PrecioCompra;
-            document.getElementById("PrecioVenta").value = result.Producto.PrecioVenta;
+            document.getElementById("PrecioCompra").value = formatearMiles(result.Producto.PrecioCompra);
+            document.getElementById("PrecioVenta").value = formatearMiles(result.Producto.PrecioVenta);
             document.getElementById("PorcVenta").value = result.Producto.PorcVenta;
             document.getElementById("DiasVencimiento").value = result.Producto.DiasVencimiento;
             document.getElementById("btnRegistrarModificar").textContent = "Modificar"; 
@@ -288,8 +290,8 @@ async function registrarProducto() {
             Imagen: document.getElementById("imgProd").value,
             idCategoria: document.getElementById("Categorias").value,
             Stock: document.getElementById("Stock").value,
-            PrecioCompra: document.getElementById("PrecioCompra").value,
-            PrecioVenta: document.getElementById("PrecioVenta").value,
+            PrecioCompra: formatearSinMiles(document.getElementById("PrecioCompra").value),
+            PrecioVenta: formatearSinMiles(document.getElementById("PrecioVenta").value),
             PorcVenta: document.getElementById("PorcVenta").value,
             DiasVencimiento: document.getElementById("DiasVencimiento").value
         });
@@ -332,8 +334,8 @@ async function modificarProducto() {
             Imagen: document.getElementById("imgProd").value,
             idCategoria: document.getElementById("Categorias").value,
             Stock: document.getElementById("Stock").value,
-            PrecioCompra: document.getElementById("PrecioCompra").value,
-            PrecioVenta: document.getElementById("PrecioVenta").value,
+            PrecioCompra: formatearSinMiles(document.getElementById("PrecioCompra").value),
+            PrecioVenta: formatearSinMiles(document.getElementById("PrecioVenta").value),
             PorcVenta: document.getElementById("PorcVenta").value,
             DiasVencimiento: document.getElementById("DiasVencimiento").value
 

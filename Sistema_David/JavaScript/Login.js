@@ -1,5 +1,24 @@
 ﻿
 $(document).ready(function () {
+
+    // ====== TEMA LOGIN según tipoSistemaVentas ======
+    const tipo = (localStorage.getItem("tipoSistemaVentas") || "").toLowerCase();
+
+    const logo = document.getElementById("loginLogo");
+    if (tipo === "electro") {
+        document.body.classList.add("tema-electro");
+
+        if (logo) {
+            logo.src = "/Imagenes/LoginElectrodomesticos.png";
+        }
+    } else {
+        document.body.classList.remove("tema-electro");
+
+        if (logo) {
+            logo.src = "/Imagenes/Login.png";
+        }
+    }
+
     // Verificar si el usuario tiene credenciales guardadas
     if (localStorage.getItem('rememberMe') === 'true') {
         // Si el checkbox estaba seleccionado la última vez
@@ -58,7 +77,20 @@ $(document).ready(function () {
 
                     // Redirigir a la página principal
                     localStorage.setItem("usuario", JSON.stringify(data.Data));
-                    document.location.href = "../Ventas/Index";
+
+                    let tipo = localStorage.getItem("tipoSistemaVentas");
+
+                    if (!tipo) {
+                        new bootstrap.Modal(document.getElementById("modalTipoVentas")).show();
+                        return;
+                    }
+
+                    if (tipo === "electro") {
+                        window.location.href = "/Ventas_Electrodomesticos/Historial/";
+                    } else {
+                        window.location.href = "/Ventas/Index/";
+                    }
+
                 } else {
                     // Mostrar el mensaje de error
                     $(document).ready(function () {

@@ -47,6 +47,10 @@ namespace Sistema_David.Models.DB
         public Nullable<System.DateTime> P_FechaCobro { get; set; }
         public Nullable<int> Comprobante { get; set; }
         public Nullable<int> Orden { get; set; }
+        public string RecargoTipo { get; set; }
+        public Nullable<decimal> RecargoValor { get; set; }
+        public string DescuentoTipo { get; set; }
+        public Nullable<decimal> DescuentoValor { get; set; }
     
         public virtual Clientes Clientes { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

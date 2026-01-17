@@ -6,7 +6,9 @@ let gridVentas = null;
 let ventasCache = [];
 let ventaSeleccionada = null;
 let rowAbierto = null;
-let userSession;
+
+const userSession = JSON.parse(localStorage.getItem('usuario'));
+const esVendedor = (userSession && Number(userSession.IdRol) === 2);
 
 /* ------------ HELPERS ------------ */
 
@@ -105,7 +107,7 @@ function toggleFiltros() {
 
 async function iniciarFiltros() {
 
-    userSession = JSON.parse(localStorage.getItem('usuario'));
+ 
 
     await cargarUsuarios()
 
@@ -119,6 +121,7 @@ async function iniciarFiltros() {
     if (userSession.IdRol == 1) {
         FechaDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
         FechaHasta = moment().format('YYYY-MM-DD');
+        document.getElementById("btnLimite").style.display = "block";
     } else {
         FechaDesde = moment().format('YYYY-MM-DD');
         FechaHasta = moment().format('YYYY-MM-DD');
@@ -265,25 +268,30 @@ function renderTabla(data) {
             },
             {
                 data: "IdVenta",
+                name: "acciones",
                 orderable: false,
                 className: "text-center",
                 render: id => `
     <div class="d-flex justify-content-center gap-2">
 
+
+    ${userSession.IdRol == 1 ? `
         <!-- EDITAR -->
         <button class="btn-accion btn-editar"
                 onclick="editarVenta(${id})"
                 title="Editar venta">
             <i class="fa fa-pencil"></i>
         </button>
+        ` : ""}
 
-        <!-- ELIMINAR -->
+         ${userSession.IdRol == 1 ? `
+        <!-- ELIMINAR (solo admin) -->
         <button class="btn-accion btn-eliminar"
                 onclick="eliminarVenta(${id})"
                 title="Eliminar venta">
             <i class="fa fa-trash"></i>
         </button>
-
+        ` : ""}
 
         <!-- PDF -->
         <button class="btn-accion btn-pdf"
@@ -296,8 +304,15 @@ function renderTabla(data) {
 `
 
             }
-        ]
+        ],
+        initComplete: function () {
+            if (esVendedor) {
+                this.api().column("acciones:name").visible(false);
+            }
+        }
     });
+
+
 
     $("#grdVentas tbody").on("click", "button.btn-row-detail", function (e) {
         e.stopPropagation();
@@ -334,6 +349,7 @@ function reabrirRowSeleccionado() {
 /* ------------ ACORDEÓN DETALLE ------------ */
 
 function formarAcordeon(v) {
+
     return `
         <div class="accordion-sub">
 
@@ -370,7 +386,7 @@ function formarAcordeon(v) {
                             <th class="text-end">Pagado</th>
                             <th class="text-end">Restante</th>
                             <th>Estado</th>
-                            <th class="text-center">Acciones</th>
+                            ${esVendedor ? "" : `<th class="text-center">Acciones</th>`}
                         </tr>
                     </thead>
                     <tbody id="tbCuotasPend_${v.IdVenta}"></tbody>
@@ -412,11 +428,14 @@ function formarAcordeon(v) {
                 </div>
             </div>
 
-            <div class="text-end mt-3">
-                <button class="btn btn-primary btn-sm" onclick="exportarPdfVenta(${v.IdVenta})">
-                    <i class="fa fa-file-pdf-o me-1"></i> PDF de esta venta
-                </button>
-            </div>
+${(userSession && (userSession.IdRol === 1 || userSession.IdRol === 4)) ? `
+    <div class="text-end mt-3">
+        <button class="btn btn-primary btn-sm" onclick="exportarPdfVenta(${v.IdVenta})">
+            <i class="fa fa-file-pdf-o me-1"></i> PDF de esta venta
+        </button>
+    </div>
+` : ""}
+
 
         </div>
     `;
@@ -479,8 +498,16 @@ function renderCuotas(v) {
     const tbPag = $(`#tbCuotasPag_${v.IdVenta}`).empty();
     const lblFin = $(`#qFin_${v.IdVenta}`);
 
+    const COLS_PEND = esVendedor ? 8 : 9;
+
     if (!v.Cuotas?.length) {
-        tbPend.append(`<tr><td colspan="9" class="text-center text-muted">Sin cuotas</td></tr>`);
+        tbPend.append(`
+            <tr>
+                <td colspan="${COLS_PEND}" class="text-center text-muted">
+                    Sin cuotas
+                </td>
+            </tr>
+        `);
         lblFin.text("0");
         return;
     }
@@ -490,7 +517,11 @@ function renderCuotas(v) {
 
     v.Cuotas.forEach(c => {
 
-        const total = (c.MontoOriginal || 0) + (c.MontoRecargos || 0) - (c.MontoDescuentos || 0);
+        const total =
+            (c.MontoOriginal || 0) +
+            (c.MontoRecargos || 0) -
+            (c.MontoDescuentos || 0);
+
         const fechaVto = moment(c.FechaVencimiento).startOf("day");
         const diasAtraso = hoy.diff(fechaVto, "days");
 
@@ -510,6 +541,7 @@ function renderCuotas(v) {
         ========================= */
         if (c.Estado === "Pagada") {
             countFin++;
+
             tbPag.append(`
                 <tr>
                     <td>${c.NumeroCuota}</td>
@@ -524,11 +556,12 @@ function renderCuotas(v) {
                     </td>
                 </tr>
             `);
+
             return;
         }
 
         /* =========================
-           ESTILOS IGUAL A COBROS
+           ESTILOS
         ========================= */
 
         let rowClass = "";
@@ -572,6 +605,33 @@ function renderCuotas(v) {
             estadoHtml = `<span class="badge bg-success">Vence hoy</span>`;
         }
 
+        /* =========================
+           ACCIONES (solo si NO es vendedor)
+        ========================= */
+        const accionesHtml = esVendedor ? "" : `
+            <td class="text-center">
+                <div class="btn-group">
+                    <button class="btn btn-accion btn-cobrar me-1"
+                            onclick="Historial.abrirCobro(${v.IdVenta}, ${c.Id})"
+                            title="Cobrar">
+                        <i class="fa fa-money"></i>
+                    </button>
+
+                    <button class="btn btn-accion btn-ajuste me-1"
+                            onclick="Historial.abrirAjuste(${v.IdVenta}, ${c.Id})"
+                            title="Ajustar">
+                        <i class="fa fa-bolt"></i>
+                    </button>
+
+                    <button class="btn btn-accion btn-historial"
+                            onclick="Historial.abrirHistorial(${v.IdVenta}, ${c.Id})"
+                            title="Historial">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
         tbPend.append(`
             <tr class="${rowClass}">
                 <td>${c.NumeroCuota}</td>
@@ -584,29 +644,7 @@ function renderCuotas(v) {
                 <td class="text-end fw-bold">${fmt(c.MontoRestante)}</td>
 
                 <td>${estadoHtml}</td>
-
-                <td class="text-center">
-                    <div class="btn-group">
-                       <button class="btn btn-accion btn-cobrar me-1"
-        onclick="Historial.abrirCobro(${v.IdVenta}, ${c.Id})"
-        title="Cobrar">
-    <i class="fa fa-money"></i>
-</button>
-
-<button class="btn btn-accion btn-ajuste me-1"
-        onclick="Historial.abrirAjuste(${v.IdVenta}, ${c.Id})"
-        title="Ajustar">
-    <i class="fa fa-bolt"></i>
-</button>
-
-<button class="btn btn-accion btn-historial"
-        onclick="Historial.abrirHistorial(${v.IdVenta}, ${c.Id})"
-        title="Historial">
-    <i class="fa fa-eye"></i>
-</button>
-
-                    </div>
-                </td>
+                ${accionesHtml}
             </tr>
         `);
     });
@@ -800,3 +838,108 @@ window.Historial = {
         window.abrirHistorialDesdeCobros(idVenta, idCuota);
     }
 };
+
+async function modalLimite() {
+    try {
+        // ocultar error
+        const err = document.getElementById("datos");
+        if (err) {
+            err.classList.add("d-none");
+            err.textContent = "";
+        }
+
+        // limpiar input mientras carga
+        const inp = document.getElementById("DiasLimite");
+        if (inp) inp.value = "";
+
+        // pedir el valor actual del limite
+        const resp = await $.getJSON("/Limite/BuscarValorLimite", { nombre: "VentasPrimerCuota" });
+
+        // resp = { data: { Id, Nombre, Valor } }
+        const lim = resp?.data;
+
+        if (!lim || lim.Valor === undefined || lim.Valor === null) {
+            if (err) {
+                err.textContent = "No se encontró el límite 'VentasPrimerCuota'.";
+                err.classList.remove("d-none");
+            }
+        } else {
+            if (inp) inp.value = lim.Valor;
+        }
+
+        // abrir modal
+        $("#modalLimite").modal("show");
+
+        // foco prolijo
+        setTimeout(() => inp?.focus(), 300);
+
+    } catch (e) {
+        console.error("Error modalLimite()", e);
+
+        const err = document.getElementById("datos");
+        if (err) {
+            err.textContent = "Ha ocurrido un error cargando el límite.";
+            err.classList.remove("d-none");
+        }
+
+        $("#modalLimite").modal("show");
+    }
+}
+
+
+async function modificarLimitePrimerCuota() {
+    try {
+        const err = document.getElementById("datos");
+        if (err) {
+            err.classList.add("d-none");
+            err.textContent = "";
+        }
+
+        const valorStr = (document.getElementById("DiasLimite")?.value || "").trim();
+        const valor = parseInt(valorStr, 10);
+
+        if (isNaN(valor) || valor < 0) {
+            if (err) {
+                err.textContent = "Ingresá una cantidad de días válida (0 o mayor).";
+                err.classList.remove("d-none");
+            }
+            return;
+        }
+
+        // Usamos LimiteController/Edita(VMLimite) como en tu ejemplo
+        const payload = JSON.stringify({
+            Nombre: "VentasPrimerCuota",
+            Valor: valor
+        });
+
+        const options = {
+            type: "POST",
+            url: "/Limite/Editar",
+            async: true,
+            data: payload,
+            contentType: "application/json",
+            dataType: "json"
+        };
+
+        const resp = await MakeAjax(options);
+
+        // resp = { data: true/false }
+        if (resp && resp.data === true) {
+            exitoModal("Límite modificado correctamente");
+            $("#modalLimite").modal("hide");
+        } else {
+            if (err) {
+                err.textContent = "No se pudo modificar el límite.";
+                err.classList.remove("d-none");
+            }
+        }
+
+    } catch (e) {
+        console.error("Error modificarLimitePrimerCuota()", e);
+        const err = document.getElementById("datos");
+        if (err) {
+            err.textContent = "Ha ocurrido un error.";
+            err.classList.remove("d-none");
+        }
+    }
+}

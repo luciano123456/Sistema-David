@@ -95,6 +95,13 @@ namespace Sistema_David.Controllers
                     FranjaHoraria = franjaHoraria
                 };
 
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+
+                if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
+                {
+                    filtro.IdVendedor = usuarioSesion.Id;
+                }
+
                 var data = Ventas_ElectrodomesticosModel.ListarCuotasACobrar(filtro);
                 return Json(new { data }, JsonRequestBehavior.AllowGet);
             }
@@ -112,9 +119,32 @@ namespace Sistema_David.Controllers
                 IdVendedor = idVendedor
             };
 
+
             var data = Ventas_ElectrodomesticosModel.ListarCobrosPendientes(filtro);
             return Json(new { data }, JsonRequestBehavior.AllowGet);
         }
+
+
+
+        public ActionResult ListarTransferenciasPendientes(int? idCliente, int? idVendedor)
+        {
+            var filtro = new VM_Ventas_Electrodomesticos_FiltroCobros
+            {
+                IdCliente = idCliente,
+                IdVendedor = idVendedor
+            };
+
+            var usuarioSesion = SessionHelper.GetUsuarioSesion();
+
+            if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
+            {
+                filtro.IdVendedor = usuarioSesion.Id;
+            }
+
+                var data = Ventas_ElectrodomesticosModel.ListarTransferenciasPendientes(filtro);
+            return Json(new { data }, JsonRequestBehavior.AllowGet);
+        }
+
 
         [HttpPost]
         public ActionResult MarcarCobroPendienteResuelto(int idCuota)
@@ -122,6 +152,16 @@ namespace Sistema_David.Controllers
             var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
 
             var msg = Ventas_ElectrodomesticosModel.MarcarCobroPendienteResuelto(idCuota, usuario);
+            return Json(new { success = msg == "OK", message = msg });
+        }
+
+
+        [HttpPost]
+        public ActionResult MarcarTransferenciaPendiente(int estado, int idCuota)
+        {
+            var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+
+            var msg = Ventas_ElectrodomesticosModel.MarcarTransferenciaPendiente(estado, idCuota, usuario);
             return Json(new { success = msg == "OK", message = msg });
         }
 
