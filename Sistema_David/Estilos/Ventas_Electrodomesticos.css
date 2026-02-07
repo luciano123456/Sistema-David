@@ -332,7 +332,7 @@ a {
 
 
     .container {
-        min-width: 97% !important;
+        min-width: 99% !important;
     }
 
 /* ===== Layout general ===== */
@@ -1497,3 +1497,368 @@ p {
     -webkit-backdrop-filter: blur(10px);
     color: #fff;
 }
+
+
+/* =========================================================
+   CHECKBOX PRO — usando tu paleta (var(--accent), etc.)
+   Reemplaza el look plano de accent-color.
+========================================================= */
+
+/* contenedor centrado (tu wrap ya existe) */
+.vc-check-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* input checkbox */
+.vc-check {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    border: 1px solid rgba(88, 166, 255, .35);
+    box-shadow: 0 8px 18px rgba(0,0,0,.25);
+    cursor: pointer;
+    position: relative;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+}
+
+    /* hover */
+    .vc-check:hover {
+        border-color: rgba(88,166,255,.85);
+        transform: translateY(-.5px);
+        box-shadow: 0 10px 22px rgba(0,0,0,.35);
+    }
+
+    /* focus accesible */
+    .vc-check:focus {
+        outline: none;
+    }
+
+    .vc-check:focus-visible {
+        box-shadow: 0 0 0 3px rgba(82,165,255,.25), 0 10px 22px rgba(0,0,0,.35);
+        border-color: rgba(88,166,255,.95);
+    }
+
+    /* checked */
+    .vc-check:checked {
+        background: linear-gradient(180deg, rgba(82,165,255,.95), rgba(82,165,255,.55));
+        border-color: rgba(82,165,255,.95);
+        box-shadow: 0 0 0 3px rgba(82,165,255,.18), 0 10px 24px rgba(0,0,0,.45);
+    }
+
+        /* tilde */
+        .vc-check:checked::after {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: rotate(40deg);
+        }
+
+    /* indeterminate (para "seleccionar todos" parcial) */
+    .vc-check:indeterminate {
+        background: linear-gradient(180deg, rgba(82,165,255,.85), rgba(82,165,255,.45));
+        border-color: rgba(82,165,255,.95);
+        box-shadow: 0 0 0 3px rgba(82,165,255,.15), 0 10px 24px rgba(0,0,0,.35);
+    }
+
+        .vc-check:indeterminate::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 8px;
+            width: 10px;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+        }
+
+    /* disabled */
+    .vc-check:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+/* Ajuste visual cuando está dentro de DataTables */
+#vc_tabla .vc-check {
+    margin: 0;
+}
+
+
+/* =======================
+   FAB Asignar Cobrador (PRO)
+======================= */
+
+#btnAsignarCobrador {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 9999;
+    display: none; /* lo maneja JS */
+}
+
+#fabAsignarCobrador {
+    border: 1px solid rgba(255,255,255,0.18);
+    background: linear-gradient(135deg, rgba(88,166,255,0.95), rgba(46,165,255,0.65));
+    color: #071422;
+    font-weight: 800;
+    letter-spacing: .2px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    backdrop-filter: blur(8px);
+}
+
+    #fabAsignarCobrador:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 34px rgba(0,0,0,0.55);
+        filter: brightness(1.05);
+    }
+
+    #fabAsignarCobrador:active {
+        transform: translateY(0px);
+        box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+    }
+
+    #fabAsignarCobrador .vc-fab-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(7,20,34,0.25);
+        color: #071422;
+    }
+
+    #fabAsignarCobrador .vc-fab-badge {
+        margin-left: 4px;
+        background: rgba(7,20,34,0.9);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.12);
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 12px;
+    }
+
+/* =======================
+   MODAL Asignar Cobrador (DARK PRO)
+======================= */
+
+#modalAsignarCobrador .modal-content {
+    background: #0f1626;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.60);
+    overflow: hidden;
+}
+
+#modalAsignarCobrador .modal-header {
+    background: linear-gradient(135deg, rgba(88,166,255,0.20), rgba(255,255,255,0.03));
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+#modalAsignarCobrador .modal-title {
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: .2px;
+}
+
+#modalAsignarCobrador .btn-close {
+    filter: invert(1);
+    opacity: .8;
+}
+
+#modalAsignarCobrador .modal-body {
+    color: rgba(255,255,255,0.86);
+}
+
+#modalAsignarCobrador .form-label {
+    color: rgba(255,255,255,0.75);
+    font-weight: 700;
+}
+
+#modalAsignarCobrador .form-select {
+    background-color: #121826;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 10px;
+}
+
+    #modalAsignarCobrador .form-select:focus {
+        border-color: rgba(88,166,255,0.55);
+        box-shadow: 0 0 0 .2rem rgba(88,166,255,0.18);
+    }
+
+#modalAsignarCobrador .modal-footer {
+    border-top: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.02);
+}
+
+#modalAsignarCobrador .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #fff;
+}
+
+    #modalAsignarCobrador .btn-secondary:hover {
+        background: rgba(255,255,255,0.12);
+    }
+
+#modalAsignarCobrador .btn-success {
+    background: linear-gradient(135deg, rgba(88,166,255,0.95), rgba(46,165,255,0.65));
+    border: 1px solid rgba(255,255,255,0.16);
+    color: #071422;
+    font-weight: 900;
+}
+
+    #modalAsignarCobrador .btn-success:hover {
+        filter: brightness(1.05);
+    }
+
+input {
+     color: black !important; 
+}
+
+/* ===========================================================
+   SELECCIÓN VISUAL DE FILAS (Historial Ventas / Cuotas)
+   =========================================================== */
+
+/* Tabla principal: cursor pointer en filas */
+#grdVentas tbody tr {
+    cursor: pointer;
+}
+
+    /* Hover (para “no perderse”) */
+    #grdVentas tbody tr:hover {
+        filter: brightness(0.96);
+    }
+
+    /* Fila seleccionada por click (NO confundir con venta-seleccionada) */
+    #grdVentas tbody tr.row-selected td {
+        background: rgba(0, 200, 255, 0.18) !important; /* celeste suave */
+    }
+
+/* Acordeón: cuotas/pagos (tablas internas) */
+.accordion-sub table tbody tr {
+    cursor: pointer;
+}
+
+    .accordion-sub table tbody tr:hover {
+        filter: brightness(0.96);
+    }
+
+    .accordion-sub table tbody tr.row-selected td {
+        background: rgba(255, 165, 0, 0.18) !important; /* naranja suave */
+    }
+
+
+/* ==========================
+   SELECT ROW - GRDVENTAS
+========================== */
+#grdVentas tbody tr {
+    cursor: pointer;
+}
+
+    #grdVentas tbody tr:hover {
+        filter: brightness(1.05);
+    }
+
+    #grdVentas tbody tr.row-selected,
+    #grdVentas tbody tr.row-selected > td {
+        background-color: rgba(0, 200, 255, 0.28) !important;
+    }
+
+    #grdVentas tbody tr.row-selected {
+        outline: 2px solid rgba(82,165,255,.55);
+        outline-offset: -2px;
+    }
+
+
+        /* Selección DEBE ganar a fila-atrasada / fila-aldia */
+        #grdVentas tbody tr.row-selected > td {
+            background: rgba(0, 200, 255, 0.28) !important;
+        }
+
+    #grdVentas tbody tr.row-selected {
+        outline: 2px solid rgba(0, 200, 255, 0.65);
+        outline-offset: -2px;
+    }
+
+    /* Por si tus clases pintan el TR en vez del TD */
+    #grdVentas tbody tr.row-selected {
+        background: rgba(0, 200, 255, 0.18) !important;
+    }
+
+
+/* Selección: SIEMPRE visible, gane a fila-aldia / fila-atrasada */
+#grdVentas_wrapper .dataTables_scrollBody table#grdVentas tbody tr.row-selected > td {
+    background: rgba(0, 200, 255, 0.28) !important;
+}
+
+#grdVentas_wrapper table#grdVentas tbody tr.row-selected > td {
+    background: rgba(0, 200, 255, 0.28) !important;
+}
+
+#grdVentas_wrapper table#grdVentas tbody tr.row-selected {
+    outline: 2px solid rgba(0, 200, 255, 0.65);
+    outline-offset: -2px;
+}
+
+
+.dataTables_wrapper .dataTables_filter input {
+    color: white !important;
+}
+
+.ve-card-body {
+    padding: 0px !important;
+}
+
+.ve-card {
+    padding: 1.5px !important;
+}
+
+/* Select2 dark-ish */
+.select2-container--default .select2-selection--single {
+    background-color: var(--panel2);
+    border: 1px solid rgba(118, 158, 255, 0.35) !important;
+    border-color: var(--border) !important;
+    border-radius: .4rem;
+    height: 38px;
+}
+
+
+.cobro-home {
+    cursor: pointer;
+    font-size: 16px;
+    opacity: .9;
+}
+
+    .cobro-home:hover {
+        opacity: 1;
+        transform: scale(1.06);
+    }
+
+    .cobro-home.ok {
+        color: #ff4d4d;
+    }
+    /* roja cuando EstadoCobro=1 */
+    .cobro-home.no {
+        color: #cbd5e1;
+    }
+/* gris cuando EstadoCobro=0 */

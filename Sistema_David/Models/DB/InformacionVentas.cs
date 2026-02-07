@@ -38,7 +38,7 @@ namespace Sistema_David.Models.DB
         public string TipoInteres { get; set; }
         public Nullable<int> ActualizoUbicacion { get; set; }
     
-        public virtual Ventas Ventas { get; set; }
         public virtual CuentasBancarias CuentasBancarias { get; set; }
+        public virtual Ventas Ventas { get; set; }
     }
 }

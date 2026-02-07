@@ -329,6 +329,10 @@ function verificarRoles(idRol) {
         document.getElementById("seccionStock").removeAttribute("hidden");
         document.getElementById("seccionClientesCero").removeAttribute("hidden");
     }
+
+    if (idRol != 4) {
+        document.getElementById("seccionSoporte").removeAttribute("hidden");
+    }
 }
 
 

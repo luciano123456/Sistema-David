@@ -10,6 +10,10 @@ let rowAbierto = null;
 const userSession = JSON.parse(localStorage.getItem('usuario'));
 const esVendedor = (userSession && Number(userSession.IdRol) === 2);
 
+let ventaClickeadaId = null; // NUEVO: la fila que el usuario clickeó
+
+
+
 /* ------------ HELPERS ------------ */
 
 const fmt = n => {
@@ -88,12 +92,14 @@ function closeModalById(id) {
 }
 
 /* ------------ LOAD ------------ */
-
 $(document).ready(() => {
 
     iniciarFiltros();
 
- 
+    // NUEVO: selección visual de filas
+    habilitarSeleccionFilaVentas();
+    habilitarSeleccionFilasCuotas();
+
     $("#btnToggleFiltros").on("click", toggleFiltros);
 });
 
@@ -202,8 +208,13 @@ function renderTabla(data) {
         rowCallback: function (row, d) {
 
             // mismas clases que cobros
-            $(row)
-                .removeClass("fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja venta-seleccionada");
+            $(row).removeClass(
+                "fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja fila-aldia venta-seleccionada row-selected"
+            );
+
+            if (ventaClickeadaId != null && Number(d.IdVenta) === Number(ventaClickeadaId)) {
+                $(row).addClass("row-selected");
+            }
 
             const vencidas = Number(d.CuotasVencidas || 0);
 
@@ -294,12 +305,13 @@ function renderTabla(data) {
         ` : ""}
 
         <!-- PDF -->
+         ${userSession.IdRol == 1 ? `
         <button class="btn-accion btn-pdf"
                 onclick="exportarPdfVenta(${id})"
                 title="Exportar PDF">
             <i class="fa fa-file-pdf-o"></i>
         </button>
-
+        ` : ""}
     </div>
 `
 
@@ -313,11 +325,56 @@ function renderTabla(data) {
     });
 
 
+    $("#grdVentas tbody").on("click", "td", function (e) {
+
+        if (!gridVentas) return;
+
+        // Si clic fue en el botón del acordeón o en acciones, NO seleccionar
+        if ($(e.target).closest("button.btn-row-detail, .btn-accion").length) return;
+
+        // Si clic fue en links/inputs dentro de la celda, NO seleccionar
+        if ($(e.target).closest("a, input, select, textarea, label").length) return;
+
+        const tr = $(this).closest("tr");
+
+        // Si es child row (detalle), NO seleccionar
+        if (tr.hasClass("child")) return;
+
+        const row = gridVentas.row(tr);
+        const d = row.data();
+        if (!d) return;
+
+        // Guardar selección
+        ventaClickeadaId = d.IdVenta;
+
+        // Quitar selección previa (scrollX-friendly)
+        gridVentas.rows().every(function () {
+            $(this.node()).removeClass("row-selected");
+        });
+
+        // Marcar esta fila
+        $(row.node()).addClass("row-selected");
+
+        // Redraw para que rowCallback sostenga la selección
+        gridVentas.draw(false);
+    });
 
     $("#grdVentas tbody").on("click", "button.btn-row-detail", function (e) {
         e.stopPropagation();
 
         const tr = $(this).closest("tr");
+
+        // marcar selección visual igual aunque el click fue en el botón
+        gridVentas.rows().every(function () {
+            $(this.node()).removeClass("row-selected");
+        });
+        $(gridVentas.row(tr).node()).addClass("row-selected");
+
+
+        // guardar el id para persistir
+        const d = gridVentas.row(tr).data();
+        ventaClickeadaId = d?.IdVenta ?? null;
+
         const row = gridVentas.row(tr);
         const icon = tr.find("button.btn-row-detail i");
 
@@ -942,4 +999,57 @@ async function modificarLimitePrimerCuota() {
             err.classList.remove("d-none");
         }
     }
+}
+
+function habilitarSeleccionFilaVentas() {
+
+    // Click en cualquier CELDA de la fila (más confiable que click en tr)
+    $("#grdVentas tbody").on("click", "td", function (e) {
+
+        if (!gridVentas) return;
+
+        // Si clic fue en el botón del acordeón o en acciones, no seleccionar
+        if ($(e.target).closest("button.btn-row-detail, button.btn-accion").length) return;
+
+        // Si clic fue en links/inputs dentro de la celda (por las dudas), no seleccionar
+        if ($(e.target).closest("a, input, select, textarea").length) return;
+
+        // Subir al TR real
+        const tr = $(this).closest("tr");
+
+        // No seleccionar child row
+        if (tr.hasClass("child")) return;
+
+        const row = gridVentas.row(tr);
+        const d = row.data();
+        if (!d) return;
+
+        ventaClickeadaId = d.IdVenta;
+
+        // Desmarcar usando nodos reales (scrollX friendly)
+        gridVentas.rows().every(function () {
+            $(this.node()).removeClass("row-selected");
+        });
+
+        $(row.node()).addClass("row-selected");
+
+        // Redraw para que rowCallback lo sostenga
+        gridVentas.draw(false);
+    });
+}
+
+
+function habilitarSeleccionFilasCuotas() {
+    // Delegación global: cualquier tabla dentro del acordeón
+    $(document).on("click", ".accordion-sub table tbody tr", function (e) {
+
+        // Si clickeás en botones de acción (Cobrar/Ajuste/Historial), no cambiar
+        if ($(e.target).closest("button, a, input, select, textarea, label, i").length) return;
+
+        const $tbody = $(this).closest("tbody");
+
+        // Solo desmarca dentro de ESA tabla
+        $tbody.find("tr").removeClass("row-selected");
+        $(this).addClass("row-selected");
+    });
 }

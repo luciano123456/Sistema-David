@@ -7,7 +7,7 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-<link href="~/Estilos/Ventas_Electrodomesticos.css" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.0" rel="stylesheet" />
 
 <style>
     /* ====== Venta seleccionada / acordeón ====== */
@@ -54,13 +54,6 @@
         margin-right: .5rem;
     }
 
-    /* Select2 dark-ish */
-    .select2-container--default .select2-selection--single {
-        background-color: #121826;
-        border: 1px solid rgba(255,255,255,0.15);
-        border-radius: .4rem;
-        height: 38px;
-    }
 
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             color: #fff;
@@ -158,8 +151,15 @@
 
 
                         <div class="col-md-3">
-                            <label class="form-label">Vendedor / Cobrador</label>
+                            <label class="form-label">Vendedor</label>
                             <select id="f_vendedor" class="form-select ve-input">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Cobrador</label>
+                            <select id="f_cobrador" class="form-select ve-input">
                                 <option value="">Todos</option>
                             </select>
                         </div>
@@ -187,10 +187,14 @@
 
                 <!-- ===== TABLA PRINCIPAL ===== -->
                 <div class="table-responsive">
+
                     <table id="vc_tabla" class="table ve-table align-middle nowrap w-100">
                         <thead>
                             <tr>
                                 <th style="width:40px;"></th>  @* Columna 0: flecha acordeón *@
+                                <th style="width:38px;" class="text-center">
+                                    <input type="checkbox" id="chkAllVentas" />
+                                </th>
                                 <th>N° Venta</th>
                                 <th>N° Cuota</th>
                                 <th>Fecha Cobro</th>
@@ -651,16 +655,72 @@
                 </a>
 
             </div>
-           
-            <div id="btnAsignarCobrador" class="me-2 mb-2" style="display: none;">
-                <a class="btn btn-success btnnuevo btn-uniform" onclick="abrirmodalCobrador()">Asignar Cobrador</a>
+
+            <div id="btnAsignarCobrador" class="me-2 mb-2" style="display:none;">
+                <button type="button" class="btn btn-success btnnuevo btn-uniform" id="fabAsignarCobrador">
+                    Asignar Cobrador
+                </button>
             </div>
+
         </div>
 
     </div>
 
     <!-- ============================= MODALES (PARTIAL) ============================= -->
     @Html.Partial("_CobroModal_Partial")
+
+    <div class="modal fade" id="modalAsignarCobrador" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Asignar cobrador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <div>Ventas seleccionadas: <b id="lblCantVentasSel">0</b></div>
+                    </div>
+
+                    <label class="form-label">Cobrador</label>
+                    <select id="ddlCobradorAsignar" class="form-select"></select>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-success" id="btnConfirmarAsignarCobrador">
+                        Asignar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="modalObsCobro" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-home"></i> Observación de cobro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="obsCobro_idVenta" />
+                  
+                    <textarea id="obsCobro_txt" class="form-control" rows="4"
+                              placeholder="Escribí la observación..."></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="VC.guardarObsCobro()">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
 </body>
 
@@ -684,5 +744,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=1.8"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=2.1"></script>
 }

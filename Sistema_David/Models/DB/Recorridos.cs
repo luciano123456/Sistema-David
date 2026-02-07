@@ -26,8 +26,8 @@ namespace Sistema_David.Models.DB
         public int CantRecorridos { get; set; }
         public Nullable<System.DateTime> Fecha { get; set; }
     
+        public virtual Usuarios Usuarios { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<RecorridosCobranzas> RecorridosCobranzas { get; set; }
-        public virtual Usuarios Usuarios { get; set; }
     }
 }

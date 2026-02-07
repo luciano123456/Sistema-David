@@ -156,6 +156,22 @@ namespace Sistema_David.Controllers
             return Json(new { data = cobradores }, JsonRequestBehavior.AllowGet);
         }
 
+        public ActionResult ListarCobradoresElectro()
+        {
+            List<VMUser> cobradores;
+
+            if (SessionHelper.GetUsuarioSesion() != null && (SessionHelper.GetUsuarioSesion().IdRol == 1 || SessionHelper.GetUsuarioSesion().IdRol == 4))
+            {
+                cobradores = UsuariosModel.ListaCobradoresElectro();
+            }
+            else
+            {
+                cobradores = UsuariosModel.ListaCobradoresId(SessionHelper.GetUsuarioSesion().Id);
+            }
+
+            return Json(new { data = cobradores }, JsonRequestBehavior.AllowGet);
+        }
+
         public ActionResult ListarRoles()
         {
             var result = UsuariosModel.ListaRoles();

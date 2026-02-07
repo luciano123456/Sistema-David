@@ -17,8 +17,8 @@ namespace Sistema_David.Models.DB
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public CuentasBancarias()
         {
-            this.InformacionVentas = new HashSet<InformacionVentas>();
             this.ComprobantesImagenes = new HashSet<ComprobantesImagenes>();
+            this.InformacionVentas = new HashSet<InformacionVentas>();
             this.Ventas_Electrodomesticos_Pagos = new HashSet<Ventas_Electrodomesticos_Pagos>();
         }
     
@@ -31,9 +31,9 @@ namespace Sistema_David.Models.DB
         public Nullable<System.DateTime> FechaMontoPagar { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<InformacionVentas> InformacionVentas { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ComprobantesImagenes> ComprobantesImagenes { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<InformacionVentas> InformacionVentas { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Pagos> Ventas_Electrodomesticos_Pagos { get; set; }
     }

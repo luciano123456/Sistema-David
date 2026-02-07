@@ -26,38 +26,36 @@ namespace Sistema_David.Models.DB
         }
     
         public virtual DbSet<Categorias> Categorias { get; set; }
+        public virtual DbSet<Clientes> Clientes { get; set; }
+        public virtual DbSet<ComprobantesImagenes> ComprobantesImagenes { get; set; }
+        public virtual DbSet<CuentasBancarias> CuentasBancarias { get; set; }
         public virtual DbSet<EstadosClientes> EstadosClientes { get; set; }
         public virtual DbSet<EstadosUsuarios> EstadosUsuarios { get; set; }
-        public virtual DbSet<Productos> Productos { get; set; }
-        public virtual DbSet<Roles> Roles { get; set; }
-        public virtual DbSet<Zonas> Zonas { get; set; }
-        public virtual DbSet<Limites> Limites { get; set; }
-        public virtual DbSet<StockUsuarios> StockUsuarios { get; set; }
-        public virtual DbSet<ProductosVenta> ProductosVenta { get; set; }
-        public virtual DbSet<RecorridosCobranzas> RecorridosCobranzas { get; set; }
-        public virtual DbSet<Recorridos> Recorridos { get; set; }
-        public virtual DbSet<StocksPendientes> StocksPendientes { get; set; }
-        public virtual DbSet<Ventas> Ventas { get; set; }
-        public virtual DbSet<Clientes> Clientes { get; set; }
-        public virtual DbSet<sysdiagrams> sysdiagrams { get; set; }
         public virtual DbSet<InformacionClientesAsignados> InformacionClientesAsignados { get; set; }
         public virtual DbSet<InformacionVentas> InformacionVentas { get; set; }
-        public virtual DbSet<TipoNegocio> TipoNegocio { get; set; }
-        public virtual DbSet<CuentasBancarias> CuentasBancarias { get; set; }
-        public virtual DbSet<ComprobantesImagenes> ComprobantesImagenes { get; set; }
-        public virtual DbSet<Sueldos_Reglas> Sueldos_Reglas { get; set; }
+        public virtual DbSet<Limites> Limites { get; set; }
+        public virtual DbSet<Productos> Productos { get; set; }
+        public virtual DbSet<ProductosVenta> ProductosVenta { get; set; }
+        public virtual DbSet<Recorridos> Recorridos { get; set; }
+        public virtual DbSet<RecorridosCobranzas> RecorridosCobranzas { get; set; }
+        public virtual DbSet<Roles> Roles { get; set; }
+        public virtual DbSet<StocksPendientes> StocksPendientes { get; set; }
+        public virtual DbSet<StockUsuarios> StockUsuarios { get; set; }
         public virtual DbSet<Sueldos> Sueldos { get; set; }
         public virtual DbSet<Sueldos_Detalle> Sueldos_Detalle { get; set; }
         public virtual DbSet<Sueldos_Pagos> Sueldos_Pagos { get; set; }
         public virtual DbSet<Sueldos_PagosParciales> Sueldos_PagosParciales { get; set; }
+        public virtual DbSet<Sueldos_Reglas> Sueldos_Reglas { get; set; }
+        public virtual DbSet<TipoNegocio> TipoNegocio { get; set; }
+        public virtual DbSet<Usuarios> Usuarios { get; set; }
+        public virtual DbSet<Ventas> Ventas { get; set; }
+        public virtual DbSet<Ventas_Electrodomesticos> Ventas_Electrodomesticos { get; set; }
+        public virtual DbSet<Ventas_Electrodomesticos_Cuotas> Ventas_Electrodomesticos_Cuotas { get; set; }
+        public virtual DbSet<Ventas_Electrodomesticos_Cuotas_Recargos> Ventas_Electrodomesticos_Cuotas_Recargos { get; set; }
         public virtual DbSet<Ventas_Electrodomesticos_Detalle> Ventas_Electrodomesticos_Detalle { get; set; }
         public virtual DbSet<Ventas_Electrodomesticos_Historial> Ventas_Electrodomesticos_Historial { get; set; }
         public virtual DbSet<Ventas_Electrodomesticos_Pagos> Ventas_Electrodomesticos_Pagos { get; set; }
         public virtual DbSet<Ventas_Electrodomesticos_Pagos_Detalle> Ventas_Electrodomesticos_Pagos_Detalle { get; set; }
-        public virtual DbSet<informacionventas_ult7d> informacionventas_ult7d { get; set; }
-        public virtual DbSet<Ventas_Electrodomesticos> Ventas_Electrodomesticos { get; set; }
-        public virtual DbSet<Usuarios> Usuarios { get; set; }
-        public virtual DbSet<Ventas_Electrodomesticos_Cuotas> Ventas_Electrodomesticos_Cuotas { get; set; }
-        public virtual DbSet<Ventas_Electrodomesticos_Cuotas_Recargos> Ventas_Electrodomesticos_Cuotas_Recargos { get; set; }
+        public virtual DbSet<Zonas> Zonas { get; set; }
     }
 }

@@ -397,9 +397,6 @@
     <Compile Include="Models\DB\InformacionClientesAsignados.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\DB\informacionventas_ult7d.cs">
-      <DependentUpon>DB.tt</DependentUpon>
-    </Compile>
     <Compile Include="Models\DB\Recorridos.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
@@ -419,9 +416,6 @@
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DB\Sueldos_Reglas.cs">
-      <DependentUpon>DB.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Models\DB\sysdiagrams.cs">
       <DependentUpon>DB.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DB\TipoNegocio.cs">

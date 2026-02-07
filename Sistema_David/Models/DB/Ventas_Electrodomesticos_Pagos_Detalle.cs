@@ -19,7 +19,7 @@ namespace Sistema_David.Models.DB
         public int IdCuota { get; set; }
         public decimal ImporteAplicado { get; set; }
     
-        public virtual Ventas_Electrodomesticos_Pagos Ventas_Electrodomesticos_Pagos { get; set; }
         public virtual Ventas_Electrodomesticos_Cuotas Ventas_Electrodomesticos_Cuotas { get; set; }
+        public virtual Ventas_Electrodomesticos_Pagos Ventas_Electrodomesticos_Pagos { get; set; }
     }
 }

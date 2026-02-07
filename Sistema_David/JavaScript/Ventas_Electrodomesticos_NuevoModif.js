@@ -223,12 +223,12 @@
         cargarLimitePrimerCuota();
 
         if (!modoEdicion) {
-            $('#fechaLimite').prop('readonly', true);
+            $('#fechaLimite').prop('disabled', true);
         }
 
 
         if (esVendedor || esCobrador) {
-            $('#fechaVenta').prop('readonly', true);
+            $('#fechaVenta').prop('disabled', true);
         }
 
 
@@ -1491,27 +1491,133 @@
 
     async function registrarVentaNueva() {
 
-        if (!cliente)
-            return showToast("Elegí un cliente.", "danger");
+        if (!cliente || !Number(cliente.Id || 0)) {
+            showToast("Elegí un cliente.", "danger");
+            return false;
+        }
 
-        
-            if (!$('#turno').val())
-            return showToast("Seleccioná un turno.", "warn");
+        // 2) Turno / Franja
+        const turno = ($('#turno').val() || '').trim();
+        const franja = ($('#franja').val() || '').trim();
 
-        if (!$('#franja').val())
-            return showToast("Seleccioná una franja horaria.", "warn");
+        if (!turno) {
+            showToast("Seleccioná un turno.", "warn");
+            return false;
+        }
 
+        if (!franja) {
+            showToast("Seleccioná una franja horaria.", "warn");
+            return false;
+        }
 
-        if (!productos.length)
-            return showToast("Agregá al menos un producto.", "danger");
+        // 3) Productos
+        if (!Array.isArray(productos) || productos.length === 0) {
+            showToast("Agregá al menos un producto.", "danger");
+            return false;
+        }
 
-        if (!cuotas.length)
-            return showToast("Generá el plan de cuotas.", "danger");
+        // 4) Validar consistencia de diasVencimientoVenta (regla de venta)
+        //    (se setea cuando agregás el primer producto, pero acá lo rechecamos)
+        const diasVenta = Number(diasVencimientoVenta || 0);
 
-    
+        if (!diasVenta || diasVenta <= 0) {
+            showToast("La venta no tiene configurados los días de vencimiento (producto inválido).", "danger");
+            return false;
+        }
+
+        // 5) Validar que todos los productos cumplan la regla de días
+        //    (si por algún motivo entró uno distinto)
+        for (const p of productos) {
+            const diasProd = Number(p?.diasVencimiento || 0);
+
+            // Si en tu estructura no guardás diasVencimiento en productos (solo al agregar),
+            // igual validamos lo mínimo para no romper.
+            if (diasProd && diasProd !== diasVenta) {
+                showToast(`Producto "${p.nombre}" no coincide en días (${diasProd}) con la venta (${diasVenta}).`, "danger");
+                return false;
+            }
+        }
+
+        // 6) Fechas: venta, primer cobro, límite
+        const rawVenta = ($('#fechaVenta').val() || '').trim();
+        const rawIni = ($('#fechaPrimerCobro').val() || '').trim();
+        const rawLim = ($('#fechaLimite').val() || '').trim();
+
+        const fVenta = parseDateStrict(rawVenta);
+        const fIni = parseDateStrict(rawIni);
+        const fLim = parseDateStrict(rawLim);
+
+        if (!fVenta.isValid() || !fIni.isValid() || !fLim.isValid()) {
+            showToast("Fechas inválidas.", "danger");
+            return false;
+        }
+
+        if (!fLim.isAfter(fIni, 'day')) {
+            showToast("La fecha límite debe ser posterior a la primera cuota.", "danger");
+            return false;
+        }
+
+        // 7) Límite de primer cuota (si existe)
+        if (limiteDiasPrimerCuota && Number(limiteDiasPrimerCuota) > 0) {
+            const diasDesdeVenta = fIni.diff(fVenta, "days");
+            if (diasDesdeVenta > Number(limiteDiasPrimerCuota)) {
+                showToast(`La fecha de primer cobro no puede superar ${limiteDiasPrimerCuota} días desde la fecha de venta.`, "danger");
+                return false;
+            }
+        }
+
+        // 8) Validación de cuotas (re-generar si hace falta)
+        //    Si no hay cuotas o no coincide cantidad/fechas, no dejamos pasar.
+        const forma = ($('#forma').val() || '').trim();
+        const cantCuotas = parseInt($('#cantCuotas').val() || '0', 10) || 0;
+
+        if (!Array.isArray(cuotas) || cuotas.length === 0) {
+            showToast("Generá el plan de cuotas.", "danger");
+            return false;
+        }
+
+        // 9) Chequeo básico: ninguna cuota puede tener total <= 0
+        //    y vencimientos deben estar dentro de [primerCobro..limite] (no estricto, pero coherente)
+        for (const c of cuotas) {
+            const totalCuota = Number(c?.total ?? (Number(c?.original || 0) + Number(c?.recargo || 0) - Number(c?.desc || 0)));
+            if (!totalCuota || totalCuota <= 0) {
+                showToast("Hay cuotas con importe inválido. Revisá el plan.", "danger");
+                return false;
+            }
+
+            const venc = moment(c?.venc, "DD/MM/YYYY", true);
+            if (!venc.isValid()) {
+                showToast("Hay cuotas con vencimiento inválido. Revisá el plan.", "danger");
+                return false;
+            }
+
+            if (venc.isBefore(fIni, "day") || venc.isAfter(fLim, "day")) {
+                showToast("Hay cuotas fuera del rango de fechas (primer cobro / límite). Revisá el plan.", "danger");
+                return false;
+            }
+        }
+
+        // 10) Entrega / Totales
+        const totalProductos = productos.reduce((a, b) => a + Number(b?.total || 0), 0);
+        const entrega = parseMoney($('#entrega').val());
+
+        if (totalProductos <= 0) {
+            showToast("El total de la venta es inválido.", "danger");
+            return false;
+        }
+
+        if (entrega < 0) {
+            showToast("La entrega no puede ser negativa.", "danger");
+            return false;
+        }
+
+        if (entrega > totalProductos) {
+            showToast("La entrega no puede ser mayor al total de la venta.", "danger");
+            return false;
+        }
 
         let total = productos.reduce((a, b) => a + b.total, 0);
-        let entrega = parseMoney($('#entrega').val());
+     
 
         let payload = {
             FechaVenta: $('#fechaVenta').val(),
@@ -2172,7 +2278,58 @@ function generarPdfVenta(venta) {
     y += 6;
 
     doc.text(`Cliente: ${venta.ClienteNombre || ""}`, 10, y);
-    y += 8;
+
+
+    y += 6;
+
+    let recargoTipo = (venta?.RecargoTipo ?? "").toString().trim();
+    let recargoVal = Number(venta?.RecargoValor ?? 0) || 0;
+
+    let descuentoTipo = (venta?.DescuentoTipo ?? "").toString().trim();
+    let descuentoVal = Number(venta?.DescuentoValor ?? 0) || 0;
+
+    // 2) Fallback a UI si backend no trae
+    if (!recargoTipo) recargoTipo = (typeof getTipoFromUI === "function")
+        ? getTipoFromUI("#recargoTipoWrap", "#recargoTipo")
+        : (document.querySelector("#recargoTipo")?.value || "%");
+
+    if (!recargoVal) recargoVal = (typeof parseMoney === "function")
+        ? parseMoney(document.querySelector("#recargo")?.value)
+        : (Number(document.querySelector("#recargo")?.value || 0) || 0);
+
+    if (!descuentoTipo) descuentoTipo = (typeof getTipoFromUI === "function")
+        ? getTipoFromUI("#descuentoTipoWrap", "#descuentoTipo")
+        : (document.querySelector("#descuentoTipo")?.value || "%");
+
+    if (!descuentoVal) descuentoVal = (typeof parseMoney === "function")
+        ? parseMoney(document.querySelector("#descuento")?.value)
+        : (Number(document.querySelector("#descuento")?.value || 0) || 0);
+
+    // 3) Armar texto por separado
+    const abs = n => Math.abs(Number(n || 0));
+   
+
+    let recargoTxt = "";
+    if (abs(recargoVal) > 0.0001) {
+        recargoTxt = (recargoTipo === "%") ? `${recargoVal}%` : money(recargoVal);
+    }
+
+    let descuentoTxt = "";
+    if (abs(descuentoVal) > 0.0001) {
+        descuentoTxt = (descuentoTipo === "%") ? `${descuentoVal}%` : money(descuentoVal);
+    }
+
+    // 4) ✅ IMPRIMIR como vos querés
+    if (recargoTxt || descuentoTxt) {
+        let linea = [];
+        if (recargoTxt) linea.push(`Recargo: ${recargoTxt}`);
+        if (descuentoTxt) linea.push(`Descuento: ${descuentoTxt}`);
+
+        doc.setFontSize(10);
+        doc.text(linea.join("  |  "), 10, y);
+        y += 8;
+    }
+
 
     /* ================= TOTALES ================= */
     const totalVenta = Number(venta.ImporteTotal || venta.Total || 0);
@@ -2344,3 +2501,49 @@ function generarPdfVenta(venta) {
 
 
 
+
+
+function getTextoRecargoDescuento(venta) {
+
+    // 1) Preferir backend si viene (lo más correcto)
+    let rTipo = (venta?.RecargoTipo ?? '').toString().trim();
+    let rVal = Number(venta?.RecargoValor ?? 0) || 0;
+
+    let dTipo = (venta?.DescuentoTipo ?? '').toString().trim();
+    let dVal = Number(venta?.DescuentoValor ?? 0) || 0;
+
+    // 2) Fallback UI (tu caso: inputs + toggles)
+    if (!rTipo) rTipo = (typeof getTipoFromUI === "function")
+        ? getTipoFromUI('#recargoTipoWrap', '#recargoTipo')
+        : (document.querySelector('#recargoTipo')?.value || '%');
+
+    if (!rVal) rVal = (typeof parseMoney === "function")
+        ? parseMoney(document.querySelector('#recargo')?.value)
+        : (Number(document.querySelector('#recargo')?.value || 0) || 0);
+
+    if (!dTipo) dTipo = (typeof getTipoFromUI === "function")
+        ? getTipoFromUI('#descuentoTipoWrap', '#descuentoTipo')
+        : (document.querySelector('#descuentoTipo')?.value || '%');
+
+    if (!dVal) dVal = (typeof parseMoney === "function")
+        ? parseMoney(document.querySelector('#descuento')?.value)
+        : (Number(document.querySelector('#descuento')?.value || 0) || 0);
+
+    const abs = x => Math.abs(Number(x || 0));
+    const tieneRec = abs(rVal) > 0.0001;
+    const tieneDes = abs(dVal) > 0.0001;
+
+    // formateo: % => “10%” | $ => “$ 10.000,00”
+    const money = v => Number(v || 0).toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+    const fmtVal = (val, tipo) => (tipo === '%') ? `${Number(val)}%` : money(val);
+
+    if (!tieneRec && !tieneDes) return "Sin recargos ni descuentos";
+
+    if (tieneRec && tieneDes)
+        return `Recargo: ${fmtVal(rVal, rTipo)} | Descuento: ${fmtVal(dVal, dTipo)}`;
+
+    if (tieneRec)
+        return `Recargo: ${fmtVal(rVal, rTipo)}`;
+
+    return `Descuento: ${fmtVal(dVal, dTipo)}`;
+}
