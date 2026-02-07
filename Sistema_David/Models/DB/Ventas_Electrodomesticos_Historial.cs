@@ -24,8 +24,8 @@ namespace Sistema_David.Models.DB
         public string ValorNuevo { get; set; }
         public string Observacion { get; set; }
     
-        public virtual Ventas_Electrodomesticos Ventas_Electrodomesticos { get; set; }
         public virtual Usuarios Usuarios { get; set; }
+        public virtual Ventas_Electrodomesticos Ventas_Electrodomesticos { get; set; }
         public virtual Ventas_Electrodomesticos_Cuotas Ventas_Electrodomesticos_Cuotas { get; set; }
     }
 }

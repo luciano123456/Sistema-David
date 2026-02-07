@@ -257,6 +257,17 @@ namespace Sistema_David.Models.ViewModels
         public string Turno { get; set; }          // en DB: "mañana"/"tarde" o ya "M"/"T"
         public string FranjaHoraria { get; set; }  // "08-09", etc
 
+        public int EstadoCobro { get; set; }
+        public string ObservacionCobro { get; set; }
+
+
+    }
+
+
+    public class VM_ObsCobroReq
+    {
+        public int IdVenta { get; set; }
+        public string Observacion { get; set; }
     }
 
 
@@ -293,4 +304,14 @@ namespace Sistema_David.Models.ViewModels
 
 
 
+    public class VM_AsignarCobradorVentasReq
+    {
+        public int IdCobrador { get; set; }
+        public List<int> IdsVentas { get; set; }
+        public string Observacion { get; set; }
 }
+
+
+
+
+    }

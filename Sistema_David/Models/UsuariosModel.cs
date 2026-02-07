@@ -227,6 +227,57 @@ namespace Sistema_David.Models
             }
         }
 
+        public static List<VMUser> ListaCobradoresElectro()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                // Roles: 3=cobrador, 1=admin (igual que tu ListaCobradores)
+                var listUser = db.Usuarios
+                    .Where(u => (u.IdRol == 3 || u.IdRol == 1) && u.IdEstado == 1) // activos
+                    .Join(db.Roles, u => u.IdRol, r => r.Id, (u, r) => new { Usuario = u, Rol = r })
+                    .Join(db.EstadosUsuarios, ur => ur.Usuario.IdEstado, eu => eu.Id, (ur, eu) => new { ur.Usuario, ur.Rol.Nombre, Estado = eu.Nombre })
+                    .GroupJoin(
+                        db.Ventas_Electrodomesticos,
+                        ur_eu => ur_eu.Usuario.Id,
+                        v => v.IdCobrador, // 👈 clave: en Electro se asigna por IdCobrador
+                        (ur_eu, ventas) => new
+                        {
+                            Usuario = ur_eu.Usuario,
+                            Rol = ur_eu.Nombre,
+                            Estado = ur_eu.Estado,
+                            TotalCobranzas = ventas.Count()
+                        }
+                    )
+                    .Select(res => new VMUser
+                    {
+                        Id = res.Usuario.Id,
+                        Usuario = res.Usuario.Usuario,
+                        Nombre = res.Usuario.Nombre,
+                        Apellido = res.Usuario.Apellido,
+                        Dni = res.Usuario.Dni,
+                        Telefono = res.Usuario.Telefono,
+                        Direccion = res.Usuario.Direccion,
+                        IdRol = res.Usuario.IdRol,
+                        Contrasena = res.Usuario.Contrasena,
+                        CantVentas = res.Usuario.CantVentas,
+                        IdEstado = res.Usuario.IdEstado,
+                        UltimaExportacion = res.Usuario.UltimaExportacion,
+                        UrlExportacion = res.Usuario.UrlExportacion,
+                        Rol = res.Rol,
+                        Estado = res.Estado,
+                        TotalCobranzas = res.TotalCobranzas,
+                        ClientesCero = (int)res.Usuario.ClientesCero,
+                        IdTipoNegocio = res.Usuario.IdTipoNegocio,
+                        BloqueoSistema = res.Usuario.BloqueoSistema,
+                        VistaStock = res.Usuario.VistaStock
+                    })
+                    .ToList();
+
+                return listUser;
+            }
+        }
+
+
 
         public static List<VMUser> ListaCobradoresId(int id)
         {

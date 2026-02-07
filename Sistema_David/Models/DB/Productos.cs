@@ -17,9 +17,9 @@ namespace Sistema_David.Models.DB
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Productos()
         {
+            this.ProductosVenta = new HashSet<ProductosVenta>();
             this.StockUsuarios = new HashSet<StockUsuarios>();
             this.StockUsuarios1 = new HashSet<StockUsuarios>();
-            this.ProductosVenta = new HashSet<ProductosVenta>();
             this.StocksPendientes = new HashSet<StocksPendientes>();
             this.Ventas_Electrodomesticos_Detalle = new HashSet<Ventas_Electrodomesticos_Detalle>();
         }
@@ -38,11 +38,11 @@ namespace Sistema_David.Models.DB
     
         public virtual Categorias Categorias { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ProductosVenta> ProductosVenta { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StockUsuarios> StockUsuarios { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StockUsuarios> StockUsuarios1 { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<ProductosVenta> ProductosVenta { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StocksPendientes> StocksPendientes { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

@@ -704,7 +704,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
             "initComplete": async function (settings, json) {
                 // Calcular los totales de Venta y Cobro
 
-
+                 
                 gridRendimiento.data().each(function (rowData) {
                     if (rowData.Descripcion.includes("Cobranza")) {
                         totCobro += rowData.Cobro;

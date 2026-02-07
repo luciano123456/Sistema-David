@@ -34,7 +34,7 @@ namespace Sistema_David.Controllers
             return View();
         }
 
-        public ActionResult Listar()
+        public ActionResult Listar() 
         {
             var result = RendimientosModel.ListaUsuarios();
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);

@@ -17,10 +17,10 @@ namespace Sistema_David.Models.DB
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Ventas_Electrodomesticos()
         {
+            this.Ventas_Electrodomesticos_Cuotas = new HashSet<Ventas_Electrodomesticos_Cuotas>();
             this.Ventas_Electrodomesticos_Detalle = new HashSet<Ventas_Electrodomesticos_Detalle>();
             this.Ventas_Electrodomesticos_Historial = new HashSet<Ventas_Electrodomesticos_Historial>();
             this.Ventas_Electrodomesticos_Pagos = new HashSet<Ventas_Electrodomesticos_Pagos>();
-            this.Ventas_Electrodomesticos_Cuotas = new HashSet<Ventas_Electrodomesticos_Cuotas>();
         }
     
         public int Id { get; set; }
@@ -51,18 +51,22 @@ namespace Sistema_David.Models.DB
         public Nullable<decimal> RecargoValor { get; set; }
         public string DescuentoTipo { get; set; }
         public Nullable<decimal> DescuentoValor { get; set; }
+        public Nullable<int> IdCobrador { get; set; }
+        public Nullable<int> EstadoCobro { get; set; }
+        public string ObservacionCobro { get; set; }
     
         public virtual Clientes Clientes { get; set; }
+        public virtual Usuarios Usuarios { get; set; }
+        public virtual Usuarios Usuarios1 { get; set; }
+        public virtual Usuarios Usuarios2 { get; set; }
+        public virtual Usuarios Usuarios3 { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Ventas_Electrodomesticos_Cuotas> Ventas_Electrodomesticos_Cuotas { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Detalle> Ventas_Electrodomesticos_Detalle { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Historial> Ventas_Electrodomesticos_Historial { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Pagos> Ventas_Electrodomesticos_Pagos { get; set; }
-        public virtual Usuarios Usuarios { get; set; }
-        public virtual Usuarios Usuarios1 { get; set; }
-        public virtual Usuarios Usuarios2 { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Ventas_Electrodomesticos_Cuotas> Ventas_Electrodomesticos_Cuotas { get; set; }
     }
 }

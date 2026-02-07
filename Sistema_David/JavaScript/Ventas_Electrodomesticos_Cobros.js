@@ -9,11 +9,61 @@ let cuotasCache = [];
 let ventaSeleccionada = null;
 let ventaAcordeonAbierta = null;
 
+let ventasSeleccionadas = new Set();
+let cobradoresCache = [];
+let ventaClickeadaId = null; // igual que Historial: fila seleccionada por click
+
+
+
 let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
 
 /* ===========================================================
    HELPERS
 =========================================================== */
+
+(function () {
+    if (document.getElementById("vcCssSel")) return;
+
+    const st = document.createElement("style");
+    st.id = "vcCssSel";
+    st.textContent = `
+        /* ===============================
+           COBROS — SELECCIÓN (igual Historial)
+        ================================ */
+
+        /* cursor igual historial en tabla principal */
+        #vc_tabla tbody tr { cursor: pointer; }
+        #vc_tabla tbody tr.child { cursor: default; }
+
+        /* selección single (clic en fila) */
+        #vc_tabla tbody tr.row-selected {
+            outline: 2px solid rgba(88,166,255,.55);
+            background: rgba(88,166,255, .5) !important;
+        }
+
+        /* tu multi-select (checkbox) se mantiene tal cual */
+        #vc_tabla tbody tr.venta-multi-sel {
+            outline: 2px solid rgba(88,166,255,.45);
+            background: rgba(88,166,255,.08) !important;
+        }
+
+        /* checkbox */
+        .vc-chk { transform: scale(1.1); cursor: pointer; }
+
+        /* ===============================
+           ACORDEÓN — selección de filas en tablas internas (igual Historial)
+           Nota: cursor pointer y row-selected por tbody dentro de accordion-sub
+        ================================ */
+        .accordion-sub table tbody tr { cursor: pointer; }
+        .accordion-sub table tbody tr.row-selected {
+            outline: 2px solid rgba(88,166,255,.55);
+            background: rgba(88,166,255, 1) !important;
+        }
+    `;
+    document.head.appendChild(st);
+})();
+
+
 
 VC.turnoMT = function (t) {
     if (!t) return "";
@@ -42,6 +92,8 @@ VC.renderDireccion = function (_, __, row) {
         </div>
     `;
 };
+
+
 
 
 VC.fmt = n => {
@@ -143,15 +195,55 @@ $(document).ready(async function () {
     await VC.cargarCombos();
     VC.initEventos();
     await VC.cargarTabla();
+
+    habilitarSeleccionFilasCuotasCobros();
 });
 
 VC.initEventos = function () {
 
     // Mostrar / Ocultar filtros
-    $("#btnToggleFiltros").on("click", () => {
+    $("#btnToggleFiltros").off("click.vcFiltros").on("click.vcFiltros", () => {
         const form = $("#formFiltros");
         form.toggleClass("d-none");
         $("#iconFiltros").toggleClass("fa-chevron-down fa-chevron-up");
+    });
+
+    // FAB asignar cobrador
+    $("#fabAsignarCobrador").off("click.vcFab").on("click.vcFab", function () {
+        VC.abrirAsignarCobrador();
+    });
+
+    // Confirmar asignación (botón del modal)
+    $("#btnConfirmarAsignarCobrador").off("click.vcConf").on("click.vcConf", function () {
+        VC.confirmarAsignarCobrador();
+    });
+
+    // ✅ Toggle individual (checkbox fila)
+    $(document).off("change.vcRowCheck").on("change.vcRowCheck", ".vc-row-check", function () {
+        const idVenta = Number(this.dataset.idventa || 0);
+        if (!idVenta) return;
+
+        if (this.checked) ventasSeleccionadas.add(idVenta);
+        else ventasSeleccionadas.delete(idVenta);
+
+        VC.refrescarSeleccionUI();
+    });
+
+    // ✅ Seleccionar todos (checkbox header)
+    $(document).off("change.vcAllCheck").on("change.vcAllCheck", "#vc_chk_all", function () {
+        const sel = this.checked;
+
+        if (!tabla) return;
+
+        tabla.rows({ search: "applied" }).every(function () {
+            const idV = Number(this.data()?.IdVenta || 0);
+            if (!idV) return;
+
+            if (sel) ventasSeleccionadas.add(idV);
+            else ventasSeleccionadas.delete(idV);
+        });
+
+        VC.refrescarSeleccionUI();
     });
 
 };
@@ -159,6 +251,68 @@ VC.initEventos = function () {
 /* ===========================================================
    SELECTS CLIENTES / VENDEDORES
 =========================================================== */
+
+VC.refrescarSeleccionUI = function () {
+
+    // 1) marcar filas y checks
+    if (tabla) {
+        $("#vc_tabla tbody tr").each(function () {
+            const r = tabla.row(this);
+            const d = r.data();
+            const idV = Number(d?.IdVenta || 0);
+
+            const checked = ventasSeleccionadas.has(idV);
+
+            $(this).toggleClass("venta-multi-sel", checked);
+
+            // check DOM (fila)
+            $(this).find("input.vc-row-check").prop("checked", checked);
+        });
+
+        // 2) setear vc_chk_all según estado (solo visibles/filtradas)
+        let totalVisibles = 0;
+        let totalSel = 0;
+
+        tabla.rows({ search: "applied" }).every(function () {
+            const idV = Number(this.data()?.IdVenta || 0);
+            if (!idV) return;
+
+            totalVisibles++;
+            if (ventasSeleccionadas.has(idV)) totalSel++;
+        });
+
+        const chkAll = document.getElementById("vc_chk_all");
+        if (chkAll) {
+            chkAll.indeterminate = totalSel > 0 && totalSel < totalVisibles;
+            chkAll.checked = totalVisibles > 0 && totalSel === totalVisibles;
+        }
+    }
+
+    // 3) mostrar/ocultar botón asignar cobrador
+    VC.refrescarFabAsignar();
+};
+
+VC.refrescarFabAsignar = function () {
+    const divBtn = document.getElementById("btnAsignarCobrador");
+    const btn = document.getElementById("fabAsignarCobrador");
+    if (!divBtn || !btn) return;
+
+    const cant = ventasSeleccionadas ? ventasSeleccionadas.size : 0;
+
+    if (cant > 0) {
+        divBtn.style.display = "block";
+
+        // Pintar estilo tipo "FAB pro" con icono + badge (sin tocar el HTML del Razor)
+        btn.innerHTML = `
+            <span class="vc-fab-icon"><i class="fa fa-user-plus"></i></span>
+            <span>Asignar cobrador</span>
+            <span class="vc-fab-badge">${cant}</span>
+        `;
+    } else {
+        divBtn.style.display = "none";
+    }
+};
+
 
 VC.cargarCombos = async function () {
 
@@ -186,6 +340,19 @@ VC.cargarCombos = async function () {
         console.error("Error cargando cobradores", e);
     }
 
+    /* VENDEDORES/COBRADORES */
+    try {
+        const resp = await $.getJSON("/Usuarios/ListarCobradoresElectro");
+        const ddl = $("#f_cobrador").empty();
+        ddl.append(`<option value="">Todos</option>`);
+        (resp.data || []).forEach(v => {
+            ddl.append(`<option value="${v.Id}">${v.Usuario} (${v.TotalCobranzas})</option>`);
+        });
+    } catch (e) {
+        console.error("Error cargando cobradores", e);
+    }
+
+
     /* =========================
    ZONAS
 ========================= */
@@ -205,6 +372,7 @@ VC.cargarCombos = async function () {
 
     $("#f_cliente").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
     $("#f_vendedor").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
+    $("#f_cobrador").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
 };
 
 /* ===========================================================
@@ -250,11 +418,9 @@ VC.cargarTabla = async function () {
         );
 
         // mismas cuotas que antes
-        const cuotas = (resp?.data || []).filter(x =>
-            x && x.Estado !== "Pagada"
-        );
+        const cuotas = (resp?.data || []).filter(x => x && x.Estado !== "Pagada");
 
-        // 🔥 ACÁ está el cambio REAL
+        // agrupar por venta manteniendo columnas
         cuotasCache = agruparCobrosPorVentaManteniendoColumnas(cuotas);
 
         cuotasCache.forEach(c => {
@@ -270,58 +436,101 @@ VC.cargarTabla = async function () {
         return;
     }
 
+    // si ya existe tabla
     if (tabla) {
         tabla.clear().rows.add(cuotasCache).draw();
         VC.reabrirAcordeon();
+        VC.refrescarSeleccionUI();
         return;
     }
 
     tabla = $("#vc_tabla").DataTable({
         data: cuotasCache,
         pageLength: 50,
-        responsive: false,   // 🔥 CLAVE
-        scrollX: true,       // 🔥 permite scroll horizontal en móvil
+        responsive: false,
+        scrollX: true,
         language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
 
-        // NO toco tus columnas ni el HTML. Solo agrego el coloreo por atraso.
         rowCallback: function (row, d) {
 
-            // limpiar clases previas
-            $(row)
-                .removeClass("fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja");
+            // 🔥 reset clases (incluye row-selected)
+            $(row).removeClass(
+                "fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja row-selected"
+            );
 
             const dias = calcularDiasAtraso(d.FechaVencimiento);
 
             if (dias > 0) {
                 $(row).addClass("fila-atrasada");
 
-                if (dias >= 15)
-                    $(row).addClass("fila-atrasada-roja");
-                else if (dias >= 10)
-                    $(row).addClass("fila-atrasada-naranja");
-                else
-                    $(row).addClass("fila-atrasada-amarilla");
+                if (dias >= 15) $(row).addClass("fila-atrasada-roja");
+                else if (dias >= 10) $(row).addClass("fila-atrasada-naranja");
+                else $(row).addClass("fila-atrasada-amarilla");
             }
+
+            // ✅ selección single visual (igual Historial)
+            if (ventaClickeadaId != null && Number(d.IdVenta) === Number(ventaClickeadaId)) {
+                $(row).addClass("row-selected");
+            }
+
+            // ✅ multi-select por checkbox (TU LÓGICA, intacta)
+            const sel = ventasSeleccionadas.has(Number(d?.IdVenta || 0));
+            $(row).toggleClass("venta-multi-sel", sel);
 
             if (ventaSeleccionada && d.IdVenta === ventaSeleccionada.IdVenta) {
                 $(row).addClass("venta-seleccionada");
             }
         },
 
-        // Orden “natural”: primero vencimiento (más viejo primero). Si querés “atrasadas arriba” sin agregar columna,
-        // se puede, pero ahí sí hay que meter columna oculta o plugin de orden.
         order: [[7, "asc"], [1, "asc"]],
 
         columns: [
 
-            /* Columna 0 - Acordeón */
+            // Col 0: acordeón
             {
-                data: null, className: "details-control text-center", orderable: false,
+                data: null,
+                className: "details-control text-center",
+                orderable: false,
                 width: "40px",
                 render: () => `
                     <button class="btn btn-link p-0 text-accent btn-row-detail" title="Ver detalle venta">
                         <i class="fa fa-chevron-down"></i>
                     </button>`
+            },
+
+            // Col 1: checkbox selección múltiple
+            {
+                data: null,
+                title: (userSession?.IdRol === 1 || userSession?.IdRol === 4)
+                    ? `
+      <div class="vc-check-wrap">
+        <input type="checkbox" id="vc_chk_all" class="vc-check" title="Seleccionar todo">
+      </div>
+    `
+                    : "",
+
+                orderable: false,
+                searchable: false,
+                className: "text-center",
+                width: "44px",
+
+                render: function (_, __, row) {
+                    const esAdmin = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+                    if (!esAdmin) return "";
+
+                    const idVenta = Number(row?.IdVenta || 0);
+                    const checked = ventasSeleccionadas.has(idVenta) ? "checked" : "";
+
+                    return `
+      <div class="vc-check-wrap">
+        <input type="checkbox"
+               class="vc-check vc-row-check"
+               data-idventa="${idVenta}"
+               ${checked}
+               title="Seleccionar venta ${idVenta}">
+      </div>
+    `;
+                }
             },
 
             { data: "IdVenta" },
@@ -331,27 +540,21 @@ VC.cargarTabla = async function () {
                 data: "FechaCobro",
                 render: d => {
                     if (!d) return "";
-
                     const dias = calcularDiasAtraso(d);
                     const fecha = moment(d).format("DD/MM/YYYY");
-
-                    if (dias <= 0) {
-                        return `<span>${fecha}</span>`;
-                    }
-
+                    if (dias <= 0) return `<span>${fecha}</span>`;
                     return `
-            <div class="text-danger fw-bold">
-                ${fecha}
-                <div class="small opacity-75">
-                    ${dias} día${dias > 1 ? "s" : ""} de atraso
-                </div>
-            </div>`;
+                        <div class="text-danger fw-bold">
+                            ${fecha}
+                            <div class="small opacity-75">
+                                ${dias} día${dias > 1 ? "s" : ""} de atraso
+                            </div>
+                        </div>`;
                 }
             },
 
             { data: "ClienteNombre" },
             { data: "VendedorNombre" },
-
             { data: "ZonaNombre", title: "Zona" },
 
             {
@@ -374,24 +577,18 @@ VC.cargarTabla = async function () {
                 data: "FechaVencimiento",
                 render: d => {
                     if (!d) return "";
-
                     const dias = calcularDiasAtraso(d);
                     const fecha = moment(d).format("DD/MM/YYYY");
-
-                    if (dias <= 0) {
-                        return `<span>${fecha}</span>`;
-                    }
-
+                    if (dias <= 0) return `<span>${fecha}</span>`;
                     return `
-            <div class="text-danger fw-bold">
-                ${fecha}
-                <div class="small opacity-75">
-                    ${dias} día${dias > 1 ? "s" : ""} de atraso
-                </div>
-            </div>`;
+                        <div class="text-danger fw-bold">
+                            ${fecha}
+                            <div class="small opacity-75">
+                                ${dias} día${dias > 1 ? "s" : ""} de atraso
+                            </div>
+                        </div>`;
                 }
             },
-
 
             { data: "TotalCuota", render: VC.fmt },
             { data: "MontoPagado", render: VC.fmt },
@@ -400,68 +597,82 @@ VC.cargarTabla = async function () {
             {
                 data: "Estado",
                 render: (st, _, row) => {
-
                     const dias = calcularDiasAtraso(row.FechaVencimiento);
 
                     if (dias > 0) {
                         let cls = "bg-warning text-dark";
-
                         if (dias >= 15) cls = "bg-danger";
                         else if (dias >= 10) cls = "bg-orange";
 
                         return `
-                <span class="badge ${cls}">
-                    Vencida · ${dias} día${dias > 1 ? "s" : ""}
-                </span>`;
+                            <span class="badge ${cls}">
+                                Vencida · ${dias} día${dias > 1 ? "s" : ""}
+                            </span>`;
                     }
 
-                    return `
-            <span class="badge bg-success">
-                Al día
-            </span>`;
+                    return `<span class="badge bg-success">Al día</span>`;
                 }
             },
 
             {
-                data: null, className: "text-center", orderable: false,
+                data: null,
+                className: "text-center",
+                orderable: false,
                 render: d => {
 
                     const pendiente = (d.TransferenciaPendiente === 1 || d.TransferenciaPendiente === true);
                     const nuevoEstado = pendiente ? 0 : 1;
 
                     const btnCls = pendiente ? "btn-warning text-dark" : "btn-outline-danger";
-                    const iconCls = pendiente ? "fa fa-exclamation-circle" : "fa fa-exclamation-circle";
+                    const iconCls = "fa fa-exclamation-circle";
 
                     const title = pendiente
                         ? "Desmarcar transferencia pendiente"
                         : "Marcar como transferencia pendiente";
 
+                    // 🏠 Obs cobro (por VENTA)
+                    const tieneObs = !!(d.ObservacionCobro && String(d.ObservacionCobro).trim());
+                    const estadoCobro = Number(d.EstadoCobro || 0) === 1;
+
+                    // tooltip seguro (sin romper comillas)
+                    const obsTooltip = tieneObs
+                        ? String(d.ObservacionCobro).replace(/"/g, "'")
+                        : "Sin observación de cobro";
+
+                    const btnCasaCls = estadoCobro ? "btn-danger" : "btn-outline-secondary";
+
                     return `
       <div class="btn-group">
 
+        <!-- 🏠 PRIMER ICONO: OBS COBRO -->
+        <button class="btn btn-accion ${btnCasaCls} me-1"
+          onclick="VC.abrirObsCobro(${d.IdVenta})"
+          title="${obsTooltip}">
+          <i class="fa fa-home"></i>
+        </button>
+
         <button class="btn btn-accion btn-cobrar me-1"
-            onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})"
-            title="Cobrar">
-            <i class="fa fa-money"></i>
+          onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})"
+          title="Cobrar">
+          <i class="fa fa-money"></i>
         </button>
 
         <button class="btn btn-accion btn-ajuste me-1"
-            onclick="VC.abrirAjuste(${d.IdVenta}, ${d.IdCuota})"
-            title="Ajustar">
-            <i class="fa fa-bolt"></i>
+          onclick="VC.abrirAjuste(${d.IdVenta}, ${d.IdCuota})"
+          title="Ajustar">
+          <i class="fa fa-bolt"></i>
         </button>
 
         <button class="btn btn-accion btn-historial me-1"
-            onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})"
-            title="Historial">
-            <i class="fa fa-eye"></i>
+          onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})"
+          title="Historial">
+          <i class="fa fa-eye"></i>
         </button>
 
-        <!-- 🔥 TRANSFERENCIA PENDIENTE (TOGGLE) -->
         <button class="btn btn-accion ${btnCls}"
-            onclick="VC.transferenciaPendiente(${nuevoEstado}, ${d.IdCuota})"
-            title="${title}">
-            <i class="${iconCls}"></i>
+          onclick="VC.transferenciaPendiente(${nuevoEstado}, ${d.IdCuota})"
+          title="${title}">
+          <i class="${iconCls}"></i>
         </button>
 
       </div>
@@ -471,12 +682,63 @@ VC.cargarTabla = async function () {
         ]
     });
 
-    /* Click acordeón */
-    $("#vc_tabla tbody").on("click", "button.btn-row-detail", async function (e) {
+    // draw => sincronizar checks + header + FAB
+    tabla.on("draw", function () {
+        VC.refrescarSeleccionUI();
+    });
+
+    /* ===========================================================
+       ✅ SELECCIÓN SINGLE (igual Historial) — TABLA PRINCIPAL
+    ============================================================ */
+
+    // Click en cualquier CELDA de la fila
+    $("#vc_tabla tbody").off("click.vcSelectRow").on("click.vcSelectRow", "td", function (e) {
+
+        if (!tabla) return;
+
+        // si clic en acordeón/acciones => no seleccionar
+        if ($(e.target).closest("button.btn-row-detail, .btn-accion").length) return;
+
+        // si clic en inputs/selects/labels => no seleccionar
+        if ($(e.target).closest("a, input, select, textarea, label").length) return;
+
+        // si clic en checkbox => no seleccionar (esto evita “atarelo al check”)
+        if ($(e.target).closest("input.vc-row-check, #vc_chk_all").length) return;
+
+        const tr = $(this).closest("tr");
+        if (tr.hasClass("child")) return;
+
+        const row = tabla.row(tr);
+        const d = row.data();
+        if (!d) return;
+
+        ventaClickeadaId = d.IdVenta;
+
+        tabla.rows().every(function () {
+            $(this.node()).removeClass("row-selected");
+        });
+
+        $(row.node()).addClass("row-selected");
+
+        tabla.draw(false);
+    });
+
+    // Click acordeón — también marca selección visual (igual Historial)
+    $("#vc_tabla tbody").off("click.vcAcordeon").on("click.vcAcordeon", "button.btn-row-detail", async function (e) {
 
         e.stopPropagation();
 
         const tr = $(this).closest("tr");
+
+        // ✅ marcar selección visual aunque sea click en botón
+        tabla.rows().every(function () {
+            $(this.node()).removeClass("row-selected");
+        });
+        $(tabla.row(tr).node()).addClass("row-selected");
+
+        const dsel = tabla.row(tr).data();
+        ventaClickeadaId = dsel?.IdVenta ?? null;
+
         const row = tabla.row(tr);
         const data = row.data();
         const icon = $(this).find("i");
@@ -509,6 +771,8 @@ VC.cargarTabla = async function () {
 
         await VC.cargarDetalleVenta(data.IdVenta);
     });
+
+    VC.refrescarSeleccionUI();
 };
 
 /* ===========================================================
@@ -525,6 +789,91 @@ VC.reabrirAcordeon = function () {
             $(this).find("button.btn-row-detail").trigger("click");
         }
     });
+};
+
+
+// ===========================================================
+// COBRADORES (para asignar)
+// ===========================================================
+
+VC.cargarCobradores = async function () {
+    try {
+        const resp = await $.getJSON("/Usuarios/ListarCobradores");
+        cobradoresCache = resp?.data || [];
+
+        const ddl = $("#ddlCobradorAsignar").empty();
+        ddl.append(`<option value="">Seleccionar...</option>`);
+        cobradoresCache.forEach(c => ddl.append(`<option value="${c.Id}">${c.Nombre}</option>`));
+
+        // Re-init select2 limpio
+        if (ddl.hasClass("select2-hidden-accessible")) {
+            ddl.select2("destroy");
+        }
+
+        ddl.select2({
+            width: "100%",
+            dropdownParent: $("#modalAsignarCobrador"),
+            placeholder: "Seleccionar...",
+            allowClear: true
+        });
+
+    } catch (e) {
+        console.error(e);
+        VC.toast("No se pudieron cargar cobradores", "danger");
+    }
+};
+
+
+VC.abrirAsignarCobrador = async function () {
+    if (!ventasSeleccionadas || ventasSeleccionadas.size === 0) {
+        VC.toast("No hay ventas seleccionadas", "warn");
+        return;
+    }
+
+    // Asegurar lista cobradores
+    if (!cobradoresCache || cobradoresCache.length === 0) {
+        await VC.cargarCobradores();
+    } else {
+        // si ya estaban cargados, igual aseguramos select2 con parent correcto
+        if (!$("#ddlCobradorAsignar").hasClass("select2-hidden-accessible")) {
+            $("#ddlCobradorAsignar").select2({ width: "100%", dropdownParent: $("#modalAsignarCobrador") });
+        }
+    }
+
+    // Cantidad seleccionadas
+    $("#lblCantVentasSel").text(ventasSeleccionadas.size);
+
+    // Abrir modal bootstrap 5
+    VC.openModal("modalAsignarCobrador");
+};
+
+VC.confirmarAsignarCobrador = async function () {
+    const idCobrador = parseInt($("#ddlCobradorAsignar").val() || "0", 10);
+
+    if (!idCobrador) {
+        VC.toast("Elegí un cobrador", "warn");
+        return;
+    }
+
+    const idsVentas = Array.from(ventasSeleccionadas);
+
+    if (!confirm(`¿Asignar cobrador a ${idsVentas.length} venta(s)?`)) return;
+
+    const resp = await $.ajax({
+        url: "/Ventas_Electrodomesticos/AsignarCobradorVentas",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ IdCobrador: idCobrador, IdsVentas: idsVentas })
+    });
+
+    if (resp && resp.success) {
+        VC.toast("Cobrador asignado", "success");
+        ventasSeleccionadas.clear();
+        VC.closeModal("modalAsignarCobrador");
+        await VC.cargarTabla();
+    } else {
+        VC.toast(resp?.message || "Error asignando cobrador", "danger");
+    }
 };
 
 /* ===========================================================
@@ -837,6 +1186,56 @@ VC.puedeCobrarCuota = function (ventaDet, idCuota) {
 
     return !prevImpagas;
 };
+
+VC.abrirObsCobro = function (idVenta) {
+
+    // tomar obs actual desde cuotasCache (tenés varias filas con mismo IdVenta)
+    const fila = (cuotasCache || []).find(x => Number(x?.IdVenta || 0) === Number(idVenta));
+    const obsActual = fila?.ObservacionCobro || "";
+
+    document.getElementById("obsCobro_idVenta").value = idVenta;
+    document.getElementById("obsCobro_txt").value = obsActual || "";
+
+    const el = document.getElementById("modalObsCobro");
+    const modal = bootstrap.Modal.getOrCreateInstance(el);
+    modal.show();
+};
+
+
+
+VC.guardarObsCobro = async function () {
+    const idVenta = parseInt(document.getElementById("obsCobro_idVenta").value || "0", 10) || 0;
+    const obs = (document.getElementById("obsCobro_txt").value || "").trim();
+
+    if (!idVenta) return;
+
+    try {
+        const resp = await fetch("/Ventas_Electrodomesticos/GuardarObservacionCobro", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idVenta, observacion: obs })
+        });
+
+        const json = await resp.json();
+
+        if (!json || json.success !== true) {
+            showToast(json?.message || "No se pudo guardar", "danger");
+            return;
+        }
+
+        showToast("Observación guardada", "success");
+
+        // cerrar modal
+        bootstrap.Modal.getInstance(document.getElementById("modalObsCobro"))?.hide();
+
+        await VC.cargarTabla();
+
+    } catch (e) {
+        console.error(e);
+        showToast("Error guardando observación", "danger");
+    }
+};
+
 
 /* ===========================================================
    MODAL COBRO
@@ -2474,4 +2873,22 @@ function renderCantidadCuotas(cantidad) {
             ${cantidad} cuota${cantidad > 1 ? "s" : ""}
         </span>
     `;
+}
+
+
+
+function habilitarSeleccionFilasCuotasCobros() {
+
+    // Delegación global: cualquier tabla dentro del acordeón (pendientes o finalizadas)
+    $(document).off("click.vcSelCuotas").on("click.vcSelCuotas", ".accordion-sub table tbody tr", function (e) {
+
+        // Si clickeás en botones/links/inputs/íconos, no cambiar selección
+        if ($(e.target).closest("button, a, input, select, textarea, label, i").length) return;
+
+        const $tbody = $(this).closest("tbody");
+
+        // Solo desmarca dentro de ESA tabla (igual Historial)
+        $tbody.find("tr").removeClass("row-selected");
+        $(this).addClass("row-selected");
+    });
 }

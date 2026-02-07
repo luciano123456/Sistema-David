@@ -411,6 +411,54 @@ namespace Sistema_David.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult AsignarCobradorVentas(VM_AsignarCobradorVentasReq req)
+        {
+            try
+            {
+                if (req == null || req.IdCobrador <= 0 || req.IdsVentas == null || req.IdsVentas.Count == 0)
+                    return Json(new { success = false, message = "Datos inválidos" });
+
+                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+
+                var r = Ventas_ElectrodomesticosModel.AsignarCobradorVentas(
+                    req.IdCobrador,
+                    req.IdsVentas,
+                    usuario,
+                    req.Observacion
+                );
+
+                return Json(new { success = r == "OK", message = r });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public ActionResult GuardarObservacionCobro(VM_ObsCobroReq req)
+        {
+            try
+            {
+                if (req == null || req.IdVenta <= 0)
+                    return Json(new { success = false, message = "Datos inválidos" });
+
+                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+
+                var msg = Ventas_ElectrodomesticosModel.GuardarObservacionCobro(
+                    req.IdVenta,
+                    req.Observacion,
+                    usuario
+                );
+
+                return Json(new { success = msg == "OK", message = msg });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
 
     }
 }

@@ -35,10 +35,10 @@ namespace Sistema_David.Models.DB
         public Nullable<int> ActualizoUbicacion { get; set; }
         public Nullable<System.DateTime> FechaVencimiento { get; set; }
     
+        public virtual CuentasBancarias CuentasBancarias { get; set; }
+        public virtual Usuarios Usuarios { get; set; }
+        public virtual Ventas_Electrodomesticos Ventas_Electrodomesticos { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Pagos_Detalle> Ventas_Electrodomesticos_Pagos_Detalle { get; set; }
-        public virtual Ventas_Electrodomesticos Ventas_Electrodomesticos { get; set; }
-        public virtual Usuarios Usuarios { get; set; }
-        public virtual CuentasBancarias CuentasBancarias { get; set; }
     }
 }

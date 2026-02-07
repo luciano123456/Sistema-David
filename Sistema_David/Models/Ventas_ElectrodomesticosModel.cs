@@ -619,6 +619,9 @@ namespace Sistema_David.Models
                     if (venta == null)
                         throw new Exception("Venta inexistente");
 
+                    venta.ObservacionCobro = "";
+                    venta.EstadoCobro = 0;
+
                     // ===============================
                     // 🔒 RESTANTE TOTAL DE LA VENTA
                     // ===============================
@@ -1179,6 +1182,8 @@ namespace Sistema_David.Models
                 if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
                     q = q.Where(x => x.Venta.IdVendedor == f.IdVendedor.Value);
 
+
+
                 var rows = q
                     .ToList()
                     .Select(x => new VM_Ventas_Electrodomesticos_CuotaCobroRow
@@ -1459,7 +1464,7 @@ namespace Sistema_David.Models
 
                 if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
                     q = q.Where(x =>
-                        x.Venta.IdVendedor == f.IdVendedor.Value);
+                        x.Venta.IdVendedor == f.IdVendedor.Value );
 
                 /* =========================
                    FILTROS NUEVOS
@@ -1494,6 +1499,11 @@ namespace Sistema_David.Models
                         q = q.Where(x => x.Cuota.Estado == f.EstadoCuota);
                     }
                 }
+
+
+                q = q.Where(x =>
+                     x.Venta.IdCobrador == f.IdVendedor.Value);
+
 
                 var rows = q
                     .ToList()
@@ -1539,7 +1549,10 @@ namespace Sistema_David.Models
 
                         // 🔥 TURNO / FRANJA
                         Turno = x.Venta.Turno,
-                        FranjaHoraria = x.Venta.FranjaHoraria
+                        FranjaHoraria = x.Venta.FranjaHoraria,
+
+                        EstadoCobro = x.Venta.EstadoCobro ?? 0,
+                        ObservacionCobro = x.Venta.ObservacionCobro,
                     })
                     .OrderBy(r => r.FechaVencimiento)
                     .ThenBy(r => r.NumeroCuota)
@@ -1608,6 +1621,154 @@ namespace Sistema_David.Models
             return turno.ToUpper();
         }
 
+
+
+        /* ===========================================================
+ * ASIGNAR COBRADOR A VENTA (INDIVIDUAL)
+ * =========================================================== */
+        public static string AsignarCobradorVenta(int idVenta, int idCobrador, int usuarioOperador, string obs = null)
+        {
+            if (idVenta <= 0) return "Venta inválida";
+            if (idCobrador <= 0) return "Cobrador inválido";
+
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var venta = db.Ventas_Electrodomesticos.FirstOrDefault(v => v.Id == idVenta);
+                    if (venta == null) return "Venta no encontrada";
+
+                    var cobrador = db.Usuarios.FirstOrDefault(u => u.Id == idCobrador);
+                    if (cobrador == null) return "Cobrador no encontrado";
+
+                    var anterior = venta.IdCobrador.HasValue ? venta.IdCobrador.Value.ToString() : "(sin)";
+
+                    if (!venta.IdCobrador.HasValue || venta.IdCobrador.Value != idCobrador)
+                    {
+                        venta.IdCobrador = idCobrador;
+                        venta.UsuarioModificacion = usuarioOperador;
+                        venta.FechaModificacion = DateTime.Now;
+
+                        Audit(
+                            db,
+                            venta.Id,
+                            null,
+                            usuarioOperador,
+                            "AsignarCobradorVenta",
+                            anterior,
+                            idCobrador.ToString(),
+                            string.IsNullOrWhiteSpace(obs)
+                                ? $"Asignado cobrador={cobrador.Nombre}"
+                                : obs
+                        );
+
+                        db.SaveChanges();
+                    }
+
+                    tx.Commit();
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error al asignar cobrador: " + ex.Message;
+                }
+            }
+        }
+
+        /* ===========================================================
+ * ASIGNAR COBRADOR A VENTAS (MASIVO)
+ * =========================================================== */
+        public static string AsignarCobradorVentas(int idCobrador, List<int> idsVentas, int usuarioOperador, string obs = null)
+        {
+            if (idCobrador <= 0) return "Cobrador inválido";
+            if (idsVentas == null || idsVentas.Count == 0) return "No hay ventas seleccionadas";
+
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var cobrador = db.Usuarios.FirstOrDefault(u => u.Id == idCobrador);
+                    if (cobrador == null) return "Cobrador no encontrado";
+
+                    var ventas = db.Ventas_Electrodomesticos
+                        .Where(v => idsVentas.Contains(v.Id))
+                        .ToList();
+
+                    if (ventas.Count == 0) return "No se encontraron ventas";
+
+                    foreach (var v in ventas)
+                    {
+                        var anterior = v.IdCobrador.HasValue ? v.IdCobrador.Value.ToString() : "(sin)";
+
+                        if (!v.IdCobrador.HasValue || v.IdCobrador.Value != idCobrador)
+                        {
+                            v.IdCobrador = idCobrador;
+                            v.UsuarioModificacion = usuarioOperador;
+                            v.FechaModificacion = DateTime.Now;
+
+                            Audit(
+                                db,
+                                v.Id,
+                                null,
+                                usuarioOperador,
+                                "AsignarCobradorVenta",
+                                anterior,
+                                idCobrador.ToString(),
+                                string.IsNullOrWhiteSpace(obs)
+                                    ? $"Asignado cobrador={cobrador.Nombre}"
+                                    : obs
+                            );
+                        }
+                    }
+
+                    db.SaveChanges();
+                    tx.Commit();
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error al asignar cobrador: " + ex.Message;
+                }
+            }
+        }
+
+        public static string GuardarObservacionCobro(int idVenta, string observacion, int usuario)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var venta = db.Ventas_Electrodomesticos.FirstOrDefault(v => v.Id == idVenta);
+                    if (venta == null) return "Venta no encontrada";
+
+                    var obsNueva = (observacion ?? "").Trim();
+
+                    // setear
+                    venta.EstadoCobro = 1;
+                    venta.ObservacionCobro = obsNueva;
+                    venta.UsuarioModificacion = usuario;
+                    venta.FechaModificacion = DateTime.Now;
+
+                    // si querés auditar (si tenés Audit accesible acá)
+                    Audit(db, venta.Id, null, usuario, "EstadoCobro", null, "1", "ObsCobro");
+                    Audit(db, venta.Id, null, usuario, "ObservacionCobro", null, obsNueva);
+
+                    db.SaveChanges();
+                    tx.Commit();
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error: " + ex.Message;
+                }
+            }
+        }
 
 
     }

@@ -4,88 +4,87 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="7a4b1bc9137e412b8284df11c44927fa" Name="Diagram1" ZoomLevel="92">
-        <EntityTypeShape EntityType="Sistema_DavidModel.Categorias" Width="1.5" PointX="8.25" PointY="3.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.EstadosClientes" Width="1.5" PointX="3" PointY="2.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.EstadosUsuarios" Width="1.5" PointX="0.75" PointY="6.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Productos" Width="1.5" PointX="10.5" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Roles" Width="1.5" PointX="0.75" PointY="3.75" IsExpanded="true" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Productos_Categorias" ManuallyRouted="false" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Zonas" Width="1.5" PointX="5.375" PointY="0.75" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Zonas_Zonas1" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Limites" Width="1.5" PointX="7.375" PointY="0.75" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.StockUsuarios" Width="1.5" PointX="15.75" PointY="4.375" />
+      <Diagram DiagramId="7a4b1bc9137e412b8284df11c44927fa" Name="Diagram1" ZoomLevel="52">
+        <EntityTypeShape EntityType="Sistema_DavidModel.Categorias" Width="1.5" PointX="3.75" PointY="20.375" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Clientes" Width="1.5" PointX="5.25" PointY="25" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.ComprobantesImagenes" Width="1.5" PointX="15.75" PointY="19" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.CuentasBancarias" Width="1.5" PointX="13.5" PointY="20.5" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.EstadosClientes" Width="1.5" PointX="0.75" PointY="6.75" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.EstadosUsuarios" Width="1.5" PointX="0.75" PointY="28.375" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.InformacionClientesAsignados" Width="1.5" PointX="7.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.InformacionVentas" Width="1.5" PointX="15.75" PointY="32.125" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Limites" Width="1.5" PointX="7.75" PointY="3.75" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Productos" Width="1.5" PointX="6" PointY="19" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.ProductosVenta" Width="1.5" PointX="15.75" PointY="22.75" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Recorridos" Width="1.5" PointX="5.25" PointY="42.625" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.RecorridosCobranzas" Width="1.5" PointX="12.75" PointY="34.625" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Roles" Width="1.5" PointX="0.75" PointY="25.375" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.StocksPendientes" Width="1.5" PointX="8.25" PointY="27.5" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.StockUsuarios" Width="1.5" PointX="8.25" PointY="23.75" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos" Width="1.5" PointX="5.25" PointY="33.875" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_Detalle" Width="1.5" PointX="5" PointY="1.125" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_Pagos" Width="1.5" PointX="5.25" PointY="38.875" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_PagosParciales" Width="1.5" PointX="7.75" PointY="6.75" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_Reglas" Width="1.5" PointX="5" PointY="4.625" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.TipoNegocio" Width="1.5" PointX="2.75" PointY="3.375" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Usuarios" Width="1.5" PointX="3" PointY="25.125" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas" Width="1.5" PointX="10.5" PointY="25.875" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos" Width="1.5" PointX="13.5" PointY="24.625" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas" Width="1.5" PointX="18.75" PointY="31.25" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas_Recargos" Width="1.5" PointX="21" PointY="39.5" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Detalle" Width="1.5" PointX="18.75" PointY="27.625" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Historial" Width="1.5" PointX="21" PointY="29" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Pagos" Width="1.5" PointX="15.75" PointY="26.75" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Pagos_Detalle" Width="1.5" PointX="21" PointY="33.625" />
+        <EntityTypeShape EntityType="Sistema_DavidModel.Zonas" Width="1.5" PointX="0.75" PointY="0.75" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Productos_Categorias" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Clientes_Usuarios" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_RecorridosCobranzas_Clientes" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_VE_Clientes" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Clientes" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_ComprobantesImagenes_CuentasBancarias" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_InformacionVentas_CuentasBancarias" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Usuarios_EstadosUsuarios1" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_InformacionVentas_Ventas" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_ProductosVenta_Productos" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Stock_Productos" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Stock_Productos1" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.ProductosVenta" Width="1.5" PointX="7.375" PointY="6.75" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_ProductosVenta_Productos" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.RecorridosCobranzas" Width="1.5" PointX="12.75" PointY="13.125" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Recorridos" Width="1.5" PointX="5.25" PointY="11.875" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_RecorridosCobranzas_Recorridos" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.StocksPendientes" Width="1.5" PointX="12.75" PointY="4.125" />
         <AssociationConnector Association="Sistema_DavidModel.FK_StocksPendientes_Productos" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas" Width="1.5" PointX="10.5" PointY="6.25" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_ProductosVenta_Ventas" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_RecorridosCobranzas_Ventas" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Clientes" Width="1.5" PointX="8.25" PointY="10.5" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Clientes_EstadosClientes" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_RecorridosCobranzas_Clientes" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Clientes" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.sysdiagrams" Width="1.5" PointX="0.75" PointY="11.75" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.InformacionClientesAsignados" Width="1.5" PointX="5.375" PointY="3.75" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.InformacionVentas" Width="1.5" PointX="12.75" PointY="0.75" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.TipoNegocio" Width="1.5" PointX="12.5" PointY="11" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_InformacionVentas_Ventas" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.CuentasBancarias" Width="1.5" PointX="13" PointY="7.875" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_InformacionVentas_Ventas1" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.ComprobantesImagenes" Width="1.5" PointX="0.75" PointY="14.75" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_ComprobantesImagenes_CuentasBancarias" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_Reglas" Width="1.5" PointX="15.625" PointY="11" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_SueldosReglas_TipoNegocio" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos" Width="1.5" PointX="5.25" PointY="19.5" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_Detalle" Width="1.5" PointX="15.625" PointY="15.25" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_Pagos" Width="1.5" PointX="5.25" PointY="15.75" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Sueldos" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Detalle_TipoNegocio" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Sueldos_PagosParciales" Width="1.5" PointX="7.375" PointY="16.75" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Detalle" Width="1.5" PointX="19.125" PointY="8.75" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Historial" Width="1.5" PointX="21.375" PointY="10.75" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Pagos" Width="1.5" PointX="13.125" PointY="16.875" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Pagos_Detalle" Width="1.5" PointX="21.375" PointY="15.5" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.informacionventas_ult7d" Width="1.5" PointX="0.75" PointY="17.75" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VED_Producto" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_VEPD_Pago" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos" Width="1.5" PointX="10.5" PointY="14.25" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_VE_Clientes" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_VED_VE" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_VEH_VE" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_VEP_VE" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Usuarios" Width="1.5" PointX="3" PointY="5.125" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Clientes_Usuarios" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Usuarios_EstadosUsuarios1" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_ProductosVenta_Ventas" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Recorridos_Usuarios" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_RecorridosCobranzas_Recorridos" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_RecorridosCobranzas_Ventas" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Usuarios_Roles" />
         <AssociationConnector Association="Sistema_DavidModel.FK_StocksPendientes_Usuarios" />
         <AssociationConnector Association="Sistema_DavidModel.FK_StocksPendientes_Usuarios_Asignados" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Stock_Usuarios" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Sueldos" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Usuarios" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Usuarios1" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Detalle_TipoNegocio" />
         <AssociationConnector Association="Sistema_DavidModel.FK_Sueldos_Pagos_Usuarios" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_SueldosReglas_TipoNegocio" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VE_UsuariosC" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VE_UsuariosM" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VE_Vendedor" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_VEH_User" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Usuarios" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_VEP_UsrCrea" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas" Width="1.5" PointX="18.75" PointY="12.875" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VEC_UsrCrea" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VEC_UsrMod" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_VEH_User" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Electrodomesticos_Usuarios" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Usuarios" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_VEP_UsrCrea" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VEC_VE" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_VED_VE" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_VEH_VE" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_VEP_VE" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Recargo_Cuota" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VEH_VEC" />
         <AssociationConnector Association="Sistema_DavidModel.FK_VEPD_Cuota" />
-        <EntityTypeShape EntityType="Sistema_DavidModel.Ventas_Electrodomesticos_Cuotas_Recargos" Width="1.5" PointX="21" PointY="18.875" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Ventas_Electrodomesticos_Pagos_CuentasBancarias" />
-        <AssociationConnector Association="Sistema_DavidModel.FK_Recargo_Cuota" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_VEPD_Pago" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Zonas_Zonas1" />
+        <AssociationConnector Association="Sistema_DavidModel.FK_Clientes_EstadosClientes" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

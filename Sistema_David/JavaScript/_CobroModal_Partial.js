@@ -1069,10 +1069,23 @@ function generarPdfVenta(venta) {
 
     // ===== Helpers fechas =====
     const parseFechaVenc = (x) => {
-        // backend suele venir ISO/Date
         const m = moment(x);
         return m.isValid() ? m : moment(String(x), "DD/MM/YYYY", true);
     };
+
+    // ===== Helpers recargo / descuento =====
+    const fmtValTipo = (val, tipo) => {
+        const t = (tipo || "").trim();
+        const n = Number(val || 0);
+        if (!t || isNaN(n) || n <= 0) return null;
+
+        if (t === "%") return `${n.toFixed(2)}%`;
+        // $ o cualquier otro -> lo muestro como dinero
+        return money(n);
+    };
+
+    const recargoTxt = fmtValTipo(venta.RecargoValor, venta.RecargoTipo);
+    const descuentoTxt = fmtValTipo(venta.DescuentoValor, venta.DescuentoTipo);
 
     const hoy = moment().startOf("day");
 
@@ -1089,19 +1102,26 @@ function generarPdfVenta(venta) {
     y += 6;
 
     doc.text(`Cliente: ${venta.ClienteNombre || ""}`, 10, y);
-    y += 8;
+    y += 6;
+
+    // ✅ NUEVO: Mostrar recargo / descuento si existen
+    if (recargoTxt || descuentoTxt) {
+        let linea = [];
+        if (recargoTxt) linea.push(`Recargo: ${recargoTxt}`);
+        if (descuentoTxt) linea.push(`Descuento: ${descuentoTxt}`);
+
+        doc.setFontSize(10);
+        doc.text(linea.join("  |  "), 10, y);
+        y += 6;
+    }
+
+    y += 2;
 
     /* ================= TOTALES ================= */
     const totalVenta = Number(venta.ImporteTotal || venta.Total || 0);
-
     const cuotasVenta = Array.isArray(venta.Cuotas) ? venta.Cuotas : [];
 
-    const totalEntrega = venta.Entrega;
-
-    const totalCuotas = cuotasVenta.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
-
-    const totalPagado = totalEntrega + totalCuotas;
-
+    const totalPagado = cuotasVenta.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
     const restante = Math.max(totalVenta - totalPagado, 0);
 
     doc.setFontSize(12);
@@ -1119,9 +1139,6 @@ function generarPdfVenta(venta) {
     y += 3;
 
     // ===== Detectar "PRÓXIMA" =====
-    // Regla:
-    // 1) primera NO pagada con vencimiento <= hoy (la que corresponde pagar hoy/atrasada)
-    // 2) si no hay, la NO pagada con vencimiento más cercano futuro
     const cuotasNorm = cuotasVenta.map(c => {
         const vencM = parseFechaVenc(c.FechaVencimiento).startOf("day");
         const totalCuota =
@@ -1148,18 +1165,20 @@ function generarPdfVenta(venta) {
     });
 
     const noPagadas = cuotasNorm
-        .filter(x =>
-            x.estadoRaw !== "Pagada" &&
-            x.restanteCuota > 0.0001 &&
-            x.vencM.isAfter(hoy, "day")   // 👈 SOLO FUTURAS
-        )
+        .filter(x => x.estadoRaw !== "Pagada" && x.restanteCuota > 0.0001)
         .sort((a, b) => a.vencM.valueOf() - b.vencM.valueOf());
 
-    let proximaNumero = noPagadas.length
-        ? noPagadas[0].numero   // la futura más cercana
-        : null;
+    let proximaNumero = null;
 
-    // ===== Armar body + meta por fila =====
+    if (noPagadas.length) {
+        const candidatasHoyOAntes = noPagadas.filter(x => x.vencM.isSameOrBefore(hoy, "day"));
+        if (candidatasHoyOAntes.length) {
+            proximaNumero = candidatasHoyOAntes[0].numero;
+        } else {
+            proximaNumero = noPagadas[0].numero;
+        }
+    }
+
     const filasMeta = [];
 
     const body = cuotasNorm
@@ -1167,13 +1186,12 @@ function generarPdfVenta(venta) {
         .map(x => {
 
             let estadoTxt = x.estadoRaw;
-            let estadoTipo = "pendiente"; // pagada | vencida | proxima | pendiente
+            let estadoTipo = "pendiente";
 
             if (x.estadoRaw === "Pagada" || x.restanteCuota <= 0.0001) {
                 estadoTxt = "Pagada";
                 estadoTipo = "pagada";
             } else {
-                // vencida?
                 if (hoy.isAfter(x.vencM, "day")) {
                     const dias = hoy.diff(x.vencM, "days");
                     estadoTxt = `Vencida - ${dias} días`;
@@ -1183,7 +1201,6 @@ function generarPdfVenta(venta) {
                     estadoTipo = "pendiente";
                 }
 
-                // proxima?
                 if (proximaNumero != null && x.numero === proximaNumero) {
                     estadoTxt = "Próxima";
                     estadoTipo = "proxima";
@@ -1192,8 +1209,7 @@ function generarPdfVenta(venta) {
 
             filasMeta.push({
                 estadoTipo,
-                // fila amarilla SOLO si es proxima
-                rowFill: (estadoTipo === "proxima") ? [255, 243, 205] : null // amarillo suave
+                rowFill: (estadoTipo === "proxima") ? [255, 243, 205] : null
             });
 
             return [
@@ -1212,92 +1228,42 @@ function generarPdfVenta(venta) {
         body,
         theme: "grid",
         styles: { fontSize: 9, valign: "middle" },
-
-        // ✅ FIX: el header NO se pinta raro
         headStyles: {
-            fillColor: [22, 160, 133],   // verde header (como tu diseño)
+            fillColor: [22, 160, 133],
             textColor: [255, 255, 255],
             fontStyle: "bold"
         },
-
-        // ✅ Pintar SOLO lo que corresponde (estado o fila próxima)
         didParseCell: function (data) {
-            // Ignorar el header totalmente
             if (data.section === "head") return;
 
             const meta = filasMeta[data.row.index];
             if (!meta) return;
 
-            // 1) Si es "próxima", pintar TODA la fila amarilla
             if (meta.rowFill) {
                 data.cell.styles.fillColor = meta.rowFill;
             }
 
-            // 2) Columna Estado: SOLO pintar el texto (sin borde raro)
-            const colEstado = 5; // índice en el body
+            const colEstado = 5;
             if (data.column.index === colEstado) {
                 if (meta.estadoTipo === "pagada") {
-                    data.cell.styles.textColor = [25, 135, 84]; // verde
+                    data.cell.styles.textColor = [25, 135, 84];
                     data.cell.styles.fontStyle = "bold";
                 }
                 else if (meta.estadoTipo === "vencida") {
-                    data.cell.styles.textColor = [220, 53, 69]; // rojo
+                    data.cell.styles.textColor = [220, 53, 69];
                     data.cell.styles.fontStyle = "bold";
                 }
                 else if (meta.estadoTipo === "proxima") {
-                    data.cell.styles.textColor = [33, 37, 41]; // negro prolijo
+                    data.cell.styles.textColor = [33, 37, 41];
                     data.cell.styles.fontStyle = "bold";
                 }
                 else {
-                    // pendiente normal
                     data.cell.styles.textColor = [33, 37, 41];
                 }
             }
         }
     });
 
-    /* ================= MENSAJE FINAL + GARANTÍA ================= */
-
-    let yFinal = doc.lastAutoTable.finalY + 20;
-
-    // Separador
-    doc.setDrawColor(220);
-    doc.line(10, yFinal - 6, 200, yFinal - 6);
-
-    /* --- Atención al cliente (izquierda) --- */
-    doc.setFontSize(10);
-    doc.setFont(undefined, "bold");
-    doc.text("¿Alguna pregunta?", 10, yFinal);
-
-    doc.setFontSize(9);
-    doc.setFont(undefined, "normal");
-    doc.text("Envianos un WhatsApp al +54 9 3777 71-0884", 10, yFinal + 6);
-
-    /* --- Garantía (debajo, ancho cómodo) --- */
-    const garantiaX = 10;
-    const garantiaY = yFinal + 16;
-    const garantiaW = 130; // ancho del bloque para que no se vaya de largo
-
-    doc.setFontSize(10);
-    doc.setFont(undefined, "bold");
-    doc.text("Garantía de productos", garantiaX, garantiaY);
-
-    doc.setFontSize(8.7);
-    doc.setFont(undefined, "normal");
-
-    const garantiaTexto =
-        "Todos los productos cuentan con garantía. La misma cubre únicamente fallas de fabricación.\n" +
-        "La garantía no cubre daños por mal uso, golpes, humedad, manipulación indebida o desgaste normal.";
-
-    doc.text(doc.splitTextToSize(garantiaTexto, garantiaW), garantiaX, garantiaY + 6);
-
-    /* --- Gracias (derecha) --- */
-    doc.setFontSize(22);
-    doc.setFont(undefined, "bold");
-    doc.text("¡Gracias!", 200, yFinal + 10, { align: "right" });
-
-
-    /* ================= FOOTER ================= */
     const fileName = `Venta_${venta.IdVenta}_${moment().format("YYYYMMDD_HHmm")}.pdf`;
     doc.save(fileName);
 }

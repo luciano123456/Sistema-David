@@ -18,8 +18,8 @@ namespace Sistema_David.Models.DB
         public Clientes()
         {
             this.RecorridosCobranzas = new HashSet<RecorridosCobranzas>();
-            this.Ventas = new HashSet<Ventas>();
             this.Ventas_Electrodomesticos = new HashSet<Ventas_Electrodomesticos>();
+            this.Ventas = new HashSet<Ventas>();
         }
     
         public int Id { get; set; }
@@ -38,13 +38,13 @@ namespace Sistema_David.Models.DB
         public Nullable<int> IdVendedorAsignado { get; set; }
         public Nullable<decimal> LimiteVentas { get; set; }
     
-        public virtual EstadosClientes EstadosClientes { get; set; }
+        public virtual Usuarios Usuarios { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<RecorridosCobranzas> RecorridosCobranzas { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Ventas> Ventas { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos> Ventas_Electrodomesticos { get; set; }
-        public virtual Usuarios Usuarios { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Ventas> Ventas { get; set; }
+        public virtual EstadosClientes EstadosClientes { get; set; }
     }
 }

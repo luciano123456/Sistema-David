@@ -28,11 +28,12 @@ namespace Sistema_David.Models.DB
             this.Ventas_Electrodomesticos = new HashSet<Ventas_Electrodomesticos>();
             this.Ventas_Electrodomesticos1 = new HashSet<Ventas_Electrodomesticos>();
             this.Ventas_Electrodomesticos2 = new HashSet<Ventas_Electrodomesticos>();
-            this.Ventas_Electrodomesticos_Historial = new HashSet<Ventas_Electrodomesticos_Historial>();
-            this.Ventas = new HashSet<Ventas>();
-            this.Ventas_Electrodomesticos_Pagos = new HashSet<Ventas_Electrodomesticos_Pagos>();
             this.Ventas_Electrodomesticos_Cuotas = new HashSet<Ventas_Electrodomesticos_Cuotas>();
             this.Ventas_Electrodomesticos_Cuotas1 = new HashSet<Ventas_Electrodomesticos_Cuotas>();
+            this.Ventas_Electrodomesticos_Historial = new HashSet<Ventas_Electrodomesticos_Historial>();
+            this.Ventas_Electrodomesticos3 = new HashSet<Ventas_Electrodomesticos>();
+            this.Ventas = new HashSet<Ventas>();
+            this.Ventas_Electrodomesticos_Pagos = new HashSet<Ventas_Electrodomesticos_Pagos>();
         }
     
         public int Id { get; set; }
@@ -78,14 +79,16 @@ namespace Sistema_David.Models.DB
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos> Ventas_Electrodomesticos2 { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Ventas_Electrodomesticos_Cuotas> Ventas_Electrodomesticos_Cuotas { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Ventas_Electrodomesticos_Cuotas> Ventas_Electrodomesticos_Cuotas1 { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Historial> Ventas_Electrodomesticos_Historial { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Ventas_Electrodomesticos> Ventas_Electrodomesticos3 { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas> Ventas { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ventas_Electrodomesticos_Pagos> Ventas_Electrodomesticos_Pagos { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Ventas_Electrodomesticos_Cuotas> Ventas_Electrodomesticos_Cuotas { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Ventas_Electrodomesticos_Cuotas> Ventas_Electrodomesticos_Cuotas1 { get; set; }
     }
 }
