@@ -234,6 +234,56 @@
     </div>
 
 
+    <div class="modal fade" id="mdWhatsApp" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content ve-modal">
+
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-white">
+                        <i class="fa fa-whatsapp text-success me-2"></i>
+                        Enviar mensaje
+                    </h5>
+                    <button class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            type="button"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="wa_telefono">
+
+                    <div class="mb-2">
+                        <label class="form-label">Cliente</label>
+                        <input id="wa_cliente"
+                               class="form-control ve-input"
+                               disabled>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Mensaje</label>
+                        <textarea id="wa_mensaje"
+                                  class="form-control ve-input"
+                                  rows="4"
+                                  placeholder="Escribí el mensaje..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button class="btn btn-success"
+                            onclick="VC.enviarWhatsApp()">
+                        <i class="fa fa-whatsapp"></i>
+                        Enviar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
     <!-- =====================================================
          MODAL HISTORIAL CUOTA
     ====================================================== -->
@@ -284,4 +334,4 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-<script src="~/JavaScript/_CobroModal_Partial.js?v=1.6"></script>
+<script src="~/JavaScript/_CobroModal_Partial.js?v=1.7"></script>

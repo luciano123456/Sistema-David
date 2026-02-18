@@ -58,6 +58,9 @@ namespace Sistema_David.Models
                 if (idVendedor > 0)
                     q = q.Where(v => v.IdVendedor == idVendedor);
 
+                if (estado == "")
+                    q = q.Where(v => v.Estado != "Pendiente");
+
                 var ventas = q.ToList();
                 var rows = new List<VM_HistorialVentasRow>();
                 var hoy = DateTime.Today;
@@ -72,8 +75,14 @@ namespace Sistema_David.Models
                     var row = new VM_HistorialVentasRow
                     {
                         IdVenta = v.Id,
+                        Comprobante = v.Comprobante,
                         Fecha = v.FechaVenta,
                         Cliente = v.Clientes?.Nombre,
+                        ClienteDni = v.Clientes?.Dni,
+                        ClienteDireccion = v.Clientes?.Direccion,
+                        ClienteLongitud = v.Clientes?.Longitud,
+                        ClienteLatitud = v.Clientes?.Latitud,
+                        ClienteTelefono = v.Clientes?.Telefono,
                         Total = v.ImporteTotal,
                         Pagado = (decimal)(cuotas.Sum(c => c.MontoPagado) + v.Entrega),
                         Pendiente = cuotas.Sum(c =>
@@ -315,12 +324,14 @@ namespace Sistema_David.Models
                         DescuentoTipo = m.DescuentoTipo,
                         DescuentoValor = m.DescuentoValor,
 
-                        Estado = "Activa",
+                        Estado = "Pendiente",
                         Observacion = m.Observacion,
                         UsuarioCreacion = m.UsuarioOperador,
                         FechaCreacion = DateTime.Now,
                         Turno = m.Turno,
-                        FranjaHoraria = m.FranjaHoraria
+                        FranjaHoraria = m.FranjaHoraria,
+                        Comprobante = 0
+                       
                     };
 
                     db.Ventas_Electrodomesticos.Add(venta);
@@ -478,6 +489,7 @@ namespace Sistema_David.Models
                     IdCliente = v.IdCliente,
                     IdVendedor = v.IdVendedor,
                     ImporteTotal = v.ImporteTotal,
+                    Comprobante = v.Comprobante,
 
                     ImporteInteres = v.ImporteInteres,
                     ImporteRecargos = v.ImporteRecargos,
@@ -994,7 +1006,7 @@ namespace Sistema_David.Models
         /* ===========================================================
          * ELIMINAR VENTA
          * =========================================================== */
-        public static string EliminarVenta(int idVenta, int usuario)
+        public static string EliminarVenta(int idVenta, int usuario, bool forzar = false)
         {
             using (var db = new Sistema_DavidEntities())
             using (var tx = db.Database.BeginTransaction())
@@ -1005,26 +1017,28 @@ namespace Sistema_David.Models
                         .Include(v => v.Ventas_Electrodomesticos_Detalle)
                         .Include(v => v.Ventas_Electrodomesticos_Cuotas
                             .Select(c => c.Ventas_Electrodomesticos_Cuotas_Recargos))
-                        .Include(v => v.Ventas_Electrodomesticos_Pagos)
+                        .Include(v => v.Ventas_Electrodomesticos_Pagos
+                            .Select(p => p.Ventas_Electrodomesticos_Pagos_Detalle))
+                        .Include(v => v.Ventas_Electrodomesticos_Historial)
                         .FirstOrDefault(v => v.Id == idVenta);
 
                     if (venta == null)
                         return "Venta no encontrada";
 
-                    if (venta.Ventas_Electrodomesticos_Pagos.Any())
-                        return "No se puede eliminar: la venta tiene pagos";
+                    bool tienePagos = venta.Ventas_Electrodomesticos_Pagos.Any();
+
+                    if (tienePagos && !forzar)
+                        return "TIENE_PAGOS";
 
                     /* ===============================
                      * 1️⃣ DEVOLVER STOCK
                      * =============================== */
                     foreach (var det in venta.Ventas_Electrodomesticos_Detalle)
                     {
-                        // 🔼 STOCK GENERAL
                         var prod = db.Productos.First(p => p.Id == det.IdProducto);
                         prod.Stock += (int?)det.Cantidad;
                         db.Entry(prod).State = EntityState.Modified;
 
-                        // 🔼 STOCK USUARIO
                         var stockUser = db.StockUsuarios.FirstOrDefault(s =>
                             s.IdUsuario == venta.IdVendedor &&
                             s.IdProducto == det.IdProducto);
@@ -1046,7 +1060,25 @@ namespace Sistema_David.Models
                     }
 
                     /* ===============================
-                     * 2️⃣ ELIMINAR RECARGOS DE CUOTAS
+                     * 2️⃣ ELIMINAR PAGOS DETALLE
+                     * =============================== */
+                    foreach (var pago in venta.Ventas_Electrodomesticos_Pagos)
+                    {
+                        if (pago.Ventas_Electrodomesticos_Pagos_Detalle.Any())
+                        {
+                            db.Ventas_Electrodomesticos_Pagos_Detalle
+                                .RemoveRange(pago.Ventas_Electrodomesticos_Pagos_Detalle);
+                        }
+                    }
+
+                    /* ===============================
+                     * 3️⃣ ELIMINAR PAGOS
+                     * =============================== */
+                    db.Ventas_Electrodomesticos_Pagos
+                        .RemoveRange(venta.Ventas_Electrodomesticos_Pagos);
+
+                    /* ===============================
+                     * 4️⃣ ELIMINAR RECARGOS DE CUOTAS
                      * =============================== */
                     foreach (var cuota in venta.Ventas_Electrodomesticos_Cuotas)
                     {
@@ -1058,19 +1090,25 @@ namespace Sistema_David.Models
                     }
 
                     /* ===============================
-                     * 3️⃣ ELIMINAR CUOTAS
+                     * 5️⃣ ELIMINAR CUOTAS
                      * =============================== */
                     db.Ventas_Electrodomesticos_Cuotas
                         .RemoveRange(venta.Ventas_Electrodomesticos_Cuotas);
 
                     /* ===============================
-                     * 4️⃣ ELIMINAR DETALLE
+                     * 6️⃣ ELIMINAR DETALLE
                      * =============================== */
                     db.Ventas_Electrodomesticos_Detalle
                         .RemoveRange(venta.Ventas_Electrodomesticos_Detalle);
 
                     /* ===============================
-                     * 5️⃣ AUDITORÍA
+                     * 7️⃣ ELIMINAR HISTORIAL
+                     * =============================== */
+                    db.Ventas_Electrodomesticos_Historial
+                        .RemoveRange(venta.Ventas_Electrodomesticos_Historial);
+
+                    /* ===============================
+                     * 8️⃣ AUDITORÍA
                      * =============================== */
                     Audit(
                         db,
@@ -1080,18 +1118,20 @@ namespace Sistema_David.Models
                         "EliminarVenta",
                         venta.Estado,
                         "Eliminada",
-                        "Eliminación total con devolución de stock"
+                        forzar
+                            ? "Eliminación forzada con pagos"
+                            : "Eliminación normal"
                     );
 
                     /* ===============================
-                     * 6️⃣ ELIMINAR VENTA
+                     * 9️⃣ ELIMINAR VENTA
                      * =============================== */
                     db.Ventas_Electrodomesticos.Remove(venta);
 
                     db.SaveChanges();
                     tx.Commit();
 
-                    return "Venta eliminada con éxito";
+                    return "OK";
                 }
                 catch (Exception ex)
                 {
@@ -1165,6 +1205,10 @@ namespace Sistema_David.Models
                     join u in db.Usuarios
                         on v.IdVendedor equals u.Id into vendedoresJoin
                     from u in vendedoresJoin.DefaultIfEmpty()
+                    join cob in db.Usuarios
+                        on v.IdCobrador equals cob.Id into cobradoresJoin
+                    from cob in cobradoresJoin.DefaultIfEmpty()
+
                     where c.CobroPendiente == 1
                     select new
                     {
@@ -1172,7 +1216,9 @@ namespace Sistema_David.Models
                         Venta = v,
                         Cliente = cli,
                         Zona = z,
-                        Vendedor = u
+                        Vendedor = u,
+                        Cobrador = cob
+
                     };
 
                 // 👉 filtros MINIMOS que ya usabas
@@ -1226,6 +1272,9 @@ namespace Sistema_David.Models
                         // ===== VENDEDOR =====
                         IdVendedor = x.Venta.IdVendedor,
                         VendedorNombre = x.Vendedor != null ? x.Vendedor.Nombre : null,
+
+                        CobradorNombre = x.Cobrador != null ? x.Cobrador.Nombre : null,
+
 
                         // ===== TURNO / FRANJA =====
                         Turno = x.Venta.Turno,
@@ -1307,6 +1356,7 @@ namespace Sistema_David.Models
                         ClienteDireccion = x.Cliente.Direccion,
                         ClienteLatitud = x.Cliente.Latitud,
                         ClienteLongitud = x.Cliente.Longitud,
+                        ClienteTelefono = x.Cliente.Telefono,
 
                         // ===== ZONA =====
                         IdZona = x.Cliente.IdZona,
@@ -1332,6 +1382,32 @@ namespace Sistema_David.Models
 
 
 
+        public static string MarcarComprobante(int idVenta)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var venta = db.Ventas_Electrodomesticos
+                        .FirstOrDefault(c => c.Id == idVenta);
+
+                    if (venta == null)
+                        return "Venta no encontrada";
+
+                    venta.Comprobante = 1;
+         
+                    db.SaveChanges();
+                    tx.Commit();
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error: " + ex.Message;
+                }
+            }
+        }
 
         public static string MarcarCobroPendienteResuelto(int idCuota, int usuario)
         {
@@ -1434,6 +1510,9 @@ namespace Sistema_David.Models
                     join u in db.Usuarios
                         on v.IdVendedor equals u.Id into vendedoresJoin
                     from u in vendedoresJoin.DefaultIfEmpty()
+                    join cob in db.Usuarios
+                        on v.IdVendedor equals cob.Id into cobradoresJoin
+                    from cob in vendedoresJoin.DefaultIfEmpty()
                     where c.CobroPendiente <= 0 && c.TransferenciaPendiente <= 0
                     select new
                     {
@@ -1441,68 +1520,71 @@ namespace Sistema_David.Models
                         Venta = v,
                         Cliente = cli,
                         Zona = z,
-                        Vendedor = u
+                        Vendedor = u,
+                        Cobrador = cob
                     };
 
                 var desde = f.FechaDesde?.Date;
                 var hasta = f.FechaHasta?.Date;
 
-                /* =========================
-                   FILTRO POR FECHA DE COBRO
-                ========================= */
-                if (desde.HasValue)
-                    q = q.Where(x =>
-                        DbFunctions.TruncateTime(x.Cuota.FechaCobro) >= desde.Value);
-
-                if (hasta.HasValue)
-                    q = q.Where(x =>
-                        DbFunctions.TruncateTime(x.Cuota.FechaCobro) <= hasta.Value);
-
-                if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
-                    q = q.Where(x =>
-                        x.Venta.IdCliente == f.IdCliente.Value);
-
-                if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
-                    q = q.Where(x =>
-                        x.Venta.IdVendedor == f.IdVendedor.Value );
-
-                /* =========================
-                   FILTROS NUEVOS
-                ========================= */
-                if (f.IdZona.HasValue && f.IdZona.Value > 0)
-                    q = q.Where(x =>
-                        x.Cliente.IdZona == f.IdZona.Value);
-
-                if (!string.IsNullOrWhiteSpace(f.Turno))
-                    q = q.Where(x =>
-                        x.Venta.Turno == f.Turno);
-
-                if (!string.IsNullOrWhiteSpace(f.FranjaHoraria))
-                    q = q.Where(x =>
-                        x.Venta.FranjaHoraria == f.FranjaHoraria);
-
-                /* =========================
-                   ESTADO CUOTA
-                ========================= */
-                if (!string.IsNullOrEmpty(f.EstadoCuota))
+                /* ======================================
+                   SI HAY COBRADOR → SOLO FILTRO COBRADOR
+                ====================================== */
+                if (f.IdCobrador.HasValue && f.IdCobrador.Value > 0)
                 {
-                    if (f.EstadoCuota == "Vencida")
-                    {
-                        var hoy = DateTime.Today;
+                    q = q.Where(x => x.Venta.IdCobrador == f.IdCobrador.Value);
+                }
+                else
+                {
+                    /* =========================
+                       FILTROS NORMALES
+                    ========================= */
 
+                    if (desde.HasValue)
                         q = q.Where(x =>
-                            x.Cuota.Estado != "Pagada" &&
-                            DbFunctions.TruncateTime(x.Cuota.FechaCobro) < hoy);
-                    }
-                    else
+                            DbFunctions.TruncateTime(x.Cuota.FechaCobro) >= desde.Value);
+
+                    if (hasta.HasValue)
+                        q = q.Where(x =>
+                            DbFunctions.TruncateTime(x.Cuota.FechaCobro) <= hasta.Value);
+
+                    if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
+                        q = q.Where(x =>
+                            x.Venta.IdCliente == f.IdCliente.Value);
+
+                    if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
+                        q = q.Where(x =>
+                            x.Venta.IdVendedor == f.IdVendedor.Value);
+
+                    if (f.IdZona.HasValue && f.IdZona.Value > 0)
+                        q = q.Where(x =>
+                            x.Cliente.IdZona == f.IdZona.Value);
+
+                    if (!string.IsNullOrWhiteSpace(f.Turno))
+                        q = q.Where(x =>
+                            x.Venta.Turno == f.Turno);
+
+                    if (!string.IsNullOrWhiteSpace(f.FranjaHoraria))
+                        q = q.Where(x =>
+                            x.Venta.FranjaHoraria == f.FranjaHoraria);
+
+                    if (!string.IsNullOrEmpty(f.EstadoCuota))
                     {
-                        q = q.Where(x => x.Cuota.Estado == f.EstadoCuota);
+                        if (f.EstadoCuota == "Vencida")
+                        {
+                            var hoy = DateTime.Today;
+
+                            q = q.Where(x =>
+                                x.Cuota.Estado != "Pagada" &&
+                                DbFunctions.TruncateTime(x.Cuota.FechaCobro) < hoy);
+                        }
+                        else
+                        {
+                            q = q.Where(x => x.Cuota.Estado == f.EstadoCuota);
+                        }
                     }
                 }
 
-
-                q = q.Where(x =>
-                     x.Venta.IdCobrador == f.IdVendedor.Value);
 
 
                 var rows = q
@@ -1538,6 +1620,7 @@ namespace Sistema_David.Models
 
                         IdVendedor = x.Venta.IdVendedor,
                         VendedorNombre = x.Vendedor != null ? x.Vendedor.Nombre : null,
+                        CobradorNombre = x.Cobrador != null ? x.Cobrador.Nombre : null,
 
                         // 🔥 ZONA / DIRECCIÓN / MAPA
                         IdZona = x.Cliente.IdZona,
@@ -1546,6 +1629,7 @@ namespace Sistema_David.Models
                         ClienteDireccion = x.Cliente.Direccion,
                         ClienteLatitud = x.Cliente.Latitud,
                         ClienteLongitud = x.Cliente.Longitud,
+                        ClienteTelefono = x.Cliente.Telefono,
 
                         // 🔥 TURNO / FRANJA
                         Turno = x.Venta.Turno,
@@ -1735,6 +1819,55 @@ namespace Sistema_David.Models
                 }
             }
         }
+
+        public static string CambiarEstadoVenta(int idVenta, string nuevoEstado, int usuario, bool forzar = false)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var venta = db.Ventas_Electrodomesticos
+                        .FirstOrDefault(v => v.Id == idVenta);
+
+                    if (venta == null)
+                        return "Venta no encontrada";
+
+                    if (nuevoEstado == "Cancelada")
+                    {
+                        tx.Rollback();
+                        return EliminarVenta(idVenta, usuario, forzar);
+                    }
+
+                    var estadoAnterior = venta.Estado;
+
+                    venta.Estado = nuevoEstado;
+                    venta.UsuarioModificacion = usuario;
+                    venta.FechaModificacion = DateTime.Now;
+
+                    Audit(db,
+                        venta.Id,
+                        null,
+                        usuario,
+                        "EstadoVenta",
+                        estadoAnterior,
+                        nuevoEstado,
+                        "Cambio desde pendientes");
+
+                    db.SaveChanges();
+                    tx.Commit();
+
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error: " + ex.Message;
+                }
+            }
+        }
+
+
 
         public static string GuardarObservacionCobro(int idVenta, string observacion, int usuario)
         {

@@ -11,6 +11,9 @@ let gridCobranzas, gridCobranzasPendientes;
 $(document).ready(async function () {
 
 
+    $("#btnCobranzasGeneral").css("background", "#2E4053")
+
+
     userSession = JSON.parse(localStorage.getItem('usuario'));
 
 

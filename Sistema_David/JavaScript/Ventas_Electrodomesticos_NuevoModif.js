@@ -15,6 +15,9 @@
 
 ; (() => {
 
+    $("#btnVentasGeneral").css("background", "#2E4053")
+
+
     let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
     const esVendedor = (userSession && Number(userSession.IdRol) === 2);
     const esCobrador = (userSession && Number(userSession.IdRol) === 3);

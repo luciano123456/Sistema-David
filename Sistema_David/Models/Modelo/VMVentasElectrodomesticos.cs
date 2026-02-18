@@ -9,9 +9,15 @@ namespace Sistema_David.Models.ViewModels
         public int IdVenta { get; set; }
         public DateTime Fecha { get; set; }
         public string Cliente { get; set; }
+        public string ClienteTelefono { get; set; }
+        public string ClienteDni { get; set; }
+        public string ClienteDireccion{ get; set; }
+        public string ClienteLatitud{ get; set; }
+        public string ClienteLongitud{ get; set; }
         public decimal Total { get; set; }
         public decimal Pagado { get; set; }
         public decimal Pendiente { get; set; }
+        public int? Comprobante { get; set; }
         public decimal PorcentajePago { get; set; }
         public int CuotasVencidas { get; set; }
         public string Estado { get; set; }
@@ -160,6 +166,7 @@ namespace Sistema_David.Models.ViewModels
         public DateTime FechaVenta { get; set; }
         public int IdCliente { get; set; }
         public int IdVendedor { get; set; }
+        public int? Comprobante { get; set; }
 
         public decimal ImporteTotal { get; set; }
 
@@ -211,6 +218,7 @@ namespace Sistema_David.Models.ViewModels
         public DateTime? FechaHasta { get; set; }
         public int? IdCliente { get; set; }
         public int? IdVendedor { get; set; }
+        public int? IdCobrador { get; set; }
         public string EstadoCuota { get; set; } // "Pendiente"|"Vencida"|"Pagada"|null
 
         // ✅ NUEVOS
@@ -245,6 +253,8 @@ namespace Sistema_David.Models.ViewModels
 
         public int IdVendedor { get; set; }
         public string VendedorNombre { get; set; } // ★ OPCIONAL (útil para filtros)
+        public string CobradorNombre { get; set; } // ★ OPCIONAL (útil para filtros)
+     
 
         // ✅ NUEVOS
         public int? IdZona { get; set; }
@@ -253,6 +263,7 @@ namespace Sistema_David.Models.ViewModels
         public string ClienteDireccion { get; set; }
         public string ClienteLatitud { get; set; }
         public string ClienteLongitud { get; set; }
+        public string ClienteTelefono { get; set; }
 
         public string Turno { get; set; }          // en DB: "mañana"/"tarde" o ya "M"/"T"
         public string FranjaHoraria { get; set; }  // "08-09", etc

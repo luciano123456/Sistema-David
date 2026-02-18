@@ -22,6 +22,9 @@ let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
 =========================================================== */
 
 (function () {
+
+    $("#btnCobranzasGeneral").css("background", "#2E4053")
+
     if (document.getElementById("vcCssSel")) return;
 
     const st = document.createElement("style");
@@ -93,6 +96,42 @@ VC.renderDireccion = function (_, __, row) {
     `;
 };
 
+VC.abrirWhatsApp = function (telefono, cliente) {
+
+    if (!telefono) {
+        alert("El cliente no tiene teléfono cargado");
+        return;
+    }
+
+    document.getElementById("wa_telefono").value = telefono;
+    document.getElementById("wa_cliente").value = cliente;
+
+    document.getElementById("wa_mensaje").value =
+        `Hola ${cliente}, `;
+
+    const modal = new bootstrap.Modal(
+        document.getElementById("mdWhatsApp")
+    );
+
+    modal.show();
+};
+
+VC.enviarWhatsApp = function () {
+
+    let telefono = document.getElementById("wa_telefono").value;
+    let mensaje = document.getElementById("wa_mensaje").value;
+
+    if (!telefono || !mensaje) {
+        alert("Completá el mensaje");
+        return;
+    }
+
+    telefono = telefono.replace(/\D/g, "");
+
+    const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+
+    window.open(url, "_blank");
+};
 
 
 
@@ -184,6 +223,9 @@ $(document).ready(async function () {
         document.getElementById("formFiltros").removeAttribute("hidden");
         document.getElementById("btnToggleFiltros").removeAttribute("hidden");
         document.getElementById("btnCuentaBancaria").style.display = "block";
+        document.getElementById("divFiltroTurno").removeAttribute("hidden");
+        document.getElementById("divFiltroZona").removeAttribute("hidden");
+        document.getElementById("divFiltroFranja").removeAttribute("hidden");
     }
 
     try { moment.locale("es"); } catch { }
@@ -403,6 +445,7 @@ VC.cargarTabla = async function () {
         fechaHasta: $("#f_hasta").val() || null,
         idCliente: $("#f_cliente").val() || null,
         idVendedor: $("#f_vendedor").val() || null,
+        idCobrador: $("#f_cobrador").val() || null,
         estado: $("#f_estado").val() || null,
 
         // 🔥 nuevos
@@ -555,6 +598,7 @@ VC.cargarTabla = async function () {
 
             { data: "ClienteNombre" },
             { data: "VendedorNombre" },
+            { data: "CobradorNombre" },
             { data: "ZonaNombre", title: "Zona" },
 
             {
@@ -630,45 +674,72 @@ VC.cargarTabla = async function () {
                         ? "Desmarcar transferencia pendiente"
                         : "Marcar como transferencia pendiente";
 
-                    // 🏠 Obs cobro (por VENTA)
+                    // 🏠 Obs cobro
                     const tieneObs = !!(d.ObservacionCobro && String(d.ObservacionCobro).trim());
                     const estadoCobro = Number(d.EstadoCobro || 0) === 1;
 
-                    // tooltip seguro (sin romper comillas)
                     const obsTooltip = tieneObs
                         ? String(d.ObservacionCobro).replace(/"/g, "'")
                         : "Sin observación de cobro";
 
                     const btnCasaCls = estadoCobro ? "btn-danger" : "btn-outline-secondary";
 
+                    // 📞 teléfono
+                    const tel = (d.ClienteTelefono || "").replace(/\D/g, "");
+
+                    // 🔐 solo roles 1 y 4
+                    const puedeContactar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+
+                    const botonesContacto = puedeContactar ? `
+        <!-- 🟢 WHATSAPP -->
+        <button class="btn btn-accion btn-wa me-1"
+  onclick="VC.abrirWhatsApp('${tel}', '${d.ClienteNombre}')"
+  title="Enviar WhatsApp">
+  <i class="fa fa-whatsapp"></i>
+</button>
+
+      <a class="btn btn-accion btn-phone me-1"
+   href="tel:${tel}"
+   title="Llamar">
+   <i class="fa fa-phone"></i>
+</a>
+
+    ` : "";
+
                     return `
       <div class="btn-group">
 
-        <!-- 🏠 PRIMER ICONO: OBS COBRO -->
+        <!-- 🏠 OBS COBRO -->
         <button class="btn btn-accion ${btnCasaCls} me-1"
           onclick="VC.abrirObsCobro(${d.IdVenta})"
           title="${obsTooltip}">
           <i class="fa fa-home"></i>
         </button>
 
+        <!-- 💰 COBRAR -->
         <button class="btn btn-accion btn-cobrar me-1"
           onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})"
           title="Cobrar">
           <i class="fa fa-money"></i>
         </button>
 
+        ${botonesContacto}
+
+        <!-- ⚡ AJUSTE -->
         <button class="btn btn-accion btn-ajuste me-1"
           onclick="VC.abrirAjuste(${d.IdVenta}, ${d.IdCuota})"
           title="Ajustar">
           <i class="fa fa-bolt"></i>
         </button>
 
+        <!-- 👁 HISTORIAL -->
         <button class="btn btn-accion btn-historial me-1"
           onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})"
           title="Historial">
           <i class="fa fa-eye"></i>
         </button>
 
+        <!-- ⚠ TRANSFERENCIA -->
         <button class="btn btn-accion ${btnCls}"
           onclick="VC.transferenciaPendiente(${nuevoEstado}, ${d.IdCuota})"
           title="${title}">
@@ -1445,6 +1516,8 @@ VC.cargarCobrosPendientes = async function () {
 
             { data: "ClienteNombre" },
             { data: "VendedorNombre" },
+            { data: "CobradorNombre" },
+
 
             { data: "ZonaNombre", title: "Zona" },
 
@@ -1612,6 +1685,8 @@ VC.cargarTransferenciasPendientes = async function () {
 
             { data: "ClienteNombre" },
             { data: "VendedorNombre" },
+            { data: "CobradorNombre" },
+
 
             { data: "ZonaNombre", title: "Zona" },
 
@@ -1685,38 +1760,64 @@ VC.cargarTransferenciasPendientes = async function () {
             {
                 data: null,
                 className: "text-center",
-                render: d => `
-<div class="btn-group">
+                render: d => {
 
-    <button class="btn btn-accion btn-cobrar me-1"
-        onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})"
-        title="Cobrar">
-        <i class="fa fa-money"></i>
-    </button>
+                    const tel = (d.ClienteTelefono || "").replace(/\D/g, "");
+                    const puedeContactar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
 
-    <button class="btn btn-accion btn-ajuste me-1"
-        onclick="VC.abrirAjuste(${d.IdVenta}, ${d.IdCuota})"
-        title="Ajustar">
-        <i class="fa fa-bolt"></i>
-    </button>
+                    const botonesContacto = puedeContactar ? `
+            <!-- 🟢 WHATSAPP -->
+            <button class="btn btn-accion btn-wa me-1"
+              onclick="VC.abrirWhatsApp('${tel}', '${d.ClienteNombre}')"
+              title="Enviar WhatsApp">
+              <i class="fa fa-whatsapp"></i>
+            </button>
 
-    <button class="btn btn-accion btn-historial me-1"
-        onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})"
-        title="Historial">
-        <i class="fa fa-eye"></i>
-    </button>
+            <!-- 📞 LLAMAR -->
+            <a class="btn btn-accion btn-phone me-1"
+               href="tel:${tel}"
+               title="Llamar">
+               <i class="fa fa-phone"></i>
+            </a>
+        ` : "";
 
-    <!-- 🔄 REVERTIR TRANSFERENCIA PENDIENTE -->
-    <button class="btn btn-accion btn-warning text-dark"
-        onclick="VC.transferenciaPendiente(0, ${d.IdCuota})"
-        title="Revertir transferencia pendiente">
-        <i class="fa fa-undo"></i>
-    </button>
+                    return `
+        <div class="btn-group">
 
-</div>
-`
+            <!-- 💰 COBRAR -->
+            <button class="btn btn-accion btn-cobrar me-1"
+                onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})"
+                title="Cobrar">
+                <i class="fa fa-money"></i>
+            </button>
+
+            ${botonesContacto}
+
+            <!-- ⚡ AJUSTAR -->
+            <button class="btn btn-accion btn-ajuste me-1"
+                onclick="VC.abrirAjuste(${d.IdVenta}, ${d.IdCuota})"
+                title="Ajustar">
+                <i class="fa fa-bolt"></i>
+            </button>
+
+            <!-- 👁 HISTORIAL -->
+            <button class="btn btn-accion btn-historial me-1"
+                onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})"
+                title="Historial">
+                <i class="fa fa-eye"></i>
+            </button>
+
+            <!-- 🔄 REVERTIR TRANSFERENCIA -->
+            <button class="btn btn-accion btn-warning text-dark"
+                onclick="VC.transferenciaPendiente(0, ${d.IdCuota})"
+                title="Revertir transferencia pendiente">
+                <i class="fa fa-undo"></i>
+            </button>
+
+        </div>
+        `;
+                }
             }
-
         ]
     });
 };

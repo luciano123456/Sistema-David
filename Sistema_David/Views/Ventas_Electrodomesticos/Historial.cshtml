@@ -131,6 +131,43 @@
         </section>
 
         <!-- ===== CARD PRINCIPAL ===== -->
+
+        <section id="cardVentasPendientes" class="ve-card mb-3" hidden>
+
+            <div class="ve-card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa fa-clock-o text-warning"></i>
+                    <span class="ve-card-title">
+                        Ventas pendientes de confirmación
+                    </span>
+                </div>
+            </div>
+
+            <div class="ve-card-body">
+                <div class="table-responsive">
+                    <table id="grdVentasPendientes"
+                           class="table ve-table align-middle nowrap w-100">
+                        <thead>
+                            <tr>
+                                <th style="width:40px"></th>
+                                <th>Nro</th>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>DNI</th>
+                                <th>Direccion</th>
+                                <th>Total</th>
+                                <th>Pagado</th>
+                                <th>Restante</th>
+                                <th>Vencidas</th>
+                                <th>Estado</th>
+                                <th style="width:140px" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+
+        </section>
         <section class="ve-card">
 
             <div class="ve-card-header justify-content-between">
@@ -196,8 +233,13 @@
                     </div>
                 </form>
 
+
+
                 <!-- ===== TABLA PRINCIPAL ===== -->
                 <div class="table-responsive">
+
+
+
                     <table id="grdVentas" class="table ve-table align-middle nowrap w-100">
                         <thead>
                             <tr>
@@ -205,6 +247,8 @@
                                 <th>Nro</th>
                                 <th>Fecha</th>
                                 <th>Cliente</th>
+                                <th>DNI</th>
+                                <th>Direccion</th>
                                 <th>Total</th>
                                 <th>Pagado</th>
                                 <th>Restante</th>
@@ -325,7 +369,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
 
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Historial.js?v=1.9"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Historial.js?v=2.0"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {

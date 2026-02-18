@@ -321,7 +321,7 @@ function verificarRoles(idRol) {
 
     } else if (idRol == 4) { // COMPROBANTES
         document.getElementById("seccionRendimiento").removeAttribute("hidden");
-        document.getElementById("seccionClientesCero").removeAttribute("hidden");
+        document.getElementById("seccionClientes").removeAttribute("hidden");
         document.getElementById("seccionProductos").removeAttribute("hidden");
         document.getElementById("seccionCobranzas").removeAttribute("hidden");
 
@@ -329,15 +329,11 @@ function verificarRoles(idRol) {
         document.getElementById("seccionStock").removeAttribute("hidden");
         document.getElementById("seccionClientesCero").removeAttribute("hidden");
     }
-
-    if (idRol != 4) {
-        document.getElementById("seccionSoporte").removeAttribute("hidden");
-    }
 }
 
 
-          const a = document.getElementById("btnCambiarTipoVentas");
-            const label = (tipoVentas === "electro") ? "Electrodomésticos" : "Indumentaria";
+const a = document.getElementById("btnCambiarTipoVentas");
+const label = (tipoVentas === "electro") ? "Electrodomésticos" : "Indumentaria";
 
-            const textNode = [...a.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
-            if (textNode) textNode.nodeValue = ` ${label}`;
+const textNode = [...a.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+if (textNode) textNode.nodeValue = ` ${label}`;
