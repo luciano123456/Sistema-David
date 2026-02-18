@@ -126,14 +126,14 @@
                             </select>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-2" id="divFiltroZona" hidden>
                             <label class="form-label">Zona</label>
                             <select id="f_zona" class="form-select ve-input">
                                 <option value="">Todas</option>
                             </select>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-2" id="divFiltroTurno" hidden>
                             <label class="form-label">Turno</label>
                             <select id="f_turno" class="form-select ve-input">
                                 <option value="">Todos</option>
@@ -142,7 +142,7 @@
                             </select>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-2" id="divFiltroFranja" hidden>
                             <label class="form-label">Franja</label>
                             <select id="f_franja" class="form-select ve-input">
                                 <option value="">Todas</option>
@@ -197,9 +197,10 @@
                                 </th>
                                 <th>N° Venta</th>
                                 <th>N° Cuota</th>
-                                <th>Fecha Cobro</th>
+                                <th>Cobro</th>
                                 <th>Cliente</th>
-                                <th>Vendedor</th>
+                                <th>V</th>
+                                <th>C</th>
 
                                 <!-- 🔥 NUEVAS -->
                                 <th>Zona</th>
@@ -235,7 +236,8 @@
                                     <th>N° Cuota</th>
                                     <th>Fecha Cobro</th>
                                     <th>Cliente</th>
-                                    <th>Vendedor</th>
+                                    <th>V</th>
+                                    <th>C</th>
 
                                     <!-- 🔥 NUEVAS -->
                                     <th>Zona</th>
@@ -272,7 +274,8 @@
                                     <th>N° Cuota</th>
                                     <th>Fecha Cobro</th>
                                     <th>Cliente</th>
-                                    <th>Vendedor</th>
+                                    <th>V</th>
+                                    <th>C</th>
 
                                     <!-- 🔥 NUEVAS -->
                                     <th>Zona</th>
@@ -707,7 +710,7 @@
 
                 <div class="modal-body">
                     <input type="hidden" id="obsCobro_idVenta" />
-                  
+
                     <textarea id="obsCobro_txt" class="form-control" rows="4"
                               placeholder="Escribí la observación..."></textarea>
                 </div>
@@ -720,7 +723,7 @@
         </div>
     </div>
 
-
+ 
 
 </body>
 
@@ -744,5 +747,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=2.1"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=2.2"></script>
 }

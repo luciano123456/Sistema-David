@@ -10,7 +10,7 @@ $(document).ready(async function () {
 
 
 
-
+    $("#btnVentasGeneral").css("background", "#2E4053")
 
     userSession = JSON.parse(localStorage.getItem('usuario'));
 

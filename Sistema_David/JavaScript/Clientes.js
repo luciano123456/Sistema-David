@@ -151,7 +151,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
 
 
                     const iconoTelefono = `<a class="btn btn-sm btnacciones" href="tel:${telefono}" title="Llamar"><i class="fa fa-phone text-white"></i></a>`;
-                  
+
                     const iconoWhatsapp = `<button class="btn btn-sm btnacciones" type="button" onclick='modalWhatssap(${data})' title="Enviar WhatsApp"><i class="fa fa-whatsapp fa-lg text-white" aria-hidden="true"></i></button>`;
                     const iconoEliminar = `<button class="btn btn-sm btnacciones" type="button" onclick='eliminarCliente(${data})' title="Eliminar"><i class="fa fa-trash-o fa-lg text-white" aria-hidden="true"></i></button>`;
 
@@ -171,7 +171,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
                 "render": function (data, type, row) {
                     return formatNumber(data); // Formatear número en la columna
                 },
-                "targets": [8,9] // Columna de Saldo
+                "targets": [8, 9] // Columna de Saldo
             }
         ],
 
@@ -192,6 +192,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
 
             if (userSession.IdRol != 1) {
                 gridClientes.column(8).visible(false);
+                gridClientes.column(10).visible(false);
 
             }
         }

@@ -94,6 +94,9 @@ function closeModalById(id) {
 /* ------------ LOAD ------------ */
 $(document).ready(() => {
 
+    $("#btnVentasGeneral").css("background", "#2E4053")
+
+
     iniciarFiltros();
 
     // NUEVO: selección visual de filas
@@ -184,6 +187,11 @@ async function cargarTabla() {
     ventasCache = resp.data || [];
     actualizarKPIs(resp.kpis || {});
     renderTabla(ventasCache);
+
+
+    if (userSession.IdRol == 1) {
+        await VC.cargarVentasPendientes();
+    }
 }
 
 function actualizarKPIs(k) {
@@ -191,6 +199,141 @@ function actualizarKPIs(k) {
     $("#kpiTotalCobrado").text(fmt(k.TotalCobrado || 0));
     $("#kpiTotalPendiente").text(fmt(k.TotalPendiente || 0));
 }
+
+
+function renderTablaBase(selector, data, tipo) {
+
+    let grid = $(selector).DataTable({
+        destroy: true,
+        data,
+        pageLength: 50,
+        responsive: false,
+        scrollX: true,
+        language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+
+        rowCallback: function (row, d) {
+
+            $(row).removeClass(
+                "fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja fila-aldia venta-seleccionada row-selected"
+            );
+
+            const vencidas = Number(d.CuotasVencidas || 0);
+
+            if (vencidas > 0) {
+                $(row).addClass("fila-atrasada fila-atrasada-naranja");
+            } else {
+                $(row).addClass("fila-aldia");
+            }
+        },
+
+        columns: [
+            {
+                data: null,
+                className: "details-control text-center",
+                orderable: false,
+                width: "40px",
+                render: () => `
+                    <button class="btn btn-link p-0 text-accent btn-row-detail">
+                        <i class="fa fa-chevron-down"></i>
+                    </button>`
+            },
+            { data: "IdVenta" },
+            { data: "Fecha", render: x => moment(x).format("DD/MM/YYYY") },
+            { data: "Cliente" },
+            { data: "ClienteDni" },
+            {
+                data: null,
+                title: "Dirección",
+                orderable: false,
+                render: VC.renderDireccion
+            },
+            { data: "Total", render: fmt },
+            { data: "Pagado", render: fmt },
+            { data: "Pendiente", render: fmt },
+            {
+                data: "CuotasVencidas",
+                className: "text-center",
+                render: (v) => {
+                    const n = Number(v || 0);
+                    if (n > 0)
+                        return `<span class="badge bg-danger">Cuotas atrasadas: ${n}</span>`;
+                    return `<span class="badge bg-success">Sin vencidas</span>`;
+                }
+            },
+            {
+                data: null,
+                render: (row) => {
+                    const vencidas = Number(row.CuotasVencidas || 0);
+                    if (vencidas > 0)
+                        return `<span class="badge bg-danger">Atrasada</span>`;
+                    return `<span class="badge bg-success">Al día</span>`;
+                }
+            },
+            {
+                data: null,
+                className: "text-center",
+                render: (row) => {
+
+                    if (tipo === "pendiente") {
+                        return `
+<div class="acciones-pendientes">
+
+    <button class="btn-accion btn-aprobar"
+        title="Aceptar venta"
+        onclick="VC.cambiarEstadoVenta(${row.IdVenta}, 'Activa')">
+        <i class="fa fa-check"></i>
+    </button>
+
+    <button class="btn-accion btn-cancelar"
+        title="Cancelar venta"
+        onclick="VC.cambiarEstadoVenta(${row.IdVenta}, 'Cancelada')">
+        <i class="fa fa-times"></i>
+    </button>
+
+    <button class="btn-accion btn-editar"
+        title="Ver / editar"
+        onclick="editarVenta(${row.IdVenta})">
+        <i class="fa fa-pencil"></i>
+    </button>
+
+</div>
+`;
+                    }
+
+                    // tabla normal
+                    return `
+<div class="d-flex justify-content-center gap-2">
+    <button class="btn-accion btn-editar"
+        onclick="editarVenta(${row.IdVenta})">
+        <i class="fa fa-pencil"></i>
+    </button>
+</div>`;
+                }
+            }
+        ]
+    });
+
+    // acordeón
+    $(`${selector} tbody`).off("click").on("click", "button.btn-row-detail", function (e) {
+        e.stopPropagation();
+
+        const tr = $(this).closest("tr");
+        const row = grid.row(tr);
+        const icon = tr.find("button.btn-row-detail i");
+
+        if (row.child.isShown()) {
+            row.child.hide();
+            icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
+        } else {
+            row.child(formarAcordeon(row.data())).show();
+            icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
+            cargarDetalleVenta(row.data().IdVenta);
+        }
+    });
+
+    return grid;
+}
+
 
 function renderTabla(data) {
     if (gridVentas) {
@@ -247,6 +390,13 @@ function renderTabla(data) {
                 render: x => moment(x).format("DD/MM/YYYY")
             },
             { data: "Cliente" },
+            { data: "ClienteDni" },
+            {
+                data: null,
+                title: "Dirección",
+                orderable: false,
+                render: VC.renderDireccion
+            },
             { data: "Total", render: fmt },
             { data: "Pagado", render: fmt },
             { data: "Pendiente", render: fmt },
@@ -278,43 +428,70 @@ function renderTabla(data) {
                 }
             },
             {
-                data: "IdVenta",
+                data: null,
                 name: "acciones",
                 orderable: false,
                 className: "text-center",
-                render: id => `
-    <div class="d-flex justify-content-center gap-2">
+                render: (row) => {
+
+                    const id = row.IdVenta;
+                    const comprobante = Number(row.Comprobante || 0);
+
+                    const pdfClass = comprobante === 1
+                        ? "btn-pdf-ok"
+                        : "btn-pdf-pend";
+
+                    const pdfTitle = comprobante === 1
+                        ? "Comprobante emitido"
+                        : "Comprobante no enviado";
+
+                    // 🔐 solo roles 1 y 4
+                    const puedeContactar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+                    const tel = (row.ClienteTelefono || "").replace(/\D/g, "");
+
+                    const botonesContacto = puedeContactar ? `
+            <!-- 🟢 WHATSAPP -->
+            <button class="btn-accion btn-wa"
+                    onclick="VC.abrirWhatsApp('${tel}', '${row.Cliente}')"
+                    title="Enviar WhatsApp">
+                <i class="fa fa-whatsapp"></i>
+            </button>
 
 
-    ${userSession.IdRol == 1 ? `
-        <!-- EDITAR -->
-        <button class="btn-accion btn-editar"
-                onclick="editarVenta(${id})"
-                title="Editar venta">
-            <i class="fa fa-pencil"></i>
-        </button>
+        ` : "";
+
+                    return `
+        <div class="d-flex justify-content-center gap-2">
+
+        ${userSession.IdRol == 1 ? `
+            <button class="btn-accion btn-editar"
+                    onclick="editarVenta(${id})"
+                    title="Editar venta">
+                <i class="fa fa-pencil"></i>
+            </button>
         ` : ""}
 
-         ${userSession.IdRol == 1 ? `
-        <!-- ELIMINAR (solo admin) -->
-        <button class="btn-accion btn-eliminar"
-                onclick="eliminarVenta(${id})"
-                title="Eliminar venta">
-            <i class="fa fa-trash"></i>
-        </button>
+        ${userSession.IdRol == 1 ? `
+            <button class="btn-accion btn-eliminar"
+                    onclick="eliminarVenta(${id})"
+                    title="Eliminar venta">
+                <i class="fa fa-trash"></i>
+            </button>
         ` : ""}
 
-        <!-- PDF -->
-         ${userSession.IdRol == 1 ? `
-        <button class="btn-accion btn-pdf"
-                onclick="exportarPdfVenta(${id})"
-                title="Exportar PDF">
-            <i class="fa fa-file-pdf-o"></i>
-        </button>
+        ${userSession.IdRol == 1 ? `
+            <button class="btn-accion ${pdfClass}"
+                    onclick="exportarPdfVenta(${id})"
+                    title="${pdfTitle}">
+                <i class="fa fa-file-pdf-o"></i>
+            </button>
         ` : ""}
-    </div>
-`
 
+        ${botonesContacto}
+
+        </div>
+        `;
+                }
             }
         ],
         initComplete: function () {
@@ -725,22 +902,32 @@ function editarVenta(id) {
 }
 
 async function eliminarVenta(id) {
-    if (!confirm("¿Eliminar venta?")) return;
+    if (!confirm("¿Eliminar la venta?"))
+        return;
 
-    try {
-        const resp = await $.post("/Ventas_Electrodomesticos/EliminarVenta", { id });
+    let resp = await $.post(
+        "/Ventas_Electrodomesticos/EliminarVenta",
+        { id: idVenta, forzar: false }
+    );
 
-        if (!resp.success) {
-            showToast(resp.message, "danger");
+    // Si tiene pagos
+    if (resp.tienePagos) {
+
+        if (!confirm("La venta tiene pagos registrados.\n¿Desea eliminarla igual?"))
             return;
-        }
 
-        showToast("Venta eliminada", "success");
-        cargarTabla();
-
-    } catch {
-        showToast("Error al eliminar", "danger");
+        resp = await $.post(
+            "/Ventas_Electrodomesticos/EliminarVenta",
+            { id: idVenta, forzar: true }
+        );
     }
+
+    if (!resp.success) {
+        alert(resp.message || "Error");
+        return;
+    }
+
+    await cargarTabla();
 }
 
 /* ------------ PDF INDIVIDUAL ------------ */
@@ -1053,3 +1240,149 @@ function habilitarSeleccionFilasCuotas() {
         $(this).addClass("row-selected");
     });
 }
+
+
+
+
+window.VC = window.VC || {};
+
+VC.renderDireccion = function (_, __, row) {
+    const dir = row.ClienteDireccion || "—";
+    const lat = row.ClienteLatitud;
+    const lng = row.ClienteLongitud;
+
+    // recorte a 15 caracteres
+    const dirCorta = dir.length > 20
+        ? dir.substring(0, 20) + "…"
+        : dir;
+
+    // sin coordenadas → solo texto con tooltip
+    if (!lat || !lng) {
+        return `
+            <span title="${dir}"
+                  style="cursor:pointer;">
+                ${dirCorta}
+            </span>`;
+    }
+
+    const url = `https://www.google.com/maps?q=${lat},${lng}`;
+
+    // texto + ícono juntos, mismo link
+    return `
+        <a href="${url}"
+           target="_blank"
+           title="${dir}"
+           style="cursor:pointer; color:inherit; text-decoration:none;"
+           class="d-inline-flex align-items-center gap-1">
+
+            <span>${dirCorta}</span>
+            <i class="fa fa-map-marker"
+               style="color:#ffc107; font-size:1.2rem;"></i>
+
+        </a>
+    `;
+};
+
+
+
+VC.cambiarEstadoVenta = async function (idVenta, estado) {
+
+    try {
+
+        // Primer intento normal
+        let resp = await $.post(
+            "/Ventas_Electrodomesticos/CambiarEstadoVenta",
+            { idVenta, estado, forzar: false }
+        );
+
+        // Si la venta tiene pagos
+        if (resp && resp.tienePagos) {
+
+            if (!confirm("La venta tiene pagos registrados.\n¿Desea cancelarla igual?"))
+                return;
+
+            // Segundo intento forzado
+            resp = await $.post(
+                "/Ventas_Electrodomesticos/CambiarEstadoVenta",
+                { idVenta, estado, forzar: true }
+            );
+        }
+
+        if (!resp || !resp.success) {
+            alert(resp?.message || "Error al cambiar el estado");
+            return;
+        }
+
+        // recargar todo
+        await cargarTabla();
+
+    } catch (e) {
+        console.error(e);
+        alert("Error de conexión con el servidor");
+    }
+};
+
+
+
+// Abrir modal
+VC.abrirWhatsApp = function (telefono, nombre) {
+
+    if (!telefono) {
+        alert("El cliente no tiene teléfono.");
+        return;
+    }
+
+    // limpiar teléfono
+    telefono = String(telefono).replace(/\D/g, "");
+
+    document.getElementById("wa_telefono").value = telefono;
+    document.getElementById("wa_cliente").value = nombre || "";
+    document.getElementById("wa_mensaje").value = "";
+
+    const modal = new bootstrap.Modal(document.getElementById("mdWhatsApp"));
+    modal.show();
+};
+
+// Enviar mensaje
+VC.enviarWhatsApp = function () {
+
+    const tel = document.getElementById("wa_telefono").value;
+    const msg = document.getElementById("wa_mensaje").value;
+
+    if (!tel) {
+        alert("Teléfono inválido.");
+        return;
+    }
+
+    const url = `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById("mdWhatsApp"));
+    if (modal) modal.hide();
+};
+
+let gridPendientes = null;
+
+VC.cargarVentasPendientes = async function () {
+
+    const resp = await $.getJSON(
+        "/Ventas_Electrodomesticos/GetHistorialVentas",
+        {
+            fechaDesde: null,
+            fechaHasta: null,
+            estado: "Pendiente",
+            idVendedor: 0
+        }
+    );
+
+    const data = resp.data || [];
+
+    if (data.length === 0) {
+        $("#cardVentasPendientes").attr("hidden", true);
+        return;
+    }
+
+    $("#cardVentasPendientes").removeAttr("hidden");
+
+    renderTablaBase("#grdVentasPendientes", data, "pendiente");
+};

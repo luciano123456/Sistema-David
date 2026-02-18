@@ -1029,8 +1029,6 @@ window.abrirAjusteDesdeCobros = async function (idVenta, idCuota) {
 
 
 
-
-
 window.exportarVentaPDF = async function (idVenta) {
 
     try {
@@ -1051,11 +1049,52 @@ window.exportarVentaPDF = async function (idVenta) {
 
         generarPdfVenta(venta);
 
+        try {
+            await fetch("/Ventas_Electrodomesticos/MarcarComprobante", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idVenta: idVenta })
+            });
+
+            // 🔥 ACTUALIZAR ICONO EN LA GRILLA SIN RECARGAR
+            marcarComprobanteEnGrilla(idVenta);
+
+        } catch (e) {
+            console.warn("No se pudo marcar comprobante", e);
+        }
+
     } catch (e) {
         console.error(e);
         showToast("Error generando el PDF", "danger");
     }
 };
+
+
+function marcarComprobanteEnGrilla(idVenta) {
+
+    if (!gridVentas) return;
+
+    // 1️⃣ actualizar cache
+    const venta = ventasCache.find(v => Number(v.IdVenta) === Number(idVenta));
+    if (venta) {
+        venta.Comprobante = 1;
+    }
+
+    // 2️⃣ buscar fila en DataTable y redibujarla
+    gridVentas.rows().every(function () {
+        const d = this.data();
+        if (Number(d.IdVenta) === Number(idVenta)) {
+
+            // actualizar dato interno
+            d.Comprobante = 1;
+            this.data(d);
+
+            // redibujar solo esa fila
+            this.invalidate().draw(false);
+        }
+    });
+}
+
 
 function generarPdfVenta(venta) {
     const { jsPDF } = window.jspdf;

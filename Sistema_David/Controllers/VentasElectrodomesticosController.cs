@@ -73,6 +73,7 @@ namespace Sistema_David.Controllers
     DateTime? fechaHasta,
     int? idCliente,
     int? idVendedor,
+    int? idCobrador,
     string estado,
     int? idZona,
     string turno,
@@ -87,6 +88,7 @@ namespace Sistema_David.Controllers
                     FechaHasta = fechaHasta,
                     IdCliente = idCliente,
                     IdVendedor = idVendedor,
+                    IdCobrador = idCobrador,
                     EstadoCuota = estado,
 
                     // ✅ nuevos (agregalos al VM filtro también)
@@ -154,6 +156,14 @@ namespace Sistema_David.Controllers
             var msg = Ventas_ElectrodomesticosModel.MarcarCobroPendienteResuelto(idCuota, usuario);
             return Json(new { success = msg == "OK", message = msg });
         }
+
+        [HttpPost]
+        public ActionResult MarcarComprobante(int idVenta)
+        {
+            var msg = Ventas_ElectrodomesticosModel.MarcarComprobante(idVenta);
+            return Json(new { success = msg == "OK", message = msg });
+        }
+
 
 
         [HttpPost]
@@ -378,13 +388,24 @@ namespace Sistema_David.Controllers
 
         /* ================= ELIMINAR VENTA ================= */
         [HttpPost]
-        public ActionResult EliminarVenta(int id)
+        public ActionResult EliminarVenta(int id, bool forzar = false)
         {
             try
             {
                 var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
-                var msg = Ventas_ElectrodomesticosModel.EliminarVenta(id, usuario);
-                return Json(new { success = msg.Contains("éxito"), message = msg });
+                var msg = Ventas_ElectrodomesticosModel.EliminarVenta(id, usuario, forzar);
+
+                if (msg == "TIENE_PAGOS")
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        tienePagos = true,
+                        message = "La venta tiene pagos. ¿Desea eliminarla igual?"
+                    });
+                }
+
+                return Json(new { success = msg == "OK", message = msg });
             }
             catch (Exception ex)
             {
@@ -435,6 +456,36 @@ namespace Sistema_David.Controllers
                 return Json(new { success = false, message = "Error: " + ex.Message });
             }
         }
+
+        [HttpPost]
+        public ActionResult CambiarEstadoVenta(int idVenta, string estado, bool forzar = false)
+        {
+            try
+            {
+                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+
+                var msg = Ventas_ElectrodomesticosModel
+                    .CambiarEstadoVenta(idVenta, estado, usuario, forzar);
+
+                if (msg == "TIENE_PAGOS")
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        tienePagos = true,
+                        message = "La venta tiene pagos. ¿Desea eliminarla igual?"
+                    });
+                }
+
+                return Json(new { success = msg == "OK", message = msg });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
 
         [HttpPost]
         public ActionResult GuardarObservacionCobro(VM_ObsCobroReq req)
