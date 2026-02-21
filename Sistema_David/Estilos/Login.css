@@ -135,3 +135,163 @@ body.tema-electro {
         body.tema-electro .left-side {
             background: #1b1033;
         }
+
+
+/* ================================
+   PASSWORD TOGGLE MODERNO
+================================ */
+
+.password-group {
+    position: relative;
+}
+
+    .password-group .form-control {
+        border-radius: 10px;
+    }
+
+.toggle-password {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+    .toggle-password i {
+        color: #1e3c72;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+
+    .toggle-password:hover i {
+        color: #0d6efd;
+        transform: scale(1.15);
+    }
+
+    /* cuando está activo */
+    .toggle-password.active i {
+        color: #198754; /* verde elegante */
+    }
+
+/* =========================
+   INPUTS MODERNOS LOGIN
+========================= */
+
+.login-field {
+    width: 100%;
+    max-width: 280px;
+}
+
+    .login-field label {
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #1e3c72;
+    }
+
+.login-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid #d6d6d6;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    outline: none;
+    font-size: 15px;
+}
+
+    /* Hover */
+    .login-input:hover {
+        border-color: #1e3c72;
+    }
+
+    /* Focus elegante */
+    .login-input:focus {
+        border-color: #1e3c72;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.15);
+    }
+
+
+/* =========================
+   PASSWORD WRAPPER
+========================= */
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #1e3c72;
+    transition: all 0.3s ease;
+}
+
+    .password-toggle:hover {
+        color: #0d6efd;
+        transform: translateY(-50%) scale(1.15);
+    }
+
+
+/* =========================
+   BOTÓN PREMIUM
+========================= */
+
+.login-btn {
+    width: 100%;
+    max-width: 280px;
+    padding: 12px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(30, 60, 114, 0.35);
+    }
+
+
+/* =========================
+   CHECKBOX MÁS PROLIJO
+========================= */
+
+.form-check-input {
+    border-radius: 6px;
+}
+
+    .form-check-input:checked {
+        background-color: #1e3c72;
+        border-color: #1e3c72;
+    }
+
+/* =========================
+   AVATAR LOGIN
+========================= */
+
+.login-avatar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+}
+
+    .login-avatar img {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        padding: 10px;
+        background: #f4f6fb;
+        box-shadow: 0 6px 15px rgba(30, 60, 114, 0.15);
+        transition: all 0.3s ease;
+    }
+
+        /* pequeño efecto hover elegante */
+        .login-avatar img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(30, 60, 114, 0.25);
+        }

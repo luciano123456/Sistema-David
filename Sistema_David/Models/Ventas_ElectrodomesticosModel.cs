@@ -32,7 +32,12 @@ namespace Sistema_David.Models
         /* ===========================================================
          * HISTORIAL
          * =========================================================== */
-        public static VM_HistorialVentasResp ListarHistorial(DateTime? desde, DateTime? hasta, string estado, int idVendedor)
+        public static VM_HistorialVentasResp ListarHistorial(
+    DateTime? desde,
+    DateTime? hasta,
+    string estado,
+    int idVendedor,
+    int idRol)
         {
             using (var db = new Sistema_DavidEntities())
             {
@@ -52,14 +57,18 @@ namespace Sistema_David.Models
                         DbFunctions.TruncateTime(v.FechaVenta) <= DbFunctions.TruncateTime(h));
                 }
 
-                if (!string.IsNullOrWhiteSpace(estado))
-                    q = q.Where(v => v.Estado == estado);
+                // 🔵 SOLO ADMIN (1) y COMPROBANTES (4) filtran por estado
+                if (idRol == 1 || idRol == 4)
+                {
+                    if (!string.IsNullOrWhiteSpace(estado))
+                        q = q.Where(v => v.Estado == estado);
+
+                    if (estado == "")
+                        q = q.Where(v => v.Estado != "Pendiente");
+                }
 
                 if (idVendedor > 0)
                     q = q.Where(v => v.IdVendedor == idVendedor);
-
-                if (estado == "")
-                    q = q.Where(v => v.Estado != "Pendiente");
 
                 var ventas = q.ToList();
                 var rows = new List<VM_HistorialVentasRow>();
@@ -72,6 +81,21 @@ namespace Sistema_David.Models
                         .OrderBy(c => c.NumeroCuota)
                         .ToList();
 
+                    var totalCuotas = cuotas.Sum(c =>
+                        (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos));
+
+                    var totalPagadoCuotas = cuotas.Sum(c => c.MontoPagado);
+                    var totalPagado = totalPagadoCuotas + v.Entrega;
+
+                    var total = Math.Round(v.ImporteTotal, 0);
+                    totalPagado = Math.Round((decimal)totalPagado, 0);
+                    var pendiente = Math.Round((decimal)(total - totalPagado), 0);
+
+                    var porcentajePago =
+                        totalCuotas == 0
+                            ? 100
+                            : Math.Round((totalPagadoCuotas / totalCuotas) * 100, 2);
+
                     var row = new VM_HistorialVentasRow
                     {
                         IdVenta = v.Id,
@@ -83,38 +107,18 @@ namespace Sistema_David.Models
                         ClienteLongitud = v.Clientes?.Longitud,
                         ClienteLatitud = v.Clientes?.Latitud,
                         ClienteTelefono = v.Clientes?.Telefono,
-                        Total = v.ImporteTotal,
-                        Pagado = (decimal)(cuotas.Sum(c => c.MontoPagado) + v.Entrega),
-                        Pendiente = cuotas.Sum(c =>
-                            (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado),
-                        PorcentajePago =
-                            cuotas.Sum(c => (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos)) == 0
-                                ? 100
-                                : (cuotas.Sum(c => c.MontoPagado)
-                                    / cuotas.Sum(c => (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos)))
-                                * 100,
 
-
+                        Total = total,
+                        Pagado = (decimal)totalPagado,
+                        Pendiente = pendiente,
+                        PorcentajePago = porcentajePago,
 
                         CuotasVencidas = cuotas.Count(c =>
-                            c.Estado != "Pagada" && c.FechaVencimiento.Date < hoy),
+                            c.Estado != "Pagada" &&
+                            c.FechaVencimiento.Date < hoy),
+
                         Estado = v.Estado
                     };
-
-                    foreach (var c in cuotas)
-                    {
-                        row.Cuotas.Add(new VM_HistorialCuota
-                        {
-                            Id = c.Id,
-                            NumeroCuota = c.NumeroCuota,
-                            FechaVencimiento = c.FechaVencimiento,
-                            MontoOriginal = c.MontoOriginal,
-                            MontoPagado = c.MontoPagado,
-                            Recargos = c.MontoRecargos,
-                            Descuentos = c.MontoDescuentos,
-                            Estado = c.Estado
-                        });
-                    }
 
                     rows.Add(row);
                 }
@@ -132,7 +136,6 @@ namespace Sistema_David.Models
                 };
             }
         }
-
         /* ===========================================================
          * Audit
          * =========================================================== */
@@ -1511,8 +1514,8 @@ namespace Sistema_David.Models
                         on v.IdVendedor equals u.Id into vendedoresJoin
                     from u in vendedoresJoin.DefaultIfEmpty()
                     join cob in db.Usuarios
-                        on v.IdVendedor equals cob.Id into cobradoresJoin
-                    from cob in vendedoresJoin.DefaultIfEmpty()
+                        on v.IdCobrador equals cob.Id into cobradoresJoin
+                    from cob in cobradoresJoin.DefaultIfEmpty()
                     where c.CobroPendiente <= 0 && c.TransferenciaPendiente <= 0
                     select new
                     {

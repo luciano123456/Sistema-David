@@ -67,6 +67,18 @@ let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
 })();
 
 
+VC.editarCliente = function (idCliente) {
+
+    if (!idCliente || idCliente <= 0) {
+        VC.toast("Cliente inválido", "danger");
+        return;
+    }
+
+    localStorage.setItem("EdicionCliente", idCliente);
+    localStorage.setItem("EdicionCobranza", 1);
+
+    document.location.href = "../../Clientes/Editar/";
+};
 
 VC.turnoMT = function (t) {
     if (!t) return "";
@@ -134,29 +146,32 @@ VC.enviarWhatsApp = function () {
 };
 
 
-
 VC.fmt = n => {
     try {
-        const v = Number(n || 0);
+        const v = Math.ceil(Number(n || 0)); // 🔥 siempre entero y hacia arriba
         return v.toLocaleString("es-AR", {
             style: "currency",
-            currency: "ARS"
+            currency: "ARS",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
         });
     } catch {
-        return "$ 0,00";
+        return "$ 0";
     }
 };
 
 VC.parseMoney = s => {
     if (!s) return 0;
-    return Number(
+
+    const num = Number(
         String(s)
             .replace(/[^\d,-]/g, "")
             .replace(/\./g, "")
             .replace(",", ".")
     ) || 0;
-};
 
+    return Math.ceil(num); // 🔥 sin decimales
+};
 VC.toast = function (msg, type = "info") {
     let cont = document.getElementById("toastContainerBR");
     if (!cont) {
@@ -596,7 +611,29 @@ VC.cargarTabla = async function () {
                 }
             },
 
-            { data: "ClienteNombre" },
+            {
+                data: null,
+                title: "Cliente",
+                render: function (_, __, row) {
+
+                    const idCliente = row.IdCliente || row.idCliente || 0;
+                    const puedeEditar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+
+                    return `
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <span class="text-truncate">${row.ClienteNombre}</span>
+
+                ${puedeEditar ? `
+                    <button class="btn btn-accion btn-editar"
+                            onclick="VC.editarCliente(${idCliente})"
+                            title="Editar cliente">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                ` : ``}
+            </div>
+        `;
+                }
+            },
             { data: "VendedorNombre" },
             { data: "CobradorNombre" },
             { data: "ZonaNombre", title: "Zona" },
@@ -1514,7 +1551,29 @@ VC.cargarCobrosPendientes = async function () {
                 }
             },
 
-            { data: "ClienteNombre" },
+            {
+                data: null,
+                title: "Cliente",
+                render: function (_, __, row) {
+
+                    const idCliente = row.IdCliente || row.idCliente || 0;
+                    const puedeEditar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+
+                    return `
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <span class="text-truncate">${row.ClienteNombre}</span>
+
+                ${puedeEditar ? `
+                    <button class="btn btn-accion btn-editar"
+                            onclick="VC.editarCliente(${idCliente})"
+                            title="Editar cliente">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                ` : ``}
+            </div>
+        `;
+                }
+            },
             { data: "VendedorNombre" },
             { data: "CobradorNombre" },
 
@@ -1683,7 +1742,29 @@ VC.cargarTransferenciasPendientes = async function () {
                 }
             },
 
-            { data: "ClienteNombre" },
+            {
+                data: null,
+                title: "Cliente",
+                render: function (_, __, row) {
+
+                    const idCliente = row.IdCliente || row.idCliente || 0;
+                    const puedeEditar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+
+                    return `
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <span class="text-truncate">${row.ClienteNombre}</span>
+
+                ${puedeEditar ? `
+                    <button class="btn btn-accion btn-editar"
+                            onclick="VC.editarCliente(${idCliente})"
+                            title="Editar cliente">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                ` : ``}
+            </div>
+        `;
+                }
+            },
             { data: "VendedorNombre" },
             { data: "CobradorNombre" },
 
@@ -2618,13 +2699,13 @@ async function generarPdfFinal() {
     doc.text(`Fecha: ${fechaActual}`, 10, posicion.y);
     if (selectedAccount.MontoPagar > 0) {
         posicion.y += 10;
-        doc.text(`Monto a Cobrar: $${selectedAccount.MontoPagar.toFixed(2)}`, 10, posicion.y);
+        doc.text(`Monto a Cobrar: $${Math.ceil(selectedAccount.MontoPagar).toLocaleString()}`, 10, posicion.y);
     }
     posicion.y += 10;
-    doc.text(`Entregado: $${selectedAccount.Entrega.toFixed(2)}`, 10, posicion.y);
+    doc.text(`Entregado: $${Math.ceil(selectedAccount.Entrega).toLocaleString()}`, 10, posicion.y);
     if (parseInt(selectedAccount.MontoPagar) > 0) {
         posicion.y += 10;
-        doc.text(`Restante: $${(selectedAccount.MontoPagar - selectedAccount.Entrega).toFixed(2)}`, 10, posicion.y);
+        doc.text(`Restante: $${Math.ceil(selectedAccount.MontoPagar - selectedAccount.Entrega).toLocaleString()}`, 10, posicion.y);
         posicion.y += 10;
         drawProgressBar(doc, 10, posicion.y, 180, 10, (selectedAccount.Entrega / selectedAccount.MontoPagar) * 100);
     }
@@ -2993,3 +3074,4 @@ function habilitarSeleccionFilasCuotasCobros() {
         $(this).addClass("row-selected");
     });
 }
+

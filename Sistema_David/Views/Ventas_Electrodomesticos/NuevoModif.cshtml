@@ -22,8 +22,8 @@
 
 
         <!-- =====================================================
-             DATOS DEL CLIENTE
-        ====================================================== -->
+         DATOS DEL CLIENTE
+    ====================================================== -->
         <section class="ve-card">
             <div class="ve-card-header justify-content-between">
 
@@ -85,88 +85,9 @@
         </section>
 
 
-
         <!-- =====================================================
-             DATOS DE VENTA
-        ====================================================== -->
-        <section class="ve-card mt-4">
-
-            <div class="ve-card-header">
-                <i class="fa fa-lock"></i>
-                <span class="ve-card-title">Datos de Venta</span>
-                <input type="hidden" id="idVenta" />
-            </div>
-
-            <div class="ve-card-body">
-                <div class="row g-3 justify-content-start">
-
-                    <!-- ===== FILA 1 ===== -->
-                    <div class="col-12 col-md-3" hidden>
-                        <label class="form-label fw-semibold">Fecha Venta</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-calendar"></i></span>
-                            <input id="fechaVenta" type="date" class="form-control ve-input" />
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Entrega</label>
-                        <input id="entrega" type="text"
-                               class="form-control ve-input text-end miles"
-                               placeholder="$ 0,00" autocomplete="off" />
-                        <div class="form-text">Se descuenta del total de la venta.</div>
-                    </div>
-
-                    <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Primer Cobro</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-calendar-o"></i></span>
-                            <input id="fechaPrimerCobro" type="date" class="form-control ve-input" />
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Fecha Límite</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-calendar-check-o"></i></span>
-                            <input id="fechaLimite" type="date" class="form-control ve-input" />
-                        </div>
-                    </div>
-
-                    <!-- ===== FILA 2 (6 + 3 + 3 REAL) ===== -->
-                    <div class="col-12 col-md-6">
-                        <label class="form-label fw-semibold">Observación</label>
-                        <input id="observacion" type="text"
-                               class="form-control ve-input"
-                               placeholder="Notas internas de la venta..." />
-                    </div>
-
-                    <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Turno</label>
-                        <select id="turno" class="form-select ve-input">
-                            <option value="">Seleccionar</option>
-                            <option value="mañana">Mañana</option>
-                            <option value="tarde">Tarde</option>
-                        </select>
-                    </div>
-
-                    <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Franja horaria</label>
-                        <select id="franja" class="form-select ve-input">
-                            <option value="">Seleccionar</option>
-                        </select>
-                    </div>
-
-                </div>
-            </div>
-
-        </section>
-
-
-
-        <!-- =====================================================
-             PRODUCTOS
-        ====================================================== -->
+         PRODUCTOS
+    ====================================================== -->
         <section class="ve-card mt-4">
 
             <div class="ve-card-header justify-content-between">
@@ -230,10 +151,9 @@
         </section>
 
 
-
         <!-- =====================================================
-             PLAN DE CUOTAS
-        ====================================================== -->
+         PLAN DE CUOTAS
+    ====================================================== -->
         <section class="ve-card mt-4">
 
             <div class="ve-card-header justify-content-between">
@@ -385,10 +305,93 @@
         </section>
 
 
+        <!-- =====================================================
+         DATOS DE VENTA
+    ====================================================== -->
+        <section class="ve-card mt-4">
+
+            <div class="ve-card-header">
+                <i class="fa fa-lock"></i>
+                <span class="ve-card-title">Datos de Venta</span>
+                <input type="hidden" id="idVenta" />
+            </div>
+
+            <div class="ve-card-body">
+                <div class="row g-3 justify-content-start">
+
+                    <!-- ===== FILA 1 ===== -->
+                    <div class="col-12 col-md-3" hidden>
+                        <label class="form-label fw-semibold">Fecha Venta</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                            <input id="fechaVenta" type="date" class="form-control ve-input" />
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Entrega</label>
+                        <input id="entrega" type="text"
+                               class="form-control ve-input text-end miles"
+                               placeholder="$ 0,00" autocomplete="off" />
+                        <div class="form-text">Se descuenta del total de la venta.</div>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Primer Cobro</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-calendar-o"></i></span>
+                            <input id="fechaPrimerCobro" type="date" class="form-control ve-input" />
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Fecha Límite</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-calendar-check-o"></i></span>
+                            <input id="fechaLimite" type="date" class="form-control ve-input" />
+                        </div>
+                    </div>
+
+                    <!-- ===== FILA 2 (6 + 3 + 3 REAL) ===== -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-semibold">Observación</label>
+                        <input id="observacion" type="text"
+                               class="form-control ve-input"
+                               placeholder="Notas internas de la venta..." />
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Turno</label>
+                        <select id="turno" class="form-select ve-input">
+                            <option value="">Seleccionar</option>
+                            <option value="mañana">Mañana</option>
+                            <option value="tarde">Tarde</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Franja horaria</label>
+                        <select id="franja" class="form-select ve-input">
+                            <option value="">Seleccionar</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+
+
+
+
+
+
+
 
         <!-- =====================================================
-             BOTONES FINALES
-        ====================================================== -->
+         BOTONES FINALES
+    ====================================================== -->
         <div class="d-flex justify-content-end gap-2 mt-3">
             <a href="../Historial" class="btn btn-outline-light">
                 <i class="fa fa-chevron-left"></i> Volver
@@ -492,7 +495,7 @@
     
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_NuevoModif.js?v=2.1"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_NuevoModif.js?v=2.2"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

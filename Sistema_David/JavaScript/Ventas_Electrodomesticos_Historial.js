@@ -18,11 +18,17 @@ let ventaClickeadaId = null; // NUEVO: la fila que el usuario clickeó
 
 const fmt = n => {
     try {
-        const v = Number(n || 0);
-        return v.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
-    } catch { return "$ 0,00"; }
+        const v = Math.round(Number(n || 0));
+        return v.toLocaleString("es-AR", {
+            style: "currency",
+            currency: "ARS",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    } catch {
+        return "$ 0";
+    }
 };
-
 const parseMoney = s => {
     if (!s) return 0;
     return Number(
@@ -94,12 +100,14 @@ function closeModalById(id) {
 /* ------------ LOAD ------------ */
 $(document).ready(() => {
 
-    $("#btnVentasGeneral").css("background", "#2E4053")
+    const rol = userSession?.IdRol;
 
+    // 🔒 Rol Comprobantes (4) no ve KPIs
+    if (rol === 4) {
+        $(".kpi").closest("section").hide();
+    }
 
     iniciarFiltros();
-
-    // NUEVO: selección visual de filas
     habilitarSeleccionFilaVentas();
     habilitarSeleccionFilasCuotas();
 
@@ -134,10 +142,16 @@ async function iniciarFiltros() {
     } else {
         FechaDesde = moment().format('YYYY-MM-DD');
         FechaHasta = moment().format('YYYY-MM-DD');
+
+    }
+
+    if (userSession.IdRol != 4 && userSession.IdRol != 1) {
+        $("#filtroEstado").val("Pendiente");
     }
 
     $("#txtFechaDesde").val(FechaDesde);
     $("#txtFechaHasta").val(FechaHasta);
+
 
     cargarTabla();
 
@@ -189,7 +203,7 @@ async function cargarTabla() {
     renderTabla(ventasCache);
 
 
-    if (userSession.IdRol == 1) {
+    if (userSession.IdRol == 1 || userSession.IdRol == 4) {
         await VC.cargarVentasPendientes();
     }
 }
@@ -275,39 +289,93 @@ function renderTablaBase(selector, data, tipo) {
                 render: (row) => {
 
                     if (tipo === "pendiente") {
+
+                        const rol = userSession?.IdRol;
+                        const id = row.IdVenta;
+                        const tel = (row.ClienteTelefono || "").replace(/\D/g, "");
+
+                        let botones = "";
+
+                        // ===== ADMIN (ROL 1) =====
+                        if (rol === 1) {
+                            botones = `
+                <button class="btn-accion btn-aprobar"
+                    title="Aceptar venta"
+                    onclick="VC.cambiarEstadoVenta(${id}, 'Activa')">
+                    <i class="fa fa-check"></i>
+                </button>
+
+                <button class="btn-accion btn-cancelar"
+                    title="Cancelar venta"
+                    onclick="VC.cambiarEstadoVenta(${id}, 'Cancelada')">
+                    <i class="fa fa-times"></i>
+                </button>
+
+                <button class="btn-accion btn-editar"
+                    title="Ver / editar"
+                    onclick="editarVenta(${id})">
+                    <i class="fa fa-pencil"></i>
+                </button>
+
+                <button class="btn-accion btn-pdf-pend"
+                    title="Descargar PDF"
+                    onclick="exportarPdfVenta(${id})">
+                    <i class="fa fa-file-pdf-o"></i>
+                </button>
+
+                <button class="btn-accion btn-wa"
+                    title="Enviar WhatsApp"
+                    onclick="VC.abrirWhatsApp('${tel}', '${row.Cliente}')">
+                    <i class="fa fa-whatsapp"></i>
+                </button>
+            `;
+                        }
+
+                        // ===== COMPROBANTES (ROL 4) =====
+                        else if (rol === 4) {
+                            botones = `
+                <button class="btn-accion btn-aprobar"
+                    title="Aceptar venta"
+                    onclick="VC.cambiarEstadoVenta(${id}, 'Activa')">
+                    <i class="fa fa-check"></i>
+                </button>
+
+                    <button class="btn-accion btn-editar"
+                    title="Ver / editar"
+                    onclick="editarVenta(${id})">
+                    <i class="fa fa-pencil"></i>
+                </button>
+
+                <button class="btn-accion btn-pdf-pend"
+                    title="Descargar PDF"
+                    onclick="exportarPdfVenta(${id})">
+                    <i class="fa fa-file-pdf-o"></i>
+                </button>
+
+                <button class="btn-accion btn-wa"
+                    title="Enviar WhatsApp"
+                    onclick="VC.abrirWhatsApp('${tel}', '${row.Cliente}')">
+                    <i class="fa fa-whatsapp"></i>
+                </button>
+            `;
+                        }
+
                         return `
-<div class="acciones-pendientes">
-
-    <button class="btn-accion btn-aprobar"
-        title="Aceptar venta"
-        onclick="VC.cambiarEstadoVenta(${row.IdVenta}, 'Activa')">
-        <i class="fa fa-check"></i>
-    </button>
-
-    <button class="btn-accion btn-cancelar"
-        title="Cancelar venta"
-        onclick="VC.cambiarEstadoVenta(${row.IdVenta}, 'Cancelada')">
-        <i class="fa fa-times"></i>
-    </button>
-
-    <button class="btn-accion btn-editar"
-        title="Ver / editar"
-        onclick="editarVenta(${row.IdVenta})">
-        <i class="fa fa-pencil"></i>
-    </button>
-
-</div>
-`;
+            <div class="acciones-pendientes">
+                ${botones}
+            </div>
+        `;
                     }
 
                     // tabla normal
                     return `
-<div class="d-flex justify-content-center gap-2">
-    <button class="btn-accion btn-editar"
-        onclick="editarVenta(${row.IdVenta})">
-        <i class="fa fa-pencil"></i>
-    </button>
-</div>`;
+        <div class="d-flex justify-content-center gap-2">
+            <button class="btn-accion btn-editar"
+                onclick="editarVenta(${row.IdVenta})">
+                <i class="fa fa-pencil"></i>
+            </button>
+        </div>
+    `;
                 }
             }
         ]
@@ -350,21 +418,21 @@ function renderTabla(data) {
         language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
         rowCallback: function (row, d) {
 
-            // mismas clases que cobros
             $(row).removeClass(
-                "fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja fila-aldia venta-seleccionada row-selected"
+                "fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja fila-aldia venta-seleccionada row-selected fila-pendiente"
             );
 
-            if (ventaClickeadaId != null && Number(d.IdVenta) === Number(ventaClickeadaId)) {
-                $(row).addClass("row-selected");
-            }
-
+            const rol = userSession?.IdRol;
             const vencidas = Number(d.CuotasVencidas || 0);
 
-            if (vencidas > 0) {
-                // En historial: si tiene cuotas vencidas, la venta se pinta “roja” como cobros
+            // 🔥 NUEVO: pendiente para roles distintos de 1 y 4
+            if (rol !== 1 && rol !== 4 && d.Estado === "Pendiente") {
+                $(row).addClass("fila-pendiente");
+            }
+            else if (vencidas > 0) {
                 $(row).addClass("fila-atrasada fila-atrasada-naranja");
-            } else {
+            }
+            else {
                 $(row).addClass("fila-aldia");
             }
 
@@ -463,7 +531,7 @@ function renderTabla(data) {
                     return `
         <div class="d-flex justify-content-center gap-2">
 
-        ${userSession.IdRol == 1 ? `
+        ${userSession.IdRol == 1 || userSession.IdRol == 4  ? `
             <button class="btn-accion btn-editar"
                     onclick="editarVenta(${id})"
                     title="Editar venta">
@@ -479,7 +547,7 @@ function renderTabla(data) {
             </button>
         ` : ""}
 
-        ${userSession.IdRol == 1 ? `
+        ${userSession.IdRol == 1 || userSession.IdRol == 4 ? `
             <button class="btn-accion ${pdfClass}"
                     onclick="exportarPdfVenta(${id})"
                     title="${pdfTitle}">
@@ -495,7 +563,11 @@ function renderTabla(data) {
             }
         ],
         initComplete: function () {
-            if (esVendedor) {
+
+            const rol = userSession?.IdRol;
+
+            // 🔥 ocultar acciones si NO es rol 1 ni 4
+            if (rol !== 1 && rol !== 4) {
                 this.api().column("acciones:name").visible(false);
             }
         }

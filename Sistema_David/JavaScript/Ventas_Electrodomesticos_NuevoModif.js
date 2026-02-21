@@ -123,23 +123,32 @@
         });
     };
 
-
     const fmt = n => {
         try {
-            const v = Number(n || 0);
-            return v.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-        } catch { return '$ 0,00'; }
+            const v = Math.ceil(Number(n || 0));
+            return v.toLocaleString('es-AR', {
+                style: 'currency',
+                currency: 'ARS',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        } catch {
+            return '$ 0';
+        }
     };
-
     const parseMoney = s => {
         if (s == null) return 0;
-        return Number(String(s)
+
+        const num = Number(String(s)
             .replace(/[^\d,-]/g, '')
             .replace(/\./g, '')
             .replace(',', '.')) || 0;
+
+        return Math.ceil(num); // 🔥 sin decimales y hacia arriba
     };
 
-    const round2 = n => Math.round((n || 0) * 100) / 100;
+    // 🔥 Redondeo SIEMPRE hacia arriba y sin decimales
+    const round2 = n => Math.ceil(Number(n || 0));
 
     function showTip(el, msg, type = 'info') {
         if (!el) return;
