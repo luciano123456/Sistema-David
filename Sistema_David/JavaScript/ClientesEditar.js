@@ -297,12 +297,17 @@ async function modificarCliente() {
             
             localStorage.removeItem("EdicionCliente");
            
-
             if (localStorage.getItem("EdicionCobranza") == 1) {
-                document.location.href = "../../Cobranzas/Index/";
+
+                const tipo = (localStorage.getItem("tipoSistemaVentas") || "").toLowerCase();
+
+                if (tipo === "electro") {
+                    document.location.href = "../../Ventas_Electrodomesticos/Cobros/";
+                } else {
+                    document.location.href = "../../Cobranzas/Index/";
+                }
+
                 localStorage.removeItem("EdicionCobranza");
-            } else {
-                document.location.href = "../Index/";
             }
         } else {
         }
@@ -500,10 +505,16 @@ function inputTelefono(event) {
 function AccionBtnCancelar() {
 
     if (localStorage.getItem("EdicionCobranza") == 1) {
-        document.location.href = "../../Cobranzas/Index/";
+
+        const tipo = (localStorage.getItem("tipoSistemaVentas") || "").toLowerCase();
+
+        if (tipo === "electro") {
+            document.location.href = "../../Ventas_Electrodomesticos/Cobros/";
+        } else {
+            document.location.href = "../../Cobranzas/Index/";
+        }
+
         localStorage.removeItem("EdicionCobranza");
-    } else {
-        document.location.href = "../Index/";
     }
 }
 

@@ -43,11 +43,11 @@ namespace Sistema_David.Controllers
 
                 if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
                 {
-                    data = Ventas_ElectrodomesticosModel.ListarHistorial(fechaDesde, fechaHasta, estado, usuarioSesion.Id);
+                    data = Ventas_ElectrodomesticosModel.ListarHistorial(fechaDesde, fechaHasta, estado, usuarioSesion.Id, (int)usuarioSesion.IdRol);
                 }
                 else
                 {
-                    data = Ventas_ElectrodomesticosModel.ListarHistorial(fechaDesde, fechaHasta, estado, idVendedor);
+                    data = Ventas_ElectrodomesticosModel.ListarHistorial(fechaDesde, fechaHasta, estado, idVendedor, (int)usuarioSesion.IdRol);
                 }
 
                 return Json(new

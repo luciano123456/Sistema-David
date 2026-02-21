@@ -3,7 +3,14 @@
    =========================================================== */
 
 const qs = (id) => document.getElementById(id);
-const money = (v) => Number(v || 0).toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+const money = (v) =>
+    Math.round(Number(v || 0))
+        .toLocaleString("es-AR", {
+            style: "currency",
+            currency: "ARS",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const getModal = (id) => bootstrap.Modal.getOrCreateInstance(qs(id));
 
@@ -295,14 +302,15 @@ window.abrirModalCobro = async function (idVenta, idCuota) {
         qs("cb_fecha").value = todayISO();
 
         // Valor cuota (monto restante real)
-        const restante =
+        const restante = Math.round(
             Number(cuotaActual.MontoOriginal || 0) +
             Number(cuotaActual.MontoRecargos || 0) -
             Number(cuotaActual.MontoDescuentos || 0) -
-            Number(cuotaActual.MontoPagado || 0);
+            Number(cuotaActual.MontoPagado || 0)
+        );
 
         qs("cb_montoRestante").value = restante;
-        qs("cb_importe").value = restante;
+        qs("cb_importe").value = formatearMiles(restante);
 
         qs("cb_valorCuotaBox").innerText = `Valor de la cuota: ${money(restante)}`;
 
@@ -395,14 +403,15 @@ async function recargarVentaYCuota() {
         cuotaActual = cuotas.find(c => Number(c.Id) === Number(qs("cb_idCuota").value));
         if (!cuotaActual) return;
 
-        const restante =
+        const restante = Math.round(
             Number(cuotaActual.MontoOriginal || 0) +
             Number(cuotaActual.MontoRecargos || 0) -
             Number(cuotaActual.MontoDescuentos || 0) -
-            Number(cuotaActual.MontoPagado || 0);
+            Number(cuotaActual.MontoPagado || 0)
+        );
 
         qs("cb_montoRestante").value = restante;
-        qs("cb_importe").value = restante;
+        qs("cb_importe").value = formatearMiles(restante);
         qs("cb_valorCuotaBox").innerText = `Valor de la cuota: ${money(restante)}`;
 
     } catch (e) {
@@ -576,7 +585,7 @@ function abrirHistorialCuota() {
                 ? Number(h.ValorNuevo.replace("Ahora=", ""))
                 : 0;
 
-            const importePagado = ahora - antes;
+            const importePagado = Math.round(ahora - antes);
 
             // Restamos en orden cronológico
             restante -= importePagado;
@@ -608,7 +617,7 @@ function abrirHistorialCuota() {
 
         // ---------- RECARGO (NUEVO) ----------
         const fechaR = moment(item.FechaCambio).format("DD/MM/YYYY HH:mm");
-        const importeRec = Number(item.Importe || 0);
+        const importeRec = Math.round(Number(item.Importe || 0));
 
         // Recargo suma al restante
         restante += importeRec;
@@ -647,7 +656,7 @@ async function confirmarCobro() {
         return;
     }
 
-    const importe = Number(qs("cb_importe").value || 0);
+    const importe = formatearSinMiles(qs("cb_importe").value);
     const fecha = qs("cb_fecha").value;
     const obs = qs("cb_obs").value || "";
 
@@ -769,10 +778,13 @@ async function confirmarCobro() {
 /* ===================== EVENTS (SEGUROS) ===================== */
 document.addEventListener("DOMContentLoaded", () => {
 
-    qs("cb_importe")?.addEventListener("input", () => {
+    qs("cb_importe")?.addEventListener("input", (e) => {
+
+        const limpio = formatearSinMiles(e.target.value);
+        e.target.value = formatearMiles(limpio);
+
         aplicarModoCobroUI();
     });
-
 
     // Fecha default (por si abrís modal sin abrirModalCobro en alguna pantalla)
     if (qs("cb_fecha")) qs("cb_fecha").value = todayISO();
@@ -1309,7 +1321,7 @@ function generarPdfVenta(venta) {
 
 function toggleModoReprogramacion() {
 
-    const importe = Number(qs("cb_importe").value || 0);
+    const importe = formatearSinMiles(qs("cb_importe").value);
     const esReprogramacion = importe <= 0;
 
     // Fecha
@@ -1348,7 +1360,7 @@ function toggleModoReprogramacion() {
 qs("cb_importe")?.addEventListener("input", toggleModoReprogramacion);
 
 function esCambioFecha() {
-    const importe = Number(qs("cb_importe").value || 0);
+    const importe = formatearSinMiles(qs("cb_importe").value);
     return importe === 0;
 }
 
@@ -1737,7 +1749,7 @@ function obtenerInfoUltimoCobro(v) {
 
     // 4️⃣ Cuotas restantes
     const cuotasRestantes = v.Cuotas.filter(c =>
-        Number(c.MontoRestante || 0) > 0.0001
+        Number(c.MontoRestante || 0) > 0
     ).length;
 
     return {
