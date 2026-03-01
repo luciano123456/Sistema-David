@@ -135,12 +135,7 @@ function inputUsuario(event) {
     }
 }
 
-document.getElementById('password').addEventListener('keydown', inputContrasena);
-function inputContrasena(event) {
-    if (event.keyCode == 13) {
-        Loguear();
-    }
-}
+
 
 function togglePassword() {
     var passwordField = document.getElementById("Contrasena");

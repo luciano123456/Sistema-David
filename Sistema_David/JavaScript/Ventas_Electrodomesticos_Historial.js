@@ -3,6 +3,7 @@
  * =========================================================== */
 
 let gridVentas = null;
+let gridVentasPendientes = null;
 let ventasCache = [];
 let ventaSeleccionada = null;
 let rowAbierto = null;
@@ -12,6 +13,19 @@ const esVendedor = (userSession && Number(userSession.IdRol) === 2);
 
 let ventaClickeadaId = null; // NUEVO: la fila que el usuario clickeó
 
+
+const columnConfig = [
+    { index: 1, filterType: 'text' },
+    { index: 2, filterType: 'text' },
+    { index: 3, filterType: 'text' },
+    { index: 4, filterType: 'text' },
+    { index: 5, filterType: 'text' },
+    { index: 6, filterType: 'text' },
+    { index: 7, filterType: 'text' },
+    { index: 8, filterType: 'text' },
+    { index: 9, filterType: 'text' },
+    { index: 10, filterType: 'text' },
+];
 
 
 /* ------------ HELPERS ------------ */
@@ -128,14 +142,14 @@ async function iniciarFiltros() {
 
     await cargarUsuarios()
 
-    if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
+    if (userSession.IdRol == 1 || userSession.IdRol == 4) { //ROL ADMINISTRADOR
         $("#formFiltros").removeAttr("hidden");
         $("#btnToggleFiltros").removeAttr("hidden");
     }
 
     var FechaDesde, FechaHasta;
 
-    if (userSession.IdRol == 1) {
+    if (userSession.IdRol == 1 || userSession.IdRol == 4) {
         FechaDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
         FechaHasta = moment().format('YYYY-MM-DD');
         document.getElementById("btnLimite").style.display = "block";
@@ -217,7 +231,12 @@ function actualizarKPIs(k) {
 
 function renderTablaBase(selector, data, tipo) {
 
-    let grid = $(selector).DataTable({
+    if (!gridVentasPendientes) {
+        inicializarEncabezadoColumnas("#grdVentasPendientes")
+    }
+
+
+       gridVentasPendientes = $(selector).DataTable({
         destroy: true,
         data,
         pageLength: 50,
@@ -378,8 +397,21 @@ function renderTablaBase(selector, data, tipo) {
     `;
                 }
             }
-        ]
+        ],
+
+        initComplete: function () {
+
+
+            const api = this.api();
+
+            inicializarFiltrosColumnas(api, columnConfig);
+
+            $(api.table().container()).find('thead tr.filters th').eq(11).html('');
+        }
     });
+
+
+
 
     // acordeón
     $(`${selector} tbody`).off("click").on("click", "button.btn-row-detail", function (e) {
@@ -399,7 +431,7 @@ function renderTablaBase(selector, data, tipo) {
         }
     });
 
-    return grid;
+    return gridVentasPendientes;
 }
 
 
@@ -408,7 +440,11 @@ function renderTabla(data) {
         gridVentas.clear().rows.add(data).draw();
         reabrirRowSeleccionado();
         return;
+    } else {
+       inicializarEncabezadoColumnas("#grdVentas")
     }
+
+
 
     gridVentas = $("#grdVentas").DataTable({
         data,
@@ -564,6 +600,14 @@ function renderTabla(data) {
         ],
         initComplete: function () {
 
+
+            const api = this.api();
+
+            inicializarFiltrosColumnas(api, columnConfig);
+
+            $(api.table().container()).find('thead tr.filters th').eq(11).html('');
+            
+
             const rol = userSession?.IdRol;
 
             // 🔥 ocultar acciones si NO es rol 1 ni 4
@@ -651,6 +695,8 @@ function reabrirRowSeleccionado() {
         }
     });
 }
+
+
 
 /* ------------ ACORDEÓN DETALLE ------------ */
 
@@ -979,7 +1025,7 @@ async function eliminarVenta(id) {
 
     let resp = await $.post(
         "/Ventas_Electrodomesticos/EliminarVenta",
-        { id: idVenta, forzar: false }
+        { id: id, forzar: false }
     );
 
     // Si tiene pagos
@@ -990,13 +1036,15 @@ async function eliminarVenta(id) {
 
         resp = await $.post(
             "/Ventas_Electrodomesticos/EliminarVenta",
-            { id: idVenta, forzar: true }
+            { id: id, forzar: true }
         );
     }
 
     if (!resp.success) {
         alert(resp.message || "Error");
         return;
+    } else {
+        exitoModal("La venta ha sido eliminada con exito.");
     }
 
     await cargarTabla();
@@ -1458,3 +1506,9 @@ VC.cargarVentasPendientes = async function () {
 
     renderTablaBase("#grdVentasPendientes", data, "pendiente");
 };
+
+
+
+
+
+

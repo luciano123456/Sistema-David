@@ -219,12 +219,16 @@
         const idUser = +$usuario.val() || 0;
         if (!idUser) { toast('Seleccioná un vendedor.', 'warning'); return; }
 
+        const clbTipoNegocio = document.getElementById("slcTipoNegocio");
+
+        const tipoNegocio = clbTipoNegocio.options[clbTipoNegocio.selectedIndex].text;
+
         // 🚦 Verificación previa: si no hay reglas, ofrezco crearlas y corto
         if (!await verificarReglasAntesDeCalcular()) return;
 
         try {
             const desdeISO = $desde.val(), hastaISO = $hasta.val();
-            const r = await $.getJSON('/Pagos/Calcular', { idUsuario: idUser, desde: desdeISO, hasta: hastaISO });
+            const r = await $.getJSON('/Pagos/Calcular', { idUsuario: idUser, desde: desdeISO, hasta: hastaISO, tipoNegocio: tipoNegocio });
             calcFull = r;
             renderCalculo(r);
 

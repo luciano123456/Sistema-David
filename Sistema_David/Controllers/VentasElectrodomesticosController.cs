@@ -102,6 +102,7 @@ namespace Sistema_David.Controllers
                 if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
                 {
                     filtro.IdVendedor = usuarioSesion.Id;
+                    filtro.IdCobrador = usuarioSesion.Id;
                 }
 
                 var data = Ventas_ElectrodomesticosModel.ListarCuotasACobrar(filtro);

@@ -4,7 +4,9 @@
  * =========================================================== */
 
 let VC = {};
-let tabla = null;
+let tablaCobros = null;
+let tablaPendientes = null;
+let tablaTransferenciasPendientes = null;
 let cuotasCache = [];
 let ventaSeleccionada = null;
 let ventaAcordeonAbierta = null;
@@ -12,6 +14,64 @@ let ventaAcordeonAbierta = null;
 let ventasSeleccionadas = new Set();
 let cobradoresCache = [];
 let ventaClickeadaId = null; // igual que Historial: fila seleccionada por click
+
+
+const columnConfigCobros = [
+    { index: 1, filterType: 'text' },
+    { index: 2, filterType: 'text' },
+    { index: 3, filterType: 'text' },
+    { index: 4, filterType: 'text' },
+    { index: 5, filterType: 'text' },
+    { index: 6, filterType: 'text' },
+    { index: 7, filterType: 'text' },
+    { index: 8, filterType: 'text' },
+    { index: 9, filterType: 'text' },
+    { index: 10, filterType: 'text' },
+    { index: 11, filterType: 'text' },
+    { index: 12, filterType: 'text' },
+    { index: 13, filterType: 'text' },
+    { index: 14, filterType: 'text' },
+    { index: 15, filterType: 'text' },
+];
+
+const columnConfigCobrosPendientes = [
+    { index: 1, filterType: 'text' },
+    { index: 2, filterType: 'text' },
+    { index: 3, filterType: 'text' },
+    { index: 4, filterType: 'text' },
+    { index: 5, filterType: 'text' },
+    { index: 6, filterType: 'text' },
+    { index: 7, filterType: 'text' },
+    { index: 8, filterType: 'text' },
+    { index: 9, filterType: 'text' },
+    { index: 10, filterType: 'text' },
+    { index: 11, filterType: 'text' },
+    { index: 12, filterType: 'text' },
+    { index: 13, filterType: 'text' },
+
+];
+
+const columnConfigTransferenciasPendientes = [
+    { index: 1, filterType: 'text' },
+    { index: 2, filterType: 'text' },
+    { index: 3, filterType: 'text' },
+    { index: 4, filterType: 'text' },
+    { index: 5, filterType: 'text' },
+    { index: 6, filterType: 'text' },
+    { index: 7, filterType: 'text' },
+    { index: 8, filterType: 'text' },
+    { index: 9, filterType: 'text' },
+    { index: 10, filterType: 'text' },
+    { index: 11, filterType: 'text' },
+    { index: 12, filterType: 'text' },
+    { index: 13, filterType: 'text' },
+
+];
+
+
+
+
+
 
 
 
@@ -292,7 +352,7 @@ VC.initEventos = function () {
 
         if (!tabla) return;
 
-        tabla.rows({ search: "applied" }).every(function () {
+        tablaCobros.rows({ search: "applied" }).every(function () {
             const idV = Number(this.data()?.IdVenta || 0);
             if (!idV) return;
 
@@ -312,9 +372,9 @@ VC.initEventos = function () {
 VC.refrescarSeleccionUI = function () {
 
     // 1) marcar filas y checks
-    if (tabla) {
+    if (tablaCobros) {
         $("#vc_tabla tbody tr").each(function () {
-            const r = tabla.row(this);
+            const r = tablaCobros.row(this);
             const d = r.data();
             const idV = Number(d?.IdVenta || 0);
 
@@ -330,7 +390,7 @@ VC.refrescarSeleccionUI = function () {
         let totalVisibles = 0;
         let totalSel = 0;
 
-        tabla.rows({ search: "applied" }).every(function () {
+        tablaCobros.rows({ search: "applied" }).every(function () {
             const idV = Number(this.data()?.IdVenta || 0);
             if (!idV) return;
 
@@ -379,7 +439,7 @@ VC.cargarCombos = async function () {
         const ddl = $("#f_cliente").empty();
         ddl.append(`<option value="">Todos</option>`);
         (resp.data || []).forEach(c => {
-            ddl.append(`<option value="${c.Id}">${c.Nombre} ${c.Apellido}</option>`);
+            ddl.append(`<option value="${c.Id}">${c.Nombre} ${c.Apellido} - ${c.Dni} </option>`);
         });
     } catch (e) {
         console.error("Error cargando clientes", e);
@@ -495,14 +555,18 @@ VC.cargarTabla = async function () {
     }
 
     // si ya existe tabla
-    if (tabla) {
-        tabla.clear().rows.add(cuotasCache).draw();
+    if (tablaCobros) {
+        tablaCobros.clear().rows.add(cuotasCache).draw();
         VC.reabrirAcordeon();
         VC.refrescarSeleccionUI();
         return;
+    } else {
+        inicializarEncabezadoColumnas("#vc_tabla")
     }
 
-    tabla = $("#vc_tabla").DataTable({
+
+
+    tablaCobros = $("#vc_tabla").DataTable({
         data: cuotasCache,
         pageLength: 50,
         responsive: false,
@@ -787,11 +851,23 @@ VC.cargarTabla = async function () {
     `;
                 }
             }
-        ]
+        ],
+        initComplete: function () {
+
+
+            const api = this.api();
+
+            inicializarFiltrosColumnas(api, columnConfigCobros);
+
+            $(api.table().container()).find('thead tr.filters th').eq(1).html('');
+            $(api.table().container()).find('thead tr.filters th').eq(16).html('');
+            $(api.table().container()).find('thead tr.filters th').eq(17).html('');
+
+        }
     });
 
     // draw => sincronizar checks + header + FAB
-    tabla.on("draw", function () {
+    tablaCobros.on("draw", function () {
         VC.refrescarSeleccionUI();
     });
 
@@ -802,7 +878,7 @@ VC.cargarTabla = async function () {
     // Click en cualquier CELDA de la fila
     $("#vc_tabla tbody").off("click.vcSelectRow").on("click.vcSelectRow", "td", function (e) {
 
-        if (!tabla) return;
+        if (!tablaCobros) return;
 
         // si clic en acordeón/acciones => no seleccionar
         if ($(e.target).closest("button.btn-row-detail, .btn-accion").length) return;
@@ -816,19 +892,19 @@ VC.cargarTabla = async function () {
         const tr = $(this).closest("tr");
         if (tr.hasClass("child")) return;
 
-        const row = tabla.row(tr);
+        const row = tablaCobros.row(tr);
         const d = row.data();
         if (!d) return;
 
         ventaClickeadaId = d.IdVenta;
 
-        tabla.rows().every(function () {
+        tablaCobros.rows().every(function () {
             $(this.node()).removeClass("row-selected");
         });
 
         $(row.node()).addClass("row-selected");
 
-        tabla.draw(false);
+        tablaCobros.draw(false);
     });
 
     // Click acordeón — también marca selección visual (igual Historial)
@@ -839,15 +915,15 @@ VC.cargarTabla = async function () {
         const tr = $(this).closest("tr");
 
         // ✅ marcar selección visual aunque sea click en botón
-        tabla.rows().every(function () {
+        tablaCobros.rows().every(function () {
             $(this.node()).removeClass("row-selected");
         });
-        $(tabla.row(tr).node()).addClass("row-selected");
+        $(tablaCobros.row(tr).node()).addClass("row-selected");
 
-        const dsel = tabla.row(tr).data();
+        const dsel = tablaCobros.row(tr).data();
         ventaClickeadaId = dsel?.IdVenta ?? null;
 
-        const row = tabla.row(tr);
+        const row = tablaCobros.row(tr);
         const data = row.data();
         const icon = $(this).find("i");
 
@@ -862,7 +938,7 @@ VC.cargarTabla = async function () {
             return;
         }
 
-        tabla.rows().every(function () {
+        tablaCobros.rows().every(function () {
             if (this.child.isShown()) {
                 this.child.hide();
                 $(this.node()).removeClass("shown venta-seleccionada");
@@ -891,7 +967,7 @@ VC.reabrirAcordeon = function () {
     if (!ventaAcordeonAbierta) return;
 
     $("#vc_tabla tbody tr").each(function () {
-        const r = tabla.row(this);
+        const r = tablaCobros.row(this);
         const d = r.data();
         if (d && d.IdVenta === ventaAcordeonAbierta) {
             $(this).find("button.btn-row-detail").trigger("click");
@@ -1516,11 +1592,15 @@ VC.cargarCobrosPendientes = async function () {
         return; // no inicialices la tabla si no hay datos
     }
 
-    $("#vc_tabla_pendientes").DataTable({
+    if (!tablaPendientes) {
+        inicializarEncabezadoColumnas("#vc_tabla_pendientes")
+    }
+
+    tablaPendientes = $("#vc_tabla_pendientes").DataTable({
         destroy: true,
         data: resp.data || [],
         paging: false,
-        searching: false,
+        searching: true,
         info: false,
 
         columns: [
@@ -1682,7 +1762,17 @@ VC.cargarCobrosPendientes = async function () {
 `
 
             }
-        ]
+        ],
+        initComplete: function () {
+
+
+            const api = this.api();
+
+            inicializarFiltrosColumnas(api, columnConfigCobrosPendientes);
+
+            $(api.table().container()).find('thead tr.filters th').eq(14).html('');
+            $(api.table().container()).find('thead tr.filters th').eq(15).html('');
+        }
     });
 };
 
@@ -1707,11 +1797,15 @@ VC.cargarTransferenciasPendientes = async function () {
         return; // no inicialices la tabla si no hay datos
     }
 
-    $("#vc_tabla_transferencias_pendientes").DataTable({
+    if (!tablaTransferenciasPendientes) {
+        inicializarEncabezadoColumnas("#vc_tabla_transferencias_pendientes")
+    }
+
+    tablaTransferenciasPendientes = $("#vc_tabla_transferencias_pendientes").DataTable({
         destroy: true,
         data: resp.data || [],
         paging: false,
-        searching: false,
+        searching: true,
         info: false,
 
         columns: [
@@ -1899,7 +1993,25 @@ VC.cargarTransferenciasPendientes = async function () {
         `;
                 }
             }
-        ]
+        ],
+
+        initComplete: function () {
+
+            const api = this.api();
+
+            inicializarFiltrosColumnas(api, columnConfigTransferenciasPendientes);
+
+            // ✅ SOLO ESTA TABLA
+            $(api.table().container())
+                .find('thead tr.filters th')
+                .eq(15)
+                .html('');
+            // ✅ SOLO ESTA TABLA
+            $(api.table().container())
+                .find('thead tr.filters th')
+                .eq(14)
+                .html('');
+        }
     });
 };
 

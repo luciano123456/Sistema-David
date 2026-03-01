@@ -478,11 +478,21 @@ namespace Sistema_David.Models
 
 
         /* ============================ Calcular ============================ */
-        public static VMSueldoCalc Calcular(int idUsuario, DateTime desde, DateTime hasta)
+        public static VMSueldoCalc Calcular(
+     int idUsuario,
+     DateTime desde,
+     DateTime hasta,
+     string tipoNegocio)
         {
             const string tag = "Calcular";
+
             try
             {
+                bool esElectro =
+                    !string.IsNullOrWhiteSpace(tipoNegocio) &&
+                    tipoNegocio.Equals("Electrodomesticos",
+                        StringComparison.OrdinalIgnoreCase);
+
                 var vm = new VMSueldoCalc
                 {
                     IdUsuario = idUsuario,
@@ -496,30 +506,152 @@ namespace Sistema_David.Models
                     ImporteTotal = 0
                 };
 
-                var ventasTN = TotalesVentasPorTipoNegocio(idUsuario, desde, hasta);
+                /* ======================================
+                   VENTAS
+                ====================================== */
+
+                var ventasTN = esElectro
+                    ? TotalesVentasElectro(idUsuario, desde, hasta)
+                    : TotalesVentasPorTipoNegocio(idUsuario, desde, hasta);
+
                 foreach (var kv in ventasTN)
                 {
                     vm.TotalVentas += kv.Value;
-                    var ap = AplicarAcumulativoVentas(kv.Value, kv.Key, "Ventas.");
+
+                    var ap = AplicarAcumulativoVentas(
+                        kv.Value,
+                        kv.Key,
+                        "Ventas."
+                    );
+
                     vm.ImporteVentas += ap.total;
                     vm.Detalles.AddRange(ap.det);
                 }
 
-                var cobrosTN = TotalesCobrosPorTipoNegocio(idUsuario, desde, hasta);
+                /* ======================================
+                   COBRANZAS
+                ====================================== */
+
+                var cobrosTN = esElectro
+                    ? TotalesCobrosElectro(idUsuario, desde, hasta)
+                    : TotalesCobrosPorTipoNegocio(idUsuario, desde, hasta);
+
                 foreach (var kv in cobrosTN)
                 {
                     vm.TotalCobranzas += kv.Value;
-                    var ap = AplicarTramos(kv.Value, 2, kv.Key, "Cobranzas.");
+
+                    var idtiponegocio = 2;
+
+                    if(tipoNegocio == "Electrodomesticos")
+                    {
+                        idtiponegocio = 3;
+                    } else
+                    {
+                        idtiponegocio = kv.Key;
+                    }
+
+                        var ap = AplicarTramos(
+                            kv.Value,
+                            2,
+                            idtiponegocio,
+                            "Cobranzas."
+                        );
+
                     vm.ImporteCobranzas += ap.total;
                     vm.Detalles.AddRange(ap.det);
                 }
 
-                vm.ImporteTotal = Math.Round(vm.ImporteVentas + vm.ImporteCobranzas, 2);
+                vm.ImporteTotal =
+                    Math.Round(vm.ImporteVentas + vm.ImporteCobranzas, 2);
+
                 return vm;
             }
-            catch (Exception ex) { Log(ex, tag); throw; }
+            catch (Exception ex)
+            {
+                Log(ex, tag);
+                throw;
+            }
         }
 
+        private static Dictionary<int?, decimal> TotalesVentasElectro(
+    int idUsuario,
+    DateTime desde,
+    DateTime hasta)
+        {
+            const string tag = "TotalesVentasElectro";
+
+            try
+            {
+                var d0 = desde.Date;
+                var h1 = hasta.Date.AddDays(1);
+
+                using (var db = new Sistema_DavidEntities())
+                {
+                    var data =
+                        (from v in db.Ventas_Electrodomesticos
+                         where v.IdVendedor == idUsuario
+                            && v.FechaVenta >= d0
+                            && v.FechaVenta < h1
+                         group v.ImporteTotal by 1 into g
+                         select new
+                         {
+                             IdTipoNegocio = (int?)3,
+                             Total = g.Sum()
+                         })
+                        .ToDictionary(
+                            x => x.IdTipoNegocio,
+                            x => (decimal)x.Total
+                        );
+
+                    return data;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log(ex, tag);
+                throw;
+            }
+        }
+
+        private static Dictionary<int, decimal> TotalesCobrosElectro(
+            int idUsuario,
+            DateTime desde,
+            DateTime hasta)
+        {
+            const string tag = "TotalesCobrosElectro";
+
+            try
+            {
+                var d0 = desde.Date;
+                var h1 = hasta.Date.AddDays(1);
+
+                using (var db = new Sistema_DavidEntities())
+                {
+                    var pagos =
+                        (from p in db.Ventas_Electrodomesticos_Pagos
+                         where p.UsuarioCreacion == idUsuario
+                            && p.FechaPago >= d0
+                            && p.FechaPago < h1
+                         group p.ImporteTotal by 0 into g
+                         select new
+                         {
+                             TN = 0,
+                             Total = g.Sum()
+                         })
+                        .ToDictionary(
+                            x => x.TN,
+                            x => (decimal)(x.Total) 
+                        );
+
+                    return pagos;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log(ex, tag);
+                throw;
+            }
+        }
         /* ============================ Pagos Parciales ============================ */
         public static List<object> PagosParcialesListar(int idUsuario, DateTime desde, DateTime hasta, bool soloSinAsignar)
         {
