@@ -275,6 +275,13 @@
             $('#fechaLimite').val(fLim);
         }
 
+        if (localStorage.getItem('RegistrarClienteVenta') == 1) {
+            document.getElementById("dni").value = localStorage.getItem('DNIClienteVenta')
+            localStorage.removeItem('RegistrarClienteVenta');
+            localStorage.removeItem('DNIClienteVenta');
+            traerClientePorDni();
+        }
+
         setupTipoToggle('#recargoTipoWrap', '#recargoTipo');
         setupTipoToggle('#descuentoTipoWrap', '#descuentoTipo');
         setupTipoToggle('#ajRecargoTipoWrap', '#ajRecargoTipo');
@@ -405,9 +412,21 @@
             $('#bTelefono').html(`<i class="fa fa-phone"></i> ${c.Telefono || '—'}`);
 
         } catch {
-            showTip($('#btnBuscarDni')[0], 'Error consultando cliente', 'danger');
+            const confirmacion2 = await confirmarModal("El cliente ingresado no existe ¿Desea registrarlo?");
+            if (confirmacion2) {
+                abrirNuevoCliente();
+            }
         }
     }
+
+    function abrirNuevoCliente() {
+
+        localStorage.removeItem("EdicionCliente");
+        localStorage.setItem("RegistrarClienteVenta", 1);
+        localStorage.setItem("DNIClienteVenta", document.getElementById("dni").value);
+        document.location.href = "../../Clientes/Editar/";
+
+    };
 
     /* ====================== PRODUCTOS ====================== */
 

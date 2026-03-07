@@ -249,7 +249,8 @@ async function registrarCliente() {
                 if (localStorage.getItem('RegistrarClienteVenta') == 1) {
                     localStorage.setItem("DNIClienteVenta", document.getElementById("Dni").value);
 
-                    document.location.href = "../../../Ventas/Nuevo/";
+
+                    window.location.href = RetornarVentaNuevoModif();
 
                 } else {
                     document.location.href = "../Index/";
