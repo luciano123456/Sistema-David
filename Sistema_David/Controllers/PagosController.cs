@@ -122,11 +122,11 @@ namespace Sistema_David.Controllers
 
         // ===== Calcular (preview) =====
         [HttpGet]
-        public ActionResult Calcular(int idUsuario, DateTime desde, DateTime hasta)
+        public ActionResult Calcular(int idUsuario, DateTime desde, DateTime hasta, string tipoNegocio)
         {
             try
             {
-                var calc = PayrollModel.Calcular(idUsuario, desde, hasta);
+                var calc = PayrollModel.Calcular(idUsuario, desde, hasta, tipoNegocio);
                 return Json(calc, JsonRequestBehavior.AllowGet);
             }
             catch (InvalidOperationException ex) when (ex.Message.StartsWith("SIN_REGLAS"))

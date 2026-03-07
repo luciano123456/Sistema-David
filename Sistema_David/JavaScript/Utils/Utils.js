@@ -210,3 +210,79 @@ function fmtFechaHora(val) {
         ? moment(d).format('DD/MM/YYYY HH:mm')
         : d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
 }
+
+
+function inicializarEncabezadoColumnas(grd) {
+    const $thead = $(`${grd} thead`);
+    if ($thead.find('tr.filters').length === 0) {
+        $thead.find('tr').first().clone(true).addClass('filters').appendTo($thead);
+    }
+}
+
+
+    function inicializarFiltrosColumnas(api, configColumns) {
+
+    // ✅ SOLO ESTA TABLA (fix real)
+    const tableContainer = $(api.table().container());
+    const filtersRow = tableContainer.find('thead tr.filters');
+
+    if (!filtersRow.length) return;
+
+        for (const config of configColumns) {
+
+        // 👇 ya NO usa $('.filters')
+        const cell = filtersRow.find('th').eq(config.index);
+
+        if (!cell.length) continue;
+
+        cell.empty();
+
+        /* ================= SELECT ================= */
+        if (config.filterType === 'select' || config.filterType === 'select_local') {
+
+            const $select = $(`
+                <select class="rp-filter-select" style="width:100%">
+                    <option value="">Todos</option>
+                </select>
+            `).appendTo(cell);
+
+            const uniques = new Set();
+
+            api.column(config.index).data().each(v => {
+                const txt = (v ?? "").toString().trim();
+                if (txt) uniques.add(txt);
+            });
+
+            [...uniques].sort().forEach(txt => {
+                $select.append(`<option value="${txt}">${txt}</option>`);
+            });
+
+            $select.on('change', function () {
+
+                const value = $(this).val();
+
+                if (!value) {
+                    api.column(config.index).search('').draw(false);
+                    return;
+                }
+
+                api.column(config.index)
+                    .search('^' + escapeRegex(value) + '$', true, false)
+                    .draw(false);
+            });
+
+        }
+        /* ================= TEXT ================= */
+        else {
+
+            $('<input class="rp-filter-input" type="text" placeholder="Buscar...">')
+                .appendTo(cell)
+                .on('keyup change', function () {
+                    api.column(config.index).search(this.value).draw(false);
+                });
+        }
+    }
+
+    // limpiar columna acordeón SOLO en esta tabla
+    filtersRow.find('th').eq(0).html('');
+}

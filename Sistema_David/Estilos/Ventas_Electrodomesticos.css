@@ -1989,3 +1989,21 @@ input {
 .fila-pendiente {
     background: rgba(255, 193, 7, 0.7) !important;
 }
+
+
+
+
+.rp-filter-label {
+    font-size: 10px !important;
+    opacity: .85;
+    margin-bottom: 6px;
+}
+
+.rp-filter-input, .rp-filter-select {
+    width: 100%;
+    border-radius: 12px !important;
+    background: var(--dt-row-zebra) !important;
+    border: 1px solid rgba(255,255,255,.10) !important;
+    color: #fff !important;
+    padding: 10px 12px !important;
+}

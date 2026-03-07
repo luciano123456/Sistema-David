@@ -1557,7 +1557,7 @@ namespace Sistema_David.Models
 
                     if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
                         q = q.Where(x =>
-                            x.Venta.IdVendedor == f.IdVendedor.Value);
+                            x.Venta.IdVendedor == f.IdVendedor.Value || x.Venta.IdCobrador == f.IdVendedor.Value);
 
                     if (f.IdZona.HasValue && f.IdZona.Value > 0)
                         q = q.Where(x =>

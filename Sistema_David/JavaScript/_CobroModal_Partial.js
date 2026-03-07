@@ -279,11 +279,7 @@ window.abrirModalCobro = async function (idVenta, idCuota) {
 
         ventaActual = json.data;
 
-        // ⛔ VALIDACIÓN DE CUOTAS ANTERIORES (MISMA QUE COBROS)
-        if (!puedeCobrarCuota(ventaActual, idCuota)) {
-            showToast("No se puede cobrar esta cuota hasta completar las cuotas anteriores.", "danger");
-            return;
-        }
+      
 
         const cuotas = Array.isArray(ventaActual.Cuotas) ? ventaActual.Cuotas : [];
         cuotaActual = cuotas.find(c => Number(c.Id) === Number(idCuota));
@@ -659,6 +655,13 @@ async function confirmarCobro() {
     const importe = formatearSinMiles(qs("cb_importe").value);
     const fecha = qs("cb_fecha").value;
     const obs = qs("cb_obs").value || "";
+
+    // ⛔ VALIDACIÓN DE CUOTAS ANTERIORES (MISMA QUE COBROS)
+    if ((importe > 0) && !puedeCobrarCuota(ventaActual, cuotaActual?.Id)) {
+        showToast("No se puede cobrar esta cuota hasta completar las cuotas anteriores.", "danger");
+        return;
+    }
+
 
     /* =============================
        🔁 CAMBIO DE FECHA
