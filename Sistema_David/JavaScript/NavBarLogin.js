@@ -337,3 +337,25 @@ const label = (tipoVentas === "electro") ? "Electrodomésticos" : "Indumentaria"
 
 const textNode = [...a.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
 if (textNode) textNode.nodeValue = ` ${label}`;
+
+
+function RetornarVentaNuevoModif() {
+
+    const tipo = localStorage.getItem("tipoSistemaVentas") || "indumentaria";
+    const path = window.location.pathname.toLowerCase();
+
+    const esModificar =
+        path.includes("/editar") ||
+        path.includes("/modif") ||
+        path.includes("/modificar");
+
+    if (tipo === "electro") {
+        return esModificar
+            ? "/Ventas_Electrodomesticos/NuevoModif"
+            : "/Ventas_Electrodomesticos/NuevoModif";
+    }
+
+    return esModificar
+        ? "/Ventas/Nuevo"
+        : "/Ventas/Nuevo";
+}
