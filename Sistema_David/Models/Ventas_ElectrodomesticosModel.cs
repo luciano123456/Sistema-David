@@ -1530,12 +1530,13 @@ namespace Sistema_David.Models
                 var desde = f.FechaDesde?.Date;
                 var hasta = f.FechaHasta?.Date;
 
-                /* ======================================
-                   SI HAY COBRADOR → SOLO FILTRO COBRADOR
-                ====================================== */
                 if (f.IdCobrador.HasValue && f.IdCobrador.Value > 0)
                 {
                     q = q.Where(x => x.Venta.IdCobrador == f.IdCobrador.Value);
+                }
+                else if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
+                {
+                    q = q.Where(x => x.Venta.IdCliente == f.IdCliente.Value);
                 }
                 else
                 {
@@ -1550,10 +1551,6 @@ namespace Sistema_David.Models
                     if (hasta.HasValue)
                         q = q.Where(x =>
                             DbFunctions.TruncateTime(x.Cuota.FechaCobro) <= hasta.Value);
-
-                    if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
-                        q = q.Where(x =>
-                            x.Venta.IdCliente == f.IdCliente.Value);
 
                     if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
                         q = q.Where(x =>
