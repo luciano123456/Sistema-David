@@ -348,6 +348,8 @@ namespace Sistema_David.Controllers
             if (data == null)
                 return Json(null);
 
+            var msg = Ventas_ElectrodomesticosModel.MarcarWhatssap(id, "");
+
             return Json(new
             {
                 Venta = data,
@@ -373,6 +375,11 @@ namespace Sistema_David.Controllers
 
             if (data == null)
                 return Json(null);
+
+
+            int IdFinal = descripcion.Contains("Venta") ? idVenta.Value : id;
+
+            var msg = Ventas_ElectrodomesticosModel.MarcarWhatssap(IdFinal, descripcion);
 
             return Json(new
             {

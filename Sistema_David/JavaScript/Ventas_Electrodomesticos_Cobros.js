@@ -14,6 +14,7 @@ let ventaAcordeonAbierta = null;
 let ventasSeleccionadas = new Set();
 let cobradoresCache = [];
 let ventaClickeadaId = null; // igual que Historial: fila seleccionada por click
+let ventaPendienteClickeadaId = null; // igual que Historial: fila seleccionada por click
 
 
 const columnConfigCobros = [
@@ -126,6 +127,29 @@ let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
     document.head.appendChild(st);
 })();
 
+VC.mostrarInfoCliente = function (row) {
+
+    const saldo = row.SaldoCliente || 0;
+    const limite = row.LimiteCliente || 0;
+
+    const porcentaje = limite > 0
+        ? Math.round((saldo / limite) * 100)
+        : 0;
+
+    $("#vc_info_cliente").removeClass("d-none");
+
+    $("#vc_info_nombre").text(row.ClienteNombre || "—");
+
+    $("#vc_info_saldo").text(
+        saldo.toLocaleString("es-AR", { style: "currency", currency: "ARS" })
+    );
+
+    $("#vc_info_limite").text(
+        limite.toLocaleString("es-AR", { style: "currency", currency: "ARS" })
+    );
+
+    $("#vc_info_porcentaje").text(porcentaje + "%");
+};
 
 VC.editarCliente = function (idCliente) {
 
@@ -350,7 +374,7 @@ VC.initEventos = function () {
     $(document).off("change.vcAllCheck").on("change.vcAllCheck", "#vc_chk_all", function () {
         const sel = this.checked;
 
-        if (!tabla) return;
+        if (!tablaCobros) return;
 
         tablaCobros.rows({ search: "applied" }).every(function () {
             const idV = Number(this.data()?.IdVenta || 0);
@@ -768,7 +792,7 @@ VC.cargarTabla = async function () {
                     const pendiente = (d.TransferenciaPendiente === 1 || d.TransferenciaPendiente === true);
                     const nuevoEstado = pendiente ? 0 : 1;
 
-                    const btnCls = pendiente ? "btn-warning text-dark" : "btn-outline-danger";
+                  
                     const iconCls = "fa fa-exclamation-circle";
 
                     const title = pendiente
@@ -783,7 +807,13 @@ VC.cargarTabla = async function () {
                         ? String(d.ObservacionCobro).replace(/"/g, "'")
                         : "Sin observación de cobro";
 
-                    const btnCasaCls = estadoCobro ? "btn-danger" : "btn-outline-secondary";
+                    const btnCasaCls = estadoCobro
+                        ? "btn-danger text-white"
+                        : "btn-success text-white";
+
+                    const btnCls = pendiente
+                        ? "btn-warning text-dark"
+                        : "btn-danger";
 
                     // 📞 teléfono
                     const tel = (d.ClienteTelefono || "").replace(/\D/g, "");
@@ -897,6 +927,8 @@ VC.cargarTabla = async function () {
         if (!d) return;
 
         ventaClickeadaId = d.IdVenta;
+
+        VC.mostrarInfoCliente(d);
 
         tablaCobros.rows().every(function () {
             $(this.node()).removeClass("row-selected");
@@ -1808,6 +1840,20 @@ VC.cargarTransferenciasPendientes = async function () {
         searching: true,
         info: false,
 
+        rowCallback: function (row, d) {
+
+            // 🔥 reset clases (incluye row-selected)
+            $(row).removeClass(
+                "fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja row-selected"
+            );
+            // ✅ selección single visual (igual Historial)
+            if (ventaPendienteClickeadaId != null && Number(d.IdCuota) === Number(ventaPendienteClickeadaId)) {
+                $(row).addClass("row-selected");
+            }
+
+          
+        },
+
         columns: [
 
 
@@ -1996,6 +2042,40 @@ VC.cargarTransferenciasPendientes = async function () {
         ],
 
         initComplete: function () {
+
+            // Click en cualquier CELDA de la fila
+            $("#vc_tabla_transferencias_pendientes tbody").off("click.vcSelectRow").on("click.vcSelectRow", "td", function (e) {
+
+                if (!tablaTransferenciasPendientes) return;
+
+                // si clic en acordeón/acciones => no seleccionar
+                if ($(e.target).closest("button.btn-row-detail, .btn-accion").length) return;
+
+                // si clic en inputs/selects/labels => no seleccionar
+                if ($(e.target).closest("a, input, select, textarea, label").length) return;
+
+                // si clic en checkbox => no seleccionar (esto evita “atarelo al check”)
+                if ($(e.target).closest("input.vc-row-check, #vc_chk_all").length) return;
+
+                const tr = $(this).closest("tr");
+                if (tr.hasClass("child")) return;
+
+                const row = tablaTransferenciasPendientes.row(tr);
+                const d = row.data();
+                if (!d) return;
+
+                ventaPendienteClickeadaId = d.IdCuota;
+
+                VC.mostrarInfoCliente(d);
+
+                tablaTransferenciasPendientes.rows().every(function () {
+                    $(this.node()).removeClass("row-selected");
+                });
+
+                $(row.node()).addClass("row-selected");
+
+                tablaTransferenciasPendientes.draw(false);
+            });
 
             const api = this.api();
 
@@ -3185,5 +3265,7 @@ function habilitarSeleccionFilasCuotasCobros() {
         $tbody.find("tr").removeClass("row-selected");
         $(this).addClass("row-selected");
     });
+
+   
 }
 

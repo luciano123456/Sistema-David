@@ -716,6 +716,16 @@ async function confirmarCobro() {
         return;
     }
 
+    if (esTransferencia(medio)) {
+
+        const comprobante = qs("cb_imagenBase64")?.value;
+
+        if (!comprobante || comprobante.length < 20) {
+            setCbError("Debe adjuntar el comprobante de transferencia.");
+            return;
+        }
+    }
+
     const payload = {
         IdVenta: ventaActual.IdVenta,
         FechaPago: fecha,
@@ -770,6 +780,8 @@ async function confirmarCobro() {
                 );
 
             }
+        } else {
+            exitoModal("Cobranza realizada con éxito.");
         }
 
     } catch {

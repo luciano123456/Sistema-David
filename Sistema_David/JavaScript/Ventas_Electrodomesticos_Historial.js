@@ -223,8 +223,15 @@ async function cargarTabla() {
 }
 
 function actualizarKPIs(k) {
+
     $("#kpiTotalVendido").text(fmt(k.TotalVendido || 0));
-    $("#kpiTotalCobrado").text(fmt(k.TotalCobrado || 0));
+
+    const totalCobradoMostrar = esVendedor || Number(userSession.IdRol) === 3
+        ? (k.TotalCobradoRealizado ?? 0)   // 🔵 solo cobros
+        : (k.TotalCobrado ?? 0);           // 🔵 cobros + entrega
+
+    $("#kpiTotalCobrado").text(fmt(totalCobradoMostrar));
+
     $("#kpiTotalPendiente").text(fmt(k.TotalPendiente || 0));
 }
 
@@ -1408,6 +1415,19 @@ VC.renderDireccion = function (_, __, row) {
 VC.cambiarEstadoVenta = async function (idVenta, estado) {
 
     try {
+
+        let mensaje = "";
+
+        if (estado === "Activa") {
+            mensaje = "¿Está seguro que desea ACEPTAR esta venta?";
+        }
+        else if (estado === "Cancelada") {
+            mensaje = "¿Está seguro que desea CANCELAR esta venta?";
+        }
+
+        const confirmar = await confirmarModal(mensaje);
+
+        if (!confirmar) return;
 
         // Primer intento normal
         let resp = await $.post(

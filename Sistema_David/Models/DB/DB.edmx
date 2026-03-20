@@ -360,6 +360,7 @@
           <Property Name="IdCobrador" Type="int" />
           <Property Name="EstadoCobro" Type="int" />
           <Property Name="ObservacionCobro" Type="varchar" MaxLength="255" />
+          <Property Name="Whatssap" Type="int" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Cuotas">
           <Key>
@@ -441,6 +442,7 @@
           <Property Name="TipoInteres" Type="varchar" MaxLength="255" />
           <Property Name="ActualizoUbicacion" Type="int" />
           <Property Name="FechaVencimiento" Type="datetime" />
+          <Property Name="Whatssap" Type="int" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Pagos_Detalle">
           <Key>
@@ -458,18 +460,6 @@
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Nombre" Type="varchar" MaxLength="100" />
         </EntityType>
-        <Association Name="FK_Clientes_EstadosClientes">
-          <End Role="EstadosClientes" Type="Self.EstadosClientes" Multiplicity="0..1" />
-          <End Role="Clientes" Type="Self.Clientes" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="EstadosClientes">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Clientes">
-              <PropertyRef Name="IdEstado" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_Clientes_Usuarios">
           <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="0..1" />
           <End Role="Clientes" Type="Self.Clientes" Multiplicity="*" />
@@ -1071,10 +1061,6 @@
           <EntitySet Name="Ventas_Electrodomesticos_Pagos" EntityType="Self.Ventas_Electrodomesticos_Pagos" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Ventas_Electrodomesticos_Pagos_Detalle" EntityType="Self.Ventas_Electrodomesticos_Pagos_Detalle" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Zonas" EntityType="Self.Zonas" Schema="dbo" store:Type="Tables" />
-          <AssociationSet Name="FK_Clientes_EstadosClientes" Association="Self.FK_Clientes_EstadosClientes">
-            <End Role="EstadosClientes" EntitySet="EstadosClientes" />
-            <End Role="Clientes" EntitySet="Clientes" />
-          </AssociationSet>
           <AssociationSet Name="FK_Clientes_Usuarios" Association="Self.FK_Clientes_Usuarios">
             <End Role="Usuarios" EntitySet="Usuarios" />
             <End Role="Clientes" EntitySet="Clientes" />
@@ -1925,6 +1911,7 @@
           <NavigationProperty Name="Ventas_Electrodomesticos_Detalle" Relationship="Sistema_DavidModel.FK_VED_VE" FromRole="Ventas_Electrodomesticos" ToRole="Ventas_Electrodomesticos_Detalle" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Historial" Relationship="Sistema_DavidModel.FK_VEH_VE" FromRole="Ventas_Electrodomesticos" ToRole="Ventas_Electrodomesticos_Historial" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Pagos" Relationship="Sistema_DavidModel.FK_VEP_VE" FromRole="Ventas_Electrodomesticos" ToRole="Ventas_Electrodomesticos_Pagos" />
+          <Property Name="Whatssap" Type="Int32" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Cuotas">
           <Key>
@@ -2022,6 +2009,7 @@
           <NavigationProperty Name="Usuarios" Relationship="Sistema_DavidModel.FK_VEP_UsrCrea" FromRole="Ventas_Electrodomesticos_Pagos" ToRole="Usuarios" />
           <NavigationProperty Name="Ventas_Electrodomesticos" Relationship="Sistema_DavidModel.FK_VEP_VE" FromRole="Ventas_Electrodomesticos_Pagos" ToRole="Ventas_Electrodomesticos" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Pagos_Detalle" Relationship="Sistema_DavidModel.FK_VEPD_Pago" FromRole="Ventas_Electrodomesticos_Pagos" ToRole="Ventas_Electrodomesticos_Pagos_Detalle" />
+          <Property Name="Whatssap" Type="Int32" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Pagos_Detalle">
           <Key>
@@ -2976,6 +2964,7 @@
           <EntitySetMapping Name="Ventas_Electrodomesticos">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas_Electrodomesticos">
               <MappingFragment StoreEntitySet="Ventas_Electrodomesticos">
+                <ScalarProperty Name="Whatssap" ColumnName="Whatssap" />
                 <ScalarProperty Name="ObservacionCobro" ColumnName="ObservacionCobro" />
                 <ScalarProperty Name="EstadoCobro" ColumnName="EstadoCobro" />
                 <ScalarProperty Name="IdCobrador" ColumnName="IdCobrador" />
@@ -3079,6 +3068,7 @@
           <EntitySetMapping Name="Ventas_Electrodomesticos_Pagos">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas_Electrodomesticos_Pagos">
               <MappingFragment StoreEntitySet="Ventas_Electrodomesticos_Pagos">
+                <ScalarProperty Name="Whatssap" ColumnName="Whatssap" />
                 <ScalarProperty Name="FechaVencimiento" ColumnName="FechaVencimiento" />
                 <ScalarProperty Name="ActualizoUbicacion" ColumnName="ActualizoUbicacion" />
                 <ScalarProperty Name="TipoInteres" ColumnName="TipoInteres" />

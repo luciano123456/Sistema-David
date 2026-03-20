@@ -1779,10 +1779,10 @@ input {
         filter: brightness(1.05);
     }
 
-    #grdVentas tbody tr.row-selected,
-    #grdVentas tbody tr.row-selected > td {
-        background-color: rgba(0, 200, 255, 0.28) !important;
-    }
+#grdVentas, #vc_tabla_transferencias_pendientes tbody tr.row-selected,
+#grdVentas, #vc_tabla_transferencias_pendientes tbody tr.row-selected > td {
+    background-color: rgba(0, 200, 255, 0.28) !important;
+}
 
     #grdVentas tbody tr.row-selected {
         outline: 2px solid rgba(82,165,255,.55);
@@ -2006,4 +2006,75 @@ input {
     border: 1px solid rgba(255,255,255,.10) !important;
     color: #fff !important;
     padding: 10px 12px !important;
+}
+
+.vc-info-cliente {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.vc-info-card {
+    flex: 1;
+    min-width: 220px;
+    background: #1f2933;
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.vc-info-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #2f80ed;
+    color: white;
+    font-size: 18px;
+}
+
+    .vc-info-icon.success {
+        background: #27ae60
+    }
+
+    .vc-info-icon.warning {
+        background: #f39c12
+    }
+
+    .vc-info-icon.info {
+        background: #16a085
+    }
+
+.vc-info-title {
+    font-size: 12px;
+    opacity: .7;
+}
+
+.vc-info-value {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* responsive */
+
+@media (max-width:768px) {
+
+    .vc-info-card {
+        min-width: 100%;
+    }
+}
+
+.btn-accion {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

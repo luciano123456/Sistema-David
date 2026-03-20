@@ -1088,6 +1088,8 @@ async function enviarWhatssap(id, descripcion) {
             await enviarWhatssapNormalDesdeApi(id);
         }
 
+        aplicarFiltros();
+
     } catch (error) {
         $('.datos-error').text('Ha ocurrido un error.')
         $('.datos-error').removeClass('d-none')
@@ -1112,6 +1114,7 @@ async function enviarWhatssapNormalDesdeApi(id) {
     }
 
     enviarWhatssapNormal(result);
+  
 }
 
 async function enviarWhatssapElectro(idMovimiento, descripcion) {
