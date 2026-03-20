@@ -2072,6 +2072,20 @@
                 return;
             }
 
+            // 🔥 NUEVA VALIDACIÓN
+            const hoy = moment().startOf("day");
+
+            if (fIni.isBefore(hoy)) {
+                showTip(
+                    this,
+                    "La fecha del primer cobro no puede ser anterior al día de hoy.",
+                    "danger"
+                );
+                this.value = fechaPrimerCobroAnterior || "";
+                return;
+            }
+
+
             // 🔥 VALIDACIÓN: primer cobro no puede superar límite desde fecha venta
             const diasDesdeVenta = fIni.diff(fVenta, "days");
 
@@ -2086,7 +2100,7 @@
             }
 
             // ✅ TU FLUJO ORIGINAL (no lo tocamos)
-            const fLim = fIni.clone().add(diasVencimientoVenta, "days");
+            const fLim = fVenta.clone().add(diasVencimientoVenta, "days");
             $("#fechaLimite").val(fLim.format("YYYY-MM-DD"));
 
                 generarPlanCuotas();

@@ -115,7 +115,7 @@ namespace Sistema_David.Models.Modelo
                                      d.Restante > 0) ||
                                     (string.IsNullOrEmpty(DNI) &&
                                      (d.idVendedor == idVendedor || idVendedor == -1) &&
-                                     (d.idCobrador == idCobradorF || (idCobradorF == -1 && (d.idCobrador == 0 || !string.IsNullOrEmpty(DNI))))  &&
+                                     (d.idCobrador == idCobradorF || (idCobradorF == -1 && (d.idCobrador == 0 || !string.IsNullOrEmpty(DNI)))) &&
                                      (c.IdZona == idZona || idZona == -1) &&
                                      ((idCobradorF == d.idCobrador) || (idCobradorF != d.idCobrador && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta) || (rc.Estado == "Pendiente" && r.IdUsuario == idUsuarioSesion) || (d.CobroPendiente == 1 && CobrosPendientes == 1)) &&
                                      d.Restante > 0) &&
@@ -150,7 +150,20 @@ namespace Sistema_David.Models.Modelo
                                   idEstado = (int)c.IdEstado,
                                   EstadoCliente = ec.Nombre,
                                   idCobrador = (int)d.idCobrador,
-                                  SaldoCliente = (decimal)db.Ventas.Where(v => v.idCliente == c.Id && v.Restante > 0).Sum(v => v.Restante),
+                                  SaldoCliente =
+                                                (decimal)(
+                                                    db.Ventas
+                                                        .Where(v => v.idCliente == c.Id && v.Restante > 0)
+                                                        .Select(v => (decimal?)v.Restante)
+                                                        .Sum() ?? 0
+                                                )
+                                                +
+                                                (decimal)(
+                                                    db.Ventas_Electrodomesticos
+                                                        .Where(v => v.IdCliente == c.Id && v.Restante > 0)
+                                                        .Select(v => (decimal?)v.Restante)
+                                                        .Sum() ?? 0
+                                                ),
                                   Cobrador = cob != null ? cob.Nombre : string.Empty,
                                   Comprobante = (int)d.Comprobante,
                                   Latitud = c.Latitud,

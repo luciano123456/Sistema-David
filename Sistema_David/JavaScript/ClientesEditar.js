@@ -309,6 +309,8 @@ async function modificarCliente() {
                 }
 
                 localStorage.removeItem("EdicionCobranza");
+            } else {
+                document.location.href = "../Index/";
             }
         } else {
         }

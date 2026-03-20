@@ -87,6 +87,50 @@
             </div>
         </header>
 
+        <div id="vc_info_cliente" class="vc-info-cliente d-none">
+
+            <div class="vc-info-card">
+                <div class="vc-info-icon">
+                    <i class="fa fa-user"></i>
+                </div>
+                <div class="vc-info-content">
+                    <div class="vc-info-title">Cliente</div>
+                    <div class="vc-info-value" id="vc_info_nombre">—</div>
+                </div>
+            </div>
+
+            <div class="vc-info-card">
+                <div class="vc-info-icon success">
+                    <i class="fa fa-money"></i>
+                </div>
+                <div class="vc-info-content">
+                    <div class="vc-info-title">Saldo total</div>
+                    <div class="vc-info-value" id="vc_info_saldo">$0</div>
+                </div>
+            </div>
+
+            <div class="vc-info-card">
+                <div class="vc-info-icon warning">
+                    <i class="fa fa-line-chart"></i>
+                </div>
+                <div class="vc-info-content">
+                    <div class="vc-info-title">Límite de ventas</div>
+                    <div class="vc-info-value" id="vc_info_limite">$0</div>
+                </div>
+            </div>
+
+            <div class="vc-info-card">
+                <div class="vc-info-icon info">
+                    <i class="fa fa-percent"></i>
+                </div>
+                <div class="vc-info-content">
+                    <div class="vc-info-title">Uso del límite</div>
+                    <div class="vc-info-value" id="vc_info_porcentaje">0%</div>
+                </div>
+            </div>
+
+        </div>
+
         <!-- ===== CARD PRINCIPAL ===== -->
         <section class="ve-card">
 
@@ -193,7 +237,7 @@
                             <tr>
                                 <th style="width:40px;"></th>  @* Columna 0: flecha acordeón *@
                                 <th style="width:38px;" class="text-center">
-                                    <input type="checkbox" id="chkAllVentas" />
+                                    <input type="checkbox" id="vc_chk_all" />
                                 </th>
                                 <th>N° Venta</th>
                                 <th>N° Cuota</th>
@@ -747,5 +791,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=2.5"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=2.6"></script>
 }

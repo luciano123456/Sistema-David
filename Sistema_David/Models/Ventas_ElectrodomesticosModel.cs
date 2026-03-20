@@ -71,7 +71,9 @@ namespace Sistema_David.Models
                     q = q.Where(v => v.IdVendedor == idVendedor);
 
                 var ventas = q.ToList();
+
                 var rows = new List<VM_HistorialVentasRow>();
+
                 var hoy = DateTime.Today;
 
                 foreach (var v in ventas)
@@ -84,17 +86,22 @@ namespace Sistema_David.Models
                     var totalCuotas = cuotas.Sum(c =>
                         (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos));
 
-                    var totalPagadoCuotas = cuotas.Sum(c => c.MontoPagado);
-                    var totalPagado = totalPagadoCuotas + v.Entrega;
+                    // 🔵 SOLO COBROS DE CUOTAS
+                    var totalCobradoRealizado = cuotas.Sum(c => c.MontoPagado);
+
+                    // 🔵 COBROS + ENTREGA (como estaba antes)
+                    var totalPagado = totalCobradoRealizado + v.Entrega;
 
                     var total = Math.Round(v.ImporteTotal, 0);
+
                     totalPagado = Math.Round((decimal)totalPagado, 0);
+
                     var pendiente = Math.Round((decimal)(total - totalPagado), 0);
 
                     var porcentajePago =
                         totalCuotas == 0
                             ? 100
-                            : Math.Round((totalPagadoCuotas / totalCuotas) * 100, 2);
+                            : Math.Round((totalCobradoRealizado / totalCuotas) * 100, 2);
 
                     var row = new VM_HistorialVentasRow
                     {
@@ -109,8 +116,15 @@ namespace Sistema_David.Models
                         ClienteTelefono = v.Clientes?.Telefono,
 
                         Total = total,
+
+                        // 🔵 incluye entrega
                         Pagado = (decimal)totalPagado,
+
+                        // 🔵 SOLO COBROS
+                        CobradoRealizado = (decimal)totalCobradoRealizado,
+
                         Pendiente = pendiente,
+
                         PorcentajePago = porcentajePago,
 
                         CuotasVencidas = cuotas.Count(c =>
@@ -129,8 +143,15 @@ namespace Sistema_David.Models
                     Kpis = new
                     {
                         CantidadVentas = rows.Count,
+
                         TotalVendido = rows.Sum(x => x.Total),
+
+                        // 🔵 COBROS + ENTREGA (como antes)
                         TotalCobrado = rows.Sum(x => x.Pagado),
+
+                        // 🔵 SOLO COBROS
+                        TotalCobradoRealizado = rows.Sum(x => x.CobradoRealizado),
+
                         TotalPendiente = rows.Sum(x => x.Pendiente)
                     }
                 };
@@ -531,6 +552,7 @@ namespace Sistema_David.Models
                 /* ================= CUOTAS ================= */
                 vm.Cuotas = v.Ventas_Electrodomesticos_Cuotas
                     .OrderBy(c => c.NumeroCuota)
+                    .Where(c => c.CobroPendiente == 0 && c.TransferenciaPendiente == 0)
                     .Select(c => new VM_Ventas_Electrodomesticos_Cuota
                     {
                         Id = c.Id,
@@ -636,6 +658,7 @@ namespace Sistema_David.Models
 
                     venta.ObservacionCobro = "";
                     venta.EstadoCobro = 0;
+                    venta.IdCobrador = null;
 
                     // ===============================
                     // 🔒 RESTANTE TOTAL DE LA VENTA
@@ -723,7 +746,7 @@ namespace Sistema_David.Models
                         cuota.FechaModificacion = DateTime.Now;
                         cuota.TransferenciaPendiente = 0;
                         cuota.CobroPendiente = 0;
-
+                        
                         Audit(
                             db,
                             venta.Id,
@@ -1382,7 +1405,44 @@ namespace Sistema_David.Models
         }
 
 
+        public static string MarcarWhatssap(int id, string descripcion)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                  
+                    if (!descripcion.Contains("Venta"))
+                    {
+                        var venta = db.Ventas_Electrodomesticos_Pagos
+                            .FirstOrDefault(c => c.Id == id);
 
+                        if (venta == null)
+                            return "Venta no encontrada";
+
+                        venta.Whatssap = 1;
+                    } else 
+                    {
+                        var venta = db.Ventas_Electrodomesticos
+                           .FirstOrDefault(c => c.Id == id);
+
+                        if (venta == null)
+                            return "Venta no encontrada";
+
+                        venta.Whatssap = 1;
+                    }
+                    db.SaveChanges();
+                    tx.Commit();
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error: " + ex.Message;
+                }
+            }
+        }
 
 
         public static string MarcarComprobante(int idVenta)
@@ -1516,7 +1576,8 @@ namespace Sistema_David.Models
                     join cob in db.Usuarios
                         on v.IdCobrador equals cob.Id into cobradoresJoin
                     from cob in cobradoresJoin.DefaultIfEmpty()
-                    where c.CobroPendiente <= 0 && c.TransferenciaPendiente <= 0
+                    where (c.CobroPendiente == 0 || c.CobroPendiente == null)
+                      && (c.TransferenciaPendiente == 0 || c.TransferenciaPendiente == null)
                     select new
                     {
                         Cuota = c,
@@ -1616,7 +1677,20 @@ namespace Sistema_David.Models
                         Estado = x.Cuota.Estado,
 
                         IdCliente = x.Venta.IdCliente,
-                        ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido).Trim(),
+                        ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido + " - " + x.Cliente.Dni).Trim(),
+
+                        LimiteCliente = (decimal)x.Cliente.LimiteVentas,
+
+                        SaldoCliente =
+                                        (db.Ventas
+                                            .Where(v => v.idCliente == x.Venta.IdCliente && v.Restante > 0)
+                                            .Select(v => (decimal?)v.Restante)
+                                            .Sum() ?? 0)
+                                        +
+                                        (db.Ventas_Electrodomesticos
+                                            .Where(v => v.IdCliente == x.Venta.IdCliente && v.Restante > 0)
+                                            .Select(v => (decimal?)v.Restante)
+                                            .Sum() ?? 0),
 
                         IdVendedor = x.Venta.IdVendedor,
                         VendedorNombre = x.Vendedor != null ? x.Vendedor.Nombre : null,

@@ -6,6 +6,7 @@ namespace Sistema_David.Models.ViewModels
 
     public class VM_HistorialVentasRow
     {
+        public decimal CobradoRealizado { get; set; }
         public int IdVenta { get; set; }
         public DateTime Fecha { get; set; }
         public string Cliente { get; set; }
@@ -254,6 +255,8 @@ namespace Sistema_David.Models.ViewModels
         public int IdVendedor { get; set; }
         public string VendedorNombre { get; set; } // ★ OPCIONAL (útil para filtros)
         public string CobradorNombre { get; set; } // ★ OPCIONAL (útil para filtros)
+        public decimal SaldoCliente { get; set; }
+        public decimal LimiteCliente { get; set; }
      
 
         // ✅ NUEVOS
