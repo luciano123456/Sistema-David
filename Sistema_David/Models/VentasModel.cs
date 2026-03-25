@@ -298,15 +298,16 @@ namespace Sistema_David.Models.Modelo
 
 
 
-
         public static (List<VMVenta> Ventas, decimal TotalRestante) RestanteVentasCliente(int idCliente)
         {
             try
             {
                 using (var db = new Sistema_DavidEntities())
                 {
+                    // =========================
+                    // VENTAS INDUMENTARIA
+                    // =========================
                     var ventas = (from v in db.Ventas
-                                  join c in db.Clientes on v.idCliente equals c.Id
                                   where v.idCliente == idCliente
                                   select new VMVenta
                                   {
@@ -315,16 +316,45 @@ namespace Sistema_David.Models.Modelo
                                       Fecha = v.Fecha,
                                       Entrega = v.Entrega,
                                       Restante = v.Restante,
+                                      TipoVenta = "INDUMENTARIA",
 
-                                      // NUEVO: total por suma de productos
                                       TotalVenta = db.ProductosVenta
                                           .Where(p => p.IdVenta == v.Id)
                                           .Select(p => (decimal?)p.PrecioUnitario * (decimal?)p.Cantidad)
                                           .Sum() ?? 0
                                   }).ToList();
 
-                    var totalRestante = ventas.Sum(x => x.Restante ?? 0);
-                    return (ventas, totalRestante);
+                    // =========================
+                    // VENTAS ELECTRO
+                    // =========================
+                    var ventasElectro = (from v in db.Ventas_Electrodomesticos
+                                         where v.IdCliente == idCliente
+                                         select new VMVenta
+                                         {
+                                             Id = v.Id,
+                                             idCliente = v.IdCliente,
+                                             Fecha = v.FechaVenta,
+                                             Entrega = v.Entrega,
+                                             Restante = v.Restante,
+                                             TipoVenta = "ELECTRO",
+
+                                             TotalVenta = db.Ventas_Electrodomesticos_Detalle
+                                                 .Where(p => p.IdVenta == v.Id)
+                                                 .Select(p => (decimal?)p.PrecioUnitario * (decimal?)p.Cantidad)
+                                                 .Sum() ?? 0
+                                         }).ToList();
+
+                    // =========================
+                    // UNIFICACIÓN
+                    // =========================
+                    var todas = ventas
+                        .Concat(ventasElectro)
+                        .OrderByDescending(v => v.Fecha)
+                        .ToList();
+
+                    var totalRestante = todas.Sum(x => x.Restante ?? 0);
+
+                    return (todas, totalRestante);
                 }
             }
             catch (Exception)
@@ -332,6 +362,7 @@ namespace Sistema_David.Models.Modelo
                 return (new List<VMVenta>(), 0m);
             }
         }
+          
 
         public static List<VMVenta> ListaVentasCliente(int idCliente)
         {
@@ -371,6 +402,7 @@ namespace Sistema_David.Models.Modelo
                                       FranjaHoraria = v.FranjaHoraria,
                                       IdTipoNegocio = (int)v.IdTipoNegocio,
                                       TipoNegocio = t.Nombre,
+                                      TipoVenta = "Indumentaria",
 
                                       // NUEVO: total por suma de productos
                                       TotalVenta = db.ProductosVenta

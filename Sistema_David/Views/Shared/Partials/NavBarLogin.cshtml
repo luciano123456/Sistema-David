@@ -5,7 +5,7 @@
     <title>My favorite book</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link href="~/Estilos/NavBarLogin.css" rel="stylesheet" />
+    <link href="~/Estilos/NavBarLogin.css?v=1.0" rel="stylesheet" />
     <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
     <style>
@@ -121,7 +121,7 @@
                         </ul>
                     </li>
 
-                    <li class="nav-item">
+                    <li class="nav-item" id="divbtnCambiarTipoVentas">
                         <a class="nav-link pointer d-flex align-items-center gap-2" id="btnCambiarTipoVentas">
                             <i class="fa fa-exchange"></i>
 
@@ -157,30 +157,44 @@
 
     <!-- 🔥 MODAL PARA ELEGIR TIPO DE VENTA -->
     <div class="modal fade" id="modalTipoVentas" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content modal-tipo-ventas border-0">
 
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Seleccioná el tipo de ventas</h5>
+                <!-- HEADER -->
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-semibold text-white">
+                        Seleccionar tipo de ventas
+                    </h5>
                 </div>
 
-                <div class="modal-body text-center">
+                <!-- BODY -->
+                <div class="modal-body text-center pt-2">
 
-                    <p class="text-muted">Elegí qué sistema vas a usar:</p>
+                    <p class="text-light opacity-75 mb-4 small">
+                        Elegí el sistema con el que vas a trabajar
+                    </p>
 
-                    <div class="row g-3">
+                    <div class="row g-4">
 
+                        <!-- INDUMENTARIA -->
                         <div class="col-12 col-md-6">
-                            <div class="p-3 border rounded pointer select-tipo" data-tipo="indumentaria">
-                                <i class="fa fa-shopping-bag fa-2x mb-2 text-success"></i>
-                                <h5>Indumentaria</h5>
+                            <div class="select-tipo tipo-card tipo-indumentaria" data-tipo="indumentaria">
+                                <div class="tipo-icon bg-success">
+                                    <i class="fa fa-shopping-bag"></i>
+                                </div>
+                                <h6>Indumentaria</h6>
+                                <span>Ventas rápidas</span>
                             </div>
                         </div>
 
+                        <!-- ELECTRO -->
                         <div class="col-12 col-md-6">
-                            <div class="p-3 border rounded pointer select-tipo" data-tipo="electro">
-                                <i class="fa fa-television fa-2x mb-2 text-primary"></i>
-                                <h5>Electrodomésticos</h5>
+                            <div class="select-tipo tipo-card tipo-electro" data-tipo="electro">
+                                <div class="tipo-icon bg-primary">
+                                    <i class="fa fa-television"></i>
+                                </div>
+                                <h6>Electrodomésticos</h6>
+                                <span>Ventas financiadas</span>
                             </div>
                         </div>
 
@@ -191,10 +205,8 @@
             </div>
         </div>
     </div>
-
-
     <script src="~/JavaScript/Utils/Utils.js"></script>
-    <script src="~/JavaScript/NavBarLogin.js?v=2.1"></script>
+    <script src="~/JavaScript/NavBarLogin.js?v=2.2"></script>
 
 </body>
 </html>

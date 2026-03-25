@@ -502,6 +502,7 @@
     </Compile>
     <Compile Include="Models\LoginModel.cs" />
     <Compile Include="Models\Manager\VentasManager.cs" />
+    <Compile Include="Models\Modelo\VMVentaUnificada.cs" />
     <Compile Include="Models\Modelo\VMVentasElectrodomesticos.cs" />
     <Compile Include="Models\Modelo\VMTiposNegocio.cs" />
     <Compile Include="Models\Modelo\VMClienteNuevaDireccion.cs" />
@@ -733,11 +734,13 @@
     <Content Include="Views\Pagos\NuevoModif.cshtml" />
     <Content Include="Views\Productos\Index.cshtml" />
     <Content Include="Views\Rendimiento\Index.cshtml" />
+    <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\Partials\NavBarLogin.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\StockPendiente\Index.cshtml" />
     <Content Include="Views\Stock\Index.cshtml" />
     <Content Include="Views\Usuarios\Index.cshtml" />
+    <Content Include="Views\Utils\Modals.cshtml" />
     <Content Include="Views\Ventas\Editar.cshtml" />
     <Content Include="Views\Ventas\Index.cshtml" />
     <Content Include="Views\Ventas\Informacion.cshtml" />
@@ -755,7 +758,6 @@
     </Content>
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
-    <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
@@ -766,7 +768,6 @@
     <Content Include="Views\Pedidos\Nuevo.cshtml" />
     <Content Include="Views\Recorrido\Index.cshtml" />
     <Content Include="Views\Stock\General.cshtml" />
-    <Content Include="Views\Utils\Modals.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

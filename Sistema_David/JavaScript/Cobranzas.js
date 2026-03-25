@@ -1909,25 +1909,23 @@ let _ventaSeleccionada = null;
 let _clienteSeleccionado = null;
 
 function informacionVenta(idVenta, grid) {
-    // Buscar la fila en el DataTable de Cobranzas
     const row = grid
-        .row((idx, data) => parseInt(data.Id, 10) === parseInt(idVenta, 10))
+        .row((idx, data) => parseInt(data.IdVenta, 10) === parseInt(idVenta, 10))
         .data();
 
     if (!row) return;
 
     const ventaId = parseInt(idVenta, 10);
-    const clienteId = parseInt(row.idCliente, 10);
+    const clienteId = parseInt(row.IdCliente, 10);
 
-    // Si no hay clienteId disponible, vamos directo a "solo esta venta"
+
+    const tipo = "INDUMENTARIA";
+
     const canVerTodas = Number.isInteger(clienteId) && clienteId > 0;
-
-    // Si tenés un modal para preguntar (opcional)
     const modalEl = document.getElementById('modalInfoSelector');
 
     if (!modalEl || !canVerTodas) {
-        // Fallback: ver solo ESA venta (no hace falta una acción aparte)
-        const urlUna = `/Ventas/Informacion?modo=una&ventaId=${encodeURIComponent(ventaId)}&from=cobranzas`;
+        const urlUna = `/Ventas/Informacion?modo=una&ventaId=${encodeURIComponent(ventaId)}&tipo=${encodeURIComponent(tipo)}&from=cobranzas`;
         window.location.href = urlUna;
         return;
     }
@@ -1935,21 +1933,18 @@ function informacionVenta(idVenta, grid) {
     const $modal = new bootstrap.Modal(modalEl);
     $modal.show();
 
-    // Ver solo ESA venta (la vista Informacion lee "modo=una" y carga por AJAX con /Ventas/EditarVenta)
     $('#btnSoloEsta').off('click').on('click', () => {
         $modal.hide();
-        const url = `/Ventas/Informacion?modo=una&ventaId=${encodeURIComponent(ventaId)}&from=cobranzas`;
+        const url = `/Ventas/Informacion?modo=una&ventaId=${encodeURIComponent(ventaId)}&tipo=${encodeURIComponent(tipo)}&from=cobranzas`;
         window.location.href = url;
     });
 
-    // Ver TODAS las ventas del cliente (la vista Informacion lee "modo=todas" y usa /Ventas/RestanteVentasCliente)
     $('#btnTodasCliente').off('click').on('click', () => {
         $modal.hide();
         const url = `/Ventas/Informacion?modo=todas&clienteId=${encodeURIComponent(clienteId)}&ventaId=${encodeURIComponent(ventaId)}&from=cobranzas`;
         window.location.href = url;
     });
 }
-
 const imprimirComprobante = async id => {
 
     try {

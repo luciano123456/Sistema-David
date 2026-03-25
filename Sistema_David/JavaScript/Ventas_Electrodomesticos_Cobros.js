@@ -15,7 +15,7 @@ let ventasSeleccionadas = new Set();
 let cobradoresCache = [];
 let ventaClickeadaId = null; // igual que Historial: fila seleccionada por click
 let ventaPendienteClickeadaId = null; // igual que Historial: fila seleccionada por click
-
+let clientesCache = [];
 
 const columnConfigCobros = [
     { index: 1, filterType: 'text' },
@@ -359,6 +359,41 @@ VC.initEventos = function () {
         VC.confirmarAsignarCobrador();
     });
 
+    $("#btnClienteSearchToggle").on("click", function () {
+
+        const idCliente = document.getElementById("f_cliente").value;
+
+        if (!idCliente) {
+            VC.toast("Seleccioná un cliente primero", "warn");
+            return;
+        }
+
+        // 💣 ESTO ES TODO
+        VC.cargarTabla();
+    });
+
+    // aplicar búsqueda
+    $("#btnClienteSearchApply").on("click", function () {
+        VC.buscarCliente();
+    });
+
+    // cerrar panel
+    $("#btnClienteSearchClose").on("click", function () {
+        $("#clienteSearchPanel").addClass("d-none");
+    });
+
+    // enter para buscar
+    $("#txtClienteSearch").on("keypress", function (e) {
+        if (e.which === 13) {
+            VC.buscarCliente();
+        }
+    });
+
+    // limpiar
+    $("#btnClienteClear").on("click", function () {
+        VC.limpiarCliente();
+    });
+
     // ✅ Toggle individual (checkbox fila)
     $(document).off("change.vcRowCheck").on("change.vcRowCheck", ".vc-row-check", function () {
         const idVenta = Number(this.dataset.idventa || 0);
@@ -511,7 +546,22 @@ VC.cargarCombos = async function () {
     $("#f_zona").select2({ width: "100%", allowClear: true, placeholder: "Todas" });
 
 
-    $("#f_cliente").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
+    $("#f_cliente").select2({
+        width: "100%",
+        placeholder: "🔎 Buscar cliente...",
+        allowClear: true,
+
+        matcher: function (params, data) {
+
+            const term = (params.term || "").toLowerCase();
+
+            if (!term) return data;
+
+            const text = (data.text || "").toLowerCase();
+
+            return text.includes(term) ? data : null;
+        }
+    });
     $("#f_vendedor").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
     $("#f_cobrador").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
 };
@@ -519,6 +569,8 @@ VC.cargarCombos = async function () {
 /* ===========================================================
    FILTROS
 =========================================================== */
+
+
 
 VC.aplicarFiltros = () => VC.cargarTabla();
 
@@ -820,6 +872,8 @@ VC.cargarTabla = async function () {
 
                     // 🔐 solo roles 1 y 4
                     const puedeContactar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+                    const botonInfoVenta = `<button class='btn btn-accion btn-infoventa me-1' type = 'button' id = 'infoVenta(${d.IdVenta})' onclick="informacionVenta(${d.IdVenta}, tablaCobros)" title = 'Informacion de la Venta' > <i class='fa fa-info-circle fa-lg text-white'></i></button >`
+
 
                     const botonesContacto = puedeContactar ? `
         <!-- 🟢 WHATSAPP -->
@@ -853,6 +907,8 @@ VC.cargarTabla = async function () {
           title="Cobrar">
           <i class="fa fa-money"></i>
         </button>
+
+        ${botonInfoVenta}
 
         ${botonesContacto}
 
@@ -1340,7 +1396,7 @@ VC.renderCuotas = function (v) {
             title="Cobrar">
             <i class="fa fa-money"></i>
         </button>
-
+      
         <button class="btn btn-accion btn-ajuste me-1"
             onclick="VC.abrirAjuste(${v.IdVenta}, ${c.Id})"
             title="Ajustar">
@@ -1547,9 +1603,74 @@ function calcularDiasAtraso(fechaVto) {
     return diff > 0 ? diff : 0;
 }
 
+VC.toggleClienteSearch = function () {
+    const panel = $("#clienteSearchPanel");
+    panel.toggleClass("d-none");
 
+    if (!panel.hasClass("d-none")) {
+        setTimeout(() => {
+            $("#txtClienteSearch").focus();
+        }, 100);
+    }
+};
 
+VC.limpiarCliente = function () {
+    $("#f_cliente").val(null).trigger("change");
+    $("#txtClienteSearch").val("");
+};
 
+VC.buscarCliente = function () {
+
+    const term = ($("#txtClienteSearch").val() || "").toLowerCase().trim();
+
+    if (!term) {
+        VC.toast("Escribí algo para buscar", "warn");
+        return;
+    }
+
+    const encontrado = clientesCache.find(c =>
+        c.text.toLowerCase().includes(term)
+    );
+
+    if (!encontrado) {
+        VC.toast("Cliente no encontrado", "warn");
+        return;
+    }
+
+    // 🔥 SETEA EL SELECT
+    $("#f_cliente").val(encontrado.id).trigger("change");
+
+    // cerrar panel
+    $("#clienteSearchPanel").addClass("d-none");
+};
+
+VC.cargarClientesDesdeCobros = function () {
+
+    if (!cuotasCache || cuotasCache.length === 0) return;
+
+    const clientesMap = {};
+
+    cuotasCache.forEach(x => {
+        if (!x.IdCliente) return;
+
+        clientesMap[x.IdCliente] = {
+            id: x.IdCliente,
+            nombre: x.ClienteNombre || "",
+            text: x.ClienteNombre || ""
+        };
+    });
+
+    clientesCache = Object.values(clientesMap);
+
+    const ddl = $("#f_cliente").empty();
+    ddl.append(`<option value=""></option>`);
+
+    clientesCache.forEach(c => {
+        ddl.append(`<option value="${c.id}">${c.text}</option>`);
+    });
+
+    ddl.trigger("change.select2");
+};
 
 VC.abrirHistorialPartial = function (idVenta, idCuota) {
 
@@ -1985,6 +2106,7 @@ VC.cargarTransferenciasPendientes = async function () {
 
                     const tel = (d.ClienteTelefono || "").replace(/\D/g, "");
                     const puedeContactar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+                    const botonInfoVenta = `<button class='btn btn-accion btn-infoventa me-1' type = 'button' id = 'infoVenta(${d})' onclick="informacionVenta(${d.IdVenta}, tablaTransferenciasPendientes)" title = 'Informacion de la Venta' > <i class='fa fa-info-circle fa-lg text-white'></i></button >`
 
                     const botonesContacto = puedeContactar ? `
             <!-- 🟢 WHATSAPP -->
@@ -2013,6 +2135,7 @@ VC.cargarTransferenciasPendientes = async function () {
             </button>
 
             ${botonesContacto}
+            ${botonInfoVenta}
 
             <!-- ⚡ AJUSTAR -->
             <button class="btn btn-accion btn-ajuste me-1"

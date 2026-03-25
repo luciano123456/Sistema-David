@@ -142,12 +142,47 @@
 
                 <div class="d-flex flex-wrap gap-2" id="divFiltros">
                     <button id="btnToggleFiltros" class="btn btn-outline-light btn-sm" hidden>
-                        <i id="iconFiltros" class="fa fa-chevron-down"></i> Filtros
+                        <i id="iconFiltros" class="fa fa-chevron-down"></i> Mas Filtros
                     </button>
                 </div>
             </div>
 
             <div class="ve-card-body">
+
+                <!-- ===== CLIENTE SMART BAR ===== -->
+                <div class="vc-smart-filter-bar mb-3">
+
+                    <div class="vc-smart-filter-main">
+                        <div class="vc-smart-filter-label">
+                            <i class="fa fa-user"></i>
+                            <span>Cliente</span>
+                        </div>
+
+                        <div class="vc-smart-filter-control">
+                            <select id="f_cliente" class="form-select ve-input"></select>
+
+                            <button type="button"
+                                    id="btnClienteSearchToggle"
+                                    class="vc-smart-btn vc-smart-btn-search"
+                                    title="Buscar cliente">
+                                <i class="fa fa-search"></i>
+                            </button>
+
+                            <button type="button"
+                                    id="btnClienteClear"
+                                    class="vc-smart-btn vc-smart-btn-clear"
+                                    title="Limpiar cliente">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                 
+
+                </div>
+
+
+            </div>
 
                 <!-- ===== FILTROS ===== -->
                 <form id="formFiltros" class="d-none mb-3" hidden>
@@ -163,12 +198,7 @@
                             <input id="f_hasta" type="date" class="form-control ve-input" />
                         </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">Cliente</label>
-                            <select id="f_cliente" class="form-select ve-input">
-                                <option value="">Todos</option>
-                            </select>
-                        </div>
+ 
 
                         <div class="col-md-2" id="divFiltroZona" hidden>
                             <label class="form-label">Zona</label>
@@ -791,5 +821,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=2.6"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=2.7"></script>
 }

@@ -33,6 +33,7 @@ namespace Sistema_David.Models.Modelo
         public string Latitud { get; set; }
         public string Longitud { get; set; }
         public string TipoInteres { get; set; }
+        public string TipoVenta { get; set; }
         public int Importante { get; set; }
         public int Orden { get; set; }
         public int IdCuenta { get; set; }
