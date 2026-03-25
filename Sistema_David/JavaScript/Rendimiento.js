@@ -84,7 +84,7 @@ async function configurarDataDiario() {
     var tiponegocio = document.getElementById("TipoNegocio").value;
     var idcuenta = document.getElementById("CuentaPago").value;
     var metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
-    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? 1 : 0;
+    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? -1 : 0;
 
 
 
@@ -355,7 +355,7 @@ function alternarColorIcono(icono) {
     const estadoVentas = iconoVentas && iconoVentas.classList.contains("text-success") ? 1 : 0;
     const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
     var idcuenta = document.getElementById("CuentaPago").value;
-    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? 1 : 0;
+    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? -1 : 0;
 
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
     // Llamar a la función para actualizar la DataTable con los nuevos estados
@@ -518,7 +518,7 @@ function aplicarFiltros() {
     const tipoNegocio = document.getElementById("TipoNegocio").value;
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
     var idcuenta = document.getElementById("CuentaPago").value;
-    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? 1 : 0;
+    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? -1 : 0;
 
 
     // Convertir las fechas a objetos Date
@@ -737,7 +737,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
                 await configurarOpcionesColumnas();
                 if (userSession.IdRol == 4) {
-                    gridRendimiento.column(3).visible(false);
+                   
                     gridRendimiento.column(4).visible(false);
                     gridRendimiento.column(5).visible(false);
                     gridRendimiento.column(6).visible(false);

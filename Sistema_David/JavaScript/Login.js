@@ -1,170 +1,190 @@
-﻿
-$(document).ready(function () {
-    $("#togglePassword").on("click", function () {
+﻿(function () {
+    "use strict";
 
-        const input = $("#password");
-        const icon = $(this).find("i");
+    let loginEnProceso = false;
 
-        if (input.attr("type") === "password") {
-            input.attr("type", "text");
-            icon.removeClass("fa-eye").addClass("fa-eye-slash");
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+        const btnLogin = document.querySelector(".login-btn");
+        const form = document.getElementById("loginForm");
+
+        const errorDiv = document.getElementById("diverrorMessage");
+        const errorMsg = document.getElementById("errorMessage");
+
+        const checkIcon = document.getElementById("checkIcon");
+        const rememberMe = document.getElementById("rememberMe");
+
+        /* =========================================================
+           👁️ TOGGLE PASSWORD
+        ========================================================= */
+        document.getElementById("togglePassword").addEventListener("click", function () {
+            const icon = this.querySelector("i");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        });
+
+        /* =========================================================
+           🎨 TEMA LOGIN
+        ========================================================= */
+        const tipo = (localStorage.getItem("tipoSistemaVentas") || "").toLowerCase();
+        const logo = document.getElementById("loginLogo");
+
+        if (tipo === "electro") {
+            document.body.classList.add("tema-electro");
+            if (logo) logo.src = "/Imagenes/LoginElectrodomesticos.png";
         } else {
-            input.attr("type", "password");
-            icon.removeClass("fa-eye-slash").addClass("fa-eye");
+            document.body.classList.remove("tema-electro");
+            if (logo) logo.src = "/Imagenes/Login.png";
         }
 
-    });
-    // ====== TEMA LOGIN según tipoSistemaVentas ======
-    const tipo = (localStorage.getItem("tipoSistemaVentas") || "").toLowerCase();
-
-    const logo = document.getElementById("loginLogo");
-    if (tipo === "electro") {
-        document.body.classList.add("tema-electro");
-
-        if (logo) {
-            logo.src = "/Imagenes/LoginElectrodomesticos.png";
+        /* =========================================================
+           💾 RECORDAR CREDENCIALES
+        ========================================================= */
+        if (localStorage.getItem('rememberMe') === 'true') {
+            usernameInput.value = localStorage.getItem('username') || "";
+            passwordInput.value = localStorage.getItem('password') || "";
+            rememberMe.checked = true;
+            checkIcon.style.display = "inline";
         }
-    } else {
-        document.body.classList.remove("tema-electro");
 
-        if (logo) {
-            logo.src = "/Imagenes/Login.png";
-        }
-    }
+        rememberMe.addEventListener("change", function () {
+            if (this.checked) {
+                localStorage.setItem('username', usernameInput.value);
+                localStorage.setItem('password', passwordInput.value);
+                localStorage.setItem('rememberMe', true);
+                checkIcon.style.display = "inline";
+            } else {
+                localStorage.removeItem('username');
+                localStorage.removeItem('password');
+                localStorage.removeItem('rememberMe');
+                checkIcon.style.display = "none";
+            }
+        });
 
-    // Verificar si el usuario tiene credenciales guardadas
-    if (localStorage.getItem('rememberMe') === 'true') {
-        // Si el checkbox estaba seleccionado la última vez
-        $("#username").val(localStorage.getItem('username'));
-        $("#password").val(localStorage.getItem('password'));
-        $("#rememberMe").prop('checked', true);
-        $("#checkIcon").show(); // Mostrar el ícono verde de check
-    }
+        /* =========================================================
+           ⌨️ ENTER (PC + MOBILE)
+        ========================================================= */
+        usernameInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                passwordInput.focus();
+            }
+        });
 
-    // Al enviar el formulario
-    $("#loginForm").on("submit", function (event) {
-        event.preventDefault(); // Evitar el envío tradicional del formulario
+        passwordInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                form.requestSubmit();
+            }
+        });
 
-        var username = $("#username").val(); // Obtener el nombre de usuario
-        var password = $("#password").val(); // Obtener la contraseña
-        var token = $('input[name="__RequestVerificationToken"]').val(); // Obtener token CSRF
-        var rememberMe = $("#rememberMe").prop('checked'); // Obtener el estado del checkbox
+        /* =========================================================
+           🚀 SUBMIT LOGIN
+        ========================================================= */
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
 
-        // Crear el objeto de datos para enviar
-        var data = {
-            Usuario: username,
-            Contrasena: password,
-        };
+            if (loginEnProceso) return;
 
-        fetch(loginUrl, { // Aquí usamos la variable generada por Razor
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                console.log(response); // Verificar la respuesta
-                if (!response.ok) {
-                    throw new Error("Error en la respuesta del servidor");
-                }
-                return response.json(); // Parsear la respuesta JSON
-            })
-            .then(data => {
-                console.log(data); // Verificar los datos recibidos
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!username || !password) {
+                mostrarError("Completá usuario y contraseña.");
+                return;
+            }
+
+            loginEnProceso = true;
+            activarLoading(true);
+
+            try {
+
+                const response = await fetchConTimeout(loginUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        Usuario: username,
+                        Contrasena: password
+                    })
+                }, 10000);
+
+                if (!response.ok) throw new Error("Error servidor");
+
+                const data = await response.json();
+
                 if (data.Status) {
 
-                    // Si "Recordar credenciales" está seleccionado, guarda las credenciales
-                    if (rememberMe) {
+                    if (rememberMe.checked) {
                         localStorage.setItem('username', username);
                         localStorage.setItem('password', password);
                         localStorage.setItem('rememberMe', true);
-                        $("#checkIcon").show(); // Mostrar el ícono verde de check
-                    } else {
-                        // Si no está seleccionado, eliminar las credenciales guardadas
-                        localStorage.removeItem('username');
-                        localStorage.removeItem('password');
-                        localStorage.removeItem('rememberMe');
-                        $("#checkIcon").hide(); // Ocultar el ícono de check
                     }
 
-                    // Redirigir a la página principal
                     localStorage.setItem("usuario", JSON.stringify(data.Data));
 
-                    let tipo = localStorage.getItem("tipoSistemaVentas");
-
-                    if (!tipo) {
-                        new bootstrap.Modal(document.getElementById("modalTipoVentas")).show();
-                        return;
-                    }
-
-                    if (tipo === "electro") {
-                        window.location.href = "/Ventas_Electrodomesticos/Historial/";
-                    } else {
-                        window.location.href = "/Ventas/Index/";
-                    }
+                    window.location.href =
+                        tipo === "electro"
+                            ? "/Ventas_Electrodomesticos/Historial/"
+                            : "/Ventas/Index/";
 
                 } else {
-                    // Mostrar el mensaje de error
-                    $(document).ready(function () {
-                        // Mostrar el mensaje de error
-                        $("#errorMessage").text(data.Mensaje).show(); // Establecer el mensaje
-                        $("#diverrorMessage").show(); // Mostrar el div
-
-                        // Ocultar el div después de 3 segundos
-                        setTimeout(function () {
-                            $("#diverrorMessage").fadeOut();
-                        }, 3000); // 3000 milisegundos = 3 segundos
-                    });
-
-
+                    mostrarError(data.Mensaje || "Usuario o contraseña incorrectos.");
                 }
-            })
-            .catch(error => {
-                console.error("Error: " + error);
-                $("#errorMessage").text("Hubo un problema al procesar la solicitud. Error: " + error).show();
-            });
+
+            } catch (error) {
+                console.error(error);
+                mostrarError("Error de conexión. Intentá nuevamente.");
+            } finally {
+                loginEnProceso = false;
+                activarLoading(false);
+            }
+        });
+
+        /* =========================================================
+           🔧 FUNCIONES AUXILIARES
+        ========================================================= */
+
+        function activarLoading(estado) {
+            if (estado) {
+                btnLogin.disabled = true;
+                btnLogin.innerHTML = `
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Ingresando...
+                `;
+            } else {
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = "Ingresar";
+            }
+        }
+
+        function mostrarError(msg) {
+            errorMsg.textContent = msg;
+            errorDiv.style.display = "block";
+
+            setTimeout(() => {
+                errorDiv.style.display = "none";
+            }, 3000);
+        }
+
+        function fetchConTimeout(url, options, timeout = 10000) {
+            return Promise.race([
+                fetch(url, options),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Timeout")), timeout)
+                )
+            ]);
+        }
+
     });
-});
 
-//ACCIONES AL APRETAR ENTER
-document.getElementById('username').addEventListener('keydown', inputUsuario);
-function inputUsuario(event) {
-    if (event.keyCode == 13) {
-        document.getElementById('password').focus();
-    }
-}
-
-
-
-function togglePassword() {
-    var passwordField = document.getElementById("Contrasena");
-    var passwordIcon = document.querySelector(".show-password");
-
-    if (passwordField.type === "password") {
-        passwordField.type = "text";
-        passwordIcon.textContent = "👁️";
-    } else {
-        passwordField.type = "password";
-        passwordIcon.textContent = "👁️";
-    }
-}
-
-
-// Al cambiar el estado del checkbox, mostrar u ocultar el ícono
-$("#rememberMe").on("change", function () {
-    var username = $("#username").val(); // Obtener el nombre de usuario
-    var password = $("#password").val(); // Obtener la contraseña
-    if ($(this).prop('checked')) {
-        $("#checkIcon").show(); // Mostrar el ícono verde de check
-        localStorage.setItem('username', username);
-        localStorage.setItem('password', password);
-        localStorage.setItem('rememberMe', true);
-    } else {
-        $("#checkIcon").hide(); // Ocultar el ícono de check
-        localStorage.removeItem('username');
-        localStorage.removeItem('password');
-        localStorage.removeItem('rememberMe');
-    }
-});
-
+})();

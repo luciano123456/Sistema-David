@@ -69,13 +69,41 @@ document.addEventListener("DOMContentLoaded", async function () {
     // ============================
 
 
+      function puedeCambiarTipo(usuario) {
+        if (!usuario) return false;
 
-    // Si no está seleccionado aún → mostrar modal
-    if (!tipoVentas) {
+        const nombre = (usuario.Usuario || "").toLowerCase().trim();
+        const rol = Number(usuario.IdRol);
+
+        return rol === 1 || nombre === "var" || nombre === "milagros";
+    }
+
+    const tienePermiso = puedeCambiarTipo(userSession);
+
+    // 🔒 SI NO TIENE PERMISO → FORZAR INDUMENTARIA
+    if (!tienePermiso) {
+        tipoVentas = "indumentaria";
+        localStorage.setItem("tipoSistemaVentas", tipoVentas);
+
+        let btnCambio = document.getElementById("btnCambiarTipoVentas");
+        let divCambio = document.getElementById("divbtnCambiarTipoVentas");
+        if (divCambio) divCambio.setAttribute("hidden", "true");
+        if (btnCambio) {
+            btnCambio.classList.add("disabled");
+            btnCambio.style.pointerEvents = "none";
+            btnCambio.style.opacity = "0.6";
+        }
+    }
+
+    // ============================
+    // MOSTRAR MODAL SOLO SI PUEDE
+    // ============================
+    if (!tipoVentas && tienePermiso) {
         try {
             new bootstrap.Modal(document.getElementById("modalTipoVentas")).show();
         } catch { }
     }
+
 
     // Click en opciones del modal
     document.querySelectorAll(".select-tipo")?.forEach(btn => {

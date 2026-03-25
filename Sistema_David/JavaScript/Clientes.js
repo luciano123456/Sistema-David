@@ -46,7 +46,7 @@ $(document).ready(function () {
         DniFiltro = ""
     }
 
-    if (userSession.IdRol != 1) {
+    if (userSession.IdRol != 1 && userSession.IdRol != 4) {
         configurarDataTable(userSession.Id, "", "", "", -1);
     } else {
         configurarDataTable(-1, NombreFiltro, ApellidoFiltro, DniFiltro, -1);
@@ -149,13 +149,27 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
                 "render": function (data, type, full) {
                     const telefono = `+54 9${full.Telefono}`;
 
+                    const botonInfoVenta = `
+                                            <button class='btn btn-sm btnacciones' 
+                                                type='button'
+                                                onclick="informacionVentasCliente(${full.Id})"
+                                                title='Ver ventas del cliente'>
+                                                <i class='fa fa-info-circle fa-lg text-white'></i>
+                                            </button>`;
 
                     const iconoTelefono = `<a class="btn btn-sm btnacciones" href="tel:${telefono}" title="Llamar"><i class="fa fa-phone text-white"></i></a>`;
 
                     const iconoWhatsapp = `<button class="btn btn-sm btnacciones" type="button" onclick='modalWhatssap(${data})' title="Enviar WhatsApp"><i class="fa fa-whatsapp fa-lg text-white" aria-hidden="true"></i></button>`;
                     const iconoEliminar = `<button class="btn btn-sm btnacciones" type="button" onclick='eliminarCliente(${data})' title="Eliminar"><i class="fa fa-trash-o fa-lg text-white" aria-hidden="true"></i></button>`;
 
-                    iconos = userSession.IdRol == 1 ? `${iconoTelefono}${iconoWhatsapp}${iconoEliminar}` : ``
+                    let iconos = "";
+
+                    if (userSession.IdRol == 1) {
+                        iconos = `${botonInfoVenta}${iconoTelefono}${iconoWhatsapp}${iconoEliminar}`;
+                    }
+                    else if (userSession.IdRol == 4) {
+                        iconos = `${botonInfoVenta}`;
+                    }
                     return iconos;
                 },
                 "orderable": true,
@@ -190,11 +204,14 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
 
             configurarOpcionesColumnas()
 
-            if (userSession.IdRol != 1) {
-                gridClientes.column(8).visible(false);
-                gridClientes.column(10).visible(false);
+            const esAdmin = userSession.IdRol == 1;
+            const esComprobantes = userSession.IdRol == 4;
 
-            }
+            // Columna 10 → solo Admin y Rol 4
+            gridClientes.column(10).visible(esAdmin || esComprobantes);
+
+            // Columna 8 → solo Admin
+            gridClientes.column(8).visible(esAdmin);
         }
     });
 
@@ -1039,4 +1056,13 @@ function configurarOpcionesColumnas() {
         localStorage.setItem(storageKey, JSON.stringify(savedConfig));
         grid.column(columnIdx).visible(isChecked);
     });
+}
+
+
+function informacionVentasCliente(idCliente) {
+    if (!idCliente) return;
+
+    const url = `/Ventas/Informacion?modo=todas&clienteId=${encodeURIComponent(idCliente)}&from=clientes`;
+
+    window.location.href = url;
 }

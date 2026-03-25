@@ -425,7 +425,7 @@ function renderTablaBase(selector, data, tipo) {
         e.stopPropagation();
 
         const tr = $(this).closest("tr");
-        const row = grid.row(tr);
+        const row = gridVentasPendientes.row(tr);
         const icon = tr.find("button.btn-row-detail i");
 
         if (row.child.isShown()) {

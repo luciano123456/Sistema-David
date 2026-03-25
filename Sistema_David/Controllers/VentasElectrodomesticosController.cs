@@ -493,7 +493,32 @@ namespace Sistema_David.Controllers
             }
         }
 
+        /* ================= VENTAS POR CLIENTE ================= */
+        public ActionResult GetVentasPorCliente(int idCliente)
+        {
+            try
+            {
+                if (idCliente <= 0)
+                    return Json(new { success = false, message = "Cliente inválido" },
+                        JsonRequestBehavior.AllowGet);
 
+                var data = Ventas_ElectrodomesticosModel.ListarVentasPorCliente(idCliente);
+
+                return Json(new
+                {
+                    success = true,
+                    data = data
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Error al obtener ventas del cliente: " + ex.Message
+                }, JsonRequestBehavior.AllowGet);
+            }
+        }
 
         [HttpPost]
         public ActionResult GuardarObservacionCobro(VM_ObsCobroReq req)

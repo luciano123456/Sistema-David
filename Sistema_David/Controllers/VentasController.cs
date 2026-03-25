@@ -471,11 +471,16 @@ namespace Sistema_David.Controllers
             return View("InformacionVenta", vm);
         }
 
-        // Vista: TODAS las ventas del cliente (acordeones)
         [HttpGet]
-        public ActionResult Ventas(int idCliente, int? seleccionada) // /Informacion/Ventas?idCliente=10&seleccionada=123
+        public ActionResult Ventas(int idCliente, int? seleccionada)
         {
-            var ventas = VentasModel.ListaVentasCliente(idCliente) ?? new System.Collections.Generic.List<VMVenta>();
+            var ventasViejas = VentasModel.ListaVentasCliente(idCliente) ?? new List<VMVenta>();
+            var ventasElectro = Ventas_ElectrodomesticosModel.ListaVentasCliente(idCliente) ?? new List<VMVenta>();
+
+            var ventas = ventasViejas
+                .Concat(ventasElectro)
+                .OrderByDescending(v => v.Fecha)
+                .ToList();
 
             var vm = new VMInfoVentasPage
             {
@@ -484,14 +489,20 @@ namespace Sistema_David.Controllers
                 Ventas = ventas.Select(v => new VMVentaInfoResumen
                 {
                     Venta = v,
-                    // KPIs por venta:
+
                     Total = (v.Restante ?? 0) + (v.Entrega ?? 0),
-                    Abonado = (VentasModel.ListarInformacionVenta(v.Id)?.Sum(c => (decimal?)c.Entrega ?? 0)) ?? 0,
+
+                    Abonado = v.TipoVenta == "ELECTRO"
+                        ? ((Ventas_ElectrodomesticosModel.ObtenerVenta(v.Id)?.Pagos as IEnumerable<dynamic>)
+                            ?.Sum(p => (decimal?)p.ImporteTotal) ?? 0)
+                        : (VentasModel.ListarInformacionVenta(v.Id)
+                            ?.Sum(c => (decimal?)c.Entrega ?? 0) ?? 0),
+
                     Saldo = (v.Restante ?? 0)
+
                 }).OrderByDescending(x => x.Venta.Fecha).ToList()
             };
 
-            // KPIs globales (del cliente)
             vm.TotalGlobal = vm.Ventas.Sum(x => x.Total);
             vm.AbonadoGlobal = vm.Ventas.Sum(x => x.Abonado);
             vm.SaldoGlobal = vm.Ventas.Sum(x => x.Saldo);
@@ -499,16 +510,56 @@ namespace Sistema_David.Controllers
             return View("InformacionVentas", vm);
         }
 
-        // Lazy-load del detalle de una venta (opcional para performance)
         [HttpGet]
-        public ActionResult VentaDetalle(int id) // /Informacion/VentaDetalle?id=123
+        public ActionResult VentaDetalle(int id)
         {
-            var data = new
+            using (var db = new Sistema_DavidEntities())
             {
-                Productos = VentasModel.ListaProductosVenta(id),
-                Cobros = VentasModel.ListarInformacionVenta(id)
-            };
-            return Json(new { data }, JsonRequestBehavior.AllowGet);
+                var tipo = (Request["tipo"] ?? "").ToUpper();
+
+                if (tipo == "ELECTRO")
+                {
+                    var v = db.Ventas_Electrodomesticos.FirstOrDefault(x => x.Id == id);
+
+                    if (v == null)
+                        return Json(new { data = (object)null }, JsonRequestBehavior.AllowGet);
+
+                    return Json(new
+                    {
+                        data = new
+                        {
+                            Id = v.Id,
+                            TipoVenta = "ELECTRO",
+                            Fecha = v.FechaVenta,
+                            Entrega = v.Entrega,
+                            Restante = v.Restante,
+                            Productos = Ventas_ElectrodomesticosModel.ListaProductosVenta(id),
+                            Historial = Ventas_ElectrodomesticosModel.ListarInformacionVenta(id)
+                        }
+                    }, JsonRequestBehavior.AllowGet);
+                }
+                else
+                {
+                    var v = db.Ventas.FirstOrDefault(x => x.Id == id);
+
+                    if (v == null)
+                        return Json(new { data = (object)null }, JsonRequestBehavior.AllowGet);
+
+                    return Json(new
+                    {
+                        data = new
+                        {
+                            Id = v.Id,
+                            TipoVenta = "INDUMENTARIA",
+                            Fecha = v.Fecha,
+                            Entrega = v.Entrega,
+                            Restante = v.Restante,
+                            Productos = VentasModel.ListaProductosVenta(id),
+                            Historial = VentasModel.ListarInformacionVenta(id)
+                        }
+                    }, JsonRequestBehavior.AllowGet);
+                }
+            }
         }
 
         [HttpPost]

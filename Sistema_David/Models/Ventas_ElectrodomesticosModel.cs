@@ -1894,6 +1894,123 @@ namespace Sistema_David.Models
             }
         }
 
+        public static List<VMProductoVenta> ListaProductosVenta(int id)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var productos = db.Ventas_Electrodomesticos_Detalle
+                    .Where(x => x.IdVenta == id)
+                    .Select(x => new VMProductoVenta
+                    {
+                        Id = x.Id,
+                        IdProducto = (int)x.IdProducto,
+                        IdVenta = x.IdVenta,
+                        Producto = x.Productos != null ? x.Productos.Nombre : x.Producto,
+                        Cantidad = (int)x.Cantidad,
+                        PrecioUnitario = x.PrecioUnitario,
+                        PrecioTotal = x.Subtotal ?? (x.Cantidad * x.PrecioUnitario)
+                    })
+                    .ToList();
+
+                return productos;
+            }
+        }
+
+        public static List<VMInformacionVenta> ListarInformacionVenta(int idVenta)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var lista = new List<VMInformacionVenta>();
+
+                var venta = db.Ventas_Electrodomesticos
+                    .FirstOrDefault(v => v.Id == idVenta);
+
+                if (venta == null)
+                    return lista;
+
+                decimal total = venta.ImporteTotal;
+
+                /* =========================
+                   1️⃣ VENTA BASE
+                ========================= */
+                lista.Add(new VMInformacionVenta
+                {
+                    Id = venta.Id,
+                    IdVenta = venta.Id,
+                    Fecha = venta.FechaVenta,
+                    Entrega = 0,
+                    Restante = 0, // 🔥 se recalcula después
+                    Interes = 0,
+                    Descripcion = $"Venta por {total:N0} pesos",
+                    MetodoPago = "Venta",
+                    Observacion = null,
+                    idCobrador = 0,
+                    Cobrador = "N/A"
+                });
+
+                /* =========================
+                   2️⃣ PAGOS
+                ========================= */
+                var pagos = db.Ventas_Electrodomesticos_Pagos
+                    .Where(p => p.IdVenta == idVenta)
+                    .ToList();
+
+                foreach (var p in pagos)
+                {
+                    lista.Add(new VMInformacionVenta
+                    {
+                        Id = p.Id,
+                        IdVenta = p.IdVenta,
+                        Fecha = p.FechaPago,
+                        Entrega = p.ImporteTotal,
+                        Restante = 0, // 🔥 recalculamos después
+                        Interes = 0,
+                        Descripcion = $"Cobranza por {p.ImporteTotal:N0} pesos",
+                        MetodoPago = p.MedioPago,
+                        Observacion = p.Observacion,
+                        idCobrador = p.UsuarioCreacion,
+                        Cobrador = db.Usuarios
+                            .Where(u => u.Id == p.UsuarioCreacion)
+                            .Select(u => u.Nombre)
+                            .FirstOrDefault() ?? "Sistema"
+                    });
+                }
+
+                /* =========================
+                   3️⃣ ORDEN FINAL
+                   - cobranzas arriba (más nuevas primero)
+                   - venta abajo
+                ========================= */
+                var ordenado = lista
+                    .OrderBy(x => x.MetodoPago == "Venta" ? 1 : 0)   // venta siempre última
+                    .ThenByDescending(x => x.Fecha)                 // cobranzas nuevas arriba
+                    .ThenByDescending(x => x.Id)
+                    .ToList();
+
+                /* =========================
+                   4️⃣ RECALCULAR RESTANTES
+                   (CLAVE DEL PROBLEMA)
+                ========================= */
+                decimal restante = total;
+
+                foreach (var item in ordenado)
+                {
+                    if (item.MetodoPago != "Venta")
+                    {
+                        restante -= item.Entrega;
+                        if (restante < 0) restante = 0;
+
+                        item.Restante = restante;
+                    }
+                    else
+                    {
+                        // 🔥 LA CLAVE
+                        item.Restante = total;
+                    }
+                }
+                return ordenado;
+            }
+        }
         public static string CambiarEstadoVenta(int idVenta, string nuevoEstado, int usuario, bool forzar = false)
         {
             using (var db = new Sistema_DavidEntities())
@@ -1977,6 +2094,94 @@ namespace Sistema_David.Models
             }
         }
 
+        /* ===========================================================
+ * VENTAS POR CLIENTE
+ * =========================================================== */
+        public static List<VM_HistorialVentasRow> ListarVentasPorCliente(int idCliente)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var ventas = db.Ventas_Electrodomesticos
+                    .Where(v => v.IdCliente == idCliente)
+                    .OrderByDescending(v => v.FechaVenta)
+                    .ToList();
+
+                var rows = new List<VM_HistorialVentasRow>();
+                var hoy = DateTime.Today;
+
+                foreach (var v in ventas)
+                {
+                    var cuotas = db.Ventas_Electrodomesticos_Cuotas
+                        .Where(c => c.IdVenta == v.Id)
+                        .ToList();
+
+                    var totalCuotas = cuotas.Sum(c =>
+                        (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos));
+
+                    var totalCobradoRealizado = cuotas.Sum(c => c.MontoPagado);
+
+                    var totalPagado = totalCobradoRealizado + (v.Entrega ?? 0);
+
+                    var total = Math.Round(v.ImporteTotal, 0);
+                    totalPagado = Math.Round(totalPagado, 0);
+
+                    var pendiente = Math.Round(total - totalPagado, 0);
+
+                    var porcentajePago =
+                        totalCuotas == 0
+                            ? 100
+                            : Math.Round((totalCobradoRealizado / totalCuotas) * 100, 2);
+
+                    rows.Add(new VM_HistorialVentasRow
+                    {
+                        IdVenta = v.Id,
+                        Comprobante = v.Comprobante,
+                        Fecha = v.FechaVenta,
+
+                        Cliente = v.Clientes?.Nombre,
+                        ClienteDni = v.Clientes?.Dni,
+                        ClienteDireccion = v.Clientes?.Direccion,
+                        ClienteTelefono = v.Clientes?.Telefono,
+
+                        Total = total,
+                        Pagado = totalPagado,
+                        CobradoRealizado = totalCobradoRealizado,
+                        Pendiente = pendiente,
+                        PorcentajePago = porcentajePago,
+
+                        CuotasVencidas = cuotas.Count(c =>
+                            c.Estado != "Pagada" &&
+                            c.FechaVencimiento < hoy),
+
+                        Estado = v.Estado
+                    });
+                }
+
+                return rows;
+            }
+        }
+
+        public static List<VMVenta> ListaVentasCliente(int idCliente)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var ventas = db.Ventas_Electrodomesticos
+                    .Where(v => v.IdCliente == idCliente)
+                    .OrderByDescending(v => v.FechaVenta)
+                    .ToList();
+
+                return ventas.Select(v => new VMVenta
+                {
+                    Id = v.Id,
+                    Fecha = v.FechaVenta,
+                    Entrega = v.Entrega ?? 0,
+                    Restante = v.Restante ?? 0,
+                    TipoVenta = "ELECTRO", // 🔥 CLAVE
+                    Comprobante = (int)v.Comprobante,
+                    Estado = v.Estado
+                }).ToList();
+            }
+        }
 
     }
 }

@@ -295,3 +295,110 @@ body.tema-electro {
             transform: scale(1.05);
             box-shadow: 0 8px 20px rgba(30, 60, 114, 0.25);
         }
+
+
+
+
+/* =========================
+   MOBILE FIX REAL
+========================= */
+@media (max-width: 768px) {
+
+    body {
+        height: auto;
+        padding: 20px;
+        align-items: flex-start;
+    }
+
+    .login-container {
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    /* HEADER SUPERIOR (LO QUE HOY ES LEFT) */
+    .left-side {
+        width: 100%;
+        height: 140px;
+        padding: 20px;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+    }
+
+        .left-side img {
+            max-width: 120px;
+        }
+
+    /* FORM */
+    .right-side {
+        width: 100%;
+        padding: 25px 20px 30px 20px;
+        border-radius: 20px 20px 0 0;
+        margin-top: -20px;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+    }
+
+        .right-side h3 {
+            font-size: 26px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+    .login-avatar img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .login-field {
+        max-width: 100%;
+    }
+
+    .login-input {
+        font-size: 16px;
+        padding: 14px;
+    }
+
+    .login-btn {
+        max-width: 100%;
+        padding: 14px;
+        font-size: 16px;
+    }
+
+    .form-check {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #checkIcon {
+        margin-left: 10px;
+    }
+}
+
+/* =========================
+   MEJORAS VISUALES
+========================= */
+.login-container {
+    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.05);
+}
+
+.right-side {
+    background: linear-gradient(180deg, #ffffff, #f4f6fb);
+}
+
+/* botón más pro */
+.login-btn {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    box-shadow: 0 10px 25px rgba(30,60,114,0.3);
+}
+
+/* inputs más modernos */
+.login-input {
+    border: none;
+    background: #eef2f7;
+}

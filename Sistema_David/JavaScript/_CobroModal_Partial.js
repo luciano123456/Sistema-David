@@ -1122,218 +1122,221 @@ function marcarComprobanteEnGrilla(idVenta) {
     });
 }
 
-
 function generarPdfVenta(venta) {
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "mm", "a4");
 
     const money = v =>
         Number(v || 0).toLocaleString("es-AR", {
             style: "currency",
-            currency: "ARS"
+            currency: "ARS",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
         });
 
-    // ===== Helpers fechas =====
     const parseFechaVenc = (x) => {
         const m = moment(x);
         return m.isValid() ? m : moment(String(x), "DD/MM/YYYY", true);
     };
 
-    // ===== Helpers recargo / descuento =====
-    const fmtValTipo = (val, tipo) => {
-        const t = (tipo || "").trim();
-        const n = Number(val || 0);
-        if (!t || isNaN(n) || n <= 0) return null;
-
-        if (t === "%") return `${n.toFixed(2)}%`;
-        // $ o cualquier otro -> lo muestro como dinero
-        return money(n);
-    };
-
-    const recargoTxt = fmtValTipo(venta.RecargoValor, venta.RecargoTipo);
-    const descuentoTxt = fmtValTipo(venta.DescuentoValor, venta.DescuentoTipo);
-
     const hoy = moment().startOf("day");
 
-    let y = 14;
+    let y = 18;
 
-    /* ================= HEADER ================= */
+    /* =====================================================
+       HEADER DARK PRO
+    ===================================================== */
+    doc.setFillColor(12, 18, 32);
+    doc.rect(0, 0, 210, 30, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("VENTA ELECTRODOMÉSTICOS", 105, y, { align: "center" });
-    y += 8;
+    doc.text("COMPROBANTE DE VENTA", 105, 14, { align: "center" });
 
-    doc.setFontSize(10);
-    doc.text(`Venta Nº: ${venta.IdVenta}`, 10, y);
-    doc.text(`Fecha: ${venta.FechaVenta ? moment(venta.FechaVenta).format("DD/MM/YYYY") : ""}`, 150, y);
-    y += 6;
+    doc.setFontSize(9);
+    doc.text(`N° ${venta.IdVenta}`, 200, 10, { align: "right" });
 
-    doc.text(`Cliente: ${venta.ClienteNombre || ""}`, 10, y);
-    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(moment().format("DD/MM/YYYY HH:mm"), 200, 16, { align: "right" });
 
-    // ✅ NUEVO: Mostrar recargo / descuento si existen
-    if (recargoTxt || descuentoTxt) {
-        let linea = [];
-        if (recargoTxt) linea.push(`Recargo: ${recargoTxt}`);
-        if (descuentoTxt) linea.push(`Descuento: ${descuentoTxt}`);
+    y = 38;
+    doc.setTextColor(0, 0, 0);
 
-        doc.setFontSize(10);
-        doc.text(linea.join("  |  "), 10, y);
-        y += 6;
+
+    /* =====================================================
+       CLIENTE (PRO LIMPIO)
+    ===================================================== */
+    const direccion = [
+        venta.ClienteDireccion,
+        venta.Localidad,
+        venta.Provincia
+    ].filter(Boolean).join(" - ");
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(220);
+    doc.roundedRect(10, y, 190, 22, 2, 2, "FD");
+
+    doc.setFontSize(9);
+    doc.setFont(undefined, "bold");
+    doc.setTextColor(60);
+    doc.text("CLIENTE", 14, y + 6);
+
+    doc.setFont(undefined, "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(0);
+
+    doc.text(venta.ClienteNombre || "-", 14, y + 12);
+
+    if (direccion) {
+        doc.setFontSize(9);
+        doc.setTextColor(90);
+        doc.text(direccion, 14, y + 18);
     }
 
-    y += 2;
+    y += 28;
 
-    /* ================= TOTALES ================= */
-    const totalVenta = Number(venta.ImporteTotal || venta.Total || 0);
-    const cuotasVenta = Array.isArray(venta.Cuotas) ? venta.Cuotas : [];
 
-    const totalPagado = cuotasVenta.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
-    const restante = Math.max(totalVenta - totalPagado, 0);
-
-    doc.setFontSize(12);
-    doc.text("Resumen", 10, y);
-    y += 5;
-
-    doc.setFontSize(10);
-    doc.text(`Total venta: ${money(totalVenta)}`, 10, y); y += 5;
-    doc.text(`Total pagado: ${money(totalPagado)}`, 10, y); y += 5;
-    doc.text(`Restante: ${money(restante)}`, 10, y); y += 8;
-
-    /* ================= PLAN DE CUOTAS ================= */
-    doc.setFontSize(12);
-    doc.text("Plan de cuotas", 10, y);
-    y += 3;
-
-    // ===== Detectar "PRÓXIMA" =====
-    const cuotasNorm = cuotasVenta.map(c => {
-        const vencM = parseFechaVenc(c.FechaVencimiento).startOf("day");
-        const totalCuota =
-            Number(c.MontoOriginal || 0) +
-            Number(c.MontoRecargos || 0) -
-            Number(c.MontoDescuentos || 0);
-
-        const pagado = Number(c.MontoPagado || 0);
-        const restanteCuota = (c.MontoRestante != null)
-            ? Number(c.MontoRestante)
-            : Math.max(totalCuota - pagado, 0);
-
-        const estadoRaw = (c.Estado || "Pendiente").trim();
-
-        return {
-            c,
-            vencM,
-            totalCuota,
-            pagado,
-            restanteCuota,
-            estadoRaw,
-            numero: Number(c.NumeroCuota || 0)
-        };
+    doc.autoTable({
+        startY: y,
+        theme: "grid",
+        styles: { fontSize: 10, cellPadding: 4 },
+        headStyles: {
+            fillColor: [20, 28, 48],
+            textColor: 255,
+            fontStyle: "bold"
+        }
     });
 
-    const noPagadas = cuotasNorm
-        .filter(x => x.estadoRaw !== "Pagada" && x.restanteCuota > 0.0001)
-        .sort((a, b) => a.vencM.valueOf() - b.vencM.valueOf());
+    y = doc.lastAutoTable.finalY + 6;
 
-    let proximaNumero = null;
 
-    if (noPagadas.length) {
-        const candidatasHoyOAntes = noPagadas.filter(x => x.vencM.isSameOrBefore(hoy, "day"));
-        if (candidatasHoyOAntes.length) {
-            proximaNumero = candidatasHoyOAntes[0].numero;
-        } else {
-            proximaNumero = noPagadas[0].numero;
-        }
+    /* ================= PRODUCTOS ================= */
+    if (venta.Items?.length) {
+
+        doc.setFont(undefined, "bold");
+        doc.setFontSize(11);
+        doc.text("Productos", 15, y);
+        y += 4;
+
+        doc.autoTable({
+            startY: y,
+            head: [["Cant", "Producto", "Precio", "Subtotal"]],
+            body: venta.Items.map(i => [
+                i.Cantidad,
+                i.Producto,
+                money(i.PrecioUnitario),
+                money(i.Subtotal)
+            ]),
+            theme: "grid",
+            styles: {
+                fontSize: 9,
+                cellPadding: 3
+            },
+            headStyles: {
+                fillColor: [30, 30, 30],
+                textColor: 255
+            },
+            alternateRowStyles: {
+                fillColor: [245, 245, 245]
+            }
+        });
+
+        y = doc.lastAutoTable.finalY + 8;
     }
 
-    const filasMeta = [];
+    /* ================= CUOTAS ================= */
+    doc.setFont(undefined, "bold");
+    doc.setFontSize(11);
+    doc.text("Cuotas", 15, y);
+    y += 4;
 
-    const body = cuotasNorm
-        .sort((a, b) => a.numero - b.numero)
-        .map(x => {
-
-            let estadoTxt = x.estadoRaw;
-            let estadoTipo = "pendiente";
-
-            if (x.estadoRaw === "Pagada" || x.restanteCuota <= 0.0001) {
-                estadoTxt = "Pagada";
-                estadoTipo = "pagada";
-            } else {
-                if (hoy.isAfter(x.vencM, "day")) {
-                    const dias = hoy.diff(x.vencM, "days");
-                    estadoTxt = `Vencida - ${dias} días`;
-                    estadoTipo = "vencida";
-                } else {
-                    estadoTxt = "Pendiente";
-                    estadoTipo = "pendiente";
-                }
-
-                if (proximaNumero != null && x.numero === proximaNumero) {
-                    estadoTxt = "Próxima";
-                    estadoTipo = "proxima";
-                }
-            }
-
-            filasMeta.push({
-                estadoTipo,
-                rowFill: (estadoTipo === "proxima") ? [255, 243, 205] : null
-            });
-
-            return [
-                String(x.numero),
-                x.vencM.isValid() ? x.vencM.format("DD/MM/YYYY") : "",
-                money(x.totalCuota),
-                money(x.pagado),
-                money(x.restanteCuota),
-                estadoTxt
-            ];
-        });
+    const cuotas = venta.Cuotas || [];
 
     doc.autoTable({
         startY: y,
         head: [["#", "Vencimiento", "Total", "Pagado", "Restante", "Estado"]],
-        body,
+        body: cuotas.map(c => {
+
+            const total =
+                Number(c.MontoOriginal || 0) +
+                Number(c.MontoRecargos || 0) -
+                Number(c.MontoDescuentos || 0);
+
+            const pagado = Number(c.MontoPagado || 0);
+            const restante = Math.max(total - pagado, 0);
+
+            let estado = c.Estado || "Pendiente";
+
+            if (estado !== "Pagada" && moment().isAfter(moment(c.FechaVencimiento))) {
+                estado = "Vencida";
+            }
+
+            return [
+                c.NumeroCuota,
+                moment(c.FechaVencimiento).format("DD/MM/YYYY"),
+                money(total),
+                money(pagado),
+                money(restante),
+                estado
+            ];
+        }),
         theme: "grid",
-        styles: { fontSize: 9, valign: "middle" },
+        styles: { fontSize: 9 },
         headStyles: {
-            fillColor: [22, 160, 133],
-            textColor: [255, 255, 255],
-            fontStyle: "bold"
-        },
-        didParseCell: function (data) {
-            if (data.section === "head") return;
-
-            const meta = filasMeta[data.row.index];
-            if (!meta) return;
-
-            if (meta.rowFill) {
-                data.cell.styles.fillColor = meta.rowFill;
-            }
-
-            const colEstado = 5;
-            if (data.column.index === colEstado) {
-                if (meta.estadoTipo === "pagada") {
-                    data.cell.styles.textColor = [25, 135, 84];
-                    data.cell.styles.fontStyle = "bold";
-                }
-                else if (meta.estadoTipo === "vencida") {
-                    data.cell.styles.textColor = [220, 53, 69];
-                    data.cell.styles.fontStyle = "bold";
-                }
-                else if (meta.estadoTipo === "proxima") {
-                    data.cell.styles.textColor = [33, 37, 41];
-                    data.cell.styles.fontStyle = "bold";
-                }
-                else {
-                    data.cell.styles.textColor = [33, 37, 41];
-                }
-            }
+            fillColor: [20, 20, 20],
+            textColor: 255
         }
     });
 
-    const fileName = `Venta_${venta.IdVenta}_${moment().format("YYYYMMDD_HHmm")}.pdf`;
-    doc.save(fileName);
-}
+    y = doc.lastAutoTable.finalY + 10;
 
+    /* ================= RESUMEN (PRO CHICO) ================= */
+    const totalVenta = Number(venta.ImporteTotal || 0);
+    const totalPagado = cuotas.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
+    const restante = Math.max(totalVenta - totalPagado, 0);
+
+    const x = 120;
+
+    doc.setDrawColor(180);
+    doc.rect(x, y, 80, 22);
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, "bold");
+    doc.text("Resumen", x + 4, y + 5);
+
+    doc.setFont(undefined, "normal");
+
+    doc.text("Total:", x + 4, y + 10);
+    doc.text(money(totalVenta), x + 75, y + 10, { align: "right" });
+
+    doc.text("Pagado:", x + 4, y + 15);
+    doc.text(money(totalPagado), x + 75, y + 15, { align: "right" });
+
+    doc.text("Restante:", x + 4, y + 20);
+    doc.text(money(restante), x + 75, y + 20, { align: "right" });
+
+    /* ================= FOOTER ================= */
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+
+    doc.text(
+        "Comprobante de venta. Conservar para reclamos.",
+        105,
+        290,
+        { align: "center" }
+    );
+
+    /* ================= NOMBRE ARCHIVO ================= */
+    const nombre = (venta.ClienteNombre || "Cliente")
+        .replace(/[^a-zA-Z0-9]/g, "_");
+
+    const fecha = moment(venta.FechaVenta).format("YYYYMMDD");
+
+    doc.save(`Venta_${venta.IdVenta}_${nombre}_${fecha}.pdf`);
+}
 function toggleModoReprogramacion() {
 
     const importe = formatearSinMiles(qs("cb_importe").value);
@@ -1802,3 +1805,43 @@ function obtenerUltimoRecargoReal(v) {
 }
 
 
+let _ventaSeleccionada = null;
+let _clienteSeleccionado = null;
+
+function informacionVenta(idVenta, grid) {
+    const row = grid
+        .row((idx, data) => parseInt(data.IdVenta, 10) === parseInt(idVenta, 10))
+        .data();
+
+    if (!row) return;
+
+    const ventaId = parseInt(idVenta, 10);
+    const clienteId = parseInt(row.IdCliente, 10);
+
+    // En esta pantalla de cobranzas es electro
+    const tipo = "ELECTRO";
+
+    const canVerTodas = Number.isInteger(clienteId) && clienteId > 0;
+    const modalEl = document.getElementById('modalInfoSelector');
+
+    if (!modalEl || !canVerTodas) {
+        const urlUna = `/Ventas/Informacion?modo=una&ventaId=${encodeURIComponent(ventaId)}&tipo=${encodeURIComponent(tipo)}&from=cobranzas`;
+        window.location.href = urlUna;
+        return;
+    }
+
+    const $modal = new bootstrap.Modal(modalEl);
+    $modal.show();
+
+    $('#btnSoloEsta').off('click').on('click', () => {
+        $modal.hide();
+        const url = `/Ventas/Informacion?modo=una&ventaId=${encodeURIComponent(ventaId)}&tipo=${encodeURIComponent(tipo)}&from=cobranzas`;
+        window.location.href = url;
+    });
+
+    $('#btnTodasCliente').off('click').on('click', () => {
+        $modal.hide();
+        const url = `/Ventas/Informacion?modo=todas&clienteId=${encodeURIComponent(clienteId)}&ventaId=${encodeURIComponent(ventaId)}&from=cobranzas`;
+        window.location.href = url;
+    });
+}
