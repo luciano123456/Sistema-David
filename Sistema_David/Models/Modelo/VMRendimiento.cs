@@ -12,6 +12,10 @@ namespace Sistema_David.Models.ViewModels
         public int IdVenta { get; set; }
         public int IdVendedor { get; set; }
 
+        public int? IdOriginal { get; set; }
+        public string IdUnico { get; set; }
+        public string Origen { get; set; }
+
         public decimal? CapitalInicial { get; set; }
         public decimal? Venta { get; set; }
         public decimal? Cobro { get; set; }
@@ -31,7 +35,9 @@ namespace Sistema_David.Models.ViewModels
 
         public string MetodoPago { get; set; }
         public string Imagen { get; set; }
-        public string TipoNegocio { get; set; }
         public string CuentaBancaria { get; set; }
+
+        public int? IdTipoNegocio { get; set; }
+        public string TipoNegocio { get; set; }
     }
 }
