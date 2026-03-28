@@ -319,7 +319,13 @@ function renderTablaBase(selector, data, tipo) {
                         const rol = userSession?.IdRol;
                         const id = row.IdVenta;
                         const tel = (row.ClienteTelefono || "").replace(/\D/g, "");
-
+                        const botonPdf = ` 
+                                        <button class="btn-accion ${row.Comprobante ? 'btn-pdf-ok' : 'btn-pdf-pend'}"
+                                            title="Descargar PDF"
+                                            onclick="exportarPdfVenta(${id})">
+                                            <i class="fa fa-file-pdf-o"></i>
+                                        </button>
+                                    `;
                         let botones = "";
 
                         // ===== ADMIN (ROL 1) =====
@@ -343,11 +349,7 @@ function renderTablaBase(selector, data, tipo) {
                     <i class="fa fa-pencil"></i>
                 </button>
 
-                <button class="btn-accion btn-pdf-pend"
-                    title="Descargar PDF"
-                    onclick="exportarPdfVenta(${id})">
-                    <i class="fa fa-file-pdf-o"></i>
-                </button>
+               ${botonPdf}
 
                 <button class="btn-accion btn-wa"
                     title="Enviar WhatsApp"
@@ -372,11 +374,7 @@ function renderTablaBase(selector, data, tipo) {
                     <i class="fa fa-pencil"></i>
                 </button>
 
-                <button class="btn-accion btn-pdf-pend"
-                    title="Descargar PDF"
-                    onclick="exportarPdfVenta(${id})">
-                    <i class="fa fa-file-pdf-o"></i>
-                </button>
+                ${botonPdf}
 
                 <button class="btn-accion btn-wa"
                     title="Enviar WhatsApp"

@@ -35,59 +35,64 @@ namespace Sistema_David.Models
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
 
+                try
+                {
+                    if (fechaHasta < fechaDesde)
+                    {
+                        return null;
+                    }
 
-                if (fechaHasta < fechaDesde)
+                    // Obtener las ventas y cobranzas en memoria
+                    DateTime fechaHastaAjustada = fechaHasta.Date.AddDays(1).AddTicks(-1);
+
+                    var ventasCobranzas = db.InformacionVentas
+                        .Where(iv => iv.Fecha >= fechaDesde.Date && iv.Fecha <= fechaHastaAjustada && (iv.Descripcion.Contains("Venta") || iv.Descripcion.Contains("Cobranza")))
+                        .OrderBy(iv => iv.Fecha)
+                        .ToList();
+
+                    // Asegurarse de que haya una entrada para cada día en el rango
+                    var fechasEnRango = Enumerable.Range(0, (int)(fechaHasta - fechaDesde).TotalDays + 1)
+                        .Select(offset => fechaDesde.AddDays(offset).Date)
+                        .ToList();
+
+                    // Combinar resultados en memoria con fechas en rango
+                    var result = fechasEnRango
+                        .Select(fecha =>
+                        {
+                            var ventasDelDia = ventasCobranzas
+                                .Where(iv => iv.Fecha?.Date == fecha && iv.Descripcion.Contains("Venta"))
+                                .Sum(x => x.Entrega + x.Restante);
+
+                            var cobranzasDelDia = ventasCobranzas
+                                .Where(iv => iv.Fecha?.Date == fecha && (iv.Descripcion.Contains("Cobranza")))
+                                .Sum(x => x.Descripcion.Contains("Cobranza") ? x.Entrega : 0);
+
+                            return new VMRendimientoGeneral
+                            {
+                                Fecha = fecha.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),  // Formato español
+                                Ventas = (decimal)ventasDelDia,
+                                Cobranza = (decimal)cobranzasDelDia,
+                            };
+                        })
+                        .OrderByDescending(rendimiento => DateTime.ParseExact(rendimiento.Fecha, "dd/MM/yyyy", CultureInfo.InvariantCulture))
+                        .ToList();
+
+                    foreach (var rendimiento in result)
+                    {
+                        DateTime fechaRendimiento = DateTime.ParseExact(rendimiento.Fecha, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+
+                        rendimiento.CapitalInicial = db.Ventas
+                            .Where(v => v.Fecha < fechaRendimiento)
+                            .Sum(v => (decimal?)v.Restante) ?? 0;
+
+                        rendimiento.CapitalFinal = rendimiento.CapitalInicial + rendimiento.Ventas - rendimiento.Cobranza;
+                    }
+
+                    return result;
+                } catch (Exception ex)
                 {
                     return null;
                 }
-
-                // Obtener las ventas y cobranzas en memoria
-                DateTime fechaHastaAjustada = fechaHasta.Date.AddDays(1).AddTicks(-1);
-
-                var ventasCobranzas = db.InformacionVentas
-                    .Where(iv => iv.Fecha >= fechaDesde.Date && iv.Fecha <= fechaHastaAjustada && (iv.Descripcion.Contains("Venta") || iv.Descripcion.Contains("Cobranza")))
-                    .OrderBy(iv => iv.Fecha)
-                    .ToList();
-
-                // Asegurarse de que haya una entrada para cada día en el rango
-                var fechasEnRango = Enumerable.Range(0, (int)(fechaHasta - fechaDesde).TotalDays + 1)
-                    .Select(offset => fechaDesde.AddDays(offset).Date)
-                    .ToList();
-
-                // Combinar resultados en memoria con fechas en rango
-                var result = fechasEnRango
-                    .Select(fecha =>
-                    {
-                        var ventasDelDia = ventasCobranzas
-                            .Where(iv => iv.Fecha?.Date == fecha && iv.Descripcion.Contains("Venta"))
-                            .Sum(x => x.Entrega + x.Restante);
-
-                        var cobranzasDelDia = ventasCobranzas
-                            .Where(iv => iv.Fecha?.Date == fecha && (iv.Descripcion.Contains("Cobranza")))
-                            .Sum(x => x.Descripcion.Contains("Cobranza") ? x.Entrega : 0);
-
-                        return new VMRendimientoGeneral
-                        {
-                            Fecha = fecha.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),  // Formato español
-                            Ventas = (decimal)ventasDelDia,
-                            Cobranza = (decimal)cobranzasDelDia,
-                        };
-                    })
-                    .OrderByDescending(rendimiento => DateTime.ParseExact(rendimiento.Fecha, "dd/MM/yyyy", CultureInfo.InvariantCulture))
-                    .ToList();
-
-                foreach (var rendimiento in result)
-                {
-                    DateTime fechaRendimiento = DateTime.ParseExact(rendimiento.Fecha, "dd/MM/yyyy", CultureInfo.InvariantCulture);
-
-                    rendimiento.CapitalInicial = db.Ventas
-                        .Where(v => v.Fecha < fechaRendimiento)
-                        .Sum(v => (decimal?)v.Restante) ?? 0;
-
-                    rendimiento.CapitalFinal = rendimiento.CapitalInicial + rendimiento.Ventas - rendimiento.Cobranza;
-                }
-
-                return result;
             }
         }
 

@@ -1,526 +1,1092 @@
-﻿.input-nuevomodif {
-    display: flex;
-    border: none;
-    border-bottom: 10px;
-    border-bottom: solid blue;
-    width: 70%;
-    display: block;
+﻿/* =========================================================
+   RENDIMIENTO.CSS
+   Extiende redisenopantallas.css sin pisar la base general
+   ========================================================= */
+
+:root {
+    --re-card-radius: 18px;
+    --re-gap: 14px;
+    --re-shadow: 0 16px 34px rgba(0,0,0,.32);
+    --re-shadow-soft: 0 10px 24px rgba(0,0,0,.22);
+    --re-line: rgba(255,255,255,.08);
+    --re-line-strong: rgba(255,255,255,.14);
+    --re-panel-soft: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    --re-panel-accent: linear-gradient(135deg, rgba(91,140,255,.18), rgba(123,92,255,.14));
+}
+
+body.ve-dark {
+    min-height: 100vh;
+}
+
+.page-99 {
     position: relative;
-    left: 17%;
-    margin-bottom: 20px;
-    color: black;
-    text-align: center !important;
-    font-size: 1.3vw;
-    max-width: 500px !important;
-    color: black !important;
-    display:inline-block;
-  
 }
 
-.lblRendimiento {
-    font-size: 20px;
-    color: red;
-    text-decoration: underline;
-    width: 100% !important;
-
-}
-
-.cursor-pointer{
-    cursor: pointer
-}
-
-.menu-seccionesRend {
-    display: grid; /* Muestra el menú de secciones como cuadrícula */
-    grid-template-columns: repeat(auto-fit, minmax(10px, 1fr));
-    gap: 10px;
-    padding: 0px !important;
-    margin: 0px !important;
-    text-align: center !important;
-    align-items: center !important;
-    align-content: center !important;
+/* =========================
+   HEADER
+========================= */
+.cc-header {
     position: relative;
-    left: -5% !important;
 }
 
-    .input-nuevomodif:active {
-        border: none;
-        border-bottom: solid blue;
+    .cc-header h2 {
+        letter-spacing: .2px;
     }
 
-    .input-nuevomodif::placeholder {
-        color: black;
-        opacity: 1 !important;
+    .cc-header .btn-group .btn,
+    #btnToggleFiltrosRendimiento,
+    #btnRendDiario,
+    #btnRendMensual {
+        min-height: 42px;
+        border-radius: 12px !important;
+        font-weight: 800;
     }
 
-    .input-nuevomodif:hover {
-        outline: none !important;
-    }
-
-    .input-nuevomodif:focus {
-        outline: none !important;
-        border-bottom: solid red;
-    }
-
-.btnAccion {
-    width: 2vw;
-    min-width: 25px;
-    background: #2E4053;
-    margin-left: 10px;
+#btnRendDiario,
+#btnRendMensual {
+    min-width: 132px;
 }
 
-
-
-.btneliminar:hover{
-    cursor: pointer;
+/* =========================
+   KPIS
+========================= */
+.cc-stat {
+    border-radius: 16px;
+    box-shadow: var(--re-shadow-soft);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
-.btneditar {
-    margin-right: 5px !important;
+    .cc-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--re-shadow);
+        border-color: var(--re-line-strong);
+    }
+
+    .cc-stat .value {
+        word-break: break-word;
+    }
+
+/* =========================
+   FILTROS
+========================= */
+#panelFiltrosRendimiento {
+    border-radius: var(--re-card-radius);
+    border: 1px solid var(--re-line);
+    background: var(--re-panel-accent), rgba(17,24,39,.55);
+    box-shadow: var(--re-shadow-soft);
 }
 
-.btn-accion {
-    background: #2E4053;
-    border-color: blue;
-    color: white;
-    font-size: 0.8vw;
-    height: 3.2vh;
-    width: auto;
+#formFiltrosRendimiento .form-label {
+    font-weight: 800;
+    color: #dce6ff;
+    margin-bottom: .35rem;
 }
 
-.btn-accion:hover {
-        background: #0D62CF;
-    }
-
-
-@media (max-width: 1000px) {
-    .input-nuevomodif {
-        width: 90%;
-        left: 8%;
-        font-size: 3vw !important;
-    }
-
-    .lblNombreInput {
-        font-size: 3vw !important;
-    }
-
-    select {
-        font-size: 3vw !important;
-    }
-
-    .btnnuevo {
-        width: 150px !important;
-    }
+#formFiltrosRendimiento .form-control,
+#formFiltrosRendimiento .form-select {
+    min-height: 44px;
+    border-radius: 12px !important;
 }
 
-@media (max-width: 450px) {
-    .input-nuevomodif {
-        width: 90% !important;
-        left: 8% !important;
-        font-size: 7vw !important;
-    }
-
-    .lblNombreInput {
-        font-size: 7vw !important;
-    }
-
-    select {
-        font-size: 7vw !important;
-    }
-
-    .btnnuevo {
-        width: 200px !important;
-    }
-
-.modal {
-	width: 90% !important;
-    }
+#formFiltrosRendimiento .btn {
+    min-height: 42px;
+    border-radius: 12px !important;
+    font-weight: 800;
 }
 
-/* Establecer el color de fondo azul para el listado */
+#divComprobantesEnviados {
+    padding: .75rem .85rem;
+    border: 1px solid var(--re-line);
+    border-radius: 14px;
+    background: var(--re-panel-soft);
+    min-height: 100%;
+}
+
+    #divComprobantesEnviados .form-check-label {
+        color: #eaf1ff;
+        font-weight: 800;
+    }
+
+    #divComprobantesEnviados .form-check-input {
+        width: 2.8rem;
+        height: 1.4rem;
+        cursor: pointer;
+    }
+
+/* =========================
+   CARDS PRINCIPALES
+========================= */
+.card-glass {
+    border-radius: var(--re-card-radius);
+    border: 1px solid var(--re-line);
+    box-shadow: var(--re-shadow-soft);
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)), rgba(18,22,42,.65);
+    overflow: hidden;
+}
+
+    .card-glass > .fw-bold,
+    .card-glass > .d-flex.fw-bold,
+    .card-glass > .p-3 > .fw-bold {
+        letter-spacing: .2px;
+    }
+
+/* =========================
+   LISTA VENDEDORES
+========================= */
+#contenedorlista {
+    scrollbar-width: thin;
+    scrollbar-color: #314766 transparent;
+}
+
+    #contenedorlista::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    #contenedorlista::-webkit-scrollbar-thumb {
+        background: #314766;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+
 #listaUsuarios {
-    background-color: blue !important;
+    border-radius: 14px;
+    overflow: hidden;
 }
 
-.card {
-    background: #2E4053;
-    opacity: 0.7 !important;
+    #listaUsuarios .list-group-item {
+        background: transparent !important;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,.06) !important;
+        color: #eaf1ff;
+        transition: background .18s ease, transform .12s ease;
+        min-height: 48px;
+    }
+
+        #listaUsuarios .list-group-item:hover {
+            background: rgba(255,255,255,.05) !important;
+        }
+
+        #listaUsuarios .list-group-item.selected-user {
+            background: linear-gradient(90deg, rgba(91,140,255,.18), rgba(123,92,255,.14)) !important;
+            box-shadow: inset 3px 0 0 #5b8cff;
+        }
+
+    #listaUsuarios .btnacciones {
+        min-width: 34px;
+        min-height: 34px;
+        border-radius: 10px;
+        padding: 4px 8px;
+    }
+
+    #listaUsuarios .fa-check {
+        transition: transform .14s ease, filter .14s ease;
+    }
+
+        #listaUsuarios .fa-check:hover {
+            transform: scale(1.08);
+            filter: brightness(1.1);
+        }
+
+/* =========================
+   TABLAS
+========================= */
+.table-responsive.dt-dark-wrap {
+    border-radius: 16px;
+    overflow: hidden;
 }
 
-#contenedorlistaUsuarios {
-    border: 2px solid blue;
-    border-radius: 5px; /* Opcional: agregar bordes redondeados */
-    padding: 10px; /* Opcional: agregar espacio interno */
-}
-
-
-
-/* Estilo para las filas pares */
-.list-group-item:nth-child(even) {
-    background-color: #353c48; /* Color de fondo para filas pares */
-    color: white; /* Color de texto para filas pares */
-}
-
-/* Estilo para las filas impares */
-.list-group-item:nth-child(odd) {
-    background-color: #2a303a; /* Color de fondo para filas impares */
-    color: white; /* Color de texto para filas impares */
-}
-
-/* Estilos para resaltar el elemento seleccionado */
-.selected-user {
-    background-color: #065f8c !important; /* Cambia el color de fondo del elemento seleccionado */
-    color: white !important; /* Cambia el color del texto del elemento seleccionado */
-}
-
-.divCliente {
-    margin-block: 10px;
-    margin-top: 15px;
-    padding: 5px 5px 5px 15px;
-    border-color: white;
-    border-width: 1px;
-    border-style: double;
-}
-
-.divProducto {
-    display: inline-block !important;
-    position: relative !important;
-    margin-left: 10px !important;
-}
-
-.divFiltros {
-    padding: 5px 5px 5px 5px;
-    border: 3px solid;
-    border: solid blue;
-    display: flex;
-    width: 85%;
-    display: block;
-    position: relative;
-    left: 8%;
-    margin-top: 20px;
-    color: black;
-    text-align: center;
-}
-
-
-
-.lblNombreInput {
-    display: flex;
-    justify-content: center;
-    text-align: center !important;
-    color: #05056C;
-    font-size: 1vw;
-}
-
-.lblcliente {
-    margin-left: 30px;
-    font-size: 0.8vw;
-}
-
-.lblvendedor {
-    margin-left: 7px;
-    font-size: 0.7vw;
-}
-
-
-label {
-    color: white;
-}
-
-#grdVentas tbody tr:hover {
-    cursor: pointer;
-}
-
-
-.input-nuevo {
-    border: none;
-    border-bottom: 0px;
-    border-bottom: solid blue;
-    width: 50%;
-    margin-bottom: 20px;
-    color: black;
-    text-align: center !important;
-    font-size: 0.6vw;
-    max-width: 150px !important;
-    background: #1B2631 !important;
-    color: white !important;
-}
-
-select {
-    font-size: 0.8vw !important;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    border-radius: 4px;
-    margin-right: 2px;
-    opacity: 0.9;
-    filter: invert(0.9);
-}
-
-
-.input-checkbox {
-    margin: 0px 0px 0px 0px !important;
-}
-
-.obs {
-    max-width: 500px !important;
+#grdRendimiento,
+#grdClientesAusentes,
+#grdRendimientoGeneral,
+#grdRendimientoCobrado {
     width: 100% !important;
 }
 
-.input-nuevo:active {
-    border: none;
-    border-bottom: solid blue;
+table.dataTable tbody tr {
+    transition: background .16s ease;
 }
 
-.input-nuevo::placeholder {
-    opacity: 1 !important;
+    table.dataTable tbody tr.selected td,
+    table.dataTable.display tbody tr.selected td,
+    table.dataTable tbody tr.seleccionada td {
+        background-color: var(--dt-row-hover) !important;
+        color: #fff !important;
+    }
+
+#grdRendimiento tbody td,
+#grdClientesAusentes tbody td,
+#grdRendimientoGeneral tbody td,
+#grdRendimientoCobrado tbody td {
+    vertical-align: middle;
 }
 
-.input-nuevo:hover {
-    outline: none !important;
+#grdRendimiento .btnacciones,
+#grdClientesAusentes .btnacciones {
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 10px;
 }
 
-.input-nuevo:focus {
-    outline: none !important;
-    border-bottom: solid red;
+/* Dropdown columnas */
+#dropdownColumnas {
+    min-height: 42px;
+    border-radius: 12px !important;
+    font-weight: 800;
 }
 
-.direccion-link {
-    text-decoration: none; /* Elimina el subrayado */
-    color: white; /* Cambia el color del texto a tu preferencia */
+/* =========================
+   MODAL
+========================= */
+#modalComprobante .modal-content {
+    border-radius: 18px;
+    overflow: hidden;
 }
 
+#modalComprobante .modal-body {
+    padding: 1rem;
+}
 
-@media (max-width: 1000px) {
+#imagenComprobante {
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.28);
+}
 
+/* =========================
+   HELPERS DE ESTADO
+========================= */
+.rend-hidden {
+    display: none !important;
+}
 
-    .divProducto {
-        font-size: 2.7vw !important;
-    }
+.rend-visible-flex {
+    display: flex !important;
+}
 
-    .input-nuevo {
-        width: 100% !important;
-        max-width: 1500px !important;
-        font-size: 4vw !important;
-    }
+.rend-visible-block {
+    display: block !important;
+}
 
-
-
-    .input-nuevomodif {
-        width: 99%;
-        left: 2%;
-        font-size: 3.7vw !important;
-        text-align: center !important;
-    }
-
-    .lblcliente {
-        font-size: 4vw !important;
-        display: block;
-        margin-left: -16px !important;
-    }
-
-    select {
-        max-width: 1500px !important;
-        font-size: 4vw !important;
-    }
-
-    .btnnuevo {
-        width: 150px !important;
-    }
-
-    .obs {
-        width: 99% !important;
-    }
-
-    .lblNombreInput {
-        font-size: 4vw !important;
-    }
-
-    .btnaccion {
-        width: 150px !important;
-    }
-
-
-    .btnaccionp {
-        width: 400px !important;
-    }
-
-    .dataTables_info {
-        font-size: 2.7vw !important;
-    }
-
-    option {
-        font-size: 2.7vw !important;
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 1399.98px) {
+    #contenedorlista {
+        max-height: 560px !important;
     }
 }
 
-@media (max-width: 600px) {
-
-
-    #grdProductosVenta {
-        font-size: 3vw !important;
+@media (max-width: 1199.98px) {
+    #contenedorlista {
+        max-height: 320px !important;
     }
 
-    .dataTables_info {
-        font-size: 2.7vw !important;
+    .cc-header .btn-group {
+        width: 100%;
     }
 
-    .divProducto {
-        display: block !important;
-        position: relative !important;
-        margin-left: 0px !important;
-    }
-
-    .input-nuevomodif {
-        font-size: 4vw !important;
-    }
-
-    .lblNombreInput {
-        font-size: 4vw !important;
-    }
-
-    .btnaccion {
-        width: 175px !important;
-    }
-
-    .btnaccionp {
-        width: 450px !important;
-    }
-
-    option {
-        font-size: 3vw !important;
-    }
-}
-
-@media (max-width: 400px) {
-
-    .lblNombreInput {
-        font-size: 6vw !important;
-    }
-
-    .input-nuevomodif {
-        font-size: 6vw !important;
-    }
-
-    .btnaccionp {
-        width: 450px !important;
-    }
-
-    option {
-        font-size: 5vw !important;
-    }
-}
-
-.mb-md-2 {
-    margin-bottom: 2rem; /* Margen inferior de 2 rem para pantallas medianas y más grandes */
+        .cc-header .btn-group .btn {
+            flex: 1 1 0;
+        }
 }
 
 @media (max-width: 767.98px) {
-
-    #contenedorlista {
-        max-height: 300px !important; /* Ajusta este valor para pantallas pequeñas */
-       
+    .container.page-99 {
+        padding-left: .5rem;
+        padding-right: .5rem;
     }
 
-    /* Estilos para pantallas pequeñas */
-    .mb-md-2 {
-        margin-bottom: 1rem; /* Eliminar el margen inferior en pantallas pequeñas */
+    .cc-header {
+        border-radius: 16px;
     }
 
-    .mt-sm-2 {
-        margin-top: 2rem; /* Margen superior de 2 rem para elementos siguientes en pantallas pequeñas */
-    }
-}
-
-@media (max-width: 300px) {
-
-
-    .lblNombreInput {
-        font-size: 8vw !important;
+    .cc-stat {
+        min-width: 100%;
     }
 
-    .input-nuevomodif {
-        font-size: 8vw !important;
+    #btnToggleFiltrosRendimiento,
+    #btnRendDiario,
+    #btnRendMensual {
+        width: 100%;
     }
 
-    .btnaccion {
-        width: 200px !important;
+    #formFiltrosRendimiento .btn {
+        width: 100%;
     }
 
-    .btnaccionp {
-        width: 450px !important;
+    #dropdownColumnas {
+        width: 100%;
+    }
+
+    #imagenComprobante {
+        max-height: 58vh;
     }
 }
 
-@media (max-width: 260px) {
-
-    .divProducto {
-        font-size: 5vw;
+@media (max-width: 576px) {
+    .cc-badge {
+        width: 40px;
+        height: 40px;
     }
 
-    .btnaccion {
-        width: 200px !important;
+    .cc-header h2 {
+        font-size: 1.3rem;
     }
 
-    .btnaccionp {
-        width: 350px !important;
+    .cc-stat .value {
+        font-size: 1rem;
+    }
+
+    #listaUsuarios .list-group-item {
+        padding-left: .75rem;
+        padding-right: .75rem;
     }
 }
 
 
+/* =========================================================
+   RENDIMIENTO.CSS
+   Extensión visual sobre redisenopantallas.css
+   ========================================================= */
 
-
-.seccion {
-    display: flex;
-    margin-left: 30px;
+:root {
+    --rend-glow: 0 14px 32px rgba(0,0,0,.35);
+    --rend-radius: 18px;
+    --rend-line: rgba(255,255,255,.10);
+    --rend-soft: rgba(255,255,255,.05);
+    --rend-soft-2: rgba(255,255,255,.08);
 }
 
-
-.cardTablePersonalizadoRendimiento {
-    width: 98%;
-    margin: 15px auto; /* Center the card */
-    border: none;
-    position: initial;
+/* =========================
+   GENERAL
+========================= */
+body.ve-dark {
+    min-height: 100vh;
 }
 
+.page-99 {
+    max-width: 99% !important;
+}
 
+/* =========================
+   HEADER
+========================= */
+.cc-header {
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--rend-glow) !important;
+}
+
+    .cc-header::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        right: -10%;
+        width: 280px;
+        height: 280px;
+        background: radial-gradient(circle, rgba(91,140,255,.18), transparent 70%);
+        pointer-events: none;
+    }
+
+    .cc-header h2 {
+        letter-spacing: .3px;
+    }
+
+#btnToggleFiltrosRendimiento,
+#btnRendDiario,
+#btnRendMensual {
+    min-height: 44px;
+    border-radius: 12px !important;
+    font-weight: 800;
+    box-shadow: 0 6px 18px rgba(0,0,0,.22);
+}
+
+/* =========================
+   KPIS
+========================= */
+.cc-stat {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(0,0,0,.24);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+    .cc-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 34px rgba(0,0,0,.3);
+    }
+
+    .cc-stat .label {
+        opacity: .95;
+    }
+
+    .cc-stat .value {
+        font-size: 1.2rem;
+    }
+
+/* =========================
+   FILTROS
+========================= */
+#panelFiltrosRendimiento {
+    border-radius: var(--rend-radius);
+    border: 1px solid var(--rend-line);
+    background: linear-gradient(135deg, rgba(91,140,255,.10), rgba(123,92,255,.08)), rgba(17,24,39,.60);
+    box-shadow: var(--rend-glow);
+}
+
+#formFiltrosRendimiento .form-label {
+    font-weight: 800;
+    color: #d7e4ff;
+    margin-bottom: .35rem;
+}
+
+#formFiltrosRendimiento .form-control,
+#formFiltrosRendimiento .form-select {
+    min-height: 44px;
+    border-radius: 12px !important;
+}
+
+#formFiltrosRendimiento .btn {
+    min-height: 42px;
+    border-radius: 12px !important;
+    font-weight: 800;
+}
+
+#divComprobantesEnviados {
+    padding: .8rem .9rem;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+}
+
+/* =========================
+   CARDS
+========================= */
+.card-glass {
+    border-radius: var(--rend-radius);
+    border: 1px solid var(--rend-line);
+    box-shadow: var(--rend-glow);
+    overflow: hidden;
+}
+
+    .card-glass .fw-bold {
+        letter-spacing: .2px;
+    }
+
+/* =========================
+   LISTA VENDEDORES
+========================= */
+#contenedorlista {
+    scrollbar-width: thin;
+    scrollbar-color: #314766 transparent;
+}
+
+    #contenedorlista::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    #contenedorlista::-webkit-scrollbar-thumb {
+        background: #314766;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+
+#listaUsuarios {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+    #listaUsuarios .list-group-item {
+        transition: background .18s ease, transform .14s ease;
+        border-bottom: 1px solid rgba(255,255,255,.06) !important;
+    }
+
+        #listaUsuarios .list-group-item:hover {
+            background: rgba(255,255,255,.05) !important;
+        }
+
+    #listaUsuarios .selected-user {
+        background: linear-gradient(90deg, rgba(91,140,255,.18), rgba(123,92,255,.12)) !important;
+        box-shadow: inset 3px 0 0 #5b8cff;
+    }
+
+    #listaUsuarios .btnacciones {
+        min-width: 34px;
+        min-height: 34px;
+        border-radius: 10px;
+        padding: 4px 8px;
+    }
+
+/* =========================
+   TABLAS
+========================= */
+.dt-dark-wrap {
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+#grdRendimiento,
+#grdClientesAusentes,
+#grdRendimientoGeneral,
+#grdRendimientoCobrado {
+    width: 100% !important;
+}
+
+table.dataTable tbody tr.seleccionada td,
+table.dataTable tbody tr.selected td {
+    background-color: var(--dt-row-hover) !important;
+    color: #fff !important;
+}
+
+#dropdownColumnas {
+    min-height: 42px;
+    border-radius: 12px !important;
+    font-weight: 800;
+}
+
+#configColumnasMenu {
+    max-height: 50vh;
+    overflow: auto;
+}
+
+/* =========================
+   MODAL
+========================= */
+#modalComprobante .modal-content {
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+#modalComprobante .modal-body {
+    background: rgba(12,18,34,.96);
+}
 
 #imagenComprobante {
-    height: 100%;
-    width: 100%;
-    max-width: 1200px;
-    max-height: 750px;
+    max-height: 75vh;
+    border-radius: 14px;
+    box-shadow: 0 12px 26px rgba(0,0,0,.28);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 1199.98px) {
+    #contenedorlista {
+        max-height: 320px !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .cc-header {
+        border-radius: 16px;
+    }
+
+    #btnToggleFiltrosRendimiento,
+    #btnRendDiario,
+    #btnRendMensual {
+        width: 100%;
+    }
+
+    #formFiltrosRendimiento .btn {
+        width: 100%;
+    }
+
+    #dropdownColumnas {
+        width: 100%;
+    }
+
+    .cc-stat .value {
+        font-size: 1rem;
+    }
+
+    #imagenComprobante {
+        max-height: 58vh;
+    }
+}
+
+@media (max-width: 576px) {
+    .cc-badge {
+        width: 40px;
+        height: 40px;
+    }
+
+    .cc-header h2 {
+        font-size: 1.25rem;
+    }
+}
+
+/* CONTENEDOR FILTROS */
+#Filtros {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+
+    /* LABELS */
+    #Filtros label {
+        color: #cbd5f1;
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    /* INPUTS Y SELECTS */
+    #Filtros input,
+    #Filtros select {
+        background: #0b1220;
+        color: #ffffff;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 14px;
+        transition: all .2s ease;
+    }
+
+        /* PLACEHOLDER */
+        #Filtros input::placeholder {
+            color: #64748b;
+        }
+
+        /* FOCUS */
+        #Filtros input:focus,
+        #Filtros select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,.3);
+            outline: none;
+        }
+
+        /* ICONO CALENDARIO */
+        #Filtros input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+
+/* BOTONES */
+.btn-aplicar {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: 600;
+    transition: .2s;
+}
+
+    .btn-aplicar:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(37,99,235,.4);
+    }
+
+/* HOY / MENSUAL */
+.btn-hoy {
+    border: 1px solid #06b6d4;
+    color: #06b6d4;
+    background: transparent;
+}
+
+    .btn-hoy:hover {
+        background: #06b6d4;
+        color: white;
+    }
+
+.btn-mensual {
+    border: 1px solid #22c55e;
+    color: #22c55e;
+    background: transparent;
+}
+
+    .btn-mensual:hover {
+        background: #22c55e;
+        color: white;
+    }
+
+
+
+/* ITEM */
+#listaUsuarios .list-group-item {
+    background: linear-gradient(135deg, #111827, #1f2937);
+    border: none;
+    color: #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    padding: 10px 12px;
+    transition: all .2s ease;
+    cursor: pointer;
+}
+
+    /* HOVER */
+    #listaUsuarios .list-group-item:hover {
+        transform: translateX(4px);
+        background: linear-gradient(135deg, #1e293b, #334155);
+    }
+
+/* SELECCIONADO */
+.selected-user {
+    border: 1px solid #3b82f6 !important;
+    box-shadow: 0 0 10px rgba(59,130,246,.6);
+    background: linear-gradient(135deg, #1e3a8a, #1d4ed8) !important;
+}
+
+/* TEXTO NOMBRE */
+#listaUsuarios span {
+    font-weight: 600;
+    letter-spacing: .3px;
+}
+
+/* ICONOS */
+#listaUsuarios i {
+    font-size: 14px;
+    transition: all .2s ease;
+}
+
+/* ICONO ACTIVO */
+.icon-active {
+    color: #22c55e !important;
+}
+
+/* ICONO INACTIVO */
+.icon-inactive {
+    color: #ef4444 !important;
+    opacity: .6;
+}
+
+/* BOTON BLOQUEO */
+.btnacciones {
+    border-radius: 8px;
+    padding: 5px 8px;
+    transition: .2s;
+}
+
+    .btnacciones:hover {
+        transform: scale(1.1);
+    }
+
+input {
+    color: black !important
 }
 
 
-/* Cambia el color del fondo del switch cuando está apagado */
-#ComprobantesEnviados.form-check-input {
-    background-color: white !important;
-    border-color: black !important;
-    width: 2rem; /* Ajuste de tamaño */
-    height: 1rem;
-    transform: scale(1.5); /* Escalado */
-    padding-left: 0px !important;
+.acciones-usuario {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
 }
 
-    /* Cambia el color de fondo cuando está activado */
-#ComprobantesEnviados.form-check-input:checked {
-    background-color: #28a745 !important; /* Verde */
-    border-color: #28a745 !important;
+    /* hover solo para acciones */
+    .acciones-usuario:hover {
+        background: rgba(255,255,255,0.12);
+    }
+
+/* separación visual */
+.list-group-item {
+    position: relative;
 }
 
-        /* Cambia la bolita del switch cuando está activado */
-#ComprobantesEnviados.form-check-input:checked::after {
-    background-color: red !important; /* Rojo */
+.acciones-usuario i,
+.acciones-usuario button {
+    pointer-events: auto;
 }
 
-    /* Cambia la bolita del switch cuando está deshabilitado */
-#ComprobantesEnviados.form-check-input:disabled::after {
-    background-color: rgb(128, 128, 128,0.7) !important; /* Gris */
+.btnacciones.btn-danger {
+    background: #e74c3c;
+    border: none;
+}
+
+.btnacciones.btn-success {
+    background: #2ecc71;
+    border: none;
+}
+
+.btnacciones:hover {
+    transform: scale(1.08);
+    transition: all 0.15s ease;
+}
+
+.acciones-usuario {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+}
+
+.acciones-usuario-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.switch-rendimiento {
+    display: flex;
+    gap: 10px;
+    background: rgba(255,255,255,0.05);
+    padding: 6px;
+    border-radius: 14px;
+}
+
+.btn-switch {
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    background: transparent;
+    color: #aaa;
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+    /* ACTIVO */
+    .btn-switch.active {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        box-shadow: 0 0 12px rgba(59,130,246,0.5);
+    }
+
+    /* HOVER */
+    .btn-switch:hover {
+        color: white;
+        background: rgba(255,255,255,0.1);
+    }
+
+/* CONTENEDOR (separa los botones) */
+.btn-group {
+    display: flex !important;
+    gap: 10px;
+    background: transparent !important;
+}
+
+    /* BOTON BASE */
+    .btn-group .btn {
+        border-radius: 12px !important;
+        padding: 10px 18px;
+        font-weight: 500;
+        transition: all 0.25s ease;
+    }
+
+/* ACTIVO (AZUL PRO) */
+.btn-activo {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 0 12px rgba(59,130,246,0.5);
+}
+
+/* INACTIVO */
+.btn-inactivo {
+    background: rgba(255,255,255,0.05) !important;
+    color: #aaa !important;
+    border: none !important;
+}
+
+/* HOVER */
+.btn-group .btn:hover {
+    transform: scale(1.05);
+}
+
+.dashboard-rendimiento {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.dashboard-card {
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 16px;
+}
+
+    .dashboard-card.full {
+        grid-column: span 2;
+    }
+
+    .dashboard-card .title {
+        color: #aaa;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+.dashboard-card {
+    height: 260px; /* 🔥 CONTROL TOTAL DEL TAMAÑO */
+}
+
+    .dashboard-card.full {
+        height: 220px;
+    }
+
+    .dashboard-card canvas {
+        width: 100% !important;
+        height: 180px !important;
+    }
+
+.dashboard-rendimiento {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.dashboard-card {
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 16px;
+    height: 260px;
+}
+
+    .dashboard-card.full {
+        grid-column: span 2;
+        height: 240px;
+    }
+
+    .dashboard-card canvas {
+        width: 100% !important;
+        height: 180px !important;
+    }
+
+    .dashboard-card .title {
+        color: #aaa;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+select,
+select option {
+    color: #000 !important;
+}
+
+/* =========================
+   BASE
+========================= */
+.dashboard-rendimiento {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+/* CARDS */
+.dashboard-card {
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 16px;
+    height: 260px;
+    display: flex;
+    flex-direction: column;
+}
+
+    /* FULL WIDTH */
+    .dashboard-card.full {
+        grid-column: span 2;
+        height: 240px;
+    }
+
+    /* TITULO */
+    .dashboard-card .title {
+        color: #aaa;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    /* CANVAS */
+    .dashboard-card canvas {
+        flex: 1;
+        width: 100% !important;
+    }
+
+/* =========================
+   📱 MOBILE (CLAVE)
+========================= */
+@media (max-width: 768px) {
+
+    .dashboard-rendimiento {
+        grid-template-columns: 1fr; /* 🔥 1 POR FILA */
+        gap: 14px;
+    }
+
+    .dashboard-card {
+        height: 220px; /* 🔥 MÁS CHICO */
+        padding: 14px;
+    }
+
+        .dashboard-card.full {
+            grid-column: span 1; /* 🔥 IMPORTANTE */
+            height: 240px;
+        }
+
+    /* 🔥 DOUGHNUT CENTRADO */
+    #chartMetodosPago {
+        max-height: 180px !important;
+        margin: 0 auto;
+    }
+
+    /* 🔥 BARRAS MÁS FINAS */
+    canvas {
+        max-height: 180px !important;
+    }
+
+    /* 🔥 TITULOS MÁS CLAROS */
+    .dashboard-card .title {
+        font-size: 14px;
+        color: #ccc;
+        text-align: center;
+    }
 }
 
 
+.global-loading {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 40, 0.85);
+    backdrop-filter: blur(6px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-.form-switch {
-    padding-left: 0px !important
+    .global-loading.hidden {
+        display: none;
+    }
+
+.loading-box {
+    text-align: center;
+    color: #fff;
+    font-weight: 600;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top: 4px solid #00d4ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: auto;
+}
+
+.loading-text {
+    margin-top: 10px;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 🔥 BLOQUEO REAL DE SCROLL */
+body.loading {
+    overflow: hidden;
 }

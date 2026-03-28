@@ -75,10 +75,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         const nombre = (usuario.Usuario || "").toLowerCase().trim();
         const rol = Number(usuario.IdRol);
 
-        return rol === 1 || nombre === "var" || nombre === "milagros";
+          return rol === 1 || nombre === "var" || nombre === "varela87." || nombre === "milagros" || nombre === "milagroscomprobantes";
     }
 
-    const tienePermiso = puedeCambiarTipo(userSession);
+    //const tienePermiso = puedeCambiarTipo(userSession);
+    const tienePermiso = true;
 
     // 🔒 SI NO TIENE PERMISO → FORZAR INDUMENTARIA
     if (!tienePermiso) {

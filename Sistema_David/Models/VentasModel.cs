@@ -136,28 +136,26 @@ namespace Sistema_David.Models.Modelo
         }
 
 
-        public static List<VMVenta> ListaVentas(int idVendedor, int tipoNegocio)
+      
+
+        public static List<VMVentaRendimiento> ListaVentas(int idVendedor, int tipoNegocio)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var result = db.Database.SqlQuery<VMVenta>(@"
-            SELECT v.Id, v.idCliente, v.Restante, v.idVendedor, v.IdTipoNegocio,
-                   ec.Nombre AS EstadoCliente, u.Nombre AS Vendedor
-            FROM Ventas v
-            LEFT JOIN Clientes c ON c.Id = v.idCliente
-            LEFT JOIN Usuarios u ON u.Id = v.idVendedor
-            LEFT JOIN EstadosClientes ec ON ec.Id = c.IdEstado
-            WHERE v.IdtipoNegocio = @tipoNegocio or @tipoNegocio = -1
-            AND v.IdVendedor = @idVendedor or @idVendedor = -1
-        ",
-                new SqlParameter("idVendedor", idVendedor),
-                new SqlParameter("tipoNegocio", tipoNegocio))
-                .ToList();
-
-                return result;
+                try
+                {
+                    return db.Database.SqlQuery<VMVentaRendimiento>(
+                    "EXEC sp_ListarVentasRendimiento @idVendedor, @tipoNegocio",
+                    new SqlParameter("@idVendedor", idVendedor),
+                    new SqlParameter("@tipoNegocio", tipoNegocio)
+                ).ToList();
+                } catch (Exception ex)
+                {
+                    return null;
+                }
+                
             }
         }
-
 
 
 

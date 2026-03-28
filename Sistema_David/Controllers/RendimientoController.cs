@@ -90,7 +90,7 @@ namespace Sistema_David.Controllers
             var result = VentasModel.ListaVentas(idVendedor, tipoNegocio);
 
             var json = Json(new { data = result }, JsonRequestBehavior.AllowGet);
-            json.MaxJsonLength = 500000000;
+            json.MaxJsonLength = 999999999;
             return json;
         }
 

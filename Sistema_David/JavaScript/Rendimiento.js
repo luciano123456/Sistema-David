@@ -1,46 +1,159 @@
 ﻿let userSession;
 let gridRendimiento = null;
-
+let usuarioSeleccionadoId = null;
+let isRenderingDashboard = false;
 
 $(document).ready(async function () {
-
-
     moment.locale('es');
 
     userSession = JSON.parse(localStorage.getItem('usuario'));
 
-    if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
+    inicializarCompatibilidadHtmlNuevo();
+    registrarEventosHtmlNuevo();
+
+    if (userSession.IdRol == 1) { // ROL ADMINISTRADOR
         $("#exportacionExcel").removeAttr("hidden");
+        $("#dashboardRendimiento").removeAttr("hidden");
+        $("#divTotalEnRojo").removeAttr("hidden");
+        $("#divTotalCapital").removeAttr("hidden");
         $("#divComprobantesEnviados").attr("style", "display: none !important;");
-
-        $("#Filtros").removeAttr("hidden");
-    } else if (userSession.IdRol == 4) { //ROL COMPROBANTES
+        mostrarPanelFiltrosNuevo(true);
+    } else if (userSession.IdRol == 4) { // ROL COMPROBANTES
         $("#divCliente").attr("hidden", "hidden");
+     
+        $("#btnFechaMensual").attr("hidden", "hidden");
         $("#divComprobantesEnviados").attr("style", "display: flex !important;");
-
         $("#btnRendMensual").attr("hidden", "hidden");
-        $("#Filtros").removeAttr("hidden");
+        mostrarPanelFiltrosNuevo(true);
     }
 
     await cargarCuentas();
     await cargarTiposDeNegocio();
     configurarDataDiario();
 
-
-
     $("#btnRendimiento").css("background", "#2E4053");
-
 });
 
+function inicializarCompatibilidadHtmlNuevo() {
+    if (document.getElementById("panelFiltrosRendimiento")) {
+        const panel = document.getElementById("panelFiltrosRendimiento");
+        panel.classList.add("d-none");
+    }
+
+    const btnToggle = document.getElementById("btnToggleFiltrosRendimiento");
+    if (btnToggle && !document.getElementById("iconFiltrosRendimiento")) {
+        const icon = document.createElement("i");
+        icon.id = "iconFiltrosRendimiento";
+        icon.className = "fa fa-chevron-down me-2";
+        btnToggle.prepend(icon);
+    }
+
+    if (document.getElementById("vistaMensualRendimiento")) {
+        document.getElementById("vistaMensualRendimiento").hidden = true;
+    }
+    if (document.getElementById("vistaDiariaRendimiento")) {
+        document.getElementById("vistaDiariaRendimiento").hidden = false;
+    }
+}
+
+function registrarEventosHtmlNuevo() {
+    $("#btnToggleFiltrosRendimiento").off("click").on("click", function () {
+        toggleFiltrosRendimiento();
+    });
+
+    $("#btnAplicarFiltrosRendimiento").off("click").on("click", function () {
+        aplicarFiltros();
+    });
+
+    $("#btnLimpiarFiltrosRendimiento").off("click").on("click", function () {
+        limpiarFiltrosRendimiento();
+    });
+
+    $("#btnFechaHoy").off("click").on("click", function () {
+        fechaHoy();
+    });
+
+    $("#btnFechaMensual").off("click").on("click", function () {
+        fechaMensual();
+    });
+
+    $("#btnRendDiario").off("click").on("click", async function () {
+        await mostrarRendimiento('Diario');
+    });
+
+    $("#btnRendMensual").off("click").on("click", async function () {
+        await mostrarRendimiento('Mensual');
+    });
+
+    $("#MetodoPago").off("change").on("change", async function () {
+        await habilitarCuentas();
+    });
+}
+
+function toggleFiltrosRendimiento() {
+    const panel = document.getElementById("panelFiltrosRendimiento");
+    const icon = document.getElementById("iconFiltrosRendimiento");
+
+    if (!panel) return;
+
+    panel.classList.toggle("d-none");
+
+    if (icon) {
+        if (panel.classList.contains("d-none")) {
+            icon.classList.remove("fa-chevron-up");
+            icon.classList.add("fa-chevron-down");
+        } else {
+            icon.classList.remove("fa-chevron-down");
+            icon.classList.add("fa-chevron-up");
+        }
+    }
+}
+
+function mostrarPanelFiltrosNuevo(mostrar) {
+    const panel = document.getElementById("panelFiltrosRendimiento");
+    const icon = document.getElementById("iconFiltrosRendimiento");
+
+    if (!panel) return;
+
+    if (mostrar) {
+        panel.classList.remove("d-none");
+        if (icon) {
+            icon.classList.remove("fa-chevron-down");
+            icon.classList.add("fa-chevron-up");
+        }
+    } else {
+        panel.classList.add("d-none");
+        if (icon) {
+            icon.classList.remove("fa-chevron-up");
+            icon.classList.add("fa-chevron-down");
+        }
+    }
+}
+
+function limpiarFiltrosRendimiento() {
+    const form = document.getElementById("formFiltrosRendimiento");
+    if (form) form.reset();
+
+    if (document.getElementById("TipoNegocio")) {
+        document.getElementById("TipoNegocio").value = -1;
+    }
+    if (document.getElementById("MetodoPago")) {
+        document.getElementById("MetodoPago").value = "Todos";
+    }
+    if (document.getElementById("CuentaPago")) {
+        document.getElementById("CuentaPago").value = -1;
+    }
+
+    fechaHoy();
+    habilitarCuentas();
+}
 
 function fechaHoy() {
-
     document.getElementById("FechaDesde").value = moment().format('YYYY-MM-DD');
     document.getElementById("FechaHasta").value = moment().format('YYYY-MM-DD');
 }
 
 function fechaMensual() {
-
     document.getElementById("FechaDesde").value = moment().startOf('month').format('YYYY-MM-DD');
     document.getElementById("FechaHasta").value = moment().format('YYYY-MM-DD');
 }
@@ -50,19 +163,19 @@ async function configurarDataDiario() {
 
     var listaUsuarios = document.getElementById("listaUsuarios");
 
-
     if (listaUsuarios) {
-        var cabeceraVC = listaUsuarios.querySelector(".list-group-item.d-flex.justify-content-end.align-items-center");
+        var cabeceraVC =
+            listaUsuarios.querySelector(".list-group-item.d-flex.justify-content-end.align-items-center") ||
+            listaUsuarios.querySelector(".list-group-item");
 
-        // Identificar la posición de la cabecera "V C" en la lista
-        var posicionCabeceraVC = Array.prototype.indexOf.call(listaUsuarios.children, cabeceraVC);
+        if (cabeceraVC) {
+            var posicionCabeceraVC = Array.prototype.indexOf.call(listaUsuarios.children, cabeceraVC);
 
-        // Limpiar la lista, excluyendo la cabecera "V C"
-        while (listaUsuarios.children.length > posicionCabeceraVC + 1) {
-            listaUsuarios.removeChild(listaUsuarios.children[posicionCabeceraVC + 1]);
+            while (listaUsuarios.children.length > posicionCabeceraVC + 1) {
+                listaUsuarios.removeChild(listaUsuarios.children[posicionCabeceraVC + 1]);
+            }
         }
     }
-
 
     if (localStorage.getItem("FechaDesdeRendimiento") == null) {
         FechaDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
@@ -76,8 +189,6 @@ async function configurarDataDiario() {
         FechaHasta = localStorage.getItem("FechaHastaRendimiento");
     }
 
-
-
     document.getElementById("FechaDesde").value = FechaDesde;
     document.getElementById("FechaHasta").value = FechaHasta;
 
@@ -86,28 +197,33 @@ async function configurarDataDiario() {
     var metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
     var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? -1 : 0;
 
-
-
-    const fechaActual = new Date();
-
-
     if (userSession.IdRol == 4) {
-        const cuatroDiasAntes = moment().subtract(4, 'days'); // Calcula 4 días antes de la fecha actual
-
+        const cuatroDiasAntes = moment().subtract(4, 'days');
         if (moment(FechaDesde).isBefore(cuatroDiasAntes)) {
             document.getElementById("FechaDesde").value = cuatroDiasAntes.format('YYYY-MM-DD');
+            FechaDesde = cuatroDiasAntes.format('YYYY-MM-DD');
         }
     }
 
-    await cargarUsuarios()
+    await cargarUsuarios();
     configurarDataTable(-1, userSession.IdRol == 1 ? 1 : 0, 1, FechaDesde, FechaHasta, tiponegocio, metodoPago, idcuenta, comprobantesEnviados);
     configurarDataTableClientesAusentes(FechaDesde, FechaHasta);
     cargarVentas(-1);
 
+    $("#btnRendMensual").removeClass("btn-activo").addClass("btn-inactivo");
+    $("#btnRendDiario").removeClass("btn-inactivo").addClass("btn-activo");
 
+    $("#btnRendMensual").css("background", "");
+    $("#btnRendDiario").css("background", "");
 
-    $("#btnRendMensual").css("background", "#1B2631");
-    $("#btnRendDiario").css("background", "#2E4053");
+    if (document.getElementById("vistaDiariaRendimiento")) {
+        document.getElementById("vistaDiariaRendimiento").hidden = false;
+    }
+    if (document.getElementById("vistaMensualRendimiento")) {
+        document.getElementById("vistaMensualRendimiento").hidden = true;
+    }
+
+    ajustarTablasRendimiento();
 }
 
 function configurarDataMensual() {
@@ -125,20 +241,19 @@ function configurarDataMensual() {
         FechaHasta = localStorage.getItem("FechaHastaRendimiento");
     }
 
-
-
     document.getElementById("FechaDesde").value = FechaDesde;
     document.getElementById("FechaHasta").value = FechaHasta;
 
+    obtenerDatosRendimiento(FechaDesde, FechaHasta);
 
-    obtenerDatosRendimiento(FechaDesde, FechaHasta)
+    $("#btnRendMensual").removeClass("btn-inactivo").addClass("btn-activo");
+    $("#btnRendDiario").removeClass("btn-activo").addClass("btn-inactivo");
 
-    $("#btnRendMensual").css("background", "#1B2631");
-    $("#btnRendDiario").css("background", "#2E4053");
+    $("#btnRendMensual").css("background", "");
+    $("#btnRendDiario").css("background", "");
+
+    ajustarTablasRendimiento();
 }
-
-
-
 
 function getRol(idRol) {
     switch (idRol) {
@@ -148,7 +263,6 @@ function getRol(idRol) {
         default: return "";
     }
 }
-
 
 async function cargarUsuarios() {
     try {
@@ -169,21 +283,33 @@ async function cargarUsuarios() {
         const result = await MakeAjax(options);
 
         if (result && result.data) {
-            listaUsuarios = document.getElementById("listaUsuarios");
+            const listaUsuarios = document.getElementById("listaUsuarios");
             [...listaUsuarios.querySelectorAll("li:not(:first-child)")].forEach(item => item.remove());
 
             result.data.forEach(usuario => {
                 const rol = getRol(usuario.IdRol);
                 const listItem = document.createElement("li");
                 listItem.className = "list-group-item d-flex justify-content-between align-items-center";
-                listItem.setAttribute("data-id", usuario.Id);
 
-                // Nombre del usuario
+
+
+                listItem.setAttribute("data-id", usuario.Id);
+                listItem.style.cursor = "pointer";
+
+                listItem.addEventListener("click", function () {
+                    seleccionarRendimiento(listItem, usuario.Id);
+                });
+
                 const nombreUsuario = createUsuarioNombre(usuario, rol);
                 listItem.appendChild(nombreUsuario);
 
-                // Div de acciones
                 const accionesDiv = document.createElement("div");
+                accionesDiv.className = "acciones-usuario";
+
+                // 🔥 CLAVE: bloquear propagación TOTAL de la zona acciones
+                accionesDiv.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                });
 
                 if (usuario.IdRol != 1) {
                     accionesDiv.appendChild(createBloqueoButton(usuario));
@@ -191,12 +317,16 @@ async function cargarUsuarios() {
 
                 if (userSession.IdRol == 1) {
                     accionesDiv.appendChild(createIconoVentas(usuario));
-                    document.getElementById("divVentas").removeAttribute("hidden", "hidden");
+                    const divVentas = document.getElementById("divVentas");
+                    const divVentasCabecera = document.getElementById("divVentasCabecera");
+                    if (divVentas) divVentas.removeAttribute("hidden");
+                    if (divVentasCabecera) divVentasCabecera.removeAttribute("hidden");
                 } else {
-                    document.getElementById("divVentas").setAttribute("hidden", "hidden");
-
+                    const divVentas = document.getElementById("divVentas");
+                    const divVentasCabecera = document.getElementById("divVentasCabecera");
+                    if (divVentas) divVentas.setAttribute("hidden", "hidden");
+                    if (divVentasCabecera) divVentasCabecera.setAttribute("hidden", "hidden");
                 }
-
 
                 accionesDiv.appendChild(createIconoCobranzas(usuario));
 
@@ -204,35 +334,43 @@ async function cargarUsuarios() {
                 listaUsuarios.appendChild(listItem);
             });
 
-            // Crear y agregar el item "GENERAL"
             const generalUsuario = {
-                Id: -1,  // ID especial para "GENERAL"
+                Id: -1,
                 Nombre: "GENERAL",
-                IdRol: ""  // Puedes dejarlo vacío o asignarle un valor especial si lo necesitas
+                IdRol: ""
             };
 
-
-            // Usamos createUsuarioNombre con el objeto "generalUsuario"
             const generalItem = document.createElement("li");
             generalItem.className = "list-group-item d-flex justify-content-between align-items-center selected-user";
             generalItem.setAttribute("data-id", generalUsuario.Id);
+            generalItem.style.cursor = "pointer";
+
+            generalItem.addEventListener("click", function () {
+                seleccionarRendimiento(generalItem, generalUsuario.Id);
+            });
 
             usuarioSeleccionadoId = generalUsuario.Id;
 
-            // Nombre del usuario "GENERAL"
             const nombreGeneral = createUsuarioNombre(generalUsuario, "");
 
-            // Div de acciones para el ítem "GENERAL"
+            // 🔥 MISMO CONTENEDOR QUE LOS DEMAS
             const accionesDivGeneral = document.createElement("div");
+            accionesDivGeneral.className = "acciones-usuario";
+
+            // 🔥 IMPORTANTE: evitar conflictos de click
+            accionesDivGeneral.addEventListener("click", function (e) {
+                e.stopPropagation();
+            });
+
             if (userSession.IdRol == 1) {
                 accionesDivGeneral.appendChild(createIconoVentasGeneral());
             }
+
             accionesDivGeneral.appendChild(createIconoCobranzasGeneral());
 
             generalItem.appendChild(nombreGeneral);
             generalItem.appendChild(accionesDivGeneral);
 
-            // Añadir a la lista
             listaUsuarios.appendChild(generalItem);
         }
     } catch (error) {
@@ -241,60 +379,63 @@ async function cargarUsuarios() {
     }
 }
 
-// Función para crear el ícono de ventas para el usuario "GENERAL"
 function createIconoVentasGeneral() {
     const iconVentas = document.createElement("i");
-    iconVentas.className = "fa fa-check text-success mx-2";  // Color verde por defecto
+    iconVentas.className = "fa fa-check text-success mx-2";
     iconVentas.setAttribute("title", "Ventas");
     iconVentas.style.cursor = "pointer";
     iconVentas.addEventListener("click", function () {
-        alternarColorIcono(iconVentas);  // Se agrega la funcionalidad de alternar color
+        alternarColorIcono(iconVentas);
     });
     return iconVentas;
 }
 
-// Función para crear el ícono de cobranzas para el usuario "GENERAL"
 function createIconoCobranzasGeneral() {
     const iconCobranzas = document.createElement("i");
-    iconCobranzas.className = "fa fa-check text-success";  // Color verde por defecto
+    iconCobranzas.className = "fa fa-check text-success";
     iconCobranzas.setAttribute("title", "Cobranzas");
     iconCobranzas.style.cursor = "pointer";
     iconCobranzas.addEventListener("click", function () {
-        alternarColorIcono(iconCobranzas);  // Se agrega la funcionalidad de alternar color
+        alternarColorIcono(iconCobranzas);
     });
     return iconCobranzas;
 }
 
-
-
 function createUsuarioNombre(usuario, rol) {
     const nombreUsuario = document.createElement("span");
+    nombreUsuario.className = "usuario-nombre";
     nombreUsuario.textContent = usuario.Nombre + (rol ? ` (${rol})` : "");
     nombreUsuario.style.cursor = "pointer";
-    nombreUsuario.addEventListener("click", function () {
-        seleccionarRendimiento(this.parentElement, usuario.Id);
-    });
     return nombreUsuario;
 }
 
 function createBloqueoButton(usuario) {
-
-    const color = usuario.BloqueoSistema ? "danger" : "success";
-    const titulo = usuario.BloqueoSistema ? "Desbloquear" : "Bloquear";
-    const estadoInverso = usuario.BloqueoSistema ? 0 : 1;
+    const estaBloqueado = usuario.BloqueoSistema;
 
     const botonBloqueo = document.createElement("button");
-    botonBloqueo.className = `btn btn-sm btn-${color} btnacciones`;
     botonBloqueo.setAttribute("type", "button");
-    botonBloqueo.setAttribute("title", titulo);
-    botonBloqueo.innerHTML = `<i class="fa fa-power-off fa-lg text-white" aria-hidden="true"></i>`;
+    botonBloqueo.classList.add("btn", "btn-sm", "btnacciones");
+
+    // 🔥 COLOR DEL BOTÓN (NO DEL ICONO)
+    if (estaBloqueado) {
+        botonBloqueo.classList.add("btn-danger"); // ROJO
+        botonBloqueo.setAttribute("title", "Desbloquear");
+    } else {
+        botonBloqueo.classList.add("btn-success"); // VERDE
+        botonBloqueo.setAttribute("title", "Bloquear");
+    }
+
+    // 🔥 ICONO SIEMPRE BLANCO (NO CAMBIA)
+    botonBloqueo.innerHTML = `<i class="fa fa-power-off fa-lg text-white"></i>`;
+
+    const estadoInverso = estaBloqueado ? 0 : 1;
+
     botonBloqueo.addEventListener("click", function (e) {
-        e.stopPropagation(); // Detener propagación para que no afecte el listItem
+        e.stopPropagation();
         bloqueoSistema(usuario.Id, estadoInverso);
     });
 
     return botonBloqueo;
-
 }
 
 function createIconoVentas(usuario) {
@@ -303,7 +444,7 @@ function createIconoVentas(usuario) {
     iconVentas.setAttribute("title", "Ventas");
     iconVentas.style.cursor = "pointer";
     iconVentas.addEventListener("click", function (e) {
-        e.stopPropagation(); // Detener propagación para que no afecte el listItem
+        e.stopPropagation();
         alternarColorIcono(iconVentas);
     });
     return iconVentas;
@@ -315,31 +456,20 @@ function createIconoCobranzas(usuario) {
     iconCobranzas.setAttribute("title", "Cobranzas");
     iconCobranzas.style.cursor = "pointer";
     iconCobranzas.addEventListener("click", function (e) {
-        e.stopPropagation(); // Detener propagación para que no afecte el listItem
+        e.stopPropagation();
         alternarColorIcono(iconCobranzas);
     });
     return iconCobranzas;
 }
 
-
-
-
-
-
-
-
-
-
-
 function alternarColorIcono(icono) {
     const listItem = icono.closest("li");
-    let dataId = listItem.getAttribute("data-id");
+    let dataId = parseInt(listItem.getAttribute("data-id"));
 
     if (dataId != usuarioSeleccionadoId) {
         return false;
     }
 
-    // Cambiar solo el color del ícono seleccionado (Ventas o Cobranzas) sin afectar al otro
     if (icono.classList.contains("text-success")) {
         icono.classList.remove("text-success");
         icono.classList.add("text-danger");
@@ -348,7 +478,6 @@ function alternarColorIcono(icono) {
         icono.classList.add("text-success");
     }
 
-    // Actualizar el estado de los íconos de Ventas y Cobranzas
     const iconoVentas = listItem.querySelector(".fa-check[title='Ventas']");
     const iconoCobranzas = listItem.querySelector(".fa-check[title='Cobranzas']");
 
@@ -358,7 +487,7 @@ function alternarColorIcono(icono) {
     var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? -1 : 0;
 
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
-    // Llamar a la función para actualizar la DataTable con los nuevos estados
+
     configurarDataTable(
         dataId,
         estadoVentas,
@@ -372,18 +501,15 @@ function alternarColorIcono(icono) {
     );
 }
 
-let usuarioSeleccionadoId = null; // Variable para realizar un seguimiento del usuario seleccionado
-
 function seleccionarRendimiento(elemento, idVendedor) {
     const usuarios = document.getElementsByClassName("list-group-item");
 
-    // Limpiar selección previa
     Array.from(usuarios).forEach(usuario => {
         usuario.classList.remove("selected-user");
+
         const iconoVentas = usuario.querySelector(".fa-check[title='Ventas']");
         const iconoCobranzas = usuario.querySelector(".fa-check[title='Cobranzas']");
 
-        // Restablecer íconos a rojo por defecto
         if (iconoVentas) {
             iconoVentas.classList.remove("text-success");
             iconoVentas.classList.add("text-danger");
@@ -394,10 +520,8 @@ function seleccionarRendimiento(elemento, idVendedor) {
         }
     });
 
-    // Agregar la clase 'selected-user' al elemento seleccionado
     elemento.classList.add("selected-user");
 
-    // Marcar los íconos de "Ventas" y "Cobranzas" en verde por defecto
     const iconoVentas = elemento.querySelector(".fa-check[title='Ventas']");
     const iconoCobranzas = elemento.querySelector(".fa-check[title='Cobranzas']");
 
@@ -410,41 +534,16 @@ function seleccionarRendimiento(elemento, idVendedor) {
         iconoCobranzas.classList.add("text-success");
     }
 
-    // Reconfigurar los eventos de clic para los íconos después de cambiar el color
-    if (iconoVentas) {
-        iconoVentas.removeEventListener("click", alternarColorIcono);  // Eliminar el evento anterior
-        iconoVentas.addEventListener("click", function () {
-            alternarColorIcono(iconoVentas);
-        });
-    }
 
-    if (iconoCobranzas) {
-        iconoCobranzas.removeEventListener("click", alternarColorIcono);  // Eliminar el evento anterior
-        iconoCobranzas.addEventListener("click", function () {
-            alternarColorIcono(iconoCobranzas);
-        });
-    }
-
-    if (userSession.idRol == 1) {
-        // Alternar los íconos cuando se haga clic
-        iconoVentas.addEventListener("click", function () {
-            alternarColorIcono(iconoVentas);
-        });
-    }
-
-    iconoCobranzas.addEventListener("click", function () {
-        alternarColorIcono(iconoCobranzas);
-    });
-
-    // Obtener el estado actual de los íconos de "Ventas" y "Cobranzas"
     const estadoVentas = iconoVentas && iconoVentas.classList.contains("text-success") ? 1 : 0;
     const estadoCobranzas = iconoCobranzas && iconoCobranzas.classList.contains("text-success") ? 1 : 0;
     const metodoPago = document.getElementById("MetodoPago").options[document.getElementById("MetodoPago").selectedIndex].text;
     var idcuenta = document.getElementById("CuentaPago").value;
-    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? 1 : 0;
+    var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? -1 : 0;
 
-    // Limpiar y reconfigurar la DataTable
-    $('#grdRendimiento').DataTable().clear().draw();
+    if ($.fn.DataTable.isDataTable('#grdRendimiento')) {
+        $('#grdRendimiento').DataTable().clear().draw();
+    }
 
     configurarDataTable(
         idVendedor,
@@ -463,9 +562,7 @@ function seleccionarRendimiento(elemento, idVendedor) {
         document.getElementById("FechaHasta").value
     );
 
-
     usuarioSeleccionadoId = idVendedor;
-
     cargarVentas(idVendedor);
 }
 
@@ -485,24 +582,24 @@ async function cargarVentas(idvendedor) {
             data: value,
             contentType: "application/json",
             dataType: "json",
-            timeout: 120000 // 2 minutos
+            timeout: 120000
         };
 
         let result = await MakeAjax(options);
 
         if (result != null && result.data) {
-            let totRestante = result.data.reduce((sum, venta) => sum + venta.Restante, 0);
+            let totRestante = result.data.reduce((sum, venta) => sum + safeNumber(venta.Restante), 0);
+
             document.getElementById("totRestante").textContent = formatNumber(totRestante);
 
-            // Calcular la suma de Restante solo para clientes con EstadoCliente "Inhabilitado"
             let totDeudaInhabilitados = result.data
-                .filter(venta => venta.EstadoCliente === "Inhabilitado")
-                .reduce((sum, venta) => sum + venta.Restante, 0);
+                .filter(venta => safeString(venta.EstadoCliente) === "Inhabilitado")
+                .reduce((sum, venta) => sum + safeNumber(venta.Restante), 0);
 
             document.getElementById("totDeuda").textContent = formatNumber(totDeudaInhabilitados);
 
         } else {
-            console.error('La respuesta del servidor es incorrecta:', result); // Agrega un mensaje de error en caso de una respuesta incorrecta
+            console.error('La respuesta del servidor es incorrecta:', result);
         }
     } catch (error) {
         console.error('Error en la solicitud AJAX:', error);
@@ -512,7 +609,8 @@ async function cargarVentas(idvendedor) {
 }
 
 function aplicarFiltros() {
-
+    destroyAllCharts();
+    dashboardRenderToken++;
     const fechaDesde = document.getElementById("FechaDesde").value;
     const fechaHasta = document.getElementById("FechaHasta").value;
     const tipoNegocio = document.getElementById("TipoNegocio").value;
@@ -520,17 +618,12 @@ function aplicarFiltros() {
     var idcuenta = document.getElementById("CuentaPago").value;
     var comprobantesEnviados = document.getElementById("ComprobantesEnviados").checked || userSession.IdRol == 1 ? -1 : 0;
 
-
-    // Convertir las fechas a objetos Date
     const fechaDesdeDate = new Date(fechaDesde);
     const fechaHastaDate = new Date(fechaHasta);
-
-    // Obtener la fecha actual
     const fechaActual = new Date();
 
     fechaActual.setUTCHours(fechaActual.getUTCHours() - 3);
 
-    // Convertir las fechas a cadenas en el formato 'YYYY-MM-DD'
     const fechaHastaString = fechaHastaDate.toISOString().split('T')[0];
     const fechaActualString = fechaActual.toISOString().split('T')[0];
 
@@ -545,10 +638,10 @@ function aplicarFiltros() {
     }
 
     if (fechaHastaString > fechaActualString) {
-        // Fecha hasta es mayor que la fecha actual
         alert("La fecha hasta no puede ser mayor que la fecha actual.");
         return;
     }
+
     const usuarioSeleccionado = document.querySelector(".selected-user");
     if (usuarioSeleccionado) {
         const idVendedor = usuarioSeleccionado.getAttribute("data-id");
@@ -556,140 +649,219 @@ function aplicarFiltros() {
         let estadoVentas = 0;
 
         if (userSession.IdRol == 1) {
-            estadoVentas = usuarioSeleccionado.querySelector(".fa-check[title='Ventas']").classList.contains("text-success") ? 1 : 0;
+            const iconVentasSel = usuarioSeleccionado.querySelector(".fa-check[title='Ventas']");
+            estadoVentas = iconVentasSel && iconVentasSel.classList.contains("text-success") ? 1 : 0;
         } else {
-            estadoVentas = 0
+            estadoVentas = 0;
         }
 
-
-        const estadoCobranzas = usuarioSeleccionado.querySelector(".fa-check[title='Cobranzas']").classList.contains("text-success") ? 1 : 0;
-
+        const iconCobranzasSel = usuarioSeleccionado.querySelector(".fa-check[title='Cobranzas']");
+        const estadoCobranzas = iconCobranzasSel && iconCobranzasSel.classList.contains("text-success") ? 1 : 0;
 
         localStorage.setItem("FechaDesdeRendimiento", document.getElementById("FechaDesde").value);
         localStorage.setItem("FechaHastaRendimiento", document.getElementById("FechaHasta").value);
 
-        $('#grdRendimiento').DataTable().clear().draw();
+        if ($.fn.DataTable.isDataTable('#grdRendimiento')) {
+            $('#grdRendimiento').DataTable().clear().draw();
+        }
+
         configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta, tipoNegocio, metodoPago, idcuenta, comprobantesEnviados);
 
     } else {
         configurarDataTable(-1, 1, 1, fechaDesde, fechaHasta, -1, "Todos", -1, comprobantesEnviados);
     }
 
-    //$('#grdRendimientoGeneral').DataTable().clear().draw();
-    //$('#grdRendimientoCobrado').DataTable().clear().draw();
     cargarVentas(-1);
     obtenerDatosRendimiento(fechaDesde, fechaHasta);
     cargarUsuarios();
 }
 
 
+const safeNumber = (v) => {
+    if (v === null || v === undefined || v === "") return 0;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+};
+
+const safeString = (v) => {
+    if (v === null || v === undefined) return "";
+    return String(v);
+};
+
+const safeUpper = (v) => safeString(v).toUpperCase();
+
+const safeDate = (v) => {
+    if (!v) return "";
+    const m = moment(v);
+    return m.isValid() ? m.format("DD/MM/YYYY") : "";
+};
 
 const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio, metodoPago, idcuenta, comprobantesEnviados) => {
-
     let totVenta = 0;
     let totCobro = 0;
     let totInteres = 0;
     let totEfectivo = 0;
     let totTransferencia = 0;
-    let totRestante = 0;
+
+    showGlobalLoading("Cargando tablas...");
+
+    const url = `/Rendimiento/MostrarRendimiento?id=${encodeURIComponent(idVendedor)}&ventas=${encodeURIComponent(estadoVentas)}&cobranzas=${encodeURIComponent(estadoCobranzas)}&fechadesde=${encodeURIComponent(fechadesde)}&fechahasta=${encodeURIComponent(fechahasta)}&tiponegocio=${encodeURIComponent(tipoNegocio)}&metodoPago=${encodeURIComponent(metodoPago)}&IdCuentaBancaria=${encodeURIComponent(idcuenta)}&ComprobantesEnviados=${encodeURIComponent(comprobantesEnviados)}`;
+
+    const recalcularTotales = (table) => {
+        totVenta = 0;
+        totCobro = 0;
+        totInteres = 0;
+        totEfectivo = 0;
+        totTransferencia = 0;
+
+        table.data().each(function (rowData) {
+            const descripcion = safeString(rowData.Descripcion);
+            const metodo = safeUpper(rowData.MetodoPago);
+            const cobro = safeNumber(rowData.Cobro);
+            const venta = safeNumber(rowData.Venta);
+            const interes = safeNumber(rowData.Interes);
+
+            if (descripcion.includes("Cobranza")) {
+                totCobro += cobro;
+
+                if (metodo === "EFECTIVO") {
+                    totEfectivo += cobro;
+                }
+
+                if (metodo === "TRANSFERENCIA PROPIA" || metodo === "TRANSFERENCIA A TERCEROS") {
+                    totTransferencia += cobro;
+                }
+            }
+
+            if (descripcion.includes("Venta")) {
+                totVenta += venta;
+            }
+
+            if (descripcion.includes("Interes")) {
+                totInteres += interes;
+            }
+        });
+
+        document.getElementById("totventa").textContent = formatNumber(totVenta);
+        document.getElementById("totcobro").textContent = formatNumber(totCobro);
+        document.getElementById("totinteres").textContent = formatNumber(totInteres);
+        document.getElementById("totefectivo").textContent = formatNumber(totEfectivo);
+        document.getElementById("tottransferencia").textContent = formatNumber(totTransferencia);
+    };
 
     const tableExists = $.fn.DataTable.isDataTable('#grdRendimiento');
 
     if (!tableExists) {
-        // Si la tabla no existe, crearla
         gridRendimiento = $('#grdRendimiento').DataTable({
-            "ajax": {
-                "url": `/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}&ComprobantesEnviados=${comprobantesEnviados}`,
-                "type": "GET",
-                "dataType": "json"
+            ajax: {
+                url: url,
+                type: "GET",
+                dataType: "json",
+                dataSrc: function (json) {
+                    if (Array.isArray(json)) return json;
+                    if (json && Array.isArray(json.data)) return json.data;
+                    if (json && Array.isArray(json.Data)) return json.Data;
+                    console.error("Respuesta AJAX inesperada:", json);
+                    return [];
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.error("Error AJAX DataTable:", {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        textStatus,
+                        errorThrown
+                    });
+                }
             },
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
             },
-
+            responsive: false,
             scrollX: true,
-
-            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-            "pageLength": 10,
+            deferRender: true,
+            processing: true,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+            pageLength: 10,
             lengthChange: true,
-            "columns": [
+            columns: [
                 {
-                    "data": "Fecha",
-                    "render": function (data) {
-                        return moment(data).format("DD/MM/YYYY");
-                    }
+                    data: "Fecha",
+                    defaultContent: "",
+                    render: (d) => safeDate(d)
                 },
                 {
-                    "data": "MetodoPago",
-                    "render": function (data, type, row) {
-                        let metodoPago = data || ''; // Mostrar el texto del método de pago si existe
-                        let icon = '';
+                    data: "MetodoPago",
+                    defaultContent: "",
+                    render: function (data, type, row) {
+                        const metodo = safeString(data);
+                        let icon = "";
 
-                        if (row.Imagen !== null && row.Imagen != "" && row.MetodoPago.toUpperCase() != "EFECTIVO") {
-                            icon = `<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='verComprobante(${row.Id})' title='Ver Comprobante'>
-                        <i class='fa fa-eye fa-lg text-primary' aria-hidden='true'></i>
-                    </button>`;
+                        if (safeString(row.Imagen) && safeUpper(metodo) !== "EFECTIVO") {
+                            icon = `<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='verComprobante(${safeNumber(row.Id)})' title='Ver Comprobante'>
+                                        <i class='fa fa-eye fa-lg text-primary' aria-hidden='true'></i>
+                                    </button>`;
                         }
 
-                        return metodoPago + ' ' + icon; // Retorna el método de pago seguido del ícono si existe la imagen
+                        return metodo + (icon ? " " + icon : "");
                     }
                 },
-
-
-                { "data": "CuentaBancaria" },
-                { "data": "Cliente" },
-                { "data": "CapitalInicial" },
-                { "data": "Venta" },
-                { "data": "Cobro" },
-                { "data": "Interes" },
-                { "data": "CapitalFinal" },
-
+                { data: "CuentaBancaria", defaultContent: "", render: d => safeString(d) },
+                { data: "Cliente", defaultContent: "", render: d => safeString(d) },
+                { data: "CapitalInicial", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
+                { data: "Venta", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
+                { data: "Cobro", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
+                { data: "Interes", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
+                { data: "CapitalFinal", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
                 {
                     data: "ProximoCobro",
-                    render: function (data) {
-                        if (!data) return "";   // 🔥 ESTA LÍNEA ES LA CLAVE
-                        return moment(data).format("DD/MM/YYYY");
-                    }
+                    defaultContent: "",
+                    render: d => safeDate(d)
                 },
                 {
-                    "data": "FechaLimite",
-                    "render": function (data) {
-                        return moment(data).format("DD/MM/YYYY");
+                    data: "FechaLimite",
+                    defaultContent: "",
+                    render: d => safeDate(d)
+                },
+                {
+                    data: "TipoNegocio",
+                    defaultContent: "",
+                    render: function (d, type, row) {
+                        return safeString(d || row.Origen);
                     }
                 },
-                { "data": "TipoNegocio" },
-                { "data": "Descripcion" },
+                { data: "Descripcion", defaultContent: "", render: d => safeString(d) },
                 {
-                    "data": "Id",
-                    "render": function (data, type, row) {
-                        let iconColorClass = row.whatssap === 1 ? 'text-success' : 'text-danger';
-                        var iconColor = userSession.IdRol == 2 ? "red" : "white"; // Color del icono basado en el rol
-                        var disabled = userSession.IdRol == 2 ? "disabled" : ""; // Desactivar el botón basado en el rol
-                        var iconWhatssap = "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ", " + JSON.stringify(row.Descripcion || "") + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>"
-                        var iconEliminar = row.Descripcion && userSession.IdRol == 1 && !row.Descripcion.includes("Venta") ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarInformacion(" + data + ")' title='Eliminar' style='color: " + iconColor + ";' " + disabled + "><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>" : '';
+                    data: "Id",
+                    defaultContent: 0,
+                    render: function (data, type, row) {
+                        const id = safeNumber(data);
+                        const desc = safeString(row.Descripcion);
+                        const whatsapp = safeNumber(row.whatssap);
+                        const iconColorClass = whatsapp === 1 ? "text-success" : "text-danger";
+
+                        const iconWhatssap = `<button class='btn btn-sm btnacciones' type='button' onclick='enviarWhatssap(${id}, ${JSON.stringify(desc)})' title='Enviar WhatsApp'>
+                                <i class='fa fa-whatsapp fa-lg ${iconColorClass}' aria-hidden='true'></i>
+                            </button>`;
+
+                        const puedeEliminar = userSession.IdRol == 1 && desc && !desc.toUpperCase().includes("VENTA");
+
+                        const iconEliminar = puedeEliminar
+                            ? `<button class='btn btn-sm btnacciones' type='button' onclick='eliminarInformacion(${id})' title='Eliminar'>
+                                   <i class='fa fa-trash fa-lg' aria-hidden='true'></i>
+                               </button>`
+                            : "";
+
                         return iconWhatssap + iconEliminar;
-
-                    },
-                }
-
-
-            ],
-            "columnDefs": [
-                {
-                    targets: [0], type: "ddMmYyyy"
-                },
-                {
-                    "render": function (data, type, row) {
-                        return formatNumber(data); // Formatear número en la columna
-                    },
-                    "targets": [4, 5, 6, 7, 8] // Columnas Venta, Cobro, Capital Final
+                    }
                 }
             ],
-
-            "order": [[0, "ddMmYyyy-desc"], [1, "asc"]],
-
-            "fnRowCallback": function (nRow, data, row) {
-                if (data.ActualizoUbicacion == 1) {
+            columnDefs: [
+                { targets: [0], type: "ddMmYyyy" }
+            ],
+            order: [[0, "ddMmYyyy-desc"], [1, "asc"]],
+            fnRowCallback: function (nRow, data) {
+                if (safeNumber(data.ActualizoUbicacion) === 1) {
                     $('td', nRow).css({
                         'background-color': '#f7f122',
                         'color': 'black',
@@ -697,123 +869,56 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                     });
                 }
             },
-
-        
-
-
-            "initComplete": async function (settings, json) {
-                // Calcular los totales de Venta y Cobro
-
-                 
-                gridRendimiento.data().each(function (rowData) {
-                    if (rowData.Descripcion.includes("Cobranza")) {
-                        totCobro += rowData.Cobro;
-
-                        if (rowData.MetodoPago != null && rowData.MetodoPago == "EFECTIVO") {
-                            totEfectivo += rowData.Cobro;
-                        }
-                        if (rowData.MetodoPago != null && (rowData.MetodoPago.toUpperCase() == "TRANSFERENCIA PROPIA" || rowData.MetodoPago.toUpperCase() == "TRANSFERENCIA A TERCEROS")) {
-                            totTransferencia += rowData.Cobro;
-                        }
-
-                    }
-                    if (rowData.Descripcion.includes("Venta")) {
-                        totVenta += rowData.Venta;
-                    }
-                    if (rowData.Descripcion.includes("Interes")) {
-                        totInteres += rowData.Interes;
-                    }
-
-
-                });
-
-                // Mostrar los totales en donde desees (por ejemplo, en algún elemento del DOM)
-                document.getElementById("totventa").textContent = formatNumber(totVenta);
-                document.getElementById("totcobro").textContent = formatNumber(totCobro);
-                document.getElementById("totinteres").textContent = formatNumber(totInteres);
-                document.getElementById("totefectivo").textContent = formatNumber(totEfectivo);
-                document.getElementById("tottransferencia").textContent = formatNumber(totTransferencia);
-                document.getElementById("totRestante").textContent = formatNumber(totRestante);
-
+            initComplete: async function () {
+                hideGlobalLoading(); // 🔥 ACA LIBERÁS TODO
+                recalcularTotales(gridRendimiento);
+                cargarVentas(-1);
+                scheduleRenderDashboard(180);
                 await configurarOpcionesColumnas();
+
                 if (userSession.IdRol == 4) {
-                   
+                    gridRendimiento.column(3).visible(false);
                     gridRendimiento.column(4).visible(false);
                     gridRendimiento.column(5).visible(false);
                     gridRendimiento.column(6).visible(false);
                     gridRendimiento.column(7).visible(false);
                 }
 
+                ajustarTablasRendimiento();
 
+                
             }
         });
+    } else {
+    
+        const table = $('#grdRendimiento').DataTable();
 
-} else {
-    // Si la tabla ya existe, simplemente actualizar los datos
-    const table = $('#grdRendimiento').DataTable();
+        table.ajax.url(url).load(function () {
+            recalcularTotales(table);
+            ajustarTablasRendimiento();
+            scheduleRenderDashboard(180);
+            hideGlobalLoading(); // 🔥 ACA LIBERÁS TODO
+        }, false);
+    }
 
-
-
-table.ajax.url(`/Rendimiento/MostrarRendimiento?id=${idVendedor}&ventas=${estadoVentas}&cobranzas=${estadoCobranzas}&fechadesde=${fechadesde}&fechahasta=${fechahasta}&tiponegocio=${tipoNegocio}&metodoPago=${metodoPago}&IdCuentaBancaria=${idcuenta}&ComprobantesEnviados=${comprobantesEnviados}`).load(function () {
-    // Recorrer los datos de la tabla después de que se hayan cargado
-    table.data().each(async function (rowData) {
-
-
-        if (rowData.Descripcion.includes("Cobranza")) {
-            totCobro += rowData.Cobro;
-
-            if (rowData.MetodoPago != null && rowData.MetodoPago == "EFECTIVO") {
-                totEfectivo += rowData.Cobro;
-            }
-            if (rowData.MetodoPago != null && (rowData.MetodoPago == "TRANSFERENCIA PROPIA" || rowData.MetodoPago == "TRANSFERENCIA A TERCEROS")) {
-                totTransferencia += rowData.Cobro;
-            }
+    let filaSeleccionada = null;
+    $('#grdRendimiento tbody').off('click', 'tr').on('click', 'tr', function () {
+        if (filaSeleccionada) {
+            $(filaSeleccionada).removeClass('seleccionada');
+            $('td', filaSeleccionada).removeClass('seleccionada');
         }
-        if (rowData.Descripcion.includes("Venta")) {
-            totVenta += rowData.Venta;
-        }
-        if (rowData.Descripcion.includes("Interes")) {
-            totInteres += rowData.Interes;
-        }
+
+        filaSeleccionada = $(this);
+        $(filaSeleccionada).addClass('seleccionada');
+        $('td', filaSeleccionada).addClass('seleccionada');
     });
-    document.getElementById("totventa").textContent = formatNumber(totVenta);
-    document.getElementById("totcobro").textContent = formatNumber(totCobro);
-    document.getElementById("totinteres").textContent = formatNumber(totInteres);
-    document.getElementById("totefectivo").textContent = formatNumber(totEfectivo);
-    document.getElementById("tottransferencia").textContent = formatNumber(totTransferencia);
-});
-
-
-
-    }
-
-
-let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
-$('#grdRendimiento tbody').on('click', 'tr', function () {
-    // Remover la clase de la fila anteriormente seleccionada
-    if (filaSeleccionada) {
-        $(filaSeleccionada).removeClass('seleccionada');
-        $('td', filaSeleccionada).removeClass('seleccionada');
-
-    }
-
-    // Obtener la fila actual
-    filaSeleccionada = $(this);
-
-    // Agregar la clase a la fila actual
-    $(filaSeleccionada).addClass('seleccionada');
-    $('td', filaSeleccionada).addClass('seleccionada');
-
-});
-
-}
+};
 
 const configurarDataTableClientesAusentes = async (fechadesde, fechahasta, data = null) => {
     const tableExists = $.fn.DataTable.isDataTable('#grdClientesAusentes');
 
     if (!tableExists) {
-        // Si la tabla no existe, crearla
-        const table = $('#grdClientesAusentes').DataTable({
+        $('#grdClientesAusentes').DataTable({
             "ajax": {
                 "url": `/Rendimiento/MostrarClientesAusentes?fechadesde=${fechadesde}&fechahasta=${fechahasta}`,
                 "type": "GET",
@@ -822,9 +927,8 @@ const configurarDataTableClientesAusentes = async (fechadesde, fechahasta, data 
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
             },
-
+            responsive: false,
             scrollX: true,
-
             "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
             "pageLength": 10,
             lengthChange: true,
@@ -845,55 +949,38 @@ const configurarDataTableClientesAusentes = async (fechadesde, fechahasta, data 
                         return "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>";
                     },
                 }
-
-
             ],
             "columnDefs": [
                 {
                     targets: [0], type: "ddMmYyyy"
-                },
+                }
             ],
-
             "order": [[0, "ddMmYyyy-desc"], [1, "asc"]],
-
-
-
-
+            "initComplete": function () {
+                ajustarTablasRendimiento();
+            }
         });
 
     } else {
-        // Si la tabla ya existe y data no es null, simplemente actualizar con la nueva data
         const table = $('#grdClientesAusentes').DataTable();
 
         if (data !== null) {
-            // Limpiar la tabla y agregar los nuevos datos
             table.clear().rows.add(data).draw();
         }
-
-
-
     }
 
-
-    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
-    $('#grdClientesAusentes tbody').on('click', 'tr', function () {
-        // Remover la clase de la fila anteriormente seleccionada
+    let filaSeleccionada = null;
+    $('#grdClientesAusentes tbody').off('click', 'tr').on('click', 'tr', function () {
         if (filaSeleccionada) {
             $(filaSeleccionada).removeClass('seleccionada');
             $('td', filaSeleccionada).removeClass('seleccionada');
-
         }
 
-        // Obtener la fila actual
         filaSeleccionada = $(this);
-
-        // Agregar la clase a la fila actual
         $(filaSeleccionada).addClass('seleccionada');
         $('td', filaSeleccionada).addClass('seleccionada');
-
     });
-
-}
+};
 
 jQuery.extend(jQuery.fn.dataTableExt.oSort, {
     "ddMmYyyy-pre": function (a) {
@@ -909,34 +996,22 @@ jQuery.extend(jQuery.fn.dataTableExt.oSort, {
     }
 });
 
-
-// Función para obtener los datos de la API
 const obtenerDatosRendimiento = async (fechadesde, fechahasta) => {
-
-
     const url = `/Rendimiento/MostrarRendimientoGeneral?fechadesde=${fechadesde}&fechahasta=${fechahasta}`;
     const response = await fetch(url);
     const data = await response.json();
 
+    configurarDataTableCobrado('#grdRendimientoCobrado', fechadesde, fechahasta, data.Cobrado);
+    configurarDataTableGeneral('#grdRendimientoGeneral', fechadesde, fechahasta, data.Rendimiento);
+    configurarDataTableClientesAusentes(fechadesde, fechahasta, data.ClientesAusentes);
+};
 
-
-    configurarDataTableCobrado('#grdRendimientoCobrado', FechaDesde, FechaHasta, data.Cobrado);
-    configurarDataTableGeneral('#grdRendimientoGeneral', FechaDesde, FechaHasta, data.Rendimiento);
-    configurarDataTableClientesAusentes(FechaDesde, FechaHasta, data.ClientesAusentes);
-
-
-}
-
-
-
-// Función para configurar un DataTable con los datos recibidos
 const configurarDataTableGeneral = async (selectorTabla, fechadesde, fechahasta, result) => {
     const datos = result;
     const tableExists = $.fn.DataTable.isDataTable(selectorTabla);
 
     if (!tableExists) {
-        // Si la tabla no existe, crearla y agregar los datos
-        const table = $(selectorTabla).DataTable({
+        $(selectorTabla).DataTable({
             "data": datos,
             "columns": [
                 {
@@ -953,60 +1028,48 @@ const configurarDataTableGeneral = async (selectorTabla, fechadesde, fechahasta,
             ],
             "columnDefs": [
                 {
-                    "render": function (data, type, row) {
+                    "render": function (data) {
                         return formatNumber(data);
                     },
                     "targets": [1, 2, 3, 4]
                 },
             ],
-
+            responsive: false,
             scrollX: true,
             "order": [[0, "asc"]],
             "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+            },
+            "initComplete": function () {
+                ajustarTablasRendimiento();
             }
         });
     } else {
-        // Si la tabla ya existe, agregar los nuevos datos
-
         $('#grdRendimientoGeneral').DataTable().clear().draw();
-
         const table = $(selectorTabla).DataTable();
         table.rows.add(datos).draw();
     }
 
-
-    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
-    $('#grdRendimientoGeneral tbody').on('click', 'tr', function () {
-        // Remover la clase de la fila anteriormente seleccionada
+    let filaSeleccionada = null;
+    $('#grdRendimientoGeneral tbody').off('click', 'tr').on('click', 'tr', function () {
         if (filaSeleccionada) {
             $(filaSeleccionada).removeClass('seleccionada');
             $('td', filaSeleccionada).removeClass('seleccionada');
-
         }
 
-        // Obtener la fila actual
         filaSeleccionada = $(this);
-
-        // Agregar la clase a la fila actual
         $(filaSeleccionada).addClass('seleccionada');
         $('td', filaSeleccionada).addClass('seleccionada');
-
     });
-
-}
-
-
+};
 
 const configurarDataTableCobrado = async (selectorTabla, fechadesde, fechahasta, result) => {
     const datos = result;
-
     const tableExists = $.fn.DataTable.isDataTable(selectorTabla);
 
     if (!tableExists) {
-        // Si la tabla no existe, crearla y agregar los datos
-        const table = $(selectorTabla).DataTable({
+        $(selectorTabla).DataTable({
             "data": datos,
             "columns": [
                 { "data": "Vendedor" },
@@ -1014,7 +1077,7 @@ const configurarDataTableCobrado = async (selectorTabla, fechadesde, fechahasta,
             ],
             "columnDefs": [
                 {
-                    "render": function (data, type, row) {
+                    "render": function (data) {
                         return formatNumber(data);
                     },
                     "targets": [1]
@@ -1024,63 +1087,47 @@ const configurarDataTableCobrado = async (selectorTabla, fechadesde, fechahasta,
             "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+            },
+            "initComplete": function () {
+                ajustarTablasRendimiento();
+
+                hideGlobalLoading(); // 🔥 ACA LIBERÁS TODO
             }
         });
     } else {
-        // Si la tabla ya existe, agregar los nuevos datos
-
         $('#grdRendimientoCobrado').DataTable().clear().draw();
-
         const table = $(selectorTabla).DataTable();
         table.rows.add(datos).draw();
     }
 
-
-    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
-    $('#grdRendimientoCobrado tbody').on('click', 'tr', function () {
-        // Remover la clase de la fila anteriormente seleccionada
+    let filaSeleccionada = null;
+    $('#grdRendimientoCobrado tbody').off('click', 'tr').on('click', 'tr', function () {
         if (filaSeleccionada) {
             $(filaSeleccionada).removeClass('seleccionada');
             $('td', filaSeleccionada).removeClass('seleccionada');
-
         }
 
-        // Obtener la fila actual
         filaSeleccionada = $(this);
-
-        // Agregar la clase a la fila actual
         $(filaSeleccionada).addClass('seleccionada');
         $('td', filaSeleccionada).addClass('seleccionada');
-
     });
-}
-
-
-
+};
 
 function ocultarFiltros() {
-    alert("Hola");
     var filtros = document.getElementById("Filtros");
 
-    // Verificar si está oculto
+    if (!filtros) return;
+
     if (filtros.style.display === "none") {
-        // Mostrar los filtros
         filtros.style.display = "block";
-        /*$("#ocultarFiltros").text("-");*/
     } else {
-        // Ocultar los filtros
-        /* $("#ocultarFiltros").text("+");*/
         filtros.style.display = "none";
     }
 }
 
 async function enviarWhatssap(id, descripcion) {
-
     try {
-
-        const esElectro = descripcion
-            ?.toLowerCase()
-            .includes("electrodomesticos");
+        const esElectro = descripcion?.toLowerCase().includes("electrodomesticos");
 
         if (esElectro) {
             await enviarWhatssapElectro(id, descripcion);
@@ -1091,14 +1138,12 @@ async function enviarWhatssap(id, descripcion) {
         aplicarFiltros();
 
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.');
+        $('.datos-error').removeClass('d-none');
     }
 }
 
-
 async function enviarWhatssapNormalDesdeApi(id) {
-
     const result = await MakeAjax({
         type: "POST",
         url: "/Ventas/EnvWhatssapInformacionVenta",
@@ -1114,11 +1159,9 @@ async function enviarWhatssapNormalDesdeApi(id) {
     }
 
     enviarWhatssapNormal(result);
-  
 }
 
 async function enviarWhatssapElectro(idMovimiento, descripcion) {
-
     const base = await MakeAjax({
         type: "POST",
         url: "/Ventas_Electrodomesticos/EnvWhatssapElectro",
@@ -1147,14 +1190,11 @@ function obtenerTipoMensajeElectro(descripcion = "") {
     if (d.includes("cobranza")) return "cobro";
     if (d.includes("recargo")) return "recargo";
 
-    return "venta"; // fallback seguro
+    return "venta";
 }
 
-
 function armarMensajeWhatsappElectro(base, descripcion) {
-
-    if (!base || !base.Venta || !base.Cliente)
-        return "";
+    if (!base || !base.Venta || !base.Cliente) return "";
 
     const v = base.Venta;
     const tipo = obtenerTipoMensajeElectro(descripcion);
@@ -1166,9 +1206,6 @@ function armarMensajeWhatsappElectro(base, descripcion) {
     const entrega = formatNumber(v.Entrega || 0);
     const saldo = formatNumber(v.Restante || 0);
 
-    // ===============================
-    // PRODUCTOS
-    // ===============================
     let productos = "";
     if (Array.isArray(v.Items) && v.Items.length) {
         productos = v.Items
@@ -1181,16 +1218,11 @@ function armarMensajeWhatsappElectro(base, descripcion) {
         }
     }
 
-    // ===============================
-    // PRÓXIMA CUOTA
-    // ===============================
     let proximaCuota = null;
     if (Array.isArray(v.Cuotas)) {
         proximaCuota = v.Cuotas
             .filter(c => (c.MontoRestante || 0) > 0)
-            .sort((a, b) =>
-                new Date(a.FechaVencimiento) - new Date(b.FechaVencimiento)
-            )[0];
+            .sort((a, b) => new Date(a.FechaVencimiento) - new Date(b.FechaVencimiento))[0];
     }
 
     let textoCuota = "—";
@@ -1201,20 +1233,12 @@ function armarMensajeWhatsappElectro(base, descripcion) {
             `${formatNumber(proximaCuota.MontoRestante)}`;
     }
 
-    // ===============================
-    // SALUDO
-    // ===============================
     const h = new Date().getHours();
     const saludo =
         h >= 5 && h < 12 ? "Buenos días" :
             h >= 12 && h < 20 ? "Buenas tardes" :
                 "Buenas noches";
 
-    // ===============================
-    // MENSAJES POR TIPO
-    // ===============================
-
-    /* ================= VENTA ================= */
     if (tipo === "venta") {
         return `${saludo} ${nombreCliente} 😊
 
@@ -1235,28 +1259,18 @@ Muchas gracias por su compra 🙌
 Ante cualquier consulta, quedamos a disposición.`;
     }
 
-    /* ================= COBRO ================= */
     if (tipo === "cobro") {
-
-        // ===============================
-        // CUOTA PAGADA
-        // ===============================
         let cuotaPagada = null;
 
         if (Array.isArray(v.Cuotas)) {
             cuotaPagada = v.Cuotas
                 .filter(c => (c.MontoPagado || 0) > 0 && (c.MontoRestante || 0) === 0)
-                .sort((a, b) =>
-                    new Date(b.FechaVencimiento) - new Date(a.FechaVencimiento)
-                )[0];
+                .sort((a, b) => new Date(b.FechaVencimiento) - new Date(a.FechaVencimiento))[0];
         }
 
         const nroCuota = cuotaPagada?.NumeroCuota ?? "";
         const importePagado = formatNumber(v.UltimoPago || cuotaPagada?.MontoPagado || 0);
 
-        // ===============================
-        // CUOTAS RESTANTES
-        // ===============================
         const cuotasRestantes = Array.isArray(v.Cuotas)
             ? v.Cuotas.filter(c => (c.MontoRestante || 0) > 0).length
             : 0;
@@ -1278,10 +1292,7 @@ Muchas gracias por su pago 🙌
 Ante cualquier consulta, quedamos a disposición.`;
     }
 
-
-    /* ================= RECARGO ================= */
     if (tipo === "recargo") {
-
         const recargo = formatNumber(v.UltimoRecargo || 0);
 
         return `${saludo} ${nombreCliente} ⚠️
@@ -1302,7 +1313,6 @@ Ante cualquier duda o consulta, quedamos a disposición.`;
 }
 
 function enviarWhatssapNormal(result) {
-
     var fecha = moment(result.InformacionVenta.Fecha).format('DD/MM/YYYY');
     var fechaHora = moment(result.InformacionVenta.Fecha).format('HH:mm');
     var fechaCobro = moment(result.Venta.FechaCobro).format('DD/MM/YYYY');
@@ -1320,16 +1330,11 @@ function enviarWhatssapNormal(result) {
 
     let mensaje = "";
 
-    // ==============================
-    // 🔹 VENTA / COBRANZA
-    // ==============================
     if (result.InformacionVenta.Descripcion != null) {
-
         const table = $('#grdRendimiento').DataTable();
-        table.ajax.reload();
+        table.ajax.reload(null, false);
 
         if (result.InformacionVenta.Descripcion.includes("Venta")) {
-
             var totalVenta = result.InformacionVenta.Entrega + result.InformacionVenta.Restante;
 
             mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
@@ -1345,7 +1350,6 @@ function enviarWhatssapNormal(result) {
                 `su primer fecha de cobro es ${fechaCobro}.`;
 
         } else {
-
             mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
                 `Le informamos que el día ${fecha} hemos registrado un cobro por ${formatNumber(result.InformacionVenta.Entrega)} pesos.`;
 
@@ -1372,13 +1376,9 @@ function enviarWhatssapNormal(result) {
         }
     }
 
-    // ==============================
-    // 🔹 CLIENTE AUSENTE
-    // ==============================
     if (result.InformacionVenta.ClienteAusente == 1) {
-
         const table = $('#grdClientesAusentes').DataTable();
-        table.ajax.reload();
+        table.ajax.reload(null, false);
 
         mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
             `Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro ` +
@@ -1406,9 +1406,6 @@ function enviarWhatssapNormal(result) {
             `Su nueva fecha de cobro es ${fechaCobro}`;
     }
 
-    // ==============================
-    // 🔹 INTERESES
-    // ==============================
     if (result.InformacionVenta.TipoInteres === "VISITA CON CAMBIO") {
         mensaje = `${saludo}, ${result.Cliente.Nombre} ${result.Cliente.Apellido}. ` +
             `El día ${fecha} el cobrador pasó por su domicilio. Al reprogramarse el pago, ` +
@@ -1445,14 +1442,10 @@ function enviarWhatssapNormal(result) {
             `• Nueva fecha: ${fechaCobro}`;
     }
 
-    // ==============================
-    // 🔹 ENVIAR WHATSAPP
-    // ==============================
     const mensajeCodificado = encodeURIComponent(mensaje);
     const urlwsp = `https://api.whatsapp.com/send?phone=+549${result.Cliente.Telefono}&text=${mensajeCodificado}`;
     window.open(urlwsp, '_blank');
 }
-
 
 function obtenerSaludo() {
     const h = new Date().getHours();
@@ -1467,72 +1460,65 @@ function abrirWhatsapp(telefono, mensaje) {
     window.open(url, '_blank');
 }
 
-
-
 async function mostrarRendimiento(rendimiento) {
-
-
-
-
-    if (rendimiento == 'Mensual' && !$('#grdRendimientoGeneral').is(':visible')) {
-
-
+    if (rendimiento == 'Mensual' && !$('#vistaMensualRendimiento').is(':visible')) {
         await configurarDataMensual();
 
-        document.getElementById("divCliente").setAttribute("hidden", "hidden")
-        document.getElementById("RendimientoDiario").setAttribute("hidden", "hidden")
-        document.getElementById("RendimientoClientesAusentes").setAttribute("hidden", "hidden")
-        document.getElementById("divUsuarios").setAttribute("hidden", "hidden")
+        if (document.getElementById("vistaDiariaRendimiento")) {
+            document.getElementById("vistaDiariaRendimiento").hidden = true;
+        }
+        if (document.getElementById("vistaMensualRendimiento")) {
+            document.getElementById("vistaMensualRendimiento").hidden = false;
+        }
 
+        document.getElementById("divCliente")?.setAttribute("hidden", "hidden");
+        document.getElementById("RendimientoDiario")?.setAttribute("hidden", "hidden");
+        document.getElementById("RendimientoClientesAusentes")?.setAttribute("hidden", "hidden");
+        document.getElementById("divUsuarios")?.setAttribute("hidden", "hidden");
 
-        document.getElementById("RendimientoMensual").removeAttribute("hidden")
-        document.getElementById("RendimientoCobrado").removeAttribute("hidden")
+        document.getElementById("RendimientoMensual")?.removeAttribute("hidden");
+        document.getElementById("RendimientoCobrado")?.removeAttribute("hidden");
 
-        //document.getElementById("lblrxdia").removeAttribute("hidden", "hidden")
-        //document.getElementById("lblrcobrador").removeAttribute("hidden", "hidden")
-        $("#btnRendDiario").css("background", "#1B2631");
-        $("#btnRendMensual").css("background", "#2E4053");
-
-
+        $("#btnRendMensual").removeClass("btn-inactivo").addClass("btn-activo");
+        $("#btnRendDiario").removeClass("btn-activo").addClass("btn-inactivo");
     }
 
-    if (rendimiento == 'Diario' && !$('#grdRendimiento').is(':visible')) {
+    if (rendimiento == 'Diario' && !$('#vistaDiariaRendimiento').is(':visible')) {
+        if ($.fn.DataTable.isDataTable('#grdRendimiento')) {
+            $('#grdRendimiento').DataTable().clear().draw();
+        }
 
-        $('#grdRendimiento').DataTable().clear().draw();
         await configurarDataDiario();
 
-        document.getElementById("RendimientoMensual").setAttribute("hidden", "hidden")
+        if (document.getElementById("vistaMensualRendimiento")) {
+            document.getElementById("vistaMensualRendimiento").hidden = true;
+        }
+        if (document.getElementById("vistaDiariaRendimiento")) {
+            document.getElementById("vistaDiariaRendimiento").hidden = false;
+        }
 
-        document.getElementById("RendimientoCobrado").setAttribute("hidden", "hidden")
-        //document.getElementById("lblrxdia").setAttribute("hidden", "hidden")
-        //document.getElementById("lblrcobrador").setAttribute("hidden", "hidden")
+        document.getElementById("RendimientoMensual")?.setAttribute("hidden", "hidden");
+        document.getElementById("RendimientoCobrado")?.setAttribute("hidden", "hidden");
 
-        document.getElementById("divCliente").removeAttribute("hidden")
+        if (userSession.IdRol != 4) {
+            document.getElementById("divCliente")?.removeAttribute("hidden");
+        }
 
-        document.getElementById("RendimientoDiario").removeAttribute("hidden")
-        document.getElementById("RendimientoClientesAusentes").removeAttribute("hidden")
+        document.getElementById("RendimientoDiario")?.removeAttribute("hidden");
+        document.getElementById("RendimientoClientesAusentes")?.removeAttribute("hidden");
+        document.getElementById("divUsuarios")?.removeAttribute("hidden");
 
-        document.getElementById("divUsuarios").removeAttribute("hidden")
-        $("#btnRendMensual").css("background", "#1B2631");
-        $("#btnRendDiario").css("background", "#2E4053");
-
+        $("#btnRendMensual").removeClass("btn-activo").addClass("btn-inactivo");
+        $("#btnRendDiario").removeClass("btn-inactivo").addClass("btn-activo");
     }
 
-
-
-
-
-
+    ajustarTablasRendimiento();
 }
 
-
 async function CantidadClientesAusentes() {
-
     var url = "/Rendimiento/MostrarCantidadClientesAusentes";
 
-    let value = JSON.stringify({
-
-    });
+    let value = JSON.stringify({});
 
     let options = {
         type: "POST",
@@ -1551,7 +1537,6 @@ async function CantidadClientesAusentes() {
     } else {
         document.getElementById("notificationIcon").style.display = "block";
     }
-
 }
 
 async function ObtenerImagen(idVenta) {
@@ -1575,11 +1560,8 @@ async function ObtenerImagen(idVenta) {
 }
 
 async function verComprobante(id) {
-    // Establece la imagen base64 en el src del img del modal
-    var image = await ObtenerImagen(id)
-    document.getElementById("imagenComprobante").src = "data:image/png;base64," + image; // Puedes ajustar el formato si es JPG, etc.
-
-    // Abre el modal
+    var image = await ObtenerImagen(id);
+    document.getElementById("imagenComprobante").src = "data:image/png;base64," + image;
     $('#modalComprobante').modal('show');
 }
 
@@ -1587,8 +1569,7 @@ async function cargarTiposDeNegocio() {
     try {
         var url = "/Usuarios/ListarTipoNegocio";
 
-        let value = JSON.stringify({
-        });
+        let value = JSON.stringify({});
 
         let options = {
             type: "POST",
@@ -1602,37 +1583,31 @@ async function cargarTiposDeNegocio() {
         let result = await MakeAjax(options);
 
         if (result != null) {
-            selectUsuarios = document.getElementById("TipoNegocio");
-
-
-
+            let selectUsuarios = document.getElementById("TipoNegocio");
 
             $('#TipoNegocio option').remove();
 
-            if (userSession.IdRol == 1 || userSession.IdRol == 4) { //ROL ADMINISTRADOR Y COMPROBANTES
-                option = document.createElement("option");
+            if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+                let option = document.createElement("option");
                 option.value = -1;
                 option.text = "Todos";
                 selectUsuarios.appendChild(option);
             }
 
-            for (i = 0; i < result.data.length; i++) {
-                option = document.createElement("option");
+            for (let i = 0; i < result.data.length; i++) {
+                let option = document.createElement("option");
                 option.value = result.data[i].Id;
                 option.text = result.data[i].Nombre;
                 selectUsuarios.appendChild(option);
             }
-
-
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.');
+        $('.datos-error').removeClass('d-none');
     }
 }
 
 const bloqueoSistema = async (id, estado) => {
-
     try {
         var url = "/Usuarios/BloqueoSistema";
 
@@ -1654,20 +1629,18 @@ const bloqueoSistema = async (id, estado) => {
 
         if (result.Status) {
             $('.datos-error').removeClass('d-none');
-
             cargarUsuarios();
         } else {
-            $('.datos-error').text('Ha ocurrido un error en los datos.')
-            $('.datos-error').removeClass('d-none')
+            $('.datos-error').text('Ha ocurrido un error en los datos.');
+            $('.datos-error').removeClass('d-none');
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.');
+        $('.datos-error').removeClass('d-none');
     }
-}
+};
 
 function sumarFecha() {
-    ;
     var FechaDesde = document.getElementById("FechaDesde").value;
     var FechaHasta = document.getElementById("FechaHasta").value;
 
@@ -1675,7 +1648,7 @@ function sumarFecha() {
     let FechaHastaNew = moment(FechaHasta).add(1, 'days').format('YYYY-MM-DD');
 
     document.getElementById("FechaDesde").value = FechaDesdeNew;
-    document.getElementById("FechaHasta").value = FechaHastaNew
+    document.getElementById("FechaHasta").value = FechaHastaNew;
 }
 
 function restarFecha() {
@@ -1686,63 +1659,76 @@ function restarFecha() {
     let FechaHastaNew = moment(FechaHasta).add(-1, 'days').format('YYYY-MM-DD');
 
     document.getElementById("FechaDesde").value = FechaDesdeNew;
-    document.getElementById("FechaHasta").value = FechaHastaNew
+    document.getElementById("FechaHasta").value = FechaHastaNew;
 }
 
 function configurarOpcionesColumnas() {
-    const grid = $('#grdRendimiento').DataTable(); // Accede al objeto DataTable utilizando el id de la tabla
-    const columnas = grid.settings().init().columns; // Obtiene la configuración de columnas
-    const container = $('#configColumnasMenu'); // El contenedor del dropdown específico para configurar columnas
+    const grid = $('#grdRendimiento').DataTable();
+    const columnas = grid.settings().init().columns;
+    const container = $('#configColumnasMenu');
 
+    const storageKey = `Rendimientos_Columnas`;
+    const savedConfig = JSON.parse(localStorage.getItem(storageKey)) || {};
 
-    const storageKey = `Rendimientos_Columnas`; // Clave única para esta pantalla
-
-    const savedConfig = JSON.parse(localStorage.getItem(storageKey)) || {}; // Recupera configuración guardada o inicializa vacía
-
-    container.empty(); // Limpia el contenedor
+    container.empty();
 
     columnas.forEach((col, index) => {
+        const nombreColumna = obtenerNombreColumnaRendimiento(index, col);
 
-
-
-        if (col.data && col.data !== "Id" && col.data != "Activo" && col.data != "Imagen") { // Solo agregar columnas que no sean "Id"
-
+        if (nombreColumna && nombreColumna !== "Id" && nombreColumna !== "Activo" && nombreColumna !== "Imagen") {
             if (userSession.IdRol == 4) {
                 if (index == 3 || index == 4 || index == 5 || index == 6 || index == 7) {
                     return;
                 }
             }
 
-            // Recupera el valor guardado en localStorage, si existe. Si no, inicializa en 'false' para no estar marcado.
-            const isChecked = savedConfig && savedConfig[`col_${index}`] !== undefined ? savedConfig[`col_${index}`] : true;
+            const isChecked = savedConfig[`col_${index}`] !== undefined ? savedConfig[`col_${index}`] : true;
 
-            // Asegúrate de que la columna esté visible si el valor es 'true'
             grid.column(index).visible(isChecked);
 
-            const columnName = col.data;
-
-            // Ahora agregamos el checkbox, asegurándonos de que se marque solo si 'isChecked' es 'true'
             container.append(`
                 <li>
                     <label class="dropdown-item">
                         <input type="checkbox" class="toggle-column" data-column="${index}" ${isChecked ? 'checked' : ''}>
-                        ${columnName}
+                        ${nombreColumna}
                     </label>
                 </li>
             `);
         }
     });
 
-    // Asocia el evento para ocultar/mostrar columnas
-    $('.toggle-column').on('change', function () {
+    $('.toggle-column').off('change').on('change', function () {
         const columnIdx = parseInt($(this).data('column'), 10);
         const isChecked = $(this).is(':checked');
         savedConfig[`col_${columnIdx}`] = isChecked;
         localStorage.setItem(storageKey, JSON.stringify(savedConfig));
         grid.column(columnIdx).visible(isChecked);
+        ajustarTablasRendimiento();
     });
 }
 
+function obtenerNombreColumnaRendimiento(index, col) {
+    const nombres = [
+        "Fecha",
+        "Metodo Pago",
+        "Cuenta Bancaria",
+        "Cliente",
+        "Capital Inicial",
+        "Ventas",
+        "Cobros",
+        "Interes",
+        "Capital Final",
+        "Proximo Cobro",
+        "Vencimiento",
+        "Tipo de Negocio",
+        "Descripcion",
+        "Acciones"
+    ];
+
+    if (nombres[index]) return nombres[index];
+    if (col && col.data) return col.data;
+    return `Columna ${index + 1}`;
+}
 
 async function cargarCuentas() {
     try {
@@ -1764,30 +1750,27 @@ async function cargarCuentas() {
         let result = await MakeAjax(options);
 
         if (result != null) {
-            select = document.getElementById("CuentaPago");
+            let select = document.getElementById("CuentaPago");
 
             $('#CuentaPago option').remove();
 
-            option = document.createElement("option");
+            let option = document.createElement("option");
             option.value = -1;
             option.text = "Todos";
             select.appendChild(option);
 
-            for (i = 0; i < result.length; i++) {
-                option = document.createElement("option");
+            for (let i = 0; i < result.length; i++) {
+                let option = document.createElement("option");
                 option.value = result[i].Id;
                 option.text = result[i].Nombre;
                 select.appendChild(option);
             }
-
-
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.');
+        $('.datos-error').removeClass('d-none');
     }
 }
-
 
 async function habilitarCuentas() {
     var formaPagoSelect = document.getElementById("MetodoPago");
@@ -1796,7 +1779,10 @@ async function habilitarCuentas() {
 
     await cargarCuentas();
 
-    if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" || formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
+    if (
+        formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" ||
+        formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS"
+    ) {
         cuenta.hidden = false;
         cuentaLbl.hidden = false;
     } else {
@@ -1804,13 +1790,13 @@ async function habilitarCuentas() {
         cuenta.hidden = true;
         cuentaLbl.hidden = true;
     }
+
+    ajustarTablasRendimiento();
 }
 
-
 const eliminarInformacion = async id => {
-
-    if (userSession.IdRol != 1) { //ROL VENDEDOR
-        alert("No tienes permisos para realizar esta accion.")
+    if (userSession.IdRol != 1) {
+        alert("No tienes permisos para realizar esta accion.");
         return false;
     }
 
@@ -1836,14 +1822,596 @@ const eliminarInformacion = async id => {
             if (result.data) {
                 alert('Informacion eliminada correctamente.');
                 $('.datos-error').removeClass('d-none');
-                gridRendimiento.ajax.reload();
-            } else {
-                //$('.datos-error').text('Ha ocurrido un error en los datos.')
-                //$('.datos-error').removeClass('d-none')
+                gridRendimiento.ajax.reload(null, false);
             }
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.');
+        $('.datos-error').removeClass('d-none');
     }
+};
+
+function ajustarTablasRendimiento() {
+    setTimeout(function () {
+        if ($.fn.DataTable.isDataTable('#grdRendimiento')) {
+            $('#grdRendimiento').DataTable().columns.adjust().draw(false);
+        }
+        if ($.fn.DataTable.isDataTable('#grdClientesAusentes')) {
+            $('#grdClientesAusentes').DataTable().columns.adjust().draw(false);
+        }
+        if ($.fn.DataTable.isDataTable('#grdRendimientoGeneral')) {
+            $('#grdRendimientoGeneral').DataTable().columns.adjust().draw(false);
+        }
+        if ($.fn.DataTable.isDataTable('#grdRendimientoCobrado')) {
+            $('#grdRendimientoCobrado').DataTable().columns.adjust().draw(false);
+        }
+    }, 120);
+}
+
+function formatNumber(number) {
+    if (number == null || number === "") return "0";
+    return new Intl.NumberFormat('es-AR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(number);
+}
+
+function mostrarError(mensaje) {
+    alert(mensaje || "Ha ocurrido un error.");
+}
+
+
+const safeMoment = (v) => {
+    if (!v) return null;
+    const m = moment(v);
+    return m.isValid() ? m : null;
+};
+
+const chunkedMapReduce = async (items, chunkSize, fn) => {
+    for (let i = 0; i < items.length; i += chunkSize) {
+        const end = Math.min(i + chunkSize, items.length);
+        for (let j = i; j < end; j++) {
+            fn(items[j], j);
+        }
+        await new Promise(requestAnimationFrame);
+    }
+};
+
+function setChartLoading(canvasId, text = "Cargando...") {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const parent = canvas.parentElement;
+    if (!parent) return;
+
+    parent.style.position = "relative";
+
+    let overlay = parent.querySelector(".chart-loading-overlay");
+    if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.className = "chart-loading-overlay";
+        overlay.style.position = "absolute";
+        overlay.style.inset = "0";
+        overlay.style.display = "flex";
+        overlay.style.alignItems = "center";
+        overlay.style.justifyContent = "center";
+        overlay.style.background = "rgba(8, 15, 40, 0.45)";
+        overlay.style.backdropFilter = "blur(2px)";
+        overlay.style.zIndex = "2";
+        overlay.style.borderRadius = "16px";
+        overlay.style.pointerEvents = "none"; // 👈 ESTO ES TODO
+        overlay.innerHTML = `
+            <div style="
+                color:#dbeafe;
+                font-weight:700;
+                font-size:14px;
+                padding:10px 16px;
+                border:1px solid rgba(255,255,255,.15);
+                border-radius:999px;
+                background:rgba(255,255,255,.06);
+            ">${text}</div>
+        `;
+        parent.appendChild(overlay);
+    } else {
+        overlay.querySelector("div").textContent = text;
+        overlay.style.display = "flex";
+    }
+}
+
+function clearChartLoading(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const parent = canvas.parentElement;
+    if (!parent) return;
+    const overlay = parent.querySelector(".chart-loading-overlay");
+    if (overlay) overlay.style.display = "none";
+}
+
+function destroyChart(chartKey, canvasId = null) {
+    try {
+        const existingRef = dashboardCharts[chartKey];
+
+        if (existingRef && typeof existingRef.destroy === "function") {
+            existingRef.destroy();
+        }
+
+        dashboardCharts[chartKey] = null;
+
+        if (canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (canvas) {
+                const chartOnCanvas = Chart.getChart(canvas);
+                if (chartOnCanvas && typeof chartOnCanvas.destroy === "function") {
+                    chartOnCanvas.destroy();
+                }
+            }
+        }
+    } catch (e) {
+        console.error(`Error destruyendo ${chartKey}:`, e);
+        dashboardCharts[chartKey] = null;
+    }
+}
+
+function destroyAllCharts() {
+    destroyChart("chartVentasCobros", "chartVentasCobros");
+    destroyChart("chartMetodosPago", "chartMetodosPago");
+    destroyChart("chartCapital", "chartCapital");
+    destroyChart("chartVentasMensual", "chartVentasMensual");
+    destroyChart("chartCobrosMensual", "chartCobrosMensual");
+}
+
+
+
+function gradientColors(ctx, c1, c2) {
+    const chart = ctx.chart;
+    const { ctx: canvasCtx, chartArea } = chart;
+
+    if (!chartArea) return c1;
+
+    const g = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+    g.addColorStop(0, c1);
+    g.addColorStop(1, c2);
+    return g;
+}
+
+function baseOptions(isMonthly = false) {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+            duration: 500
+        },
+        interaction: {
+            mode: "index",
+            intersect: false
+        },
+        plugins: {
+            legend: {
+                display: true,
+                labels: {
+                    color: "#e5e7eb",
+                    font: {
+                        weight: "600"
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: "rgba(15, 23, 42, 0.96)",
+                titleColor: "#fff",
+                bodyColor: "#fff",
+                borderColor: "rgba(255,255,255,.12)",
+                borderWidth: 1,
+                callbacks: {
+                    label: function (ctx) {
+                        return `${ctx.dataset.label || ""}: ${formatNumber(safeNumber(ctx.raw))}`;
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: "#cbd5e1",
+                    maxRotation: isMonthly ? 0 : 0,
+                    minRotation: 0
+                },
+                grid: {
+                    color: "rgba(255,255,255,.05)"
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: "#cbd5e1",
+                    callback: function (value) {
+                        return formatNumber(safeNumber(value));
+                    }
+                },
+                grid: {
+                    color: "rgba(255,255,255,.06)"
+                }
+            }
+        }
+    };
+}
+
+const dashboardCharts = {
+    chartVentasCobros: null,
+    chartMetodosPago: null,
+    chartCapital: null,
+    chartVentasMensual: null,
+    chartCobrosMensual: null
+};
+
+let dashboardRenderToken = 0;
+
+
+// =========================
+// AGRUPAR Y RESUMIR
+// =========================
+async function buildDashboardData(rows) {
+    const resumen = {
+        totalVentas: 0,
+        totalCobros: 0,
+        totalInteres: 0,
+        efectivo: 0,
+        transferencia: 0,
+        capital: 0,
+        capitalRojo: 0,
+        ventasPorMes: {},
+        cobrosPorMes: {}
+    };
+
+    const hoy = moment().startOf("day");
+
+    await chunkedMapReduce(rows, 400, (row) => {
+        const descripcion = safeString(row.Descripcion);
+        const metodo = safeUpper(row.MetodoPago);
+        const venta = safeNumber(row.Venta);
+        const cobro = safeNumber(row.Cobro);
+        const interes = safeNumber(row.Interes);
+        const capitalFinal = safeNumber(row.CapitalFinal);
+
+        const fecha = safeMoment(row.Fecha);
+        const fechaLimite = safeMoment(row.FechaLimite);
+
+        if (capitalFinal > 0) {
+            resumen.capital += capitalFinal;
+
+            if (fechaLimite && fechaLimite.isBefore(hoy, "day")) {
+                resumen.capitalRojo += capitalFinal;
+            }
+        }
+
+        if (descripcion.includes("Venta")) {
+            resumen.totalVentas += venta;
+
+            if (fecha) {
+                const key = fecha.format("YYYY-MM");
+                if (!resumen.ventasPorMes[key]) {
+                    resumen.ventasPorMes[key] = 0;
+                }
+                resumen.ventasPorMes[key] += venta;
+            }
+        }
+
+        if (descripcion.includes("Cobranza")) {
+            resumen.totalCobros += cobro;
+
+            if (fecha) {
+                const key = fecha.format("YYYY-MM");
+                if (!resumen.cobrosPorMes[key]) {
+                    resumen.cobrosPorMes[key] = 0;
+                }
+                resumen.cobrosPorMes[key] += cobro;
+            }
+
+            const metodo = safeUpper(row.MetodoPago).trim();
+
+            if (metodo.includes("EFECTIVO")) {
+                resumen.efectivo += cobro;
+            }
+            else if (metodo.includes("TRANSFERENCIA")) {
+                resumen.transferencia += cobro;
+            }
+        }
+
+        if (safeUpper(descripcion).includes("INTERES")) {
+            resumen.totalInteres += interes;
+        }
+    });
+
+    const allMonthKeys = Array.from(
+        new Set([
+            ...Object.keys(resumen.ventasPorMes),
+            ...Object.keys(resumen.cobrosPorMes)
+        ])
+    ).sort();
+
+    resumen.monthLabels = allMonthKeys.map(k => moment(k + "-01").format("MMM YYYY"));
+    resumen.monthVentas = allMonthKeys.map(k => safeNumber(resumen.ventasPorMes[k]));
+    resumen.monthCobros = allMonthKeys.map(k => safeNumber(resumen.cobrosPorMes[k]));
+
+    return resumen;
+}
+
+// =========================
+// RENDER CHARTS
+// =========================
+function renderVentasCobrosChart(resumen) {
+    const canvasId = "chartVentasCobros";
+
+    try {
+        destroyChart("chartVentasCobros", canvasId);
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) throw new Error("Canvas no encontrado");
+
+        dashboardCharts.chartVentasCobros = new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: ["Ventas", "Cobros"],
+                datasets: [{
+                    label: "Totales",
+                    data: [
+                        safeNumber(resumen.totalVentas),
+                        safeNumber(resumen.totalCobros)
+                    ],
+                    borderRadius: 10,
+                    barThickness: 46,
+                    backgroundColor: (context) => {
+                        const colors = [
+                            ["#60a5fa", "#2563eb"],
+                            ["#4ade80", "#16a34a"]
+                        ];
+                        const pair = colors[context.dataIndex] || ["#60a5fa", "#2563eb"];
+                        return gradientColors(context, pair[0], pair[1]);
+                    }
+                }]
+            },
+            options: baseOptions()
+        });
+    } catch (e) {
+        console.error("Error chartVentasCobros:", e);
+    } finally {
+        clearChartLoading(canvasId);
+    }
+}
+
+function renderMetodosPagoChart(resumen) {
+    const canvasId = "chartMetodosPago";
+
+    try {
+        destroyChart("chartMetodosPago", canvasId);
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) throw new Error("Canvas no encontrado");
+
+        dashboardCharts.chartMetodosPago = new Chart(canvas, {
+            type: "doughnut",
+            data: {
+                labels: ["Efectivo", "Transferencia"],
+                datasets: [{
+                    data: [
+                        safeNumber(resumen.efectivo),
+                        safeNumber(resumen.transferencia)
+                    ],
+                    backgroundColor: ["#f59e0b", "#06b6d4"],
+                    borderWidth: 0,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                ...baseOptions(),
+                cutout: "68%",
+                scales: undefined
+            }
+        });
+    } catch (e) {
+        console.error("Error chartMetodosPago:", e);
+    } finally {
+        clearChartLoading(canvasId);
+    }
+}
+
+function renderCapitalChart(resumen) {
+    const canvasId = "chartCapital";
+
+    try {
+        destroyChart("chartCapital", canvasId);
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) throw new Error("Canvas no encontrado");
+
+        dashboardCharts.chartCapital = new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: ["Capital", "Capital en rojo", "Interés"],
+                datasets: [{
+                    label: "Totales",
+                    data: [
+                        safeNumber(resumen.capital),
+                        safeNumber(resumen.capitalRojo),
+                        safeNumber(resumen.totalInteres)
+                    ],
+                    borderRadius: 10,
+                    barThickness: 42,
+                    backgroundColor: (context) => {
+                        const colors = [
+                            ["#a78bfa", "#7c3aed"],
+                            ["#fb7185", "#e11d48"],
+                            ["#34d399", "#10b981"]
+                        ];
+                        const pair = colors[context.dataIndex] || ["#a78bfa", "#7c3aed"];
+                        return gradientColors(context, pair[0], pair[1]);
+                    }
+                }]
+            },
+            options: baseOptions()
+        });
+    } catch (e) {
+        console.error("Error chartCapital:", e);
+    } finally {
+        clearChartLoading(canvasId);
+    }
+}
+
+function renderVentasMensualChart(resumen) {
+    const canvasId = "chartVentasMensual";
+
+    try {
+        destroyChart("chartVentasMensual", canvasId);
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) throw new Error("Canvas no encontrado");
+
+        dashboardCharts.chartVentasMensual = new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: Array.isArray(resumen.monthLabels) ? resumen.monthLabels : [],
+                datasets: [{
+                    label: "Ventas",
+                    data: Array.isArray(resumen.monthVentas) ? resumen.monthVentas.map(safeNumber) : [],
+                    backgroundColor: "#3b82f6",
+                    borderRadius: 6,
+                    maxBarThickness: 46
+                }]
+            },
+            options: baseOptions(true)
+        });
+    } catch (e) {
+        console.error("Error chartVentasMensual:", e);
+    } finally {
+        clearChartLoading(canvasId);
+    }
+}
+
+
+function renderCobrosMensualChart(resumen) {
+    const canvasId = "chartCobrosMensual";
+
+    try {
+        destroyChart("chartCobrosMensual", canvasId);
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) throw new Error("Canvas no encontrado");
+
+        dashboardCharts.chartCobrosMensual = new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: Array.isArray(resumen.monthLabels) ? resumen.monthLabels : [],
+                datasets: [{
+                    label: "Cobros",
+                    data: Array.isArray(resumen.monthCobros) ? resumen.monthCobros.map(safeNumber) : [],
+                    backgroundColor: "#22c55e",
+                    borderRadius: 6,
+                    maxBarThickness: 46
+                }]
+            },
+            options: baseOptions(true)
+        });
+    } catch (e) {
+        console.error("Error chartCobrosMensual:", e);
+    } finally {
+        clearChartLoading(canvasId);
+    }
+}
+// =========================
+// RENDER PRINCIPAL
+// =========================
+async function renderDashboard() {
+    if (isRenderingDashboard) return;
+
+    isRenderingDashboard = true;
+
+    try {
+        const myToken = ++dashboardRenderToken;
+
+        const table = $.fn.DataTable.isDataTable('#grdRendimiento')
+            ? $('#grdRendimiento').DataTable()
+            : null;
+
+        if (!table) {
+            destroyAllCharts();
+            return;
+        }
+
+        const data = table.rows({ search: "applied" }).data().toArray();
+
+        if (!data || data.length === 0) {
+            destroyAllCharts();
+            clearChartLoading("chartVentasCobros");
+            clearChartLoading("chartMetodosPago");
+            clearChartLoading("chartCapital");
+            clearChartLoading("chartVentasMensual");
+            clearChartLoading("chartCobrosMensual");
+            return;
+        }
+
+        setChartLoading("chartVentasCobros", "Calculando ventas y cobros...");
+        setChartLoading("chartMetodosPago", "Calculando métodos...");
+        setChartLoading("chartCapital", "Calculando capital...");
+        setChartLoading("chartVentasMensual", "Calculando evolución mensual...");
+        setChartLoading("chartCobrosMensual", "Calculando evolución mensual...");
+
+        await new Promise(requestAnimationFrame);
+
+        const resumen = await buildDashboardData(data);
+
+        if (myToken !== dashboardRenderToken) return;
+
+        await new Promise(requestAnimationFrame);
+
+        destroyAllCharts();
+
+        renderVentasCobrosChart(resumen);
+        renderMetodosPagoChart(resumen);
+        renderCapitalChart(resumen);
+        renderVentasMensualChart(resumen);
+        renderCobrosMensualChart(resumen);
+
+    } catch (e) {
+        console.error("Error renderDashboard:", e);
+        destroyAllCharts();
+    } finally {
+        clearChartLoading("chartVentasCobros");
+        clearChartLoading("chartMetodosPago");
+        clearChartLoading("chartCapital");
+        clearChartLoading("chartVentasMensual");
+        clearChartLoading("chartCobrosMensual");
+
+        isRenderingDashboard = false;
+    }
+}
+
+// =========================
+// DISPARADOR DIFERIDO
+// =========================
+let dashboardTimer = null;
+
+function scheduleRenderDashboard(delay = 120) {
+    if (dashboardTimer) {
+        clearTimeout(dashboardTimer);
+    }
+
+    dashboardTimer = setTimeout(() => {
+        renderDashboard().catch(err => console.error("Error renderDashboard:", err));
+    }, delay);
+}
+function showGlobalLoading(text = "Cargando datos...") {
+    const loading = document.getElementById("globalLoading");
+    if (!loading) return;
+
+    loading.classList.remove("hidden");
+    loading.querySelector(".loading-text").textContent = text;
+
+    document.body.classList.add("loading"); // 🔥 bloquea scroll
+}
+
+function hideGlobalLoading() {
+    const loading = document.getElementById("globalLoading");
+    if (!loading) return;
+
+    loading.classList.add("hidden");
+    document.body.classList.remove("loading");
 }
