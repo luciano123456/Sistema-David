@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using Microsoft.Ajax.Utilities;
 using Sistema_David.Models.DB;
 using Sistema_David.Models.Modelo;
 using Sistema_David.Models.ViewModels;
@@ -114,6 +115,7 @@ namespace Sistema_David.Models
                         ClienteLongitud = v.Clientes?.Longitud,
                         ClienteLatitud = v.Clientes?.Latitud,
                         ClienteTelefono = v.Clientes?.Telefono,
+                        Vendedor = v.Usuarios2.Nombre,
 
                         Total = total,
 

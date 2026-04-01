@@ -25,6 +25,7 @@ const columnConfig = [
     { index: 8, filterType: 'text' },
     { index: 9, filterType: 'text' },
     { index: 10, filterType: 'text' },
+    { index: 11, filterType: 'text' },
 ];
 
 
@@ -280,6 +281,7 @@ function renderTablaBase(selector, data, tipo) {
             { data: "IdVenta" },
             { data: "Fecha", render: x => moment(x).format("DD/MM/YYYY") },
             { data: "Cliente" },
+            { data: "Vendedor" },
             { data: "ClienteDni" },
             {
                 data: null,
@@ -499,6 +501,7 @@ function renderTabla(data) {
                 render: x => moment(x).format("DD/MM/YYYY")
             },
             { data: "Cliente" },
+            { data: "Vendedor" },
             { data: "ClienteDni" },
             {
                 data: null,

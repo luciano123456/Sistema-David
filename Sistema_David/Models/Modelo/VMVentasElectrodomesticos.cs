@@ -12,6 +12,7 @@ namespace Sistema_David.Models.ViewModels
         public string Cliente { get; set; }
         public string ClienteTelefono { get; set; }
         public string ClienteDni { get; set; }
+        public string Vendedor { get; set; }
         public string ClienteDireccion{ get; set; }
         public string ClienteLatitud{ get; set; }
         public string ClienteLongitud{ get; set; }
