@@ -1180,7 +1180,7 @@ async function enviarWhatssapElectro(idMovimiento, descripcion) {
     }
 
     const mensaje = armarMensajeWhatsappElectro(base, descripcion);
-    abrirWhatsapp(base.Cliente.Telefono, mensaje);
+    abrirWhatsapp(base.Cliente.ClienteTelefono, mensaje);
 }
 
 function obtenerTipoMensajeElectro(descripcion = "") {

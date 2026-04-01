@@ -1127,26 +1127,21 @@ function generarPdfVenta(venta) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "mm", "a4");
 
-    const money = v =>
-        Number(v || 0).toLocaleString("es-AR", {
+    const money = (v) =>
+        Math.round(Number(v || 0)).toLocaleString("es-AR", {
             style: "currency",
             currency: "ARS",
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         });
 
-    const parseFechaVenc = (x) => {
-        const m = moment(x);
-        return m.isValid() ? m : moment(String(x), "DD/MM/YYYY", true);
-    };
+    const toInt = (v) => Math.round(Number(v || 0));
 
-    const hoy = moment().startOf("day");
+    const round1000 = (v) => Math.round((v || 0) / 1000) * 1000;
 
     let y = 18;
 
-    /* =====================================================
-       HEADER DARK PRO
-    ===================================================== */
+    /* ================= HEADER ================= */
     doc.setFillColor(12, 18, 32);
     doc.rect(0, 0, 210, 30, "F");
 
@@ -1165,10 +1160,7 @@ function generarPdfVenta(venta) {
     y = 38;
     doc.setTextColor(0, 0, 0);
 
-
-    /* =====================================================
-       CLIENTE (PRO LIMPIO)
-    ===================================================== */
+    /* ================= CLIENTE ================= */
     const direccion = [
         venta.ClienteDireccion,
         venta.Localidad,
@@ -1181,13 +1173,10 @@ function generarPdfVenta(venta) {
 
     doc.setFontSize(9);
     doc.setFont(undefined, "bold");
-    doc.setTextColor(60);
     doc.text("CLIENTE", 14, y + 6);
 
     doc.setFont(undefined, "normal");
     doc.setFontSize(11);
-    doc.setTextColor(0);
-
     doc.text(venta.ClienteNombre || "-", 14, y + 12);
 
     if (direccion) {
@@ -1197,21 +1186,6 @@ function generarPdfVenta(venta) {
     }
 
     y += 28;
-
-
-    doc.autoTable({
-        startY: y,
-        theme: "grid",
-        styles: { fontSize: 10, cellPadding: 4 },
-        headStyles: {
-            fillColor: [20, 28, 48],
-            textColor: 255,
-            fontStyle: "bold"
-        }
-    });
-
-    y = doc.lastAutoTable.finalY + 6;
-
 
     /* ================= PRODUCTOS ================= */
     if (venta.Items?.length) {
@@ -1228,20 +1202,11 @@ function generarPdfVenta(venta) {
                 i.Cantidad,
                 i.Producto,
                 money(i.PrecioUnitario),
-                money(i.Subtotal)
+                money(toInt(i.Subtotal || (i.Cantidad * i.PrecioUnitario)))
             ]),
             theme: "grid",
-            styles: {
-                fontSize: 9,
-                cellPadding: 3
-            },
-            headStyles: {
-                fillColor: [30, 30, 30],
-                textColor: 255
-            },
-            alternateRowStyles: {
-                fillColor: [245, 245, 245]
-            }
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [30, 30, 30], textColor: 255 }
         });
 
         y = doc.lastAutoTable.finalY + 8;
@@ -1257,19 +1222,18 @@ function generarPdfVenta(venta) {
 
     doc.autoTable({
         startY: y,
-        head: [["#", "Vencimiento", "Total", "Pagado", "Restante", "Estado"]],
+        head: [["#", "Vencimiento", "Original", "Descuentos", "Total", "Pagado", "Restante", "Estado"]],
         body: cuotas.map(c => {
 
-            const total =
-                Number(c.MontoOriginal || 0) +
-                Number(c.MontoRecargos || 0) -
-                Number(c.MontoDescuentos || 0);
+            const original = toInt(c.MontoOriginal);
+            const recargos = toInt(c.MontoRecargos);
+            const descuentos = toInt(c.MontoDescuentos);
+            const pagado = toInt(c.MontoPagado);
 
-            const pagado = Number(c.MontoPagado || 0);
+            const total = original + recargos - descuentos;
             const restante = Math.max(total - pagado, 0);
 
             let estado = c.Estado || "Pendiente";
-
             if (estado !== "Pagada" && moment().isAfter(moment(c.FechaVencimiento))) {
                 estado = "Vencida";
             }
@@ -1277,6 +1241,8 @@ function generarPdfVenta(venta) {
             return [
                 c.NumeroCuota,
                 moment(c.FechaVencimiento).format("DD/MM/YYYY"),
+                money(original),
+                money(descuentos),
                 money(total),
                 money(pagado),
                 money(restante),
@@ -1285,51 +1251,77 @@ function generarPdfVenta(venta) {
         }),
         theme: "grid",
         styles: { fontSize: 9 },
-        headStyles: {
-            fillColor: [20, 20, 20],
-            textColor: 255
-        }
+        headStyles: { fillColor: [20, 20, 20], textColor: 255 }
     });
 
     y = doc.lastAutoTable.finalY + 10;
 
-    /* ================= RESUMEN (PRO CHICO) ================= */
-    const totalVenta = Number(venta.ImporteTotal || 0);
-    const totalPagado = cuotas.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
-    const restante = Math.max(totalVenta - totalPagado, 0);
+    /* ================= RESUMEN (FIX REAL FINAL) ================= */
+
+    let subtotal = 0;
+    let totalDescuentos = 0;
+    let totalPagado = 0;
+
+    /* 🔹 SUBTOTAL DESDE PRODUCTOS */
+    if (venta.Items?.length) {
+        venta.Items.forEach(i => {
+            const sub = toInt(i.Subtotal || (i.Cantidad * i.PrecioUnitario));
+            subtotal += sub;
+        });
+    }
+
+    /* 🔹 DESCUENTOS Y PAGADO DESDE CUOTAS */
+    cuotas.forEach(c => {
+        totalDescuentos += toInt(c.MontoDescuentos);
+        totalPagado += toInt(c.MontoPagado);
+    });
+
+    /* 🔹 SUMAR ENTREGA */
+    const entrega = toInt(venta.Entrega);
+    totalPagado += entrega;
+
+    /* 🔹 REDONDEO A MILES */
+    subtotal = round1000(subtotal);
+    totalDescuentos = round1000(totalDescuentos);
+
+    const totalFinal = round1000(subtotal - totalDescuentos);
+    totalPagado = round1000(totalPagado);
+
+    const restante = round1000(Math.max(totalFinal - totalPagado, 0));
 
     const x = 120;
 
     doc.setDrawColor(180);
-    doc.rect(x, y, 80, 22);
+    doc.rect(x, y, 80, 40);
 
     doc.setFontSize(10);
     doc.setFont(undefined, "bold");
-    doc.text("Resumen", x + 4, y + 5);
+    doc.text("Resumen", x + 4, y + 6);
 
     doc.setFont(undefined, "normal");
 
-    doc.text("Total:", x + 4, y + 10);
-    doc.text(money(totalVenta), x + 75, y + 10, { align: "right" });
+    doc.text("Subtotal:", x + 4, y + 12);
+    doc.text(money(subtotal), x + 75, y + 12, { align: "right" });
 
-    doc.text("Pagado:", x + 4, y + 15);
-    doc.text(money(totalPagado), x + 75, y + 15, { align: "right" });
+    doc.text("Descuentos:", x + 4, y + 18);
+    doc.setTextColor(200, 0, 0);
+    doc.text("- " + money(totalDescuentos), x + 75, y + 18, { align: "right" });
 
-    doc.text("Restante:", x + 4, y + 20);
-    doc.text(money(restante), x + 75, y + 20, { align: "right" });
+    doc.setTextColor(0, 0, 0);
+    doc.text("Total:", x + 4, y + 24);
+    doc.text(money(totalFinal), x + 75, y + 24, { align: "right" });
+
+    doc.text("Pagado:", x + 4, y + 30);
+    doc.text(money(totalPagado), x + 75, y + 30, { align: "right" });
+
+    doc.text("Restante:", x + 4, y + 36);
+    doc.text(money(restante), x + 75, y + 36, { align: "right" });
 
     /* ================= FOOTER ================= */
     doc.setFontSize(8);
     doc.setTextColor(120);
+    doc.text("Comprobante de venta. Conservar para reclamos.", 105, 290, { align: "center" });
 
-    doc.text(
-        "Comprobante de venta. Conservar para reclamos.",
-        105,
-        290,
-        { align: "center" }
-    );
-
-    /* ================= NOMBRE ARCHIVO ================= */
     const nombre = (venta.ClienteNombre || "Cliente")
         .replace(/[^a-zA-Z0-9]/g, "_");
 
@@ -1337,6 +1329,7 @@ function generarPdfVenta(venta) {
 
     doc.save(`Venta_${venta.IdVenta}_${nombre}_${fecha}.pdf`);
 }
+
 function toggleModoReprogramacion() {
 
     const importe = formatearSinMiles(qs("cb_importe").value);
