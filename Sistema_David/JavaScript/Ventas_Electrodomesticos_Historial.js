@@ -12,7 +12,7 @@ const userSession = JSON.parse(localStorage.getItem('usuario'));
 const esVendedor = (userSession && Number(userSession.IdRol) === 2);
 
 let ventaClickeadaId = null; // NUEVO: la fila que el usuario clickeó
-
+let ventaPendienteClickeadaId = null;
 
 const columnConfig = [
     { index: 1, filterType: 'text' },
@@ -240,11 +240,10 @@ function actualizarKPIs(k) {
 function renderTablaBase(selector, data, tipo) {
 
     if (!gridVentasPendientes) {
-        inicializarEncabezadoColumnas("#grdVentasPendientes")
+        inicializarEncabezadoColumnas("#grdVentasPendientes");
     }
 
-
-       gridVentasPendientes = $(selector).DataTable({
+    gridVentasPendientes = $(selector).DataTable({
         destroy: true,
         data,
         pageLength: 50,
@@ -255,15 +254,35 @@ function renderTablaBase(selector, data, tipo) {
         rowCallback: function (row, d) {
 
             $(row).removeClass(
-                "fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja fila-aldia venta-seleccionada row-selected"
+                "fila-atrasada fila-atrasada-amarilla fila-atrasada-naranja fila-atrasada-roja fila-aldia venta-seleccionada row-selected fila-cliente-nuevo"
             );
 
             const vencidas = Number(d.CuotasVencidas || 0);
 
-            if (vencidas > 0) {
+            // 🔥 FECHA CLIENTE
+            let esClienteHoy = false;
+
+            if (d.ClienteFecha) {
+                const fechaCliente = moment(d.ClienteFecha).startOf("day");
+                const hoy = moment().startOf("day");
+
+                esClienteHoy = fechaCliente.isSame(hoy, "day");
+            }
+
+            // 🔥 PRIORIDAD: cliente nuevo HOY
+            if (esClienteHoy) {
+                $(row).addClass("fila-cliente-nuevo");
+            }
+            else if (vencidas > 0) {
                 $(row).addClass("fila-atrasada fila-atrasada-naranja");
-            } else {
+            }
+            else {
                 $(row).addClass("fila-aldia");
+            }
+
+            // 🔥 SELECCIÓN
+            if (ventaPendienteClickeadaId === d.IdVenta) {
+                $(row).addClass("row-selected");
             }
         },
 
@@ -321,126 +340,156 @@ function renderTablaBase(selector, data, tipo) {
                         const rol = userSession?.IdRol;
                         const id = row.IdVenta;
                         const tel = (row.ClienteTelefono || "").replace(/\D/g, "");
-                        const botonPdf = ` 
-                                        <button class="btn-accion ${row.Comprobante ? 'btn-pdf-ok' : 'btn-pdf-pend'}"
-                                            title="Descargar PDF"
-                                            onclick="exportarPdfVenta(${id})">
-                                            <i class="fa fa-file-pdf-o"></i>
-                                        </button>
-                                    `;
+
+                        const botonPdf = `
+                            <button class="btn-accion ${row.Comprobante ? 'btn-pdf-ok' : 'btn-pdf-pend'}"
+                                title="Descargar PDF"
+                                onclick="exportarPdfVenta(${id})">
+                                <i class="fa fa-file-pdf-o"></i>
+                            </button>
+                        `;
+
                         let botones = "";
 
-                        // ===== ADMIN (ROL 1) =====
                         if (rol === 1) {
                             botones = `
-                <button class="btn-accion btn-aprobar"
-                    title="Aceptar venta"
-                    onclick="VC.cambiarEstadoVenta(${id}, 'Activa')">
-                    <i class="fa fa-check"></i>
-                </button>
+                                <button class="btn-accion btn-aprobar"
+                                    onclick="VC.cambiarEstadoVenta(${id}, 'Activa')">
+                                    <i class="fa fa-check"></i>
+                                </button>
 
-                <button class="btn-accion btn-cancelar"
-                    title="Cancelar venta"
-                    onclick="VC.cambiarEstadoVenta(${id}, 'Cancelada')">
-                    <i class="fa fa-times"></i>
-                </button>
+                                <button class="btn-accion btn-cancelar"
+                                    onclick="VC.cambiarEstadoVenta(${id}, 'Cancelada')">
+                                    <i class="fa fa-times"></i>
+                                </button>
 
-                <button class="btn-accion btn-editar"
-                    title="Ver / editar"
-                    onclick="editarVenta(${id})">
-                    <i class="fa fa-pencil"></i>
-                </button>
+                                <button class="btn-accion btn-editar"
+                                    onclick="editarVenta(${id})">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
 
-               ${botonPdf}
+                                ${botonPdf}
 
-                <button class="btn-accion btn-wa"
-                    title="Enviar WhatsApp"
-                    onclick="VC.abrirWhatsApp('${tel}', '${row.Cliente}')">
-                    <i class="fa fa-whatsapp"></i>
-                </button>
-            `;
+                                <button class="btn-accion btn-wa"
+                                    onclick="VC.abrirWhatsApp('${tel}', '${row.Cliente}')">
+                                    <i class="fa fa-whatsapp"></i>
+                                </button>
+                            `;
                         }
-
-                        // ===== COMPROBANTES (ROL 4) =====
                         else if (rol === 4) {
                             botones = `
-                <button class="btn-accion btn-aprobar"
-                    title="Aceptar venta"
-                    onclick="VC.cambiarEstadoVenta(${id}, 'Activa')">
-                    <i class="fa fa-check"></i>
-                </button>
+                                <button class="btn-accion btn-aprobar"
+                                    onclick="VC.cambiarEstadoVenta(${id}, 'Activa')">
+                                    <i class="fa fa-check"></i>
+                                </button>
 
-                    <button class="btn-accion btn-editar"
-                    title="Ver / editar"
-                    onclick="editarVenta(${id})">
-                    <i class="fa fa-pencil"></i>
-                </button>
+                                <button class="btn-accion btn-editar"
+                                    onclick="editarVenta(${id})">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
 
-                ${botonPdf}
+                                ${botonPdf}
 
-                <button class="btn-accion btn-wa"
-                    title="Enviar WhatsApp"
-                    onclick="VC.abrirWhatsApp('${tel}', '${row.Cliente}')">
-                    <i class="fa fa-whatsapp"></i>
-                </button>
-            `;
+                                <button class="btn-accion btn-wa"
+                                    onclick="VC.abrirWhatsApp('${tel}', '${row.Cliente}')">
+                                    <i class="fa fa-whatsapp"></i>
+                                </button>
+                            `;
                         }
 
-                        return `
-            <div class="acciones-pendientes">
-                ${botones}
-            </div>
-        `;
+                        return `<div class="acciones-pendientes">${botones}</div>`;
                     }
 
-                    // tabla normal
                     return `
-        <div class="d-flex justify-content-center gap-2">
-            <button class="btn-accion btn-editar"
-                onclick="editarVenta(${row.IdVenta})">
-                <i class="fa fa-pencil"></i>
-            </button>
-        </div>
-    `;
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn-accion btn-editar"
+                                onclick="editarVenta(${row.IdVenta})">
+                                <i class="fa fa-pencil"></i>
+                            </button>
+                        </div>
+                    `;
                 }
             }
         ],
 
         initComplete: function () {
 
-
             const api = this.api();
 
             inicializarFiltrosColumnas(api, columnConfig);
 
-            $(api.table().container()).find('thead tr.filters th').eq(11).html('');
+            $(api.table().container()).find('thead tr.filters th').eq(12).html('');
         }
     });
 
+    // =========================
+    // 🔥 SELECCIÓN DE FILA
+    // =========================
+    $(`${selector} tbody`)
+        .off("click.rowSelectPend")
+        .on("click.rowSelectPend", "td", function (e) {
 
+            if (!gridVentasPendientes) return;
 
+            if ($(e.target).closest("button.btn-row-detail, .btn-accion").length) return;
+            if ($(e.target).closest("a, input, select, textarea, label").length) return;
 
-    // acordeón
-    $(`${selector} tbody`).off("click").on("click", "button.btn-row-detail", function (e) {
-        e.stopPropagation();
+            const tr = $(this).closest("tr");
+            if (tr.hasClass("child")) return;
 
-        const tr = $(this).closest("tr");
-        const row = gridVentasPendientes.row(tr);
-        const icon = tr.find("button.btn-row-detail i");
+            const row = gridVentasPendientes.row(tr);
+            const data = row.data();
+            if (!data) return;
 
-        if (row.child.isShown()) {
-            row.child.hide();
-            icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
-        } else {
-            row.child(formarAcordeon(row.data())).show();
-            icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
-            cargarDetalleVenta(row.data().IdVenta);
-        }
-    });
+            ventaPendienteClickeadaId = data.IdVenta;
+
+            gridVentasPendientes.rows().every(function () {
+                $(this.node()).removeClass("row-selected");
+            });
+
+            $(row.node()).addClass("row-selected");
+
+            gridVentasPendientes.draw(false);
+        });
+
+    // =========================
+    // 🔥 ACORDEÓN + SELECCIÓN
+    // =========================
+    $(`${selector} tbody`)
+        .off("click.rowDetailPend")
+        .on("click.rowDetailPend", "button.btn-row-detail", function (e) {
+
+            e.stopPropagation();
+
+            const tr = $(this).closest("tr");
+            const row = gridVentasPendientes.row(tr);
+            const data = row.data();
+            const icon = tr.find("button.btn-row-detail i");
+
+            if (!data) return;
+
+            ventaPendienteClickeadaId = data.IdVenta;
+
+            gridVentasPendientes.rows().every(function () {
+                $(this.node()).removeClass("row-selected");
+            });
+
+            $(row.node()).addClass("row-selected");
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
+            } else {
+                row.child(formarAcordeon(data)).show();
+                icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
+                cargarDetalleVenta(data.IdVenta);
+            }
+
+            gridVentasPendientes.draw(false);
+        });
 
     return gridVentasPendientes;
 }
-
 
 function renderTabla(data) {
     if (gridVentas) {
@@ -481,6 +530,10 @@ function renderTabla(data) {
 
             if (ventaSeleccionada?.IdVenta === d.IdVenta) {
                 $(row).addClass("venta-seleccionada");
+            }
+
+            if (ventaClickeadaId === d.IdVenta) {
+                $(row).addClass("row-selected");
             }
         },
         columns: [
@@ -613,7 +666,7 @@ function renderTabla(data) {
 
             inicializarFiltrosColumnas(api, columnConfig);
 
-            $(api.table().container()).find('thead tr.filters th').eq(11).html('');
+            $(api.table().container()).find('thead tr.filters th').eq(12).html('');
             
 
             const rol = userSession?.IdRol;
@@ -1028,34 +1081,79 @@ function editarVenta(id) {
 }
 
 async function eliminarVenta(id) {
-    if (!confirm("¿Eliminar la venta?"))
-        return;
 
-    let resp = await $.post(
-        "/Ventas_Electrodomesticos/EliminarVenta",
-        { id: id, forzar: false }
-    );
+    try {
 
-    // Si tiene pagos
-    if (resp.tienePagos) {
+        const confirmar = await confirmarModal(`
+            ¿Está seguro que desea 
+            <b style="color:#dc3545">ELIMINAR</b> esta venta?
+        `);
 
-        if (!confirm("La venta tiene pagos registrados.\n¿Desea eliminarla igual?"))
-            return;
+        if (!confirmar) return;
 
-        resp = await $.post(
+        let devolverStock = await confirmarModal(`
+    ¿Desea devolver el stock de los productos?<br><br>
+
+    <div>
+        <span style="color:#198754; font-weight:bold;">✔ Sí</span>
+        → vuelve al inventario
+    </div>
+
+    <div>
+        <span style="color:#dc3545; font-weight:bold;">✖ No</span>
+        → queda como consumido
+    </div>
+`);
+
+        let resp = await $.post(
             "/Ventas_Electrodomesticos/EliminarVenta",
-            { id: id, forzar: true }
+            { id: id, forzar: false, devolverStock }
         );
-    }
 
-    if (!resp.success) {
-        alert(resp.message || "Error");
-        return;
-    } else {
-        exitoModal("La venta ha sido eliminada con exito.");
-    }
+        if (resp && resp.tienePagos) {
 
-    await cargarTabla();
+            const confirmarPagos = await confirmarModal(`
+                <span style="color:#dc3545; font-weight:bold">
+                    ⚠ Esta venta tiene pagos registrados
+                </span><br>
+                ¿Desea eliminarla igualmente?
+            `);
+
+            if (!confirmarPagos) return;
+
+            devolverStock = await confirmarModal(`
+    ¿Desea devolver el stock de los productos?<br><br>
+
+    <div>
+        <span style="color:#198754; font-weight:bold;">✔ Sí</span>
+        → vuelve al inventario
+    </div>
+
+    <div>
+        <span style="color:#dc3545; font-weight:bold;">✖ No</span>
+        → queda como consumido
+    </div>
+`);
+
+            resp = await $.post(
+                "/Ventas_Electrodomesticos/EliminarVenta",
+                { id: id, forzar: true, devolverStock }
+            );
+        }
+
+        if (!resp || !resp.success) {
+            alert(resp?.message || "Error al eliminar la venta");
+            return;
+        }
+
+        exitoModal("La venta ha sido eliminada con éxito.");
+
+        await cargarTabla();
+
+    } catch (e) {
+        console.error(e);
+        alert("Error de conexión con el servidor");
+    }
 }
 
 /* ------------ PDF INDIVIDUAL ------------ */
@@ -1417,35 +1515,48 @@ VC.cambiarEstadoVenta = async function (idVenta, estado) {
 
     try {
 
-        let mensaje = "";
-
-        if (estado === "Activa") {
-            mensaje = "¿Está seguro que desea ACEPTAR esta venta?";
-        }
-        else if (estado === "Cancelada") {
-            mensaje = "¿Está seguro que desea CANCELAR esta venta?";
-        }
+        let mensaje = estado === "Activa"
+            ? `¿Está seguro que desea <b style="color:#198754">ACEPTAR</b> esta venta?`
+            : `¿Está seguro que desea <b style="color:#dc3545">CANCELAR</b> esta venta?`;
 
         const confirmar = await confirmarModal(mensaje);
-
         if (!confirmar) return;
 
-        // Primer intento normal
+        let devolverStock = true;
+
+        if (estado === "Cancelada") {
+            devolverStock = await confirmarModal(`
+                ¿Desea devolver el stock de los productos?<br>
+                <small class="text-muted">
+                    ✔ Sí → vuelve al inventario<br>
+                    ❌ No → queda como consumido
+                </small>
+            `);
+        }
+
         let resp = await $.post(
             "/Ventas_Electrodomesticos/CambiarEstadoVenta",
-            { idVenta, estado, forzar: false }
+            { idVenta, estado, forzar: false, devolverStock }
         );
 
-        // Si la venta tiene pagos
         if (resp && resp.tienePagos) {
 
-            if (!confirm("La venta tiene pagos registrados.\n¿Desea cancelarla igual?"))
-                return;
+            const confirmarPagos = await confirmarModal(`
+                <span style="color:#dc3545; font-weight:bold">
+                    ⚠ La venta tiene pagos registrados
+                </span><br>
+                ¿Desea continuar igualmente?
+            `);
 
-            // Segundo intento forzado
+            if (!confirmarPagos) return;
+
+            if (estado === "Cancelada") {
+                devolverStock = await confirmarModal(`¿Desea devolver el stock?`);
+            }
+
             resp = await $.post(
                 "/Ventas_Electrodomesticos/CambiarEstadoVenta",
-                { idVenta, estado, forzar: true }
+                { idVenta, estado, forzar: true, devolverStock }
             );
         }
 
@@ -1454,7 +1565,6 @@ VC.cambiarEstadoVenta = async function (idVenta, estado) {
             return;
         }
 
-        // recargar todo
         await cargarTabla();
 
     } catch (e) {
@@ -1462,9 +1572,6 @@ VC.cambiarEstadoVenta = async function (idVenta, estado) {
         alert("Error de conexión con el servidor");
     }
 };
-
-
-
 // Abrir modal
 VC.abrirWhatsApp = function (telefono, nombre) {
 

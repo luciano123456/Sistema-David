@@ -420,8 +420,27 @@ namespace Sistema_David.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult MarcarWhatssapMasivo(List<int> idsPagos)
+        {
+            try
+            {
+                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
 
+                var msg = Ventas_ElectrodomesticosModel
+                    .MarcarWhatssapMasivo(idsPagos, usuario);
 
+                return Json(new
+                {
+                    success = msg == "OK",
+                    message = msg
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
 
         public ActionResult EnvWhatssapInformacionVenta(int id)
         {

@@ -361,9 +361,50 @@ namespace Sistema_David.Controllers
             });
         }
 
+        [HttpPost]
+        public ActionResult MarcarWhatssapPago(int id, string descripcion)
+        {
+            try
+            {
+                var msg = Ventas_ElectrodomesticosModel.MarcarWhatssap(id, descripcion);
+
+                return Json(new
+                {
+                    success = msg == "OK",
+                    message = msg
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
 
         [HttpPost]
-        public ActionResult EnvWhatssapElectro(int id, string descripcion)
+        public ActionResult MarcarWhatssapMasivo(List<int> idsPagos)
+        {
+            try
+            {
+                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+
+                var msg = Ventas_ElectrodomesticosModel
+                    .MarcarWhatssapMasivo(idsPagos, usuario);
+
+                return Json(new
+                {
+                    success = msg == "OK",
+                    message = msg
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+        [HttpPost]
+        public ActionResult EnvWhatssapElectro(int id, string descripcion, int? nroCuota)
         {
             var idVenta = Ventas_ElectrodomesticosModel
                 .ResolverIdVentaDesdeMovimiento(id, descripcion);
@@ -376,10 +417,9 @@ namespace Sistema_David.Controllers
             if (data == null)
                 return Json(null);
 
-
-            int IdFinal = descripcion.Contains("Venta") ? idVenta.Value : id;
-
-            var msg = Ventas_ElectrodomesticosModel.MarcarWhatssap(IdFinal, descripcion);
+            // 🔥 ACA ESTA LA CLAVE
+            var pagosPendientes = Ventas_ElectrodomesticosModel
+                .ObtenerPagosWhatssapPendientes(idVenta.Value);
 
             return Json(new
             {
@@ -388,7 +428,14 @@ namespace Sistema_David.Controllers
                 {
                     data.ClienteNombre,
                     data.ClienteTelefono
-                }
+                },
+                Pagos = data.Pagos,
+                IdPagoActual = id,
+                NroCuota = nroCuota,
+                PagosPendientesWhatssap = pagosPendientes, // 🔥 CLAVE
+                EsVenta = (descripcion ?? "").Contains("Venta"),
+                Descripcion = descripcion ?? "",
+                IdVenta = idVenta.Value
             });
         }
 
@@ -396,7 +443,7 @@ namespace Sistema_David.Controllers
 
         /* ================= ELIMINAR VENTA ================= */
         [HttpPost]
-        public ActionResult EliminarVenta(int id, bool forzar = false)
+        public ActionResult EliminarVenta(int id, bool forzar = false, bool devolverStock = true)
         {
             try
             {
@@ -466,14 +513,14 @@ namespace Sistema_David.Controllers
         }
 
         [HttpPost]
-        public ActionResult CambiarEstadoVenta(int idVenta, string estado, bool forzar = false)
+        public ActionResult CambiarEstadoVenta(int idVenta, string estado, bool forzar = false, bool devolverStock = true)
         {
             try
             {
                 var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
 
                 var msg = Ventas_ElectrodomesticosModel
-                    .CambiarEstadoVenta(idVenta, estado, usuario, forzar);
+                    .CambiarEstadoVenta(idVenta, estado, usuario, forzar, devolverStock);
 
                 if (msg == "TIENE_PAGOS")
                 {
@@ -519,6 +566,8 @@ namespace Sistema_David.Controllers
                 }, JsonRequestBehavior.AllowGet);
             }
         }
+
+
 
         [HttpPost]
         public ActionResult GuardarObservacionCobro(VM_ObsCobroReq req)

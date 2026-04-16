@@ -214,6 +214,8 @@ function seleccionarCasaVerde() {
 
 /* ===================== RESET MODAL COBRO ===================== */
 function resetCobroModal() {
+    qs("cb_fecha").disabled = false;
+    qs("cb_fecha").classList.remove("opacity-50");
     ventaActual = null;
     cuotaActual = null;
     cuentasCache = [];
@@ -306,7 +308,8 @@ window.abrirModalCobro = async function (idVenta, idCuota) {
         );
 
         qs("cb_montoRestante").value = restante;
-        qs("cb_importe").value = formatearMiles(restante);
+        qs("cb_importe").value = 0;
+        evaluarFechaCobroUI();
 
         qs("cb_valorCuotaBox").innerText = `Valor de la cuota: ${money(restante)}`;
 
@@ -338,6 +341,61 @@ window.abrirModalCobro = async function (idVenta, idCuota) {
     }
 };
 
+function evaluarFechaCobroUI() {
+    const importe = formatearSinMiles(qs("cb_importe").value);
+    const restante = Number(qs("cb_montoRestante").value || 0);
+
+    const inputFecha = qs("cb_fecha");
+    if (!inputFecha) return;
+
+    // ===============================
+    // 💰 PAGO TOTAL
+    // ===============================
+    if (importe >= restante && restante > 0) {
+        inputFecha.disabled = true;
+        inputFecha.classList.add("opacity-50");
+
+        // 🔥 opcional: setear hoy igual
+        inputFecha.value = todayISO();
+
+        return;
+    }
+
+    // ===============================
+    // 💸 PARCIAL
+    // ===============================
+    if (importe > 0 && importe < restante) {
+        inputFecha.disabled = false;
+        inputFecha.classList.remove("opacity-50");
+
+        if (!inputFecha.value) {
+            inputFecha.value = todayISO();
+        }
+
+        return;
+    }
+
+    // ===============================
+    // 🔁 REPROGRAMACIÓN (0)
+    // ===============================
+    if (importe === 0) {
+        inputFecha.disabled = false;
+        inputFecha.classList.remove("opacity-50");
+
+        if (!inputFecha.value) {
+            inputFecha.value = todayISO();
+        }
+
+        return;
+    }
+
+    // ===============================
+    // 🧼 DEFAULT
+    // ===============================
+    inputFecha.disabled = false;
+    inputFecha.classList.remove("opacity-50");
+
+}
 /* ===================== CUENTAS (TU ENDPOINT) ===================== */
 async function cargarCuentasTotales() {
     const metodo = qs("cb_metodo").value;
@@ -798,7 +856,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const limpio = formatearSinMiles(e.target.value);
         e.target.value = formatearMiles(limpio);
 
-        aplicarModoCobroUI();
+        aplicarModoCobroUI(); // ya lo tenías
+        evaluarFechaCobroUI(); // 🔥 NUEVO
     });
 
     // Fecha default (por si abrís modal sin abrirModalCobro en alguna pantalla)
@@ -1149,6 +1208,12 @@ function generarPdfVenta(venta) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("COMPROBANTE DE VENTA", 105, 14, { align: "center" });
+
+
+    // 🔥 Leyenda legal debajo
+    doc.setFontSize(9);
+    doc.setTextColor(200, 200, 200); // gris suave
+    doc.text("Documento no válido como factura", 173, 28, { align: "center" });
 
     doc.setFontSize(9);
     doc.text(`N° ${venta.IdVenta}`, 200, 10, { align: "right" });
@@ -1637,7 +1702,6 @@ Ante cualquier consulta, quedamos a disposición.`;
 Se ha registrado correctamente el pago de la *Cuota ${nroCuota}*.
 
 💰 *Importe abonado:* ${importePagado}
-📉 *Saldo pendiente total:* ${saldo}
 📊 *Cuotas restantes:* ${cuotasRestantes}
 
 📆 *Próxima cuota a vencer:*
