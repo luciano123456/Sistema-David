@@ -16,6 +16,7 @@ let cobradoresCache = [];
 let ventaClickeadaId = null; // igual que Historial: fila seleccionada por click
 let ventaPendienteClickeadaId = null; // igual que Historial: fila seleccionada por click
 let clientesCache = [];
+const VC_STORAGE_KEY = "vc_filtros_cobranzas";
 
 const columnConfigCobros = [
     { index: 1, filterType: 'text' },
@@ -127,6 +128,57 @@ let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
     document.head.appendChild(st);
 })();
 
+VC.guardarFiltros = function () {
+
+    const estado = {
+        desde: $("#f_desde").val(),
+        hasta: $("#f_hasta").val(),
+        cliente: $("#f_cliente").val(),
+        vendedor: $("#f_vendedor").val(),
+        cobrador: $("#f_cobrador").val(),
+        estado: $("#f_estado").val(),
+        zona: $("#f_zona").val(),
+        turno: $("#f_turno").val(),
+        franja: $("#f_franja").val()
+    };
+
+    localStorage.setItem(VC_STORAGE_KEY, JSON.stringify(estado));
+};
+
+VC.restaurarFiltros = function () {
+
+    const raw = localStorage.getItem(VC_STORAGE_KEY);
+    if (!raw) return false;
+
+    try {
+        const estado = JSON.parse(raw);
+
+        $("#f_desde").val(estado.desde || "");
+        $("#f_hasta").val(estado.hasta || "");
+
+        // 🔥 SELECT2
+        VC.setSelect2Value("#f_cliente", estado.cliente);
+        VC.setSelect2Value("#f_vendedor", estado.vendedor);
+        VC.setSelect2Value("#f_cobrador", estado.cobrador);
+        VC.setSelect2Value("#f_zona", estado.zona);
+
+        // 🔥 TURNOS (normal)
+        $("#f_turno").val(estado.turno || "").trigger("change");
+
+        // 🔥 FRANJA (depende de turno → esperar)
+        setTimeout(() => {
+            VC.setSelect2Value("#f_franja", estado.franja);
+        }, 300);
+
+        $("#f_estado").val(estado.estado || "");
+
+        return true;
+
+    } catch (e) {
+        console.error("Error restaurando filtros", e);
+        return false;
+    }
+};
 VC.mostrarInfoCliente = function (row) {
 
     const saldo = row.SaldoCliente || 0;
@@ -330,10 +382,19 @@ $(document).ready(async function () {
     try { moment.locale("es"); } catch { }
 
     const hoy = moment().format("YYYY-MM-DD");
-    $("#f_desde").val(hoy);
-    $("#f_hasta").val(hoy);
+    const hasta = moment(hoy).add(7, 'days').format('YYYY-MM-DD');
 
     await VC.cargarCombos();
+
+    // ✅ DESPUÉS restaurar
+    const restaurado = VC.restaurarFiltros();
+
+    if (!restaurado) {
+        $("#f_desde").val(hoy);
+        $("#f_hasta").val(hasta);
+    }
+
+   
     VC.initEventos();
     await VC.cargarTabla();
 
@@ -341,6 +402,20 @@ $(document).ready(async function () {
 });
 
 VC.initEventos = function () {
+
+    $(document).on("change", `
+    #f_desde,
+    #f_hasta,
+    #f_cliente,
+    #f_vendedor,
+    #f_cobrador,
+    #f_estado,
+    #f_zona,
+    #f_turno,
+    #f_franja
+`, function () {
+        VC.guardarFiltros();
+    });
 
     // Mostrar / Ocultar filtros
     $("#btnToggleFiltros").off("click.vcFiltros").on("click.vcFiltros", () => {
@@ -571,9 +646,33 @@ VC.cargarCombos = async function () {
 =========================================================== */
 
 
+VC.setSelect2Value = function (selector, value) {
 
-VC.aplicarFiltros = () => VC.cargarTabla();
+    const el = $(selector);
+    if (!el.length) return;
 
+    if (!value) {
+        el.val(null).trigger("change");
+        return;
+    }
+
+    // 🔥 SI NO EXISTE OPTION → CREARLA
+    if (el.find(`option[value="${value}"]`).length === 0) {
+        el.append(new Option(value, value, true, true));
+    }
+
+    // 🔥 IMPORTANTE: esperar select2 si no está listo
+    if (!el.hasClass("select2-hidden-accessible")) {
+        // no está inicializado aún
+        el.val(value);
+    } else {
+        el.val(value).trigger("change.select2");
+    }
+};
+VC.aplicarFiltros = () => {
+    VC.guardarFiltros(); // 🔥 clave
+    VC.cargarTabla();
+};
 VC.limpiarFiltros = function () {
     const hoy = moment().format("YYYY-MM-DD");
     $("#f_desde").val(hoy);

@@ -613,9 +613,6 @@ a {
 
 
 
-.fila-atrasada-amarilla {
-    background: rgba(241,196,15,.12) !important;
-}
 
 .fila-atrasada-naranja {
     background: rgba(230,126,34,.15) !important;
@@ -659,7 +656,7 @@ tr.fila-atrasada-roja {
 
 
 tr.fila-aldia {
-    background: rgba(40,167,69,0.12) !important;
+   
     box-shadow: inset 4px 0 0 rgba(40,167,69,0.9);
 }
 
@@ -1758,6 +1755,17 @@ input {
         background: rgba(0, 200, 255, 0.18) !important; /* celeste suave */
     }
 
+#grdVentasPendientes tbody tr {
+    cursor: pointer;
+}
+
+    /* Hover (para “no perderse”) */
+    #grdVentasPendientes tbody tr:hover {
+        filter: brightness(0.96);
+    }
+
+    
+
 /* Acordeón: cuotas/pagos (tablas internas) */
 .accordion-sub table tbody tr {
     cursor: pointer;
@@ -1783,10 +1791,6 @@ input {
         filter: brightness(1.05);
     }
 
-#grdVentas, #vc_tabla_transferencias_pendientes tbody tr.row-selected,
-#grdVentas, #vc_tabla_transferencias_pendientes tbody tr.row-selected > td {
-    background-color: rgba(0, 200, 255, 0.28) !important;
-}
 
     #grdVentas tbody tr.row-selected {
         outline: 2px solid rgba(82,165,255,.55);
@@ -2250,4 +2254,24 @@ input {
     .vc-smart-search-box {
         max-width: 100%;
     }
+}
+
+#grdVentasPendientes tbody tr.row-selected {
+    background: linear-gradient(90deg, #92400e, #f59e0b) !important;
+    color: #fff !important;
+}
+
+.fila-cliente-nuevo {
+    background-color: #198754 !important; /* verde bootstrap */
+    color: #fff !important;
+}
+
+    .fila-cliente-nuevo td {
+        background-color: #198754 !important;
+        color: #fff !important;
+    }
+
+.opacity-50 {
+    opacity: 0.5;
+    pointer-events: none;
 }

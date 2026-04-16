@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using Microsoft.Ajax.Utilities;
 using Sistema_David.Models.DB;
 using Sistema_David.Models.Modelo;
 using Sistema_David.Models.ViewModels;
@@ -114,6 +115,8 @@ namespace Sistema_David.Models
                         ClienteLongitud = v.Clientes?.Longitud,
                         ClienteLatitud = v.Clientes?.Latitud,
                         ClienteTelefono = v.Clientes?.Telefono,
+                        ClienteFecha = (DateTime)v.Clientes.Fecha,
+                        Vendedor = v.Usuarios2.Nombre,
 
                         Total = total,
 
@@ -355,7 +358,7 @@ namespace Sistema_David.Models
                         Turno = m.Turno,
                         FranjaHoraria = m.FranjaHoraria,
                         Comprobante = 0
-                       
+
                     };
 
                     db.Ventas_Electrodomesticos.Add(venta);
@@ -449,12 +452,16 @@ namespace Sistema_David.Models
             if (string.IsNullOrWhiteSpace(descripcion))
                 return null;
 
+            var desc = descripcion.ToLower(); // 🔥 CLAVE
+
             using (var db = new Sistema_DavidEntities())
             {
-                if (descripcion.Contains("Venta"))
+                // 🔵 VENTA
+                if (desc.Contains("venta"))
                     return idMovimiento;
 
-                if (descripcion.Contains("Cobranza"))
+                // 🔴 COBRANZA (PAGO)
+                if (desc.Contains("cobranza"))
                 {
                     return db.Ventas_Electrodomesticos_Pagos
                         .Where(p => p.Id == idMovimiento)
@@ -462,7 +469,8 @@ namespace Sistema_David.Models
                         .FirstOrDefault();
                 }
 
-                if (descripcion.Contains("Recargo"))
+                // 🟡 RECARGO
+                if (desc.Contains("recargo"))
                 {
                     return db.Ventas_Electrodomesticos_Cuotas_Recargos
                         .Where(r => r.Id == idMovimiento)
@@ -715,9 +723,12 @@ namespace Sistema_David.Models
                         if (montoDisponible <= 0)
                             break;
 
-                        decimal restanteCuota =
-                            (cuota.MontoOriginal + cuota.MontoRecargos - cuota.MontoDescuentos)
-                            - cuota.MontoPagado;
+                        decimal totalCuota =
+                            cuota.MontoOriginal +
+                            cuota.MontoRecargos -
+                            cuota.MontoDescuentos;
+
+                        decimal restanteCuota = totalCuota - cuota.MontoPagado;
 
                         if (restanteCuota <= 0)
                             continue;
@@ -736,17 +747,35 @@ namespace Sistema_David.Models
                         var pagAnt = cuota.MontoPagado;
 
                         cuota.MontoPagado = R2(cuota.MontoPagado + aplicar);
-                        cuota.MontoRestante = R2(
-                            (cuota.MontoOriginal + cuota.MontoRecargos - cuota.MontoDescuentos)
-                            - cuota.MontoPagado
-                        );
 
-                        cuota.Estado = cuota.MontoRestante > 0 ? "Pendiente" : "Pagada";
+                        cuota.MontoRestante = R2(totalCuota - cuota.MontoPagado);
+
+                        // ===============================
+                        // 🔥 LÓGICA FINAL DE FECHAS
+                        // ===============================
+                        if (cuota.MontoRestante <= 0)
+                        {
+                            // ✅ PAGO TOTAL
+                            cuota.Estado = "Pagada";
+                            cuota.FechaCobro = m.FechaPago != null ? m.FechaPago : DateTime.Now;
+                        }
+                        else
+                        {
+                            // ⚠️ PAGO PARCIAL
+                            cuota.Estado = "Pendiente";
+
+                            // 🔥 RESPETAR FECHA EXISTENTE (clave)
+                            if (cuota.FechaCobro == null)
+                            {
+                                cuota.FechaCobro = DateTime.Now.AddDays(7);
+                            }
+                        }
+
                         cuota.UsuarioModificacion = m.UsuarioOperador;
                         cuota.FechaModificacion = DateTime.Now;
                         cuota.TransferenciaPendiente = 0;
                         cuota.CobroPendiente = 0;
-                        
+
                         Audit(
                             db,
                             venta.Id,
@@ -1032,7 +1061,7 @@ namespace Sistema_David.Models
         /* ===========================================================
          * ELIMINAR VENTA
          * =========================================================== */
-        public static string EliminarVenta(int idVenta, int usuario, bool forzar = false)
+        public static string EliminarVenta(int idVenta, int usuario, bool forzar = false, bool devolverStock = true)
         {
             using (var db = new Sistema_DavidEntities())
             using (var tx = db.Database.BeginTransaction())
@@ -1059,29 +1088,32 @@ namespace Sistema_David.Models
                     /* ===============================
                      * 1️⃣ DEVOLVER STOCK
                      * =============================== */
-                    foreach (var det in venta.Ventas_Electrodomesticos_Detalle)
+                    if (devolverStock)
                     {
-                        var prod = db.Productos.First(p => p.Id == det.IdProducto);
-                        prod.Stock += (int?)det.Cantidad;
-                        db.Entry(prod).State = EntityState.Modified;
-
-                        var stockUser = db.StockUsuarios.FirstOrDefault(s =>
-                            s.IdUsuario == venta.IdVendedor &&
-                            s.IdProducto == det.IdProducto);
-
-                        if (stockUser != null)
+                        foreach (var det in venta.Ventas_Electrodomesticos_Detalle)
                         {
-                            stockUser.Cantidad += (int)det.Cantidad;
-                            db.Entry(stockUser).State = EntityState.Modified;
-                        }
-                        else
-                        {
-                            db.StockUsuarios.Add(new StockUsuarios
+                            var prod = db.Productos.First(p => p.Id == det.IdProducto);
+                            prod.Stock += (int?)det.Cantidad;
+                            db.Entry(prod).State = EntityState.Modified;
+
+                            var stockUser = db.StockUsuarios.FirstOrDefault(s =>
+                                s.IdUsuario == venta.IdVendedor &&
+                                s.IdProducto == det.IdProducto);
+
+                            if (stockUser != null)
                             {
-                                IdUsuario = venta.IdVendedor,
-                                IdProducto = (int)det.IdProducto,
-                                Cantidad = (int)det.Cantidad
-                            });
+                                stockUser.Cantidad += (int)det.Cantidad;
+                                db.Entry(stockUser).State = EntityState.Modified;
+                            }
+                            else
+                            {
+                                db.StockUsuarios.Add(new StockUsuarios
+                                {
+                                    IdUsuario = venta.IdVendedor,
+                                    IdProducto = (int)det.IdProducto,
+                                    Cantidad = (int)det.Cantidad
+                                });
+                            }
                         }
                     }
 
@@ -1404,6 +1436,51 @@ namespace Sistema_David.Models
             }
         }
 
+        public static List<int> ObtenerPagosWhatssapPendientes(int idVenta)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                return db.Ventas_Electrodomesticos_Pagos
+                    .Where(p => p.IdVenta == idVenta && (p.Whatssap ?? 0) == 0)
+                    .OrderBy(p => p.FechaPago)
+                    .ThenBy(p => p.Id)
+                    .Select(p => p.Id)
+                    .ToList();
+            }
+        }
+
+
+        public static string MarcarWhatssapMasivo(List<int> idsPagos, int usuario)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (idsPagos == null || idsPagos.Count == 0)
+                        return "Sin datos";
+
+                    var pagos = db.Ventas_Electrodomesticos_Pagos
+                        .Where(p => idsPagos.Contains(p.Id))
+                        .ToList();
+
+                    foreach (var p in pagos)
+                    {
+                        p.Whatssap = 1;
+                    }
+
+                    db.SaveChanges();
+                    tx.Commit();
+
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error: " + ex.Message;
+                }
+            }
+        }
 
         public static string MarcarWhatssap(int id, string descripcion)
         {
@@ -1412,7 +1489,7 @@ namespace Sistema_David.Models
             {
                 try
                 {
-                  
+
                     if (!descripcion.Contains("Venta"))
                     {
                         var venta = db.Ventas_Electrodomesticos_Pagos
@@ -1422,7 +1499,8 @@ namespace Sistema_David.Models
                             return "Venta no encontrada";
 
                         venta.Whatssap = 1;
-                    } else 
+                    }
+                    else
                     {
                         var venta = db.Ventas_Electrodomesticos
                            .FirstOrDefault(c => c.Id == id);
@@ -1459,7 +1537,7 @@ namespace Sistema_David.Models
                         return "Venta no encontrada";
 
                     venta.Comprobante = 1;
-         
+
                     db.SaveChanges();
                     tx.Commit();
                     return "OK";
@@ -2011,7 +2089,7 @@ namespace Sistema_David.Models
                 return ordenado;
             }
         }
-        public static string CambiarEstadoVenta(int idVenta, string nuevoEstado, int usuario, bool forzar = false)
+        public static string CambiarEstadoVenta(int idVenta, string nuevoEstado, int usuario, bool forzar = false, bool devolverStock = true)
         {
             using (var db = new Sistema_DavidEntities())
             using (var tx = db.Database.BeginTransaction())
@@ -2027,7 +2105,7 @@ namespace Sistema_David.Models
                     if (nuevoEstado == "Cancelada")
                     {
                         tx.Rollback();
-                        return EliminarVenta(idVenta, usuario, forzar);
+                        return EliminarVenta(idVenta, usuario, forzar, devolverStock);
                     }
 
                     var estadoAnterior = venta.Estado;

@@ -134,7 +134,7 @@ function confirmarModal(mensaje) {
         const mensajeEl = document.getElementById('modalConfirmarMensaje');
         const btnAceptar = document.getElementById('btnModalConfirmarAceptar');
 
-        mensajeEl.innerText = mensaje;
+        mensajeEl.innerHTML = mensaje;
 
         const modal = new bootstrap.Modal(modalEl, {
             backdrop: 'static',

@@ -585,12 +585,19 @@ async function modificarStockuser() {
 async function agregarStockUser() {
 
     try {
+
+        let cantidad = Number($("#Cantidad").val());
+
+        if (cantidad <= 0) {
+            alert("No puedes asignar un stock en 0");
+            return;
+        }
         var url = "/StockPendiente/Agregar";
 
         let value = JSON.stringify({
             //IdProducto: obtenerIdListSeleccionado(),
             IdProducto: $("#Productos").find("option:selected").val(),
-            Cantidad: Number($("#Cantidad").val()),
+            Cantidad: cantidad,
             IdUsuario: idUserStock,
             Tipo: 'SUMAR'
         });

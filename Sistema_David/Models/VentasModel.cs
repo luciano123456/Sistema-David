@@ -506,25 +506,36 @@ namespace Sistema_David.Models.Modelo
 
         public static List<VMProductoVenta> ListaProductosVenta(int id)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            try
             {
+                using (var db = new Sistema_DavidEntities())
+                {
+                    var productosventa = db.ProductosVenta
+                        .Where(pv => pv.IdVenta == id)
+                        .Select(pv => new VMProductoVenta
+                        {
+                            Id = pv.Id,
+                            IdProducto = pv.IdProducto,
+                            IdVenta = pv.IdVenta,
+                            Producto = pv.Productos != null
+                                ? pv.Productos.Nombre
+                                : pv.Producto,
+                            Cantidad = (int)pv.Cantidad,
+                            PrecioUnitario = (decimal)pv.PrecioUnitario,
+                            PrecioTotal = (decimal)(pv.PrecioUnitario * pv.Cantidad)
+                        })
+                        .ToList();
 
-                var productosventa = (from d in db.ProductosVenta
-                         .SqlQuery("select pv.Id, pv.idproducto, pv.idventa, pv.Cantidad, pv.PrecioUnitario, pv.Producto, p.Nombre as Producto, p.PrecioVenta from ProductosVenta pv left join Productos p on pv.IdProducto = p.Id")
-                                      select new VMProductoVenta
-                                      {
-                                          Id = d.Id,
-                                          IdProducto = d.IdProducto,
-                                          IdVenta = d.IdVenta,
-                                          Producto = d.Productos == null ? d.Producto : d.Productos.Nombre,
-                                          Cantidad = (int)d.Cantidad,
-                                          PrecioUnitario = (decimal)d.PrecioUnitario,
-                                          PrecioTotal = (decimal)(d.PrecioUnitario * d.Cantidad)
-                                      }).Where(x => x.IdVenta == id).ToList();
-
-                return productosventa;
+                    return productosventa;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en ListaProductosVenta: {ex.Message}");
+                return null;
             }
         }
+
 
 
 
