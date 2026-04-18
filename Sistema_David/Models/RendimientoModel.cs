@@ -202,15 +202,34 @@ namespace Sistema_David.Models
         }
 
 
-        public static string ObtenerImagen(int idVenta)
+        public static string ObtenerImagen(int id, string origen)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            try
             {
-                var imagen = db.InformacionVentas.Where(iv => iv.Id == idVenta)
-                                                 .Select(iv => iv.Imagen)
-                                                 .FirstOrDefault();
+                using (var db = new Sistema_DavidEntities())
+                {
+                    db.Configuration.ProxyCreationEnabled = false;
+                    db.Configuration.LazyLoadingEnabled = false;
 
-                return imagen;
+                    if (origen == "ELECTRO")
+                    {
+                        return db.Ventas_Electrodomesticos_Pagos
+                            .Where(p => p.Id == id)
+                            .Select(p => p.Imagen)
+                            .FirstOrDefault();
+                    }
+                    else
+                    {
+                        return db.InformacionVentas
+                            .Where(iv => iv.Id == id)
+                            .Select(iv => iv.Imagen)
+                            .FirstOrDefault();
+                    }
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
 

@@ -566,11 +566,13 @@ namespace Sistema_David.Models
                         Id = c.Id,
                         NumeroCuota = c.NumeroCuota,
                         FechaVencimiento = c.FechaVencimiento,
+                        FechaCobro = (DateTime)c.FechaCobro,
 
                         MontoOriginal = c.MontoOriginal,
                         MontoRecargos = c.MontoRecargos,
                         MontoDescuentos = c.MontoDescuentos,
                         MontoPagado = c.MontoPagado,
+
 
                         MontoRestante =
                             c.MontoOriginal +
