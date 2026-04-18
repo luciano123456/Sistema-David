@@ -1090,3 +1090,11 @@ select option {
 body.loading {
     overflow: hidden;
 }
+
+#grdRendimiento tbody tr.row-selected {
+    background: rgba(2, 255, 255, 1) !important;
+}
+
+#grdRendimiento tbody tr {
+    cursor: pointer;
+}

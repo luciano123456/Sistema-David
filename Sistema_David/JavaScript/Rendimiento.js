@@ -2,6 +2,7 @@
 let gridRendimiento = null;
 let usuarioSeleccionadoId = null;
 let isRenderingDashboard = false;
+let rendimientoRowSelectedId = null;
 
 $(document).ready(async function () {
     moment.locale('es');
@@ -703,6 +704,7 @@ const safeDate = (v) => {
 };
 
 const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio, metodoPago, idcuenta, comprobantesEnviados) => {
+
     let totVenta = 0;
     let totCobro = 0;
     let totInteres = 0;
@@ -721,6 +723,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
         totTransferencia = 0;
 
         table.data().each(function (rowData) {
+
             const descripcion = safeString(rowData.Descripcion);
             const metodo = safeUpper(rowData.MetodoPago);
             const cobro = safeNumber(rowData.Cobro);
@@ -730,22 +733,14 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
             if (descripcion.includes("Cobranza")) {
                 totCobro += cobro;
 
-                if (metodo === "EFECTIVO") {
-                    totEfectivo += cobro;
-                }
-
+                if (metodo === "EFECTIVO") totEfectivo += cobro;
                 if (metodo === "TRANSFERENCIA PROPIA" || metodo === "TRANSFERENCIA A TERCEROS") {
                     totTransferencia += cobro;
                 }
             }
 
-            if (descripcion.includes("Venta")) {
-                totVenta += venta;
-            }
-
-            if (descripcion.includes("Interes")) {
-                totInteres += interes;
-            }
+            if (descripcion.includes("Venta")) totVenta += venta;
+            if (descripcion.includes("Interes")) totInteres += interes;
         });
 
         document.getElementById("totventa").textContent = formatNumber(totVenta);
@@ -758,6 +753,7 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
     const tableExists = $.fn.DataTable.isDataTable('#grdRendimiento');
 
     if (!tableExists) {
+
         gridRendimiento = $('#grdRendimiento').DataTable({
             ajax: {
                 url: url,
@@ -770,14 +766,8 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                     console.error("Respuesta AJAX inesperada:", json);
                     return [];
                 },
-                error: function (xhr, textStatus, errorThrown) {
-                    console.error("Error AJAX DataTable:", {
-                        status: xhr.status,
-                        statusText: xhr.statusText,
-                        responseText: xhr.responseText,
-                        textStatus,
-                        errorThrown
-                    });
+                error: function (xhr) {
+                    console.error("Error AJAX DataTable:", xhr.responseText);
                 }
             },
             language: {
@@ -787,149 +777,115 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
             scrollX: true,
             deferRender: true,
             processing: true,
-            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
             pageLength: 10,
-            lengthChange: true,
+
             columns: [
-                {
-                    data: "Fecha",
-                    defaultContent: "",
-                    render: (d) => safeDate(d)
-                },
+                { data: "Fecha", render: d => safeDate(d) },
                 {
                     data: "MetodoPago",
-                    defaultContent: "",
                     render: function (data, type, row) {
+
                         const metodo = safeString(data);
                         let icon = "";
 
                         if (safeString(row.Imagen) && safeUpper(metodo) !== "EFECTIVO") {
-                            icon = `<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='verComprobante(${safeNumber(row.Id)})' title='Ver Comprobante'>
-                                        <i class='fa fa-eye fa-lg text-primary' aria-hidden='true'></i>
-                                    </button>`;
+                            icon = `<button class='btn btn-sm ms-1 btnacciones'
+                                type='button'
+                                onclick='verComprobante(${safeNumber(row.Id)}, "${safeString(row.Descripcion)}")'>
+                                <i class='fa fa-eye text-primary'></i>
+                            </button>`;
                         }
 
                         return metodo + (icon ? " " + icon : "");
                     }
                 },
-                { data: "CuentaBancaria", defaultContent: "", render: d => safeString(d) },
-                { data: "Cliente", defaultContent: "", render: d => safeString(d) },
-                { data: "CapitalInicial", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
-                { data: "Venta", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
-                { data: "Cobro", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
-                { data: "Interes", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
-                { data: "CapitalFinal", defaultContent: 0, render: d => formatNumber(safeNumber(d)) },
-                {
-                    data: "ProximoCobro",
-                    defaultContent: "",
-                    render: d => safeDate(d)
-                },
-                {
-                    data: "FechaLimite",
-                    defaultContent: "",
-                    render: d => safeDate(d)
-                },
-                {
-                    data: "TipoNegocio",
-                    defaultContent: "",
-                    render: function (d, type, row) {
-                        return safeString(d || row.Origen);
-                    }
-                },
-                { data: "Descripcion", defaultContent: "", render: d => safeString(d) },
+                { data: "CuentaBancaria" },
+                { data: "Cliente" },
+                { data: "CapitalInicial", render: d => formatNumber(safeNumber(d)) },
+                { data: "Venta", render: d => formatNumber(safeNumber(d)) },
+                { data: "Cobro", render: d => formatNumber(safeNumber(d)) },
+                { data: "Interes", render: d => formatNumber(safeNumber(d)) },
+                { data: "CapitalFinal", render: d => formatNumber(safeNumber(d)) },
+                { data: "ProximoCobro", render: d => safeDate(d) },
+                { data: "FechaLimite", render: d => safeDate(d) },
+                { data: "TipoNegocio", render: d => safeString(d) },
+                { data: "Descripcion" },
                 {
                     data: "Id",
-                    defaultContent: 0,
                     render: function (data, type, row) {
 
-                        const desc = (row.Descripcion || "");
-                        const whatsapp = safeNumber(row.whatssap);
-                        const iconColorClass = whatsapp === 1 ? "text-success" : "text-danger";
+                        const iconColor = safeNumber(row.whatssap) === 1 ? "text-success" : "text-danger";
 
-                        // 🔥 MANDAMOS EL ROW COMPLETO
                         const rowEncoded = encodeURIComponent(JSON.stringify(row));
 
-                        const iconWhatssap = `
-            <button class='btn btn-sm btnacciones'
-                type='button'
-                onclick='enviarWhatssapDesdeRow("${rowEncoded}")'
-                title='Enviar WhatsApp'>
-                <i class='fa fa-whatsapp fa-lg ${iconColorClass}'></i>
-            </button>`;
-
-                        const puedeEliminar = userSession.IdRol == 1 && desc && !desc.toUpperCase().includes("VENTA");
-
-                        const iconEliminar = puedeEliminar
-                            ? `<button class='btn btn-sm btnacciones ms-2'
-                type='button'
-                onclick='eliminarInformacion(${safeNumber(row.Id)}, ${JSON.stringify(desc)})'
-                title='Eliminar'>
-                <i class='fa fa-trash fa-lg text-danger'></i>
-            </button>`
-                            : "";
-
-                        return iconWhatssap + iconEliminar;
+                        return `
+                        <button class='btn btn-sm btnacciones'
+                            onclick='enviarWhatssapDesdeRow("${rowEncoded}")'>
+                            <i class='fa fa-whatsapp ${iconColor}'></i>
+                        </button>`;
                     }
-                },
-            ],
-            columnDefs: [
-                { targets: [0], type: "ddMmYyyy" }
-            ],
-            order: [[0, "ddMmYyyy-desc"], [1, "asc"]],
-            fnRowCallback: function (nRow, data) {
-                if (safeNumber(data.ActualizoUbicacion) === 1) {
-                    $('td', nRow).css({
-                        'background-color': '#f7f122',
-                        'color': 'black',
-                        'font-weight': 'bold'
-                    });
                 }
-            },
+            ],
+
+            order: [[0, "desc"]],
+
             initComplete: async function () {
-                hideGlobalLoading(); // 🔥 ACA LIBERÁS TODO
+
+                hideGlobalLoading();
+
                 recalcularTotales(gridRendimiento);
                 cargarVentas(-1);
                 scheduleRenderDashboard(180);
                 await configurarOpcionesColumnas();
-
-                if (userSession.IdRol == 4) {
-                    gridRendimiento.column(3).visible(false);
-                    gridRendimiento.column(4).visible(false);
-                    gridRendimiento.column(5).visible(false);
-                    gridRendimiento.column(6).visible(false);
-                    gridRendimiento.column(7).visible(false);
-                }
-
                 ajustarTablasRendimiento();
 
-                
+                // 🔥 CLICK + SELECCIÓN
+                $('#grdRendimiento tbody')
+                    .off('click', 'tr')
+                    .on('click', 'tr', function () {
+
+                        const data = gridRendimiento.row(this).data();
+                        if (!data) return;
+
+                        rendimientoRowSelectedId = data.Id;
+
+                        $('#grdRendimiento tbody tr').removeClass('row-selected');
+                        $(this).addClass('row-selected');
+                    });
+
+                // 🔥 REAPLICAR SELECCIÓN
+                $('#grdRendimiento')
+                    .off('draw.dt.rowselect')
+                    .on('draw.dt.rowselect', function () {
+
+                        if (!rendimientoRowSelectedId) return;
+
+                        gridRendimiento.rows().every(function () {
+
+                            const data = this.data();
+
+                            if (data && data.Id === rendimientoRowSelectedId) {
+                                $(this.node()).addClass('row-selected');
+                            }
+                        });
+                    });
             }
         });
+
     } else {
-    
+
         const table = $('#grdRendimiento').DataTable();
 
         table.ajax.url(url).load(function () {
+
             recalcularTotales(table);
             ajustarTablasRendimiento();
             scheduleRenderDashboard(180);
-            hideGlobalLoading(); // 🔥 ACA LIBERÁS TODO
+            hideGlobalLoading();
+
         }, false);
     }
-
-    let filaSeleccionada = null;
-    $('#grdRendimiento tbody').off('click', 'tr').on('click', 'tr', function () {
-        if (filaSeleccionada) {
-            $(filaSeleccionada).removeClass('seleccionada');
-            $('td', filaSeleccionada).removeClass('seleccionada');
-        }
-
-        filaSeleccionada = $(this);
-        $(filaSeleccionada).addClass('seleccionada');
-        $('td', filaSeleccionada).addClass('seleccionada');
-    });
 };
-
 const configurarDataTableClientesAusentes = async (fechadesde, fechahasta, data = null) => {
     const tableExists = $.fn.DataTable.isDataTable('#grdClientesAusentes');
 
@@ -1879,32 +1835,45 @@ async function CantidadClientesAusentes() {
     }
 }
 
-async function ObtenerImagen(idVenta) {
-    let url = `/Rendimiento/ObtenerImagen?idVenta=${idVenta}`;
+const cacheImagenes = {};
 
-    let options = {
+async function ObtenerImagen(id, origen) {
+
+    let url = `/Rendimiento/ObtenerImagen?id=${id}&origen=${encodeURIComponent(origen)}`;
+
+    let result = await $.ajax({
         type: "GET",
         url: url,
-        async: true,
-        contentType: "application/json",
         dataType: "json"
-    };
+    });
 
-    let result = await $.ajax(options);
-
-    if (result != null) {
-        return result.data;
-    } else {
-        return null;
-    }
+    return result?.data || null;
 }
 
-async function verComprobante(id) {
-    var image = await ObtenerImagen(id);
-    document.getElementById("imagenComprobante").src = "data:image/png;base64," + image;
+async function verComprobante(id, descripcion) {
+
+    const origen = (descripcion || "").toLowerCase().includes("electro")
+        ? "ELECTRO"
+        : "INDUMENTARIA";
+
+    const image = await ObtenerImagen(id, origen);
+
+    if (!image) {
+        errorModal("No hay comprobante");
+        return;
+    }
+
+    let src = image;
+
+    // 🔥 SI YA VIENE CON data:image → usar directo
+    if (!image.startsWith("data:image")) {
+        src = "data:image/png;base64," + image;
+    }
+
+    document.getElementById("imagenComprobante").src = src;
+
     $('#modalComprobante').modal('show');
 }
-
 async function cargarTiposDeNegocio() {
     try {
         var url = "/Usuarios/ListarTipoNegocio";

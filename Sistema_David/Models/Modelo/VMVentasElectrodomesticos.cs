@@ -142,6 +142,7 @@ namespace Sistema_David.Models.ViewModels
         public int Id { get; set; }
         public int NumeroCuota { get; set; }
         public DateTime FechaVencimiento { get; set; }
+        public DateTime FechaCobro { get; set; }
 
         public decimal MontoOriginal { get; set; }
         public decimal MontoRecargos { get; set; }

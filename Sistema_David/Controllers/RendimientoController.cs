@@ -53,12 +53,9 @@ namespace Sistema_David.Controllers
 
 
         [HttpGet]
-        public ActionResult ObtenerImagen(int idVenta)
+        public ActionResult ObtenerImagen(int id, string origen)
         {
-
-
-            var result = RendimientosModel.ObtenerImagen(idVenta);
-
+            var result = RendimientosModel.ObtenerImagen(id, origen);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
