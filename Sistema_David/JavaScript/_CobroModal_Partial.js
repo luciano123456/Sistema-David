@@ -11,7 +11,154 @@ const money = (v) =>
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         });
+
+/** Parsea montos guardados en auditoría (p. ej. "Antes=0,00", "Ahora=39000,00" desde C# N2 / cultura es-AR). */
+function parseValorAuditHistorial(val) {
+    if (val == null) return 0;
+    let s = String(val).trim().replace(/\u00a0/g, " ");
+    if (!s) return 0;
+    // Quita etiqueta Antes=/Ahora=… con o sin espacios alrededor del =
+    s = s
+        .replace(/^\s*(antes|ahora|pagadoantes|pagadoahora)\s*=\s*/i, "")
+        .trim();
+    if (!s) return 0;
+    const n = parseMontoFlexible(s);
+    return Number.isFinite(n) ? n : 0;
+}
+
+/** Importe aplicado en un registro PagoCuota (observación "… Aplicado=…"). */
+function parseAplicadoDesdeObs(obs) {
+    if (!obs) return 0;
+    const m = String(obs).match(/Aplicado\s*=\s*([\d.,\s\u00a0]+)/i);
+    if (!m) return 0;
+    const n = parseMontoFlexible(m[1].replace(/\s/g, "").replace(/\u00a0/g, ""));
+    return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Convierte montos que vienen de JSON/BD (número, o string "39.000" / "1.234,56").
+ * OJO: Number("39.000") en JS da 39, no 39000.
+ */
+function parseMontoFlexible(val) {
+    if (val == null || val === "") return NaN;
+    if (typeof val === "number" && Number.isFinite(val)) return val;
+    let s = String(val).trim().replace(/\s/g, "");
+    if (!s) return NaN;
+    // Miles con punto y decimal con coma: 1.234.567,89
+    if (s.includes(",")) {
+        s = s.replace(/\./g, "").replace(",", ".");
+        const n = parseFloat(s);
+        return Number.isFinite(n) ? n : NaN;
+    }
+    // Solo puntos: 1.234.567 o 39.000 (miles AR) vs 1234.56 (decimal EN)
+    if (s.includes(".")) {
+        const parts = s.split(".");
+        const last = parts[parts.length - 1];
+        if (parts.length > 2 || (parts.length === 2 && last.length === 3 && /^\d{3}$/.test(last))) {
+            s = s.replace(/\./g, "");
+        }
+    }
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : NaN;
+}
+
+/** Lee un número de la cuota probando PascalCase y camelCase. */
+function pickCuotaNum(cuota, keys) {
+    if (!cuota) return 0;
+    for (const k of keys) {
+        const v = cuota[k];
+        if (v == null || v === "") continue;
+        const n = parseMontoFlexible(v);
+        if (Number.isFinite(n)) return n;
+    }
+    return 0;
+}
+
+/** Lee un número de la venta (PascalCase / camelCase). */
+function pickVentaNum(venta, keys) {
+    if (!venta) return 0;
+    for (const k of keys) {
+        const v = venta[k];
+        if (v == null || v === "") continue;
+        const n = parseMontoFlexible(v);
+        if (Number.isFinite(n)) return n;
+    }
+    return 0;
+}
+
+/**
+ * Importe de un movimiento PagoCuota en historial (misma heurística que el modal de cuota).
+ * Actualiza pagadoPorCuota[idCuota] con el acumulado simulado en orden cronológico global.
+ */
+function getImportePagoCuotaHistorialIncremental(h, pagadoPorCuota) {
+    const idC = Number(h.IdCuota ?? h.idCuota);
+    const obsRaw = h.Observacion ?? h.observacion;
+    const va = h.ValorAnterior ?? h.valorAnterior;
+    const vn = h.ValorNuevo ?? h.valorNuevo;
+    const valorAnteriorSim = pagadoPorCuota[idC] || 0;
+    const ahoraCum = parseValorAuditHistorial(vn);
+    let importePagado = Math.round(parseAplicadoDesdeObs(obsRaw));
+    if (!Number.isFinite(importePagado) || importePagado <= 0) {
+        if (ahoraCum > valorAnteriorSim) {
+            importePagado = Math.round(ahoraCum - valorAnteriorSim);
+        }
+    }
+    if (!Number.isFinite(importePagado) || importePagado <= 0) {
+        importePagado = Math.round(
+            parseValorAuditHistorial(vn) - parseValorAuditHistorial(va)
+        );
+    }
+    importePagado = Math.max(0, importePagado);
+    pagadoPorCuota[idC] = Math.round((pagadoPorCuota[idC] || 0) + importePagado);
+    return importePagado;
+}
+
+/**
+ * Restante de la venta después de aplicar cada PagoCuota (todos los movimientos de la venta).
+ * Se obtiene desde Restante actual + pagos posteriores en el tiempo (suma sufija).
+ */
+function buildMapRestanteVentaDespuesDePago(venta) {
+    const map = new Map();
+    if (!venta || !Array.isArray(venta.Historial)) return map;
+
+    const rows = venta.Historial
+        .filter((h) => (h.Campo ?? h.campo) === "PagoCuota")
+        .map((h) => ({
+            h,
+            t: new Date(h.FechaCambio ?? h.fechaCambio).getTime(),
+            id: h.Id ?? h.id
+        }))
+        .sort((a, b) => (a.t - b.t) || (Number(a.id) - Number(b.id)));
+
+    const pagadoPorCuota = {};
+    const imp = rows.map(({ h }) =>
+        getImportePagoCuotaHistorialIncremental(h, pagadoPorCuota)
+    );
+
+    const restDb = Math.round(pickVentaNum(venta, ["Restante", "restante"]));
+    let accFuture = 0;
+    for (let i = rows.length - 1; i >= 0; i--) {
+        const hid = rows[i].h.Id ?? rows[i].h.id;
+        const restDespues = Math.max(0, restDb + accFuture);
+        map.set(hid, restDespues);
+        map.set(String(hid), restDespues);
+        const n = Number(hid);
+        if (Number.isFinite(n)) map.set(n, restDespues);
+        accFuture += imp[i];
+    }
+    return map;
+}
+
 const todayISO = () => new Date().toISOString().slice(0, 10);
+
+/** Fecha sugerida para cobro/reprogramación: no antes del vencimiento de la cuota. */
+function defaultFechaCobroCuotaIso(cuota) {
+    const t = moment().startOf("day");
+    if (!cuota?.FechaVencimiento) return todayISO();
+    const v = moment(cuota.FechaVencimiento).startOf("day");
+    return (v.isAfter(t) ? v : t).format("YYYY-MM-DD");
+}
+
 const getModal = (id) => bootstrap.Modal.getOrCreateInstance(qs(id));
 
 function setCbError(msg) {
@@ -296,8 +443,8 @@ window.abrirModalCobro = async function (idVenta, idCuota) {
         qs("cb_idVenta").value = ventaActual.IdVenta;
         qs("cb_idCuota").value = cuotaActual.Id;
 
-        // Fecha (SIEMPRE)
-        qs("cb_fecha").value = todayISO();
+        // Fecha (desde vencimiento de la cuota hacia adelante)
+        qs("cb_fecha").value = defaultFechaCobroCuotaIso(cuotaActual);
 
         // Valor cuota (monto restante real)
         const restante = Math.round(
@@ -348,12 +495,21 @@ function evaluarFechaCobroUI() {
     const inputFecha = qs("cb_fecha");
     if (!inputFecha) return;
 
+    const aplicarMinReprogramacion = () => {
+        if (importe === 0 && cuotaActual?.FechaVencimiento) {
+            inputFecha.min = moment(cuotaActual.FechaVencimiento).format("YYYY-MM-DD");
+        } else {
+            inputFecha.removeAttribute("min");
+        }
+    };
+
     // ===============================
     // 💰 PAGO TOTAL
     // ===============================
     if (importe >= restante && restante > 0) {
         inputFecha.disabled = true;
         inputFecha.classList.add("opacity-50");
+        inputFecha.removeAttribute("min");
 
         // 🔥 opcional: setear hoy igual
         inputFecha.value = todayISO();
@@ -367,9 +523,10 @@ function evaluarFechaCobroUI() {
     if (importe > 0 && importe < restante) {
         inputFecha.disabled = false;
         inputFecha.classList.remove("opacity-50");
+        inputFecha.removeAttribute("min");
 
         if (!inputFecha.value) {
-            inputFecha.value = todayISO();
+            inputFecha.value = defaultFechaCobroCuotaIso(cuotaActual);
         }
 
         return;
@@ -381,9 +538,10 @@ function evaluarFechaCobroUI() {
     if (importe === 0) {
         inputFecha.disabled = false;
         inputFecha.classList.remove("opacity-50");
+        aplicarMinReprogramacion();
 
         if (!inputFecha.value) {
-            inputFecha.value = todayISO();
+            inputFecha.value = defaultFechaCobroCuotaIso(cuotaActual);
         }
 
         return;
@@ -394,6 +552,7 @@ function evaluarFechaCobroUI() {
     // ===============================
     inputFecha.disabled = false;
     inputFecha.classList.remove("opacity-50");
+    aplicarMinReprogramacion();
 
 }
 /* ===================== CUENTAS (TU ENDPOINT) ===================== */
@@ -518,7 +677,7 @@ async function aplicarRecargo() {
 
         // 🔄 refrescar datos en pantalla
         await recargarVentaYCuota();
-        actualizarGrillaCobros();
+        await actualizarGrillaCobros();
 
         // ===================================================
         // 📲 WHATSAPP (MISMO FLUJO QUE COBRO)
@@ -558,11 +717,16 @@ function abrirHistorialCuota() {
     // =============================
     const movimientos = Array.isArray(ventaActual.Historial)
         ? ventaActual.Historial
-            .filter(h =>
-                h.Campo === "PagoCuota" &&
-                Number(h.IdCuota) === Number(cuotaActual.Id)
-            )
-            .sort((a, b) => new Date(a.FechaCambio) - new Date(b.FechaCambio))
+            .filter(h => {
+                const campo = h.Campo ?? h.campo;
+                const idCuota = h.IdCuota ?? h.idCuota;
+                return campo === "PagoCuota" && Number(idCuota) === Number(cuotaActual.Id);
+            })
+            .sort((a, b) => {
+                const fa = new Date(a.FechaCambio ?? a.fechaCambio);
+                const fb = new Date(b.FechaCambio ?? b.fechaCambio);
+                return fa - fb;
+            })
         : [];
 
     // =============================
@@ -587,7 +751,7 @@ function abrirHistorialCuota() {
     if (!movimientos.length && !recargos.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="text-center text-muted">
+                <td colspan="7" class="text-center text-muted">
                     Sin movimientos registrados para esta cuota
                 </td>
             </tr>`;
@@ -612,13 +776,35 @@ function abrirHistorialCuota() {
 
     // ordenar todo por fecha (pago usa FechaCambio, recargo ya trae FechaCambio)
     timeline.sort((a, b) => {
-        const fa = a._tipo === "PAGO" ? new Date(a.h.FechaCambio) : new Date(a.FechaCambio);
-        const fb = b._tipo === "PAGO" ? new Date(b.h.FechaCambio) : new Date(b.FechaCambio);
+        const fa = a._tipo === "PAGO"
+            ? new Date(a.h.FechaCambio ?? a.h.fechaCambio)
+            : new Date(a.FechaCambio);
+        const fb = b._tipo === "PAGO"
+            ? new Date(b.h.FechaCambio ?? b.h.fechaCambio)
+            : new Date(b.FechaCambio);
         return fa - fb;
     });
 
-    // Partimos del monto ORIGINAL de la cuota (TU LÓGICA)
-    let restante = Number(cuotaActual.MontoOriginal || 0);
+    const sumRecTimeline = recargos.reduce(
+        (s, r) => s + Math.round(parseMontoFlexible(r.Importe) || 0),
+        0
+    );
+    const orig = pickCuotaNum(cuotaActual, ["MontoOriginal", "montoOriginal"]);
+    const desc = pickCuotaNum(cuotaActual, ["MontoDescuentos", "montoDescuentos"]);
+    const recField = pickCuotaNum(cuotaActual, ["MontoRecargos", "montoRecargos"]);
+    const mp = pickCuotaNum(cuotaActual, ["MontoPagado", "montoPagado"]);
+    const mr = pickCuotaNum(cuotaActual, ["MontoRestante", "montoRestante"]);
+
+    // Capital: original - desc + recargos ya reflejados en MontoRecargos pero no duplicados en filas del timeline
+    let deuda = Math.round(orig - desc + Math.max(0, recField - sumRecTimeline));
+    if (deuda <= 0) {
+        const tot = Math.round(mp + mr);
+        if (tot > 0) deuda = tot;
+    }
+
+    let pagadoAcum = 0;
+
+    const restanteVentaDespuesPago = buildMapRestanteVentaDespuesDePago(ventaActual);
 
     // =============================
     // 5) RENDER (TU TABLA, MISMO FORMATO)
@@ -629,26 +815,50 @@ function abrirHistorialCuota() {
         if (item._tipo === "PAGO") {
             const h = item.h;
 
-            const fecha = moment(h.FechaCambio).format("DD/MM/YYYY HH:mm");
+            const fechaC = h.FechaCambio ?? h.fechaCambio;
+            const fecha = moment(fechaC).format("DD/MM/YYYY HH:mm");
 
-            const antes = h.ValorAnterior
-                ? Number(h.ValorAnterior.replace("Antes=", ""))
-                : 0;
+            const va = h.ValorAnterior ?? h.valorAnterior;
+            const vn = h.ValorNuevo ?? h.valorNuevo;
+            const obsRaw = h.Observacion ?? h.observacion;
 
-            const ahora = h.ValorNuevo
-                ? Number(h.ValorNuevo.replace("Ahora=", ""))
-                : 0;
+            // El back a veces guarda Antes=0 mal; simulamos "MontoPagado antes" recorriendo el tiempo (orden del timeline).
+            const valorAnteriorSim = pagadoAcum;
+            const ahoraCum = parseValorAuditHistorial(vn);
 
-            const importePagado = Math.round(ahora - antes);
+            // 1) Aplicado= en obs (importe de ESTE movimiento).
+            let importePagado = Math.round(parseAplicadoDesdeObs(obsRaw));
+            // 2) Si Ahora es acumulado y > lo ya pagado en simulación, la cuota del movimiento es la diferencia.
+            if (!Number.isFinite(importePagado) || importePagado <= 0) {
+                if (ahoraCum > valorAnteriorSim) {
+                    importePagado = Math.round(ahoraCum - valorAnteriorSim);
+                }
+            }
+            // 3) Último recurso: strings del audit (pueden venir con cultura rara).
+            if (!Number.isFinite(importePagado) || importePagado <= 0) {
+                const antesAudit = parseValorAuditHistorial(va);
+                const ahoraAudit = parseValorAuditHistorial(vn);
+                importePagado = Math.round(ahoraAudit - antesAudit);
+            }
 
-            // Restamos en orden cronológico
-            restante -= importePagado;
-            if (restante < 0) restante = 0;
+            pagadoAcum = Math.round(pagadoAcum + importePagado);
+
+            const importeActual = Math.max(0, Math.round(deuda - pagadoAcum));
+
+            const hid = h.Id ?? h.id;
+            const restVenta =
+                restanteVentaDespuesPago.get(hid) ??
+                restanteVentaDespuesPago.get(String(hid)) ??
+                restanteVentaDespuesPago.get(Number(hid));
+            const ventaCell =
+                restVenta != null && Number.isFinite(restVenta)
+                    ? money(restVenta)
+                    : '<span class="text-muted">—</span>';
 
             // Observación limpia (solo lo útil)
             let obs = "";
-            if (h.Observacion) {
-                obs = h.Observacion.split("|")[0].trim();
+            if (obsRaw) {
+                obs = String(obsRaw).split("|")[0].trim();
             }
 
             tbody.insertAdjacentHTML("beforeend", `
@@ -661,7 +871,8 @@ function abrirHistorialCuota() {
                         </span>
                     </td>
                     <td class="text-end">${money(importePagado)}</td>
-                    <td class="text-end">${money(restante)}</td>
+                    <td class="text-end">${money(importeActual)}</td>
+                    <td class="text-end">${ventaCell}</td>
                     <td>${obs}</td>
                 </tr>
             `);
@@ -673,8 +884,9 @@ function abrirHistorialCuota() {
         const fechaR = moment(item.FechaCambio).format("DD/MM/YYYY HH:mm");
         const importeRec = Math.round(Number(item.Importe || 0));
 
-        // Recargo suma al restante
-        restante += importeRec;
+        deuda = Math.round(deuda + importeRec);
+
+        const importeActualRec = Math.max(0, Math.round(deuda - pagadoAcum));
 
         let obsR = (item.Observacion || "").trim();
 
@@ -692,7 +904,8 @@ function abrirHistorialCuota() {
                     </span>
                 </td>
                 <td class="text-end">${money(importeRec)}</td>
-                <td class="text-end">${money(restante)}</td>
+                <td class="text-end">${money(importeActualRec)}</td>
+                <td class="text-end text-muted">—</td>
                 <td>${obsR}</td>
             </tr>
         `);
@@ -731,31 +944,45 @@ async function confirmarCobro() {
             return;
         }
 
-        const payload = {
-            IdCuota: cuotaActual.Id,
-            NuevaFecha: fecha,
-            Observacion: obs
-        };
+        if (
+            cuotaActual?.FechaVencimiento &&
+            moment(fecha).isBefore(moment(cuotaActual.FechaVencimiento), "day")
+        ) {
+            setCbError("La fecha de cobro no puede ser anterior al vencimiento de la cuota.");
+            return;
+        }
 
         try {
+            const body = new URLSearchParams({
+                idCuota: String(cuotaActual.Id),
+                nuevaFecha: fecha,
+                observacion: (obs || "").trim() || "Cambio de fecha de cobro"
+            });
+
             const resp = await fetch("/Ventas_Electrodomesticos/ReprogramarCobroCuota", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                body: body.toString()
             });
 
             const json = await resp.json();
             if (!json || json.success === false) {
-                setCbError(json?.message || "Error al cambiar la fecha.");
+                const m = json?.message || "Error al cambiar la fecha.";
+                setCbError(m);
+                notificarErrorCobrosUi(m);
                 return;
             }
 
             getModal("mdCobro").hide();
-            actualizarGrillaCobros();
+            await actualizarGrillaCobros();
+            const fechaFmt = moment(fecha).format("DD/MM/YYYY");
+            notificarExitoCobrosUi(`Fecha de cobro actualizada a ${fechaFmt}.`);
             return;
 
         } catch {
-            setCbError("Error de conexión al cambiar la fecha.");
+            const m = "Error de conexión al cambiar la fecha.";
+            setCbError(m);
+            notificarErrorCobrosUi(m);
             return;
         }
     }
@@ -820,7 +1047,7 @@ async function confirmarCobro() {
            ✅ COBRO OK
         ============================= */
         getModal("mdCobro").hide();
-        actualizarGrillaCobros();
+        await actualizarGrillaCobros();
 
         /* =============================
            📲 WHATSAPP (POST-COBRO, IGUAL COBRANZAS)
@@ -1020,6 +1247,31 @@ function showToast(msg, type = "info") {
     el.addEventListener("hidden.bs.toast", () => el.remove());
 }
 
+/** Éxito post-cobro/reprogramación: VC.toast en Cobros, showToast si existe, sino exitoModal (layout). */
+function notificarExitoCobrosUi(mensaje) {
+    if (window.VC && typeof VC.toast === "function") {
+        VC.toast(mensaje, "success");
+        return;
+    }
+    if (typeof showToast === "function") {
+        showToast(mensaje, "success");
+        return;
+    }
+    if (typeof exitoModal === "function") exitoModal(mensaje);
+}
+
+/** Error visible fuera del modal (toast o ErrorModal). */
+function notificarErrorCobrosUi(mensaje) {
+    if (window.VC && typeof VC.toast === "function") {
+        VC.toast(mensaje, "danger");
+        return;
+    }
+    if (typeof showToast === "function") {
+        showToast(mensaje, "danger");
+        return;
+    }
+    if (typeof errorModal === "function") errorModal(mensaje);
+}
 
 
 function setTipoRecargo(tipo) {
@@ -1760,13 +2012,13 @@ function obtenerSaludo() {
     return "Buenas noches";
 }
 
-function actualizarGrillaCobros() {
+async function actualizarGrillaCobros() {
 
     // 🔹 Pantalla COBROS ELECTRO
     if (window.VC && typeof VC.cargarTabla === "function") {
-        VC.cargarTabla();              // tabla principal
+        await VC.cargarTabla();
         if (typeof VC.cargarCobrosPendientes === "function") {
-            VC.cargarCobrosPendientes(); // 🔥 pendientes
+            await VC.cargarCobrosPendientes();
         }
         return;
     }
@@ -1793,27 +2045,32 @@ function obtenerInfoUltimoCobro(v) {
 
     // 1️⃣ Último movimiento de PAGO DE CUOTA
     const ultimoPago = v.Historial
-        .filter(h =>
-            h.Campo === "PagoCuota" &&
-            Number(h.ValorNuevo) > Number(h.ValorAnterior)
-        )
+        .filter(h => {
+            const campo = h.Campo ?? h.campo;
+            if (campo !== "PagoCuota") return false;
+            const va = h.ValorAnterior ?? h.valorAnterior;
+            const vn = h.ValorNuevo ?? h.valorNuevo;
+            const obs = h.Observacion ?? h.observacion;
+            const a = parseValorAuditHistorial(va);
+            const b = parseValorAuditHistorial(vn);
+            const aplic = parseAplicadoDesdeObs(obs);
+            return aplic > 0 || b > a;
+        })
         .sort((a, b) =>
-            new Date(b.FechaCambio) - new Date(a.FechaCambio)
+            new Date(b.FechaCambio ?? b.fechaCambio) - new Date(a.FechaCambio ?? a.fechaCambio)
         )[0];
 
     if (!ultimoPago)
         return null;
 
     // 2️⃣ Importe REAL pagado en este cobro
-    const antes = Number(
-        String(ultimoPago.ValorAnterior || "0").replace("Antes=", "")
-    );
-
-    const ahora = Number(
-        String(ultimoPago.ValorNuevo || "0").replace("Ahora=", "")
-    );
-
-    const importePagado = ahora - antes;
+    const obsU = ultimoPago.Observacion ?? ultimoPago.observacion;
+    let importePagado = Math.round(parseAplicadoDesdeObs(obsU));
+    if (!Number.isFinite(importePagado) || importePagado <= 0) {
+        const antes = parseValorAuditHistorial(ultimoPago.ValorAnterior ?? ultimoPago.valorAnterior);
+        const ahora = parseValorAuditHistorial(ultimoPago.ValorNuevo ?? ultimoPago.valorNuevo);
+        importePagado = Math.round(ahora - antes);
+    }
 
     // 3️⃣ Cuota afectada
     const idCuota = Number(ultimoPago.IdCuota);

@@ -1658,6 +1658,103 @@ p {
     }
 
 /* =======================
+   FAB Reprogramar cuotas (masivo)
+======================= */
+
+.vc-reprog-fab-wrap {
+    position: fixed;
+    right: 22px;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    z-index: 10000;
+    max-width: calc(100vw - 32px);
+}
+
+.vc-reprog-fab-wrap[hidden] {
+    display: none !important;
+}
+
+.vc-reprog-fab-btn {
+    border: 1px solid rgba(255,255,255,0.18);
+    background: linear-gradient(135deg, rgba(240,173,78,0.98), rgba(255,193,7,0.75));
+    color: #1a1205;
+    font-weight: 800;
+    letter-spacing: .2px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    backdrop-filter: blur(8px);
+    max-width: 100%;
+}
+
+    .vc-reprog-fab-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 34px rgba(0,0,0,0.55);
+        filter: brightness(1.03);
+    }
+
+    .vc-reprog-fab-btn:active {
+        transform: translateY(0px);
+        box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+    }
+
+    .vc-reprog-fab-btn .vc-fab-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(7,20,34,0.18);
+        color: #1a1205;
+        flex-shrink: 0;
+    }
+
+    .vc-reprog-fab-btn .vc-fab-badge {
+        margin-left: 2px;
+        background: rgba(7,20,34,0.9);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.12);
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+.vc-reprog-masivo-lista {
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+@media (max-width: 576px) {
+    .vc-reprog-fab-wrap {
+        right: 12px;
+        left: 12px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .vc-reprog-fab-btn {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+
+    .vc-reprog-fab-label {
+        display: none;
+    }
+}
+
+@media (min-width: 577px) {
+    .vc-reprog-fab-label {
+        display: inline;
+    }
+}
+
+/* =======================
    MODAL Asignar Cobrador (DARK PRO)
 ======================= */
 

@@ -12,11 +12,18 @@ let ventaSeleccionada = null;
 let ventaAcordeonAbierta = null;
 
 let ventasSeleccionadas = new Set();
+/** idCuota (string) → meta para reprogramación masiva desde el acordeón */
+const cuotasReprogSel = new Map();
+const VC_REPROG_MIN_SEL = 2;
 let cobradoresCache = [];
 let ventaClickeadaId = null; // igual que Historial: fila seleccionada por click
 let ventaPendienteClickeadaId = null; // igual que Historial: fila seleccionada por click
 let clientesCache = [];
-const VC_STORAGE_KEY = "vc_filtros_cobranzas";
+/** Solo fechas desde/hasta (no cliente, vendedor, etc.). */
+const VC_STORAGE_KEY = "vc_filtros_cobranzas_v2";
+const VC_COL_FILTER_MAIN = "vc_col_filtros_cobros_main";
+const VC_COL_FILTER_PEND = "vc_col_filtros_cobros_pendientes";
+const VC_COL_FILTER_TRANSF = "vc_col_filtros_transferencias";
 
 const columnConfigCobros = [
     { index: 1, filterType: 'text' },
@@ -50,11 +57,12 @@ const columnConfigCobrosPendientes = [
     { index: 11, filterType: 'text' }, // Vencimiento
     { index: 12, filterType: 'text' }, // Total
     { index: 13, filterType: 'text' }, // Pagado
-    { index: 14, filterType: 'text' },  // Restante
-    { index: 15, filterType: 'text' }  // Restante
+    { index: 14, filterType: 'text' }, // Restante
+    { index: 15, filterType: 'text' } // Estado
 ];
 
 const columnConfigTransferenciasPendientes = [
+    { index: 0, filterType: 'text' },
     { index: 1, filterType: 'text' },
     { index: 2, filterType: 'text' },
     { index: 3, filterType: 'text' },
@@ -68,7 +76,7 @@ const columnConfigTransferenciasPendientes = [
     { index: 11, filterType: 'text' },
     { index: 12, filterType: 'text' },
     { index: 13, filterType: 'text' },
-
+    { index: 14, filterType: 'text' }
 ];
 
 
@@ -133,14 +141,7 @@ VC.guardarFiltros = function () {
 
     const estado = {
         desde: $("#f_desde").val(),
-        hasta: $("#f_hasta").val(),
-        cliente: $("#f_cliente").val(),
-        vendedor: $("#f_vendedor").val(),
-        cobrador: $("#f_cobrador").val(),
-        estado: $("#f_estado").val(),
-        zona: $("#f_zona").val(),
-        turno: $("#f_turno").val(),
-        franja: $("#f_franja").val()
+        hasta: $("#f_hasta").val()
     };
 
     localStorage.setItem(VC_STORAGE_KEY, JSON.stringify(estado));
@@ -156,22 +157,6 @@ VC.restaurarFiltros = function () {
 
         $("#f_desde").val(estado.desde || "");
         $("#f_hasta").val(estado.hasta || "");
-
-        // 🔥 SELECT2
-        VC.setSelect2Value("#f_cliente", estado.cliente);
-        VC.setSelect2Value("#f_vendedor", estado.vendedor);
-        VC.setSelect2Value("#f_cobrador", estado.cobrador);
-        VC.setSelect2Value("#f_zona", estado.zona);
-
-        // 🔥 TURNOS (normal)
-        $("#f_turno").val(estado.turno || "").trigger("change");
-
-        // 🔥 FRANJA (depende de turno → esperar)
-        setTimeout(() => {
-            VC.setSelect2Value("#f_franja", estado.franja);
-        }, 300);
-
-        $("#f_estado").val(estado.estado || "");
 
         return true;
 
@@ -404,17 +389,7 @@ $(document).ready(async function () {
 
 VC.initEventos = function () {
 
-    $(document).on("change", `
-    #f_desde,
-    #f_hasta,
-    #f_cliente,
-    #f_vendedor,
-    #f_cobrador,
-    #f_estado,
-    #f_zona,
-    #f_turno,
-    #f_franja
-`, function () {
+    $(document).on("change", "#f_desde, #f_hasta", function () {
         VC.guardarFiltros();
     });
 
@@ -428,6 +403,20 @@ VC.initEventos = function () {
     // FAB asignar cobrador
     $("#fabAsignarCobrador").off("click.vcFab").on("click.vcFab", function () {
         VC.abrirAsignarCobrador();
+    });
+
+    $("#vcReprogFabBtn").off("click.vcReprogFab").on("click.vcReprogFab", () => VC.abrirModalReprogMasivo());
+    $("#btnVcReprogMasivoConfirmar").off("click.vcReprogConf").on("click.vcReprogConf", () => VC.confirmarReprogMasivo());
+
+    $(document).off("change.vcReprogChk").on("change.vcReprogChk", ".vc-reprog-chk", function () {
+        VC.syncCuotasReprogDesdeDom();
+    });
+    $(document).off("change.vcReprogChkAll").on("change.vcReprogChkAll", ".vc-reprog-chk-all", function () {
+        const on = this.checked;
+        const $tbl = $(this).closest("table");
+        $tbl.find("tbody .vc-reprog-chk").prop("checked", on);
+        VC.syncCuotasReprogDesdeDom();
+        VC.syncReprogChkAllHeader($tbl);
     });
 
     // Confirmar asignación (botón del modal)
@@ -563,6 +552,175 @@ VC.refrescarFabAsignar = function () {
     } else {
         divBtn.style.display = "none";
     }
+
+    VC.actualizarReprogFabUI();
+};
+
+VC.syncCuotasReprogDesdeDom = function () {
+    cuotasReprogSel.clear();
+    document.querySelectorAll(".vc-reprog-chk:checked").forEach((el) => {
+        const idc = el.getAttribute("data-idcuota");
+        if (!idc) return;
+        cuotasReprogSel.set(String(idc), {
+            idVenta: Number(el.getAttribute("data-idventa") || 0),
+            vencIso: el.getAttribute("data-venc") || "",
+            nro: el.getAttribute("data-nro") || ""
+        });
+    });
+    VC.actualizarReprogFabUI();
+    $(".vc-reprog-chk-all").each(function () {
+        const $tbl = $(this).closest("table");
+        VC.syncReprogChkAllHeader($tbl);
+    });
+};
+
+VC.syncReprogChkAllHeader = function ($tbl) {
+    const $all = $tbl.find("tbody .vc-reprog-chk");
+    const head = $tbl.find("thead .vc-reprog-chk-all")[0];
+    if (!head) return;
+    if (!$all.length) {
+        head.indeterminate = false;
+        head.checked = false;
+        return;
+    }
+    const n = $all.length;
+    const c = $all.filter(":checked").length;
+    head.indeterminate = c > 0 && c < n;
+    head.checked = n > 0 && c === n;
+};
+
+VC.actualizarReprogFabUI = function () {
+    const wrap = document.getElementById("vcReprogFabWrap");
+    const badge = document.getElementById("vcReprogFabBadge");
+    if (!wrap || !badge) return;
+
+    const n = cuotasReprogSel.size;
+    badge.textContent = String(n);
+    const mostrar = n >= VC_REPROG_MIN_SEL;
+    wrap.hidden = !mostrar;
+
+    const assignDiv = document.getElementById("btnAsignarCobrador");
+    const assignOn = assignDiv && assignDiv.style.display === "block";
+    wrap.style.bottom = assignOn ? "96px" : "calc(22px + env(safe-area-inset-bottom, 0px))";
+};
+
+VC.abrirModalReprogMasivo = function () {
+    if (cuotasReprogSel.size < VC_REPROG_MIN_SEL) {
+        VC.toast(`Seleccioná al menos ${VC_REPROG_MIN_SEL} cuotas.`, "warn");
+        return;
+    }
+
+    const lista = document.getElementById("vcReprogMasivoLista");
+    if (lista) {
+        lista.innerHTML = "";
+        const frag = document.createDocumentFragment();
+        [...cuotasReprogSel.entries()]
+            .sort((a, b) => {
+                const va = Number(a[1].idVenta) - Number(b[1].idVenta);
+                if (va !== 0) return va;
+                return Number(a[1].nro) - Number(b[1].nro);
+            })
+            .forEach(([idCuota, meta]) => {
+                const li = document.createElement("li");
+                li.className = "small";
+                li.textContent = `Venta ${meta.idVenta || "—"} · cuota ${meta.nro || "?"} · venc. ${moment(meta.vencIso).format("DD/MM/YYYY")}`;
+                frag.appendChild(li);
+            });
+        lista.appendChild(frag);
+    }
+
+    let maxV = "1970-01-01";
+    cuotasReprogSel.forEach((m) => {
+        const iso = m.vencIso;
+        if (iso && iso > maxV) maxV = iso;
+    });
+
+    const inp = document.getElementById("vcReprogMasivoFecha");
+    const obs = document.getElementById("vcReprogMasivoObs");
+    if (inp) {
+        inp.min = maxV;
+        const hoy = moment().format("YYYY-MM-DD");
+        inp.value = hoy >= maxV ? hoy : maxV;
+    }
+    if (obs) obs.value = "";
+
+    const el = document.getElementById("modalReprogCuotasMasivo");
+    if (el && window.bootstrap) bootstrap.Modal.getOrCreateInstance(el).show();
+};
+
+VC.confirmarReprogMasivo = async function () {
+    const fecha = document.getElementById("vcReprogMasivoFecha")?.value;
+    const obs = (document.getElementById("vcReprogMasivoObs")?.value || "").trim();
+    if (!fecha) {
+        VC.toast("Elegí una fecha de cobro.", "warn");
+        return;
+    }
+
+    let maxV = "1970-01-01";
+    cuotasReprogSel.forEach((m) => {
+        if (m.vencIso && m.vencIso > maxV) maxV = m.vencIso;
+    });
+    if (moment(fecha).isBefore(moment(maxV), "day")) {
+        VC.toast(
+            `La fecha no puede ser anterior al vencimiento de ninguna cuota elegida (mínimo ${moment(maxV).format("DD/MM/YYYY")}).`,
+            "danger"
+        );
+        return;
+    }
+
+    const ids = [...cuotasReprogSel.keys()];
+    let ok = 0;
+    const errores = [];
+
+    for (const idCuota of ids) {
+        try {
+            const body = new URLSearchParams({
+                idCuota: String(idCuota),
+                nuevaFecha: fecha,
+                observacion: obs || "Reprogramación masiva"
+            });
+            const resp = await fetch("/Ventas_Electrodomesticos/ReprogramarCobroCuota", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                body: body.toString()
+            });
+            const json = await resp.json();
+            if (json && json.success) ok++;
+            else errores.push(`Cuota ${idCuota}: ${json?.message || "error"}`);
+        } catch (e) {
+            errores.push(`Cuota ${idCuota}: red`);
+        }
+    }
+
+    const elModal = document.getElementById("modalReprogCuotasMasivo");
+    if (elModal && window.bootstrap) bootstrap.Modal.getInstance(elModal)?.hide();
+
+    cuotasReprogSel.clear();
+    VC.actualizarReprogFabUI();
+
+    const fechaFmt = moment(fecha).format("DD/MM/YYYY");
+
+    try {
+        await VC.cargarTabla();
+    } catch (e) {
+        const m = "Las cuotas se reprogramaron pero falló al actualizar el listado. Probá actualizar la página.";
+        VC.toast(m, "danger");
+        if (typeof errorModal === "function") errorModal(m);
+        return;
+    }
+
+    if (ok === ids.length) {
+        VC.toast(`Fecha de cobro actualizada a ${fechaFmt} (${ok} cuota(s)).`, "success");
+    } else if (ok > 0) {
+        VC.toast(
+            `${ok} de ${ids.length} cuota(s) con fecha ${fechaFmt}. ${errores.slice(0, 2).join(" | ")}`,
+            "warn"
+        );
+    } else {
+        const errText = errores.slice(0, 3).join(" | ") || "No se pudo reprogramar ninguna cuota.";
+        VC.toast(errText, "danger");
+        if (typeof errorModal === "function") errorModal(errText);
+    }
 };
 
 
@@ -682,6 +840,7 @@ VC.limpiarFiltros = function () {
     $("#f_vendedor").val("").trigger("change");
     $("#f_estado").val("");
 
+    VC.guardarFiltros();
     VC.cargarTabla();
 };
 
@@ -690,6 +849,9 @@ VC.limpiarFiltros = function () {
 =========================================================== */
 
 VC.cargarTabla = async function () {
+
+    cuotasReprogSel.clear();
+    VC.actualizarReprogFabUI();
 
     const params = {
         fechaDesde: $("#f_desde").val() || null,
@@ -833,9 +995,9 @@ VC.cargarTabla = async function () {
 
             {
                 data: "FechaCobro",
-                render: d => {
+                render: (d, type, row) => {
                     if (!d) return "";
-                    const dias = calcularDiasAtraso(d);
+                    const dias = calcularDiasAtraso(row.FechaVencimiento);
                     const fecha = moment(d).format("DD/MM/YYYY");
                     if (dias <= 0) return `<span>${fecha}</span>`;
                     return `
@@ -1040,7 +1202,7 @@ VC.cargarTabla = async function () {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfigCobros);
+            inicializarFiltrosColumnas(api, columnConfigCobros, VC_COL_FILTER_MAIN);
 
             $(api.table().container()).find('thead tr.filters th').eq(1).html('');
             $(api.table().container()).find('thead tr.filters th').eq(16).html('');
@@ -1277,6 +1439,9 @@ VC.formarAcordeonVenta = function (rowData) {
                 <table class="table ve-table">
                     <thead>
                         <tr>
+                            <th class="text-center align-middle" style="width:40px" title="Seleccionar cuotas para reprogramar">
+                                <input type="checkbox" class="form-check-input vc-reprog-chk-all" data-idventa="${idV}" aria-label="Seleccionar todas las cuotas pendientes" />
+                            </th>
                             <th>#</th>
                             <th>Vencimiento</th>
                             <th>Cobro</th>
@@ -1398,9 +1563,19 @@ VC.renderCuotas = function (v) {
     const tbPag = $(`#tbCuotasPag_${v.IdVenta}`).empty();
     const lblFin = $(`#qFin_${v.IdVenta}`);
 
+    const pendIds = new Set(
+        (v.Cuotas || []).filter((c) => c.Estado !== "Pagada").map((c) => String(c.Id))
+    );
+    for (const [key, meta] of [...cuotasReprogSel.entries()]) {
+        if (Number(meta.idVenta) === Number(v.IdVenta) && !pendIds.has(String(key))) {
+            cuotasReprogSel.delete(key);
+        }
+    }
+
     if (!v.Cuotas?.length) {
-        tbPend.append(`<tr><td colspan="10" class="text-center text-muted">Sin cuotas</td></tr>`);
+        tbPend.append(`<tr><td colspan="11" class="text-center text-muted">Sin cuotas</td></tr>`);
         lblFin.text("0");
+        VC.actualizarReprogFabUI();
         return;
     }
 
@@ -1455,9 +1630,18 @@ VC.renderCuotas = function (v) {
             estadoHtml = `<span class="badge bg-success">Vence hoy</span>`;
         }
 
+        const chkOn = cuotasReprogSel.has(String(c.Id)) ? " checked" : "";
+
         tbPend.append(`
             <tr class="${rowClass}">
-                
+                <td class="text-center align-middle">
+                    <input type="checkbox" class="form-check-input vc-reprog-chk"${chkOn}
+                        data-idcuota="${c.Id}"
+                        data-idventa="${v.IdVenta}"
+                        data-venc="${fechaVto.format("YYYY-MM-DD")}"
+                        data-nro="${c.NumeroCuota}"
+                        aria-label="Seleccionar cuota ${c.NumeroCuota} para reprogramar" />
+                </td>
                 <td>${c.NumeroCuota}</td>
 
                 <!-- 📅 VENCIMIENTO -->
@@ -1477,7 +1661,7 @@ VC.renderCuotas = function (v) {
                 }
 
                 const fechaCobro = moment(c.FechaCobro).startOf("day");
-                const diasCobro = calcularDiasAtraso(c.FechaCobro);
+                const diasCobro = diasAtraso;
                 const fechaFmt = fechaCobro.format("DD/MM/YYYY");
 
                 if (diasCobro <= 0) {
@@ -1533,6 +1717,12 @@ VC.renderCuotas = function (v) {
         `);
     });
 
+    if (!tbPend.children().length) {
+        tbPend.append(
+            `<tr><td colspan="11" class="text-center text-muted">Sin cuotas pendientes</td></tr>`
+        );
+    }
+
     lblFin.text(countFin);
 
     if (!tbPag.children().length) {
@@ -1544,6 +1734,10 @@ VC.renderCuotas = function (v) {
             </tr>
         `);
     }
+
+    const $tblPend = tbPend.closest("table");
+    if ($tblPend.length) VC.syncReprogChkAllHeader($tblPend);
+    VC.actualizarReprogFabUI();
 };
 /* ===========================================================
    COBRO ADELANTADO
@@ -1896,9 +2090,9 @@ VC.cargarCobrosPendientes = async function () {
 
             {
                 data: "FechaCobro",
-                render: d => {
+                render: (d, type, row) => {
                     if (!d) return "";
-                    const dias = calcularDiasAtraso(d);
+                    const dias = calcularDiasAtraso(row.FechaVencimiento);
                     const fecha = moment(d).format("DD/MM/YYYY");
 
                     if (dias <= 0) return `<span>${fecha}</span>`;
@@ -2012,7 +2206,7 @@ VC.cargarCobrosPendientes = async function () {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfigCobrosPendientes);
+            inicializarFiltrosColumnas(api, columnConfigCobrosPendientes, VC_COL_FILTER_PEND);
 
             $(api.table().container()).find('thead tr.filters th').eq(0).html('');
             $(api.table().container()).find('thead tr.filters th').eq(16).html('');
@@ -2144,10 +2338,10 @@ VC.cargarTransferenciasPendientes = async function () {
 
             {
                 data: "FechaCobro",
-                render: d => {
+                render: (d, type, row) => {
                     if (!d) return "";
 
-                    const dias = calcularDiasAtraso(d);
+                    const dias = calcularDiasAtraso(row.FechaVencimiento);
                     const fecha = moment(d).format("DD/MM/YYYY");
 
                     if (dias <= 0) {
@@ -2363,15 +2557,11 @@ VC.cargarTransferenciasPendientes = async function () {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfigTransferenciasPendientes);
-
-            inicializarFiltrosColumnas(api, columnConfigCobrosPendientes);
+            inicializarFiltrosColumnas(api, columnConfigTransferenciasPendientes, VC_COL_FILTER_TRANSF);
 
             const container = $(api.table().container());
 
-            // ❌ sin filtro
-            container.find('thead tr.filters th').eq(0).html(''); // acordeón
-            container.find('thead tr.filters th').eq(16).html(''); // acciones
+            container.find("thead tr.filters th").eq(15).html("");
         }
     });
 };

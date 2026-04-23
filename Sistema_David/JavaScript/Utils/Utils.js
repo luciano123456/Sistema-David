@@ -219,26 +219,72 @@ function inicializarEncabezadoColumnas(grd) {
     }
 }
 
+/** Escapa texto para usarlo dentro de RegExp en búsquedas de DataTables. */
+function escapeRegex(value) {
+    return String(value ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
-    function inicializarFiltrosColumnas(api, configColumns) {
+/**
+ * Filtros por columna en la fila clonada del thead.
+ * @param {object} api API DataTables
+ * @param {Array<{index:number, filterType:string}>} configColumns
+ * @param {string} [storageKey] Si se pasa, guarda/restaura valores en localStorage (solo Cobros).
+ */
+function inicializarFiltrosColumnas(api, configColumns, storageKey) {
 
-    // ✅ SOLO ESTA TABLA (fix real)
     const tableContainer = $(api.table().container());
-    const filtersRow = tableContainer.find('thead tr.filters');
+    const filtersRow = tableContainer.find("thead tr.filters");
 
     if (!filtersRow.length) return;
 
-        for (const config of configColumns) {
+    let saved = {};
+    if (storageKey) {
+        try {
+            const raw = localStorage.getItem(storageKey);
+            if (raw) saved = JSON.parse(raw) || {};
+        } catch (e) {
+            saved = {};
+        }
+    }
 
-        // 👇 ya NO usa $('.filters')
-        const cell = filtersRow.find('th').eq(config.index);
+    let persistTimer = null;
+    function persistColumnFilters() {
+        if (!storageKey) return;
+        clearTimeout(persistTimer);
+        persistTimer = setTimeout(function () {
+            const out = {};
+            for (const config of configColumns) {
+                const cell = filtersRow.find("th").eq(config.index);
+                if (!cell.length) continue;
+                const $in = cell.find(".rp-filter-input");
+                const $sel = cell.find(".rp-filter-select");
+                let val = "";
+                if ($in.length) val = String($in.val() || "").trim();
+                else if ($sel.length) val = String($sel.val() || "").trim();
+                if (val) out[String(config.index)] = val;
+            }
+            try {
+                if (Object.keys(out).length)
+                    localStorage.setItem(storageKey, JSON.stringify(out));
+                else
+                    localStorage.removeItem(storageKey);
+            } catch (e) { /* ignore */ }
+        }, 250);
+    }
+
+    let appliedAnySaved = false;
+
+    for (const config of configColumns) {
+
+        const cell = filtersRow.find("th").eq(config.index);
 
         if (!cell.length) continue;
 
         cell.empty();
 
-        /* ================= SELECT ================= */
-        if (config.filterType === 'select' || config.filterType === 'select_local') {
+        const savedVal = saved[String(config.index)];
+
+        if (config.filterType === "select" || config.filterType === "select_local") {
 
             const $select = $(`
                 <select class="rp-filter-select" style="width:100%">
@@ -248,41 +294,70 @@ function inicializarEncabezadoColumnas(grd) {
 
             const uniques = new Set();
 
-            api.column(config.index).data().each(v => {
+            api.column(config.index).data().each((v) => {
                 const txt = (v ?? "").toString().trim();
                 if (txt) uniques.add(txt);
             });
 
-            [...uniques].sort().forEach(txt => {
-                $select.append(`<option value="${txt}">${txt}</option>`);
+            [...uniques].sort().forEach((txt) => {
+                $("<option/>", { value: txt, text: txt }).appendTo($select);
             });
 
-            $select.on('change', function () {
+            if (savedVal) {
+                const has = $select.find("option").filter(function () {
+                    return $(this).val() === savedVal;
+                }).length;
+                if (has) {
+                    $select.val(savedVal);
+                    api.column(config.index)
+                        .search("^" + escapeRegex(savedVal) + "$", true, false);
+                    appliedAnySaved = true;
+                }
+            }
+
+            $select.on("change", function () {
 
                 const value = $(this).val();
 
                 if (!value) {
-                    api.column(config.index).search('').draw(false);
+                    api.column(config.index).search("").draw(false);
+                    persistColumnFilters();
                     return;
                 }
 
                 api.column(config.index)
-                    .search('^' + escapeRegex(value) + '$', true, false)
+                    .search("^" + escapeRegex(value) + "$", true, false)
                     .draw(false);
+                persistColumnFilters();
             });
 
-        }
-        /* ================= TEXT ================= */
-        else {
+        } else {
 
-            $('<input class="rp-filter-input" type="text" placeholder="Buscar...">')
-                .appendTo(cell)
-                .on('keyup change', function () {
-                    api.column(config.index).search(this.value).draw(false);
-                });
+            const $inp = $("<input>", {
+                class: "rp-filter-input",
+                type: "text",
+                placeholder: "Buscar..."
+            }).appendTo(cell);
+
+            if (savedVal) {
+                $inp.val(savedVal);
+                api.column(config.index).search(savedVal);
+                appliedAnySaved = true;
+            }
+
+            $inp.on("keyup change", function () {
+                api.column(config.index).search(this.value).draw(false);
+                persistColumnFilters();
+            });
         }
     }
 
-    // limpiar columna acordeón SOLO en esta tabla
-    filtersRow.find('th').eq(0).html('');
+    if (appliedAnySaved) {
+        api.draw(false);
+    }
+
+    const configHasColZero = configColumns.some((c) => c.index === 0);
+    if (!configHasColZero) {
+        filtersRow.find("th").eq(0).html("");
+    }
 }

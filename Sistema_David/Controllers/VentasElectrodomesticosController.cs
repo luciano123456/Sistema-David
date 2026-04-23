@@ -50,6 +50,12 @@ namespace Sistema_David.Controllers
                     data = Ventas_ElectrodomesticosModel.ListarHistorial(fechaDesde, fechaHasta, estado, idVendedor, (int)usuarioSesion.IdRol);
                 }
 
+                if (!string.IsNullOrEmpty(data.MensajeError))
+                {
+                    return Json(new { success = false, message = data.MensajeError },
+                        JsonRequestBehavior.AllowGet);
+                }
+
                 return Json(new
                 {
                     success = true,
@@ -474,10 +480,12 @@ namespace Sistema_David.Controllers
         {
             try
             {
-                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var ses = SessionHelper.GetUsuarioSesion();
+                var usuario = ses?.Id ?? 0;
+                var idRol = ses?.IdRol;
 
                 var msg = Ventas_ElectrodomesticosModel
-                    .ReprogramarCobroCuota(idCuota, nuevaFecha, usuario, observacion);
+                    .ReprogramarCobroCuota(idCuota, nuevaFecha, usuario, observacion, idRol);
 
                 return Json(new { success = msg == "OK", message = msg });
             }

@@ -963,7 +963,8 @@ function renderCuotas(v) {
                     <td class="text-end">${fmt(c.MontoPagado)}</td>
                     <td class="text-center">
                         <button class="btn btn-secondary btn-sm"
-                                onclick="verHistorial(${c.Id}, ${v.IdVenta})">
+                                onclick="Historial.abrirHistorial(${v.IdVenta}, ${c.Id})"
+                                title="Historial">
                             <i class="fa fa-clock-o"></i>
                         </button>
                     </td>

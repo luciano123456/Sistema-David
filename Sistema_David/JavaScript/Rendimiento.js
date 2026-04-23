@@ -697,6 +697,16 @@ const safeString = (v) => {
 
 const safeUpper = (v) => safeString(v).toUpperCase();
 
+/** Cobranza de electro: `Id` es `Ventas_Electrodomesticos_Pagos.Id` (ver `Rendimiento/ObtenerImagen`). */
+const esElectrodomesticosRendimiento = (row) => {
+    if (!row) return false;
+    const o = safeUpper(row.Origen);
+    if (o.includes("ELECTRO")) return true;
+    if (safeString(row.TipoNegocio).toLowerCase().includes("electro")) return true;
+    if (safeString(row.Descripcion).toLowerCase().includes("electro")) return true;
+    return false;
+};
+
 const safeDate = (v) => {
     if (!v) return "";
     const m = moment(v);
@@ -789,9 +799,10 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                         let icon = "";
 
                         if (safeString(row.Imagen) && safeUpper(metodo) !== "EFECTIVO") {
+                            const origEsc = encodeURIComponent(safeString(row.Origen));
                             icon = `<button class='btn btn-sm ms-1 btnacciones'
                                 type='button'
-                                onclick='verComprobante(${safeNumber(row.Id)}, "${safeString(row.Descripcion)}")'>
+                                onclick='verComprobante(${safeNumber(row.Id)}, "${safeString(row.Descripcion)}", "${origEsc}")'>
                                 <i class='fa fa-eye text-primary'></i>
                             </button>`;
                         }
@@ -818,11 +829,25 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
                         const rowEncoded = encodeURIComponent(JSON.stringify(row));
 
+                        const descLower = safeString(row.Descripcion).toLowerCase();
+                        const esCobranza = descLower.includes("cobranza");
+                        const electro = esElectrodomesticosRendimiento(row);
+                        const eliminarBtn =
+                            userSession.IdRol === 1 && esCobranza
+                                ? `<button type="button" class="btn btn-sm btnacciones ms-1"
+                                    data-rend-elim-id="${safeNumber(data)}"
+                                    data-rend-elim-electro="${electro ? "1" : "0"}"
+                                    onclick="eliminarRendimientoCobranza(this)"
+                                    title="Eliminar cobranza">
+                                    <i class="fa fa-trash-o fa-lg text-danger"></i>
+                                </button>`
+                                : "";
+
                         return `
                         <button class='btn btn-sm btnacciones'
                             onclick='enviarWhatssapDesdeRow("${rowEncoded}")'>
                             <i class='fa fa-whatsapp ${iconColor}'></i>
-                        </button>`;
+                        </button>${eliminarBtn}`;
                     }
                 }
             ],
@@ -1850,9 +1875,14 @@ async function ObtenerImagen(id, origen) {
     return result?.data || null;
 }
 
-async function verComprobante(id, descripcion) {
+async function verComprobante(id, descripcion, origenEncoded) {
 
-    const origen = (descripcion || "").toLowerCase().includes("electro")
+    const origenParam = origenEncoded ? decodeURIComponent(origenEncoded) : "";
+    const origen = esElectrodomesticosRendimiento({
+        Descripcion: descripcion,
+        Origen: origenParam,
+        TipoNegocio: ""
+    })
         ? "ELECTRO"
         : "INDUMENTARIA";
 
@@ -2103,51 +2133,61 @@ async function habilitarCuentas() {
     ajustarTablasRendimiento();
 }
 
-const eliminarInformacion = async (id, descripcion = "") => {
+async function eliminarRendimientoCobranza(btn) {
     if (userSession.IdRol != 1) {
         alert("No tienes permisos para realizar esta accion.");
-        return false;
+        return;
+    }
+
+    const id = Number(btn && btn.getAttribute("data-rend-elim-id"));
+    const esElectro = btn && btn.getAttribute("data-rend-elim-electro") === "1";
+
+    if (!id) {
+        alert("Movimiento inválido.");
+        return;
     }
 
     try {
-        if (!confirm("¿Está seguro que desea eliminar esta informacion?")) return;
-
-        const esElectro = descripcion?.toLowerCase().includes("electro");
-
-        let url = "";
-        let payload = {};
+        if (!confirm("¿Está seguro que desea eliminar esta cobranza?")) return;
 
         if (esElectro) {
-            // 🔴 ELECTRODOMESTICOS
-            url = "/Ventas_Electrodomesticos/EliminarPago";
-            payload = { idPago: id };
+            const result = await $.ajax({
+                type: "POST",
+                url: "/Ventas_Electrodomesticos/EliminarPago",
+                data: { idPago: id },
+                dataType: "json"
+            });
+
+            if (result && result.success) {
+                alert("Cobranza eliminada correctamente.");
+                if ($.fn.DataTable.isDataTable("#grdRendimiento")) {
+                    $("#grdRendimiento").DataTable().ajax.reload(null, false);
+                }
+            } else {
+                alert((result && result.message) || "Error al eliminar el pago.");
+            }
         } else {
-            // 🔵 NORMAL
-            url = "/Ventas/EliminarInformacionVenta";
-            payload = { Id: id };
+            const result = await $.ajax({
+                type: "GET",
+                url: "/Ventas/EliminarInformacionVenta",
+                data: { id: id },
+                dataType: "json"
+            });
+
+            if (result && result.data) {
+                alert("Información eliminada correctamente.");
+                if ($.fn.DataTable.isDataTable("#grdRendimiento")) {
+                    $("#grdRendimiento").DataTable().ajax.reload(null, false);
+                }
+            } else {
+                alert("Error al eliminar.");
+            }
         }
-
-        const result = await MakeAjax({
-            type: "POST",
-            url: url,
-            async: true,
-            data: JSON.stringify(payload),
-            contentType: "application/json",
-            dataType: "json"
-        });
-
-        if (result.success || result.data) {
-            alert('Información eliminada correctamente.');
-            gridRendimiento.ajax.reload(null, false);
-        } else {
-            alert(result.message || "Error al eliminar.");
-        }
-
     } catch (error) {
         console.error(error);
         alert("Error inesperado.");
     }
-};
+}
 function ajustarTablasRendimiento() {
     setTimeout(function () {
         if ($.fn.DataTable.isDataTable('#grdRendimiento')) {
