@@ -99,12 +99,23 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
 
         "columns": [
             {
-                "data": "Nombre",
+                "data": function (row) {
+                    return [row.Nombre, row.Apellido]
+                        .map((x) => (x || "").trim())
+                        .filter(Boolean)
+                        .join(" ");
+                },
                 "render": function (data, type, row) {
-                    // Crear el HTML para el cliente con el ícono de edición y el checkbox
-
-                    return `<span class="cliente-tooltip" data-toggle="tooltip" data-placement="bottom" data-trigger="hover touch" title="${data}">
-            <span class="cliente-nombre">${data}</span> 
+                    const full = data || "";
+                    if (type === "sort" || type === "filter" || type === "type") {
+                        return full;
+                    }
+                    const title = full
+                        .replace(/&/g, "&amp;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/</g, "&lt;");
+                    return `<span class="cliente-tooltip" data-toggle="tooltip" data-placement="bottom" data-trigger="hover touch" title="${title}">
+            <span class="cliente-nombre">${full}</span> 
             <i class="fa fa-pencil fa-1x text-primary" title="Editar cliente" 
             style="cursor: pointer;" 
             onclick="editarCliente(${row.Id})"></i>
@@ -112,7 +123,6 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
                 }
             },
 
-            { "data": "Apellido" },
             { "data": "Dni" },
 
             {
@@ -185,7 +195,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
                 "render": function (data, type, row) {
                     return formatNumber(data); // Formatear número en la columna
                 },
-                "targets": [8, 9] // Columna de Saldo
+                "targets": [7, 8] // Saldo y límite
             }
         ],
 
@@ -207,11 +217,11 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
             const esAdmin = userSession.IdRol == 1;
             const esComprobantes = userSession.IdRol == 4;
 
-            // Columna 10 → solo Admin y Rol 4
-            gridClientes.column(10).visible(esAdmin || esComprobantes);
+            // Acciones → solo Admin y Rol 4
+            gridClientes.column(9).visible(esAdmin || esComprobantes);
 
-            // Columna 8 → solo Admin
-            gridClientes.column(8).visible(esAdmin);
+            // Saldo → solo Admin
+            gridClientes.column(7).visible(esAdmin);
         }
     });
 
@@ -1020,7 +1030,7 @@ function configurarOpcionesColumnas() {
     const columnas = grid.settings().init().columns; // Obtiene la configuración de columnas
     const container = $('#configColumnasMenu'); // El contenedor del dropdown específico para configurar columnas
 
-    const storageKey = `Clientes_Columnas`; // Clave única para esta pantalla
+    const storageKey = `Clientes_Columnas_v2`; // v2: nombre+apellido en una sola columna
 
     const savedConfig = JSON.parse(localStorage.getItem(storageKey)) || {}; // Recupera configuración guardada o inicializa vacía
 
@@ -1034,7 +1044,8 @@ function configurarOpcionesColumnas() {
             // Asegúrate de que la columna esté visible si el valor es 'true'
             grid.column(index).visible(isChecked);
 
-            const columnName = index != 3 ? col.data : "Direccion";
+            const columnName =
+                index === 0 ? "Nombre" : index === 2 ? "Direccion" : col.data;
 
             // Ahora agregamos el checkbox, asegurándonos de que se marque solo si 'isChecked' es 'true'
             container.append(`

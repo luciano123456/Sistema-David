@@ -86,11 +86,18 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona, id
 
 
         "columns": [
-            /* { "data": "Nombre" },*/
             {
-                "data": "Nombre",
+                "data": function (row) {
+                    return [row.Nombre, row.Apellido]
+                        .map((x) => (x || "").trim())
+                        .filter(Boolean)
+                        .join(" ");
+                },
                 "render": function (data, type, row) {
-                    // Crear el HTML para el cliente con el ícono de edición, el checkbox y el ícono de información
+                    const full = data || "";
+                    if (type === "sort" || type === "filter" || type === "type") {
+                        return full;
+                    }
                     const isChecked = false;
                     const checkboxClass = isChecked ? 'fa-check-square-o' : 'fa-square-o';
                     const checkbox = `<span class="custom-checkbox" data-id="${row.Id}">
@@ -101,14 +108,12 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona, id
                           </span>`;
 
                     if (userSession.IdRol == 1) {
-                        return `${checkbox} ${row.Nombre} ${infoIcon}`;
-                    } else {
-                        return `${row.Nombre} ${infoIcon}`;
+                        return `${checkbox} ${full} ${infoIcon}`;
                     }
+                    return `${full} ${infoIcon}`;
                 }
             },
 
-            { "data": "Apellido" },
             { "data": "Dni" },
             {
                 data: function (row) {
@@ -166,7 +171,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona, id
                 "render": function (data, type, row) {
                     return formatNumber(data); // Formatear número en la columna
                 },
-                "targets": [7] // Columna de Saldo
+                "targets": [6] // Columna de Saldo
             }
         ],
 
@@ -182,8 +187,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona, id
         "initComplete": function (settings, json) {
 
             if (userSession.IdRol != 1) {
-                gridClientes.column(8).visible(false);
-
+                gridClientes.column(6).visible(false);
             }
         }
     });

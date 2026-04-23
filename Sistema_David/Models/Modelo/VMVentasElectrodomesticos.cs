@@ -47,6 +47,9 @@ namespace Sistema_David.Models.ViewModels
     {
         public List<VM_HistorialVentasRow> Filas { get; set; }
         public object Kpis { get; set; }
+
+        /// <summary>Si no es null, hubo error al armar el historial (ver también Filas vacías).</summary>
+        public string MensajeError { get; set; }
     }
 
     public class VM_RecargoCuota
@@ -142,7 +145,11 @@ namespace Sistema_David.Models.ViewModels
         public int Id { get; set; }
         public int NumeroCuota { get; set; }
         public DateTime FechaVencimiento { get; set; }
+        /// <summary>Fecha de visita / cobro agendada (alineada a cuota en BD).</summary>
         public DateTime FechaCobro { get; set; }
+
+        public int? CobroPendiente { get; set; }
+        public int? TransferenciaPendiente { get; set; }
 
         public decimal MontoOriginal { get; set; }
         public decimal MontoRecargos { get; set; }

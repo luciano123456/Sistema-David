@@ -7,7 +7,7 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-<link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.0" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.1" rel="stylesheet" />
 
 <style>
     /* ====== Venta seleccionada / acordeón ====== */
@@ -797,7 +797,45 @@
         </div>
     </div>
 
- 
+    <div id="vcReprogFabWrap" class="vc-reprog-fab-wrap" hidden>
+        <button type="button" id="vcReprogFabBtn" class="vc-reprog-fab-btn" title="Reprogramar cuotas seleccionadas">
+            <span class="vc-fab-icon"><i class="fa fa-calendar"></i></span>
+            <span class="vc-reprog-fab-label">Reprogramar</span>
+            <span id="vcReprogFabBadge" class="vc-fab-badge">0</span>
+        </button>
+    </div>
+
+    <div class="modal fade" id="modalReprogCuotasMasivo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content ve-modal">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold text-white">
+                        <i class="fa fa-calendar text-warning me-2"></i>
+                        Reprogramar cuotas
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-2">
+                        Se actualizará la fecha de cobro de todas las cuotas marcadas (misma fecha y observación).
+                    </p>
+                    <ul id="vcReprogMasivoLista" class="small mb-3 ps-3 vc-reprog-masivo-lista"></ul>
+                    <div class="mb-3">
+                        <label for="vcReprogMasivoFecha" class="form-label text-white-50">Nueva fecha de cobro</label>
+                        <input type="date" id="vcReprogMasivoFecha" class="form-control ve-input" />
+                    </div>
+                    <div class="mb-0">
+                        <label for="vcReprogMasivoObs" class="form-label text-white-50">Observación</label>
+                        <input type="text" id="vcReprogMasivoObs" class="form-control ve-input" placeholder="Opcional" maxlength="500" />
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning text-dark fw-semibold" id="btnVcReprogMasivoConfirmar">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 
@@ -821,5 +859,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=3.0"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=3.3"></script>
 }
