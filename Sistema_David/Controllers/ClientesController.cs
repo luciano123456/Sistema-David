@@ -135,6 +135,29 @@ namespace Sistema_David.Controllers
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
+        /// <summary>Totales globales de cartera (solo admin). No cambian con filtros del listado.</summary>
+        [HttpGet]
+        public ActionResult TotalesSaldosCartera()
+        {
+            if (SessionHelper.GetUsuarioSesion() == null || SessionHelper.GetUsuarioSesion().IdRol != 1)
+            {
+                return Json(new
+                {
+                    TotalIndumentaria = 0m,
+                    TotalElectrodomestico = 0m,
+                    TotalGeneral = 0m
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            var t = ClientesModel.TotalesSaldosCartera();
+            return Json(new
+            {
+                t.TotalIndumentaria,
+                t.TotalElectrodomestico,
+                t.TotalGeneral
+            }, JsonRequestBehavior.AllowGet);
+        }
+
 
         public ActionResult GetClientes()
         {

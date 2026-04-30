@@ -112,6 +112,7 @@ namespace Sistema_David.Models.ViewModels
     {
         public int IdVenta { get; set; }
         public DateTime FechaPago { get; set; }
+        public DateTime? FechaCobroCuota { get; set; } // Próxima fecha de visita para saldo parcial
         public string MedioPago { get; set; }
         public decimal ImporteTotal { get; set; }
         public string Observacion { get; set; }
@@ -230,12 +231,18 @@ namespace Sistema_David.Models.ViewModels
         public int? IdCliente { get; set; }
         public int? IdVendedor { get; set; }
         public int? IdCobrador { get; set; }
+        public int IdUsuarioSesion { get; set; }
         public string EstadoCuota { get; set; } // "Pendiente"|"Vencida"|"Pagada"|null
 
         // ✅ NUEVOS
         public int? IdZona { get; set; }
         public string Turno { get; set; }         // "mañana"/"tarde" (o "M"/"T")
         public string FranjaHoraria { get; set; } // "08-09"
+
+        /// <summary>
+        /// True cuando el usuario eligió cliente o cobrador en pantalla: no aplicar rango Desde/Hasta a FechaCobro.
+        /// </summary>
+        public bool OmitirRangoFecha { get; set; }
     }
 
     public class FiltroHistorialVentas

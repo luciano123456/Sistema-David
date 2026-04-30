@@ -19,6 +19,59 @@ namespace Sistema_David.Models
         private static decimal R2(decimal v) =>
             Math.Round(v, 2, MidpointRounding.AwayFromZero);
 
+        /// <summary>
+        /// Nombre a mostrar para quien registró el cobro (UsuarioCreacion del último pago que afecta la cuota).
+        /// </summary>
+        private static void AplicarCobradorNombreDesdePagos(Sistema_DavidEntities db, List<VM_Ventas_Electrodomesticos_CuotaCobroRow> rows)
+        {
+            if (rows == null || rows.Count == 0) return;
+
+            var idCuotas = rows.Select(r => r.IdCuota).Distinct().ToList();
+
+            var lineas = (
+                from d in db.Ventas_Electrodomesticos_Pagos_Detalle.AsNoTracking()
+                join p in db.Ventas_Electrodomesticos_Pagos.AsNoTracking() on d.IdPago equals p.Id
+                where idCuotas.Contains(d.IdCuota)
+                select new { d.IdCuota, p.UsuarioCreacion, p.FechaPago, p.FechaCreacion }
+            ).ToList();
+
+            if (lineas.Count == 0) return;
+
+            var usuarioIdPorCuota = lineas
+                .GroupBy(x => x.IdCuota)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g
+                        .OrderByDescending(x => x.FechaPago)
+                        .ThenByDescending(x => x.FechaCreacion)
+                        .Select(x => x.UsuarioCreacion)
+                        .FirstOrDefault());
+
+            var idsUsuarios = usuarioIdPorCuota.Values.Where(id => id > 0).Distinct().ToList();
+            if (idsUsuarios.Count == 0) return;
+
+            var nombres = db.Usuarios.AsNoTracking()
+                .Where(u => idsUsuarios.Contains(u.Id))
+                .ToDictionary(
+                    u => u.Id,
+                    u =>
+                    {
+                        var n = ($"{u.Nombre ?? ""} {u.Apellido ?? ""}").Trim();
+                        return !string.IsNullOrEmpty(n) ? n : (u.Usuario ?? "").Trim();
+                    });
+
+            foreach (var r in rows)
+            {
+                if (!usuarioIdPorCuota.TryGetValue(r.IdCuota, out var idU) || idU <= 0) continue;
+                // Si la venta ya tiene cobrador asignado, respetarlo en columna C.
+                // Solo completar desde pagos cuando no hay cobrador asignado en la venta.
+                if (string.IsNullOrWhiteSpace(r.CobradorNombre)
+                    && nombres.TryGetValue(idU, out var nom)
+                    && !string.IsNullOrWhiteSpace(nom))
+                    r.CobradorNombre = nom;
+            }
+        }
+
         /** Texto estable para auditoría / JSON (evita "39.000,00" según cultura del servidor). */
         private static string AuditDecimal(decimal v) =>
             v.ToString("F2", CultureInfo.InvariantCulture);
@@ -632,6 +685,9 @@ namespace Sistema_David.Models
                     })
                     .ToList();
 
+                vm.Restante = vm.Cuotas
+                    .Sum(c => (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado);
+
                 /* ================= PAGOS ================= */
                 vm.Pagos = v.Ventas_Electrodomesticos_Pagos
                     .OrderByDescending(p => p.FechaPago)
@@ -691,6 +747,13 @@ namespace Sistema_David.Models
             {
                 try
                 {
+                    // Regla de negocio: todo cobro se registra con fecha de hoy.
+                    // La fecha solo puede cambiarse en reprogramación.
+                    var fechaPagoReal = DateTime.Today;
+                    var fechaCobroProgramada = m.FechaCobroCuota?.Date;
+                    if (fechaCobroProgramada.HasValue && fechaCobroProgramada.Value < fechaPagoReal)
+                        throw new Exception("La próxima fecha de cobro no puede ser anterior a hoy.");
+
                     var venta = db.Ventas_Electrodomesticos
                         .Include(x => x.Ventas_Electrodomesticos_Cuotas)
                         .FirstOrDefault(x => x.Id == m.IdVenta);
@@ -725,7 +788,7 @@ namespace Sistema_David.Models
                     var pago = new Ventas_Electrodomesticos_Pagos
                     {
                         IdVenta = venta.Id,
-                        FechaPago = m.FechaPago,
+                        FechaPago = fechaPagoReal,
                         MedioPago = m.MedioPago,
                         ImporteTotal = R2(m.ImporteTotal),
                         Observacion = m.Observacion,
@@ -791,15 +854,20 @@ namespace Sistema_David.Models
                         {
                             // ✅ PAGO TOTAL
                             cuota.Estado = "Pagada";
-                            cuota.FechaCobro = m.FechaPago != null ? m.FechaPago : DateTime.Now;
+                            cuota.FechaCobro = fechaPagoReal;
                         }
                         else
                         {
                             // ⚠️ PAGO PARCIAL
                             cuota.Estado = "Pendiente";
 
-                            // Próxima visita: desde el vencimiento (no antes de la obligación de la cuota)
-                            if (cuota.FechaCobro == null)
+                            // Próxima visita programada por el usuario (si se envía).
+                            if (fechaCobroProgramada.HasValue)
+                            {
+                                cuota.FechaCobro = fechaCobroProgramada.Value;
+                            }
+                            // Si no se indicó, mantener lógica por defecto.
+                            else if (cuota.FechaCobro == null)
                             {
                                 cuota.FechaCobro = cuota.FechaVencimiento.Date;
                             }
@@ -1320,10 +1388,20 @@ namespace Sistema_David.Models
                 if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
                     q = q.Where(x => x.Venta.IdVendedor == f.IdVendedor.Value);
 
+                var idSesionPendientes = f.IdUsuarioSesion;
+                if (idSesionPendientes > 0)
+                {
+                    q = q.Where(x =>
+                        x.Venta.IdCobrador == null
+                        || x.Venta.IdCobrador == 0
+                        || x.Venta.IdCobrador == idSesionPendientes);
+                }
 
 
-                var rows = q
-                    .ToList()
+
+                var baseRows = q.ToList();
+
+                var rows = baseRows
                     .Select(x => new VM_Ventas_Electrodomesticos_CuotaCobroRow
                     {
                         IdCuota = x.Cuota.Id,
@@ -1703,20 +1781,35 @@ namespace Sistema_David.Models
                 var desde = f.FechaDesde?.Date;
                 var hasta = f.FechaHasta?.Date;
 
-                if (f.IdCobrador.HasValue && f.IdCobrador.Value > 0)
+                /* =========================
+                   FILTROS NORMALES
+                ========================= */
+
+                var filtraPorCliente = f.IdCliente.HasValue && f.IdCliente.Value > 0;
+                var filtraPorCobrador = f.IdCobrador.HasValue && f.IdCobrador.Value > 0;
+
+                if (!filtraPorCliente && filtraPorCobrador)
                 {
+                    // Al elegir cobrador, mostrar solo lo asignado a ese cobrador.
                     q = q.Where(x => x.Venta.IdCobrador == f.IdCobrador.Value);
                 }
-                else if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
+                else if (!filtraPorCliente)
                 {
-                    q = q.Where(x => x.Venta.IdCliente == f.IdCliente.Value);
+                    // Sin filtro de cobrador: mostrar no asignados o los asignados al usuario actual.
+                    // Los asignados a otro cobrador solo se muestran cuando se filtra por IdCobrador.
+                    var idUsuarioSesion = f.IdUsuarioSesion;
+                    q = q.Where(x =>
+                        x.Venta.IdCobrador == null
+                        || x.Venta.IdCobrador == 0
+                        || x.Venta.IdCobrador == idUsuarioSesion);
                 }
-                else
-                {
-                    /* =========================
-                       FILTROS NORMALES
-                    ========================= */
 
+                if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
+                    q = q.Where(x => x.Venta.IdCliente == f.IdCliente.Value);
+
+                // Si el usuario eligió cliente o cobrador en la pantalla, no acotar por fecha (flag desde el front).
+                if (!f.OmitirRangoFecha)
+                {
                     if (desde.HasValue)
                         q = q.Where(x =>
                             DbFunctions.TruncateTime(x.Cuota.FechaCobro) >= desde.Value);
@@ -1724,37 +1817,37 @@ namespace Sistema_David.Models
                     if (hasta.HasValue)
                         q = q.Where(x =>
                             DbFunctions.TruncateTime(x.Cuota.FechaCobro) <= hasta.Value);
+                }
 
-                    if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
-                        q = q.Where(x =>
-                            x.Venta.IdVendedor == f.IdVendedor.Value || x.Venta.IdCobrador == f.IdVendedor.Value);
+                if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
+                    q = q.Where(x =>
+                        x.Venta.IdVendedor == f.IdVendedor.Value || x.Venta.IdCobrador == f.IdVendedor.Value);
 
-                    if (f.IdZona.HasValue && f.IdZona.Value > 0)
-                        q = q.Where(x =>
-                            x.Cliente.IdZona == f.IdZona.Value);
+                if (f.IdZona.HasValue && f.IdZona.Value > 0)
+                    q = q.Where(x =>
+                        x.Cliente.IdZona == f.IdZona.Value);
 
-                    if (!string.IsNullOrWhiteSpace(f.Turno))
-                        q = q.Where(x =>
-                            x.Venta.Turno == f.Turno);
+                if (!string.IsNullOrWhiteSpace(f.Turno))
+                    q = q.Where(x =>
+                        x.Venta.Turno == f.Turno);
 
-                    if (!string.IsNullOrWhiteSpace(f.FranjaHoraria))
-                        q = q.Where(x =>
-                            x.Venta.FranjaHoraria == f.FranjaHoraria);
+                if (!string.IsNullOrWhiteSpace(f.FranjaHoraria))
+                    q = q.Where(x =>
+                        x.Venta.FranjaHoraria == f.FranjaHoraria);
 
-                    if (!string.IsNullOrEmpty(f.EstadoCuota))
+                if (!string.IsNullOrEmpty(f.EstadoCuota))
+                {
+                    if (f.EstadoCuota == "Vencida")
                     {
-                        if (f.EstadoCuota == "Vencida")
-                        {
-                            var hoy = DateTime.Today;
+                        var hoy = DateTime.Today;
 
-                            q = q.Where(x =>
-                                x.Cuota.Estado != "Pagada" &&
-                                DbFunctions.TruncateTime(x.Cuota.FechaVencimiento) < hoy);
-                        }
-                        else
-                        {
-                            q = q.Where(x => x.Cuota.Estado == f.EstadoCuota);
-                        }
+                        q = q.Where(x =>
+                            x.Cuota.Estado != "Pagada" &&
+                            DbFunctions.TruncateTime(x.Cuota.FechaVencimiento) < hoy);
+                    }
+                    else
+                    {
+                        q = q.Where(x => x.Cuota.Estado == f.EstadoCuota);
                     }
                 }
 
@@ -1792,17 +1885,7 @@ namespace Sistema_David.Models
                         ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido + " - " + x.Cliente.Dni).Trim(),
 
                         LimiteCliente = (decimal)x.Cliente.LimiteVentas,
-
-                        SaldoCliente =
-                                        (db.Ventas
-                                            .Where(v => v.idCliente == x.Venta.IdCliente && v.Restante > 0)
-                                            .Select(v => (decimal?)v.Restante)
-                                            .Sum() ?? 0)
-                                        +
-                                        (db.Ventas_Electrodomesticos
-                                            .Where(v => v.IdCliente == x.Venta.IdCliente && v.Restante > 0)
-                                            .Select(v => (decimal?)v.Restante)
-                                            .Sum() ?? 0),
+                        SaldoCliente = 0,
 
                         IdVendedor = x.Venta.IdVendedor,
                         VendedorNombre = x.Vendedor != null ? x.Vendedor.Nombre : null,
@@ -1827,6 +1910,33 @@ namespace Sistema_David.Models
                     .OrderBy(r => r.FechaVencimiento)
                     .ThenBy(r => r.NumeroCuota)
                     .ToList();
+
+                if (rows.Count > 0)
+                {
+                    var idsCliente = rows.Select(r => r.IdCliente).Distinct().ToList();
+
+                    // Saldo por cliente en un solo query (evita N+1 y acelera fuertemente).
+                    var saldosPorCliente = (
+                        from ce in db.Ventas_Electrodomesticos_Cuotas
+                        join ve in db.Ventas_Electrodomesticos on ce.IdVenta equals ve.Id
+                        where idsCliente.Contains(ve.IdCliente)
+                        group ce by ve.IdCliente into g
+                        select new
+                        {
+                            IdCliente = g.Key,
+                            Saldo = g.Sum(c => (decimal?)(
+                                (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado
+                            )) ?? 0m
+                        }
+                    ).ToDictionary(x => x.IdCliente, x => x.Saldo);
+
+                    foreach (var r in rows)
+                    {
+                        r.SaldoCliente = saldosPorCliente.TryGetValue(r.IdCliente, out var saldo)
+                            ? saldo
+                            : 0m;
+                    }
+                }
 
                 return rows;
             }
@@ -1961,7 +2071,6 @@ namespace Sistema_David.Models
  * =========================================================== */
         public static string AsignarCobradorVentas(int idCobrador, List<int> idsVentas, int usuarioOperador, string obs = null)
         {
-            if (idCobrador <= 0) return "Cobrador inválido";
             if (idsVentas == null || idsVentas.Count == 0) return "No hay ventas seleccionadas";
 
             using (var db = new Sistema_DavidEntities())
@@ -1969,8 +2078,13 @@ namespace Sistema_David.Models
             {
                 try
                 {
-                    var cobrador = db.Usuarios.FirstOrDefault(u => u.Id == idCobrador);
-                    if (cobrador == null) return "Cobrador no encontrado";
+                    var desasignar = idCobrador <= 0;
+                    Usuarios cobrador = null;
+                    if (!desasignar)
+                    {
+                        cobrador = db.Usuarios.FirstOrDefault(u => u.Id == idCobrador);
+                        if (cobrador == null) return "Cobrador no encontrado";
+                    }
 
                     var ventas = db.Ventas_Electrodomesticos
                         .Where(v => idsVentas.Contains(v.Id))
@@ -1981,10 +2095,11 @@ namespace Sistema_David.Models
                     foreach (var v in ventas)
                     {
                         var anterior = v.IdCobrador.HasValue ? v.IdCobrador.Value.ToString() : "(sin)";
-
-                        if (!v.IdCobrador.HasValue || v.IdCobrador.Value != idCobrador)
+                        var nuevo = desasignar ? (int?)null : idCobrador;
+                        var cambio = v.IdCobrador != nuevo;
+                        if (cambio)
                         {
-                            v.IdCobrador = idCobrador;
+                            v.IdCobrador = nuevo;
                             v.UsuarioModificacion = usuarioOperador;
                             v.FechaModificacion = DateTime.Now;
 
@@ -1995,9 +2110,11 @@ namespace Sistema_David.Models
                                 usuarioOperador,
                                 "AsignarCobradorVenta",
                                 anterior,
-                                idCobrador.ToString(),
+                                desasignar ? "(sin)" : idCobrador.ToString(),
                                 string.IsNullOrWhiteSpace(obs)
-                                    ? $"Asignado cobrador={cobrador.Nombre}"
+                                    ? (desasignar
+                                        ? "Cobrador desasignado"
+                                        : $"Asignado cobrador={cobrador.Nombre}")
                                     : obs
                             );
                         }

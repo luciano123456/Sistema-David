@@ -83,7 +83,8 @@ namespace Sistema_David.Controllers
     string estado,
     int? idZona,
     string turno,
-    string franjaHoraria
+    string franjaHoraria,
+    bool omitirRangoFecha = false
 )
         {
             try
@@ -95,20 +96,25 @@ namespace Sistema_David.Controllers
                     IdCliente = idCliente,
                     IdVendedor = idVendedor,
                     IdCobrador = idCobrador,
+                    IdUsuarioSesion = SessionHelper.GetUsuarioSesion()?.Id ?? 0,
                     EstadoCuota = estado,
 
                     // ✅ nuevos (agregalos al VM filtro también)
                     IdZona = idZona,
                     Turno = turno,
-                    FranjaHoraria = franjaHoraria
+                    FranjaHoraria = franjaHoraria,
+                    OmitirRangoFecha = omitirRangoFecha
                 };
 
                 var usuarioSesion = SessionHelper.GetUsuarioSesion();
 
+                var filtraPorCliente = filtro.IdCliente.HasValue && filtro.IdCliente.Value > 0;
+
                 if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
                 {
                     filtro.IdVendedor = usuarioSesion.Id;
-                    filtro.IdCobrador = usuarioSesion.Id;
+                    // Si se busca por cliente, no restringir por cobrador para mostrar todos sus cobros.
+                    filtro.IdCobrador = filtraPorCliente ? (int?)null : usuarioSesion.Id;
                 }
 
                 var data = Ventas_ElectrodomesticosModel.ListarCuotasACobrar(filtro);
@@ -125,9 +131,9 @@ namespace Sistema_David.Controllers
             var filtro = new VM_Ventas_Electrodomesticos_FiltroCobros
             {
                 IdCliente = idCliente,
-                IdVendedor = idVendedor
+                IdVendedor = idVendedor,
+                IdUsuarioSesion = SessionHelper.GetUsuarioSesion()?.Id ?? 0
             };
-
 
             var data = Ventas_ElectrodomesticosModel.ListarCobrosPendientes(filtro);
             return Json(new { data }, JsonRequestBehavior.AllowGet);
@@ -500,7 +506,7 @@ namespace Sistema_David.Controllers
         {
             try
             {
-                if (req == null || req.IdCobrador <= 0 || req.IdsVentas == null || req.IdsVentas.Count == 0)
+                if (req == null || req.IdsVentas == null || req.IdsVentas.Count == 0)
                     return Json(new { success = false, message = "Datos inválidos" });
 
                 var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;

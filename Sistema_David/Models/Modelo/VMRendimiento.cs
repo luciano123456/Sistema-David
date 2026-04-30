@@ -39,5 +39,14 @@ namespace Sistema_David.Models.ViewModels
 
         public int? IdTipoNegocio { get; set; }
         public string TipoNegocio { get; set; }
+
+        /// <summary>Vendedor de la venta (clásica o electro), según IdVenta.</summary>
+        public string Vendedor { get; set; }
+
+        /// <summary>Id del usuario cobrador (InformacionVentas.IdCobrador o Ventas_Electrodomesticos_Pagos.UsuarioCreacion según el SP).</summary>
+        public int IdCobrador { get; set; }
+
+        /// <summary>Nombre legible del cobrador (se completa en servidor a partir de <see cref="IdCobrador"/>).</summary>
+        public string UsuarioCobro { get; set; }
     }
 }

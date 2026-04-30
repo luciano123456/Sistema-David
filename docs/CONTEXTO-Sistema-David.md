@@ -2,6 +2,8 @@
 
 Documento vivo para alinear trabajo durante el año. **Actualizarlo** cuando cambien flujos, rutas o decisiones importantes.
 
+**Handoff detallado (Clientes + Rendimiento + electro, sesión reciente):** [agent-handoff-clientes-rendimiento.md](./agent-handoff-clientes-rendimiento.md)
+
 ---
 
 ## Qué es este repo

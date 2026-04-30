@@ -1,4 +1,9 @@
-﻿.centered-modal-nuevo {
+﻿/* Raíz de la vista (reemplaza body duplicado): mismo rol visual que otras pantallas oscuras */
+.clientes-root.ve-dark {
+    min-height: 100vh;
+}
+
+.centered-modal-nuevo {
     position: fixed !important;
     top: 7% !important;
     left: 50% !important;
@@ -512,4 +517,479 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
 
 .btn-seccionCliente:hover {
     background: #0D62CF;
+}
+
+/* =========================
+   Refactor Clientes v2
+========================= */
+body {
+    min-height: 100vh;
+}
+
+.page-99 {
+    max-width: 99% !important;
+}
+
+.cc-header {
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: linear-gradient(135deg, rgba(91,140,255,.13), rgba(123,92,255,.08)), rgba(17,24,39,.55);
+    padding: 18px;
+    box-shadow: 0 14px 30px rgba(0,0,0,.26);
+}
+
+.cc-header .btn,
+.card-glass .btn {
+    border-radius: 10px !important;
+}
+
+#btnToggleFiltrosClientes {
+    background: rgba(255,255,255,.06) !important;
+    border: 1px solid rgba(255,255,255,.22) !important;
+    color: #eaf1ff !important;
+}
+
+#btnToggleFiltrosClientes:hover {
+    background: rgba(91,140,255,.2) !important;
+}
+
+.cc-badge {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    box-shadow: 0 8px 20px rgba(37,99,235,.45);
+}
+
+.text-muted-cc {
+    color: #b7c3da;
+    font-size: .92rem;
+}
+
+.card-glass {
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 12px 28px rgba(0,0,0,.25);
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)), rgba(17,24,39,.62);
+}
+
+.cc-stat {
+    border-radius: 14px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04);
+    box-shadow: 0 10px 24px rgba(0,0,0,.22);
+}
+
+.cc-stat .label {
+    color: #c9d6ee;
+    font-size: .86rem;
+    font-weight: 700;
+}
+
+.cc-stat .value {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-top: 6px;
+}
+
+#Filtros .form-label {
+    color: #d9e3f5;
+    font-weight: 700;
+    margin-bottom: .35rem;
+}
+
+#Filtros {
+    border: 1px solid rgba(91,140,255,.38) !important;
+    background: linear-gradient(135deg, rgba(16,25,56,.95), rgba(10,18,43,.95)) !important;
+}
+
+#Filtros .form-control,
+#Filtros .form-select {
+    min-height: 42px;
+    border-radius: 11px !important;
+    background: #0c1731 !important;
+    color: #f0f5ff !important;
+    border: 1px solid rgba(118, 158, 255, 0.35) !important;
+}
+
+#Filtros .form-control,
+#Filtros .form-select,
+#Filtros input {
+    color: #f0f5ff !important;
+}
+
+#Filtros .form-control::placeholder {
+    color: #9cb0d8 !important;
+    opacity: .85;
+}
+
+#Filtros .select2-container .select2-selection--single {
+    min-height: 42px;
+    border-radius: 11px !important;
+    border: 1px solid rgba(118, 158, 255, 0.35) !important;
+    background: #0c1731 !important;
+    color: #f0f5ff !important;
+    display: flex !important;
+    align-items: center;
+}
+
+#Filtros .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #eaf1ff !important;
+    line-height: 40px !important;
+    padding-left: .75rem !important;
+}
+
+#Filtros .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 40px !important;
+}
+
+.select2-dropdown {
+    background: #121826 !important;
+    border-color: rgba(255,255,255,.15) !important;
+    color: #fff !important;
+}
+
+.select2-results__option {
+    color: #eaf1ff !important;
+}
+
+#Filtros .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #9cb0d8 !important;
+}
+
+#Filtros .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #f0f5ff !important;
+    line-height: 40px !important;
+    padding-left: .75rem !important;
+}
+
+#Filtros .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 40px !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: rgba(91,140,255,.35) !important;
+    color: #fff !important;
+}
+
+#grdClientes tfoot th {
+    padding: 8px !important;
+}
+
+#grdClientes tfoot .form-control,
+#grdClientes tfoot .form-select {
+    min-height: 34px;
+    font-size: .82rem;
+    border-radius: 8px !important;
+}
+
+#grdClientes thead tr.filters th {
+    padding: 6px !important;
+    background: rgba(9,15,35,.98) !important;
+}
+
+#grdClientes thead tr.filters .rp-filter-input,
+#grdClientes thead tr.filters .rp-filter-select {
+    width: 100%;
+    min-height: 34px;
+    border-radius: 8px !important;
+    border: 1px solid rgba(118, 158, 255, 0.35);
+    background: #0c1731;
+    color: #eaf1ff;
+    padding: .3rem .45rem;
+    font-size: .78rem;
+}
+
+#grdClientes thead tr.filters .rp-filter-select option {
+    color: #fff;
+    background: #0c1731;
+}
+
+/* Estado de cliente como antes */
+#grdClientes tbody tr.fila-cliente-inhabilitado td {
+    background-color: #890E07 !important;
+    color: #fff !important;
+}
+
+#grdClientes tbody tr.fila-cliente-regular td {
+    background-color: #DED803 !important;
+    color: #000 !important;
+}
+
+/* Fila seleccionada: barra solo en la primera celda (no “separadores” en cada td) */
+#grdClientes tbody tr:not(.child) {
+    cursor: pointer;
+}
+
+#grdClientes tbody tr.child {
+    cursor: default;
+}
+
+#grdClientes tbody tr.cliente-row-selected td {
+    background-color: rgba(88, 166, 255, 0.22) !important;
+    color: #eaf1ff !important;
+    box-shadow: none;
+}
+
+#grdClientes tbody tr.cliente-row-selected td:first-child {
+    box-shadow: inset 3px 0 0 rgba(88, 166, 255, 0.95);
+}
+
+#grdClientes tbody tr.fila-cliente-regular.cliente-row-selected td {
+    background-color: rgba(88, 166, 255, 0.28) !important;
+    color: #0b1224 !important;
+}
+
+#grdClientes tbody tr.fila-cliente-regular.cliente-row-selected td:first-child {
+    box-shadow: inset 3px 0 0 rgba(88, 166, 255, 0.95);
+}
+
+#grdClientes tbody tr.fila-cliente-inhabilitado.cliente-row-selected td {
+    background-color: rgba(88, 166, 255, 0.25) !important;
+    color: #fff !important;
+}
+
+#grdClientes tbody tr.fila-cliente-inhabilitado.cliente-row-selected td:first-child {
+    box-shadow: inset 3px 0 0 rgba(88, 166, 255, 0.95);
+}
+
+#grdClientes thead tr.filters .rp-filter-input::placeholder {
+    color: #8ea3d1;
+}
+
+#grdClientes thead tr.filters .rp-filter-input:focus,
+#grdClientes thead tr.filters .rp-filter-select:focus {
+    border-color: rgba(88, 166, 255, .95);
+    box-shadow: 0 0 0 .15rem rgba(88,166,255,.35);
+    outline: none;
+}
+
+@media (max-width: 767.98px) {
+    .cc-header {
+        padding: 14px;
+    }
+
+    #btnToggleFiltrosClientes,
+    #aplicarFiltros,
+    #btnLimpiarFiltrosClientes {
+        width: 100%;
+    }
+
+    #grdClientes tfoot {
+        display: none;
+    }
+
+    #grdClientes thead tr.filters {
+        display: none;
+    }
+}
+
+/* Overlay “Cargando tablas…” (mismo patrón que Rendimiento) */
+.global-loading {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 40, 0.85);
+    backdrop-filter: blur(6px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.global-loading.hidden {
+    display: none;
+}
+
+.loading-box {
+    text-align: center;
+    color: #fff;
+    font-weight: 600;
+}
+
+.global-loading .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top: 4px solid #00d4ff;
+    border-radius: 50%;
+    animation: cc-spin 0.8s linear infinite;
+    margin: auto;
+}
+
+.loading-text {
+    margin-top: 10px;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+@keyframes cc-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+body.loading {
+    overflow: hidden;
+}
+
+/* ——— Modales Límite / WhatsApp (Clientes) ——— */
+.cc-modal-shell .modal-dialog.cc-modal-dialog {
+    max-width: 500px;
+    width: calc(100% - 1.5rem);
+    margin: 8vh auto 1.25rem;
+}
+
+.cc-modal-content {
+    background: linear-gradient(165deg, #172036 0%, #0f1628 55%, #0c1220 100%);
+    color: #eaf1ff;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 16px;
+    box-shadow: 0 28px 56px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    overflow: hidden;
+}
+
+.cc-modal-shell .modal-header {
+    padding: 1.1rem 1.25rem 0.5rem;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.18) !important;
+}
+
+.cc-modal-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+.cc-modal-footer-actions {
+    display: flex !important;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding-top: 0.65rem !important;
+}
+
+.cc-modal-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.cc-modal-icon--warning {
+    background: linear-gradient(135deg, #f0ad4e 0%, #d58512 100%);
+    color: #1a1205;
+}
+
+.cc-modal-icon--whatsapp {
+    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    color: #fff;
+}
+
+.cc-modal-shell .modal-title {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+}
+
+.cc-modal-subtitle {
+    font-size: 0.82rem;
+    color: rgba(207, 224, 255, 0.72);
+    margin-top: 0.2rem;
+    line-height: 1.35;
+}
+
+.cc-modal-shell .modal-body {
+    padding: 1rem 1.25rem 1.25rem;
+}
+
+.cc-modal-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(180, 200, 240, 0.75);
+    margin-bottom: 0.45rem;
+}
+
+.cc-modal-input-group .cc-modal-addon,
+.cc-modal-input-group .input-group-addon {
+    background: #121c34;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    color: #8ab4ff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0.65rem 0.85rem;
+}
+
+.cc-modal-input,
+.cc-modal-textarea {
+    background: #0c1428 !important;
+    border: 1px solid rgba(88, 166, 255, 0.35) !important;
+    color: #f0f4ff !important;
+    border-radius: 0 10px 10px 0 !important;
+    font-size: 1.05rem;
+    padding: 0.75rem 1rem !important;
+}
+
+.cc-modal-textarea {
+    border-radius: 10px !important;
+    min-height: 110px;
+    resize: vertical;
+}
+
+.cc-modal-input:focus,
+.cc-modal-textarea:focus {
+    border-color: rgba(88, 166, 255, 0.85) !important;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.2) !important;
+    outline: none;
+}
+
+.cc-modal-input::placeholder,
+.cc-modal-textarea::placeholder {
+    color: rgba(142, 163, 209, 0.55);
+}
+
+.cc-modal-shell .modal-footer {
+    padding: 0 1.25rem 1.15rem;
+    border-top: none !important;
+}
+
+.cc-modal-shell .modal-footer .btn-outline-light {
+    border-color: rgba(120, 150, 220, 0.45);
+    color: #dbe6ff;
+}
+
+.cc-modal-shell .modal-footer .btn-outline-light:hover {
+    background: rgba(88, 166, 255, 0.12);
+    color: #fff;
+    border-color: rgba(88, 166, 255, 0.55);
+}
+
+.cc-modal-btn-primary {
+    font-weight: 600;
+    border-radius: 10px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.cc-modal-msg {
+    border-radius: 8px;
+    padding: 0.5rem 0.65rem;
+    background: rgba(220, 53, 69, 0.12);
+    border: 1px solid rgba(220, 53, 69, 0.35);
 }

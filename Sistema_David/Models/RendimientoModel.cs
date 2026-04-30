@@ -193,6 +193,8 @@ namespace Sistema_David.Models
                         idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam, metodoPagoParam, cuentabancariaParam, comprobantesEnviadosParam
                     ).ToList();
 
+                    EnriquecerRendimientoDespuesDeSp(db, resultList);
+
                     return resultList;
                 }
             } catch (Exception ex)
@@ -271,6 +273,154 @@ namespace Sistema_David.Models
                
 
                 return resultList;
+            }
+        }
+
+        private static string FormatearNombreUsuario(Usuarios u)
+        {
+            if (u == null) return null;
+            var nombre = $"{u.Nombre ?? ""} {u.Apellido ?? ""}".Trim();
+            if (!string.IsNullOrEmpty(nombre)) return nombre;
+            return string.IsNullOrWhiteSpace(u.Usuario) ? null : u.Usuario.Trim();
+        }
+
+        /// <summary>
+        /// Corrige y completa datos que el SP puede duplicar o que EF mapea mal: cobrador (electro = mismo Id de pago en varias filas),
+        /// nombre del cobrador, vendedor por IdVenta y nombre de tipo de negocio.
+        /// </summary>
+        private static void EnriquecerRendimientoDespuesDeSp(Sistema_DavidEntities db, List<VMRendimiento> rows)
+        {
+            if (rows == null || rows.Count == 0) return;
+
+            db.Configuration.ProxyCreationEnabled = false;
+            db.Configuration.LazyLoadingEnabled = false;
+
+            var idsPagoElectro = new HashSet<int>();
+            var idsInformacionClasica = new HashSet<int>();
+            var idVentas = new HashSet<int>();
+
+            foreach (var r in rows)
+            {
+                if (r == null) continue;
+                if (r.IdVenta > 0) idVentas.Add(r.IdVenta);
+
+                var desc = r.Descripcion ?? string.Empty;
+                var d = desc.ToLowerInvariant();
+
+                if (d.Contains("electro") && d.Contains("cobranza"))
+                    idsPagoElectro.Add(r.Id);
+                else if (!d.Contains("electro"))
+                    idsInformacionClasica.Add(r.Id);
+            }
+
+            var usuarioPorPagoId = db.Ventas_Electrodomesticos_Pagos
+                .AsNoTracking()
+                .Where(p => idsPagoElectro.Contains(p.Id))
+                .Select(p => new { p.Id, p.UsuarioCreacion })
+                .ToList()
+                .GroupBy(x => x.Id)
+                .ToDictionary(g => g.Key, g => g.First().UsuarioCreacion);
+
+            var cobradorPorInformacionId = db.InformacionVentas
+                .AsNoTracking()
+                .Where(iv => idsInformacionClasica.Contains(iv.Id))
+                .Select(iv => new { iv.Id, iv.idCobrador })
+                .ToList()
+                .ToDictionary(x => x.Id, x => x.idCobrador);
+
+            var vendedorIdPorVentaElectro = db.Ventas_Electrodomesticos
+                .AsNoTracking()
+                .Where(v => idVentas.Contains(v.Id))
+                .Select(v => new { v.Id, v.IdVendedor })
+                .ToList()
+                .ToDictionary(x => x.Id, x => x.IdVendedor);
+
+            var vendedorIdPorVentaClasica = db.Ventas
+                .AsNoTracking()
+                .Where(v => idVentas.Contains(v.Id))
+                .Select(v => new { v.Id, v.idVendedor })
+                .ToList()
+                .ToDictionary(x => x.Id, x => x.idVendedor);
+
+            var idsTipoNegocio = rows
+                .Where(r => r != null && r.IdTipoNegocio.HasValue && r.IdTipoNegocio.Value > 0)
+                .Select(r => r.IdTipoNegocio.Value)
+                .Distinct()
+                .ToList();
+
+            var nombreTipoPorId = idsTipoNegocio.Count == 0
+                ? new Dictionary<int, string>()
+                : db.TipoNegocio
+                    .AsNoTracking()
+                    .Where(t => idsTipoNegocio.Contains(t.Id))
+                    .ToDictionary(t => t.Id, t => t.Nombre ?? string.Empty);
+
+            var idsUsuarios = new HashSet<int>();
+            foreach (var u in usuarioPorPagoId.Values)
+                idsUsuarios.Add(u);
+            foreach (var c in cobradorPorInformacionId.Values)
+            {
+                if (c.HasValue) idsUsuarios.Add(c.Value);
+            }
+            foreach (var vid in idVentas)
+            {
+                if (vendedorIdPorVentaElectro.TryGetValue(vid, out var ve)) idsUsuarios.Add(ve);
+                if (vendedorIdPorVentaClasica.TryGetValue(vid, out var vc)) idsUsuarios.Add(vc);
+            }
+            foreach (var r in rows)
+            {
+                if (r != null && r.IdVendedor > 0) idsUsuarios.Add(r.IdVendedor);
+            }
+
+            var nombresUsuario = idsUsuarios.Count == 0
+                ? new Dictionary<int, string>()
+                : db.Usuarios
+                    .AsNoTracking()
+                    .Where(u => idsUsuarios.Contains(u.Id))
+                    .ToList()
+                    .ToDictionary(u => u.Id, FormatearNombreUsuario);
+
+            foreach (var r in rows)
+            {
+                if (r == null) continue;
+
+                var desc = r.Descripcion ?? string.Empty;
+                var d = desc.ToLowerInvariant();
+
+                if (d.Contains("electro") && d.Contains("cobranza"))
+                {
+                    if (usuarioPorPagoId.TryGetValue(r.Id, out var idUc))
+                        r.IdCobrador = idUc;
+                }
+                else if (!d.Contains("electro"))
+                {
+                    if (cobradorPorInformacionId.TryGetValue(r.Id, out var idC) && idC.HasValue)
+                        r.IdCobrador = idC.Value;
+                }
+
+                if (r.IdVenta > 0)
+                {
+                    int idVend = 0;
+                    if (vendedorIdPorVentaElectro.TryGetValue(r.IdVenta, out var ve))
+                        idVend = ve;
+                    else if (vendedorIdPorVentaClasica.TryGetValue(r.IdVenta, out var vc))
+                        idVend = vc;
+
+                    if (idVend > 0 && nombresUsuario.TryGetValue(idVend, out var nomV))
+                        r.Vendedor = nomV;
+                }
+
+                if (string.IsNullOrWhiteSpace(r.Vendedor) && r.IdVendedor > 0
+                    && nombresUsuario.TryGetValue(r.IdVendedor, out var nomFallback))
+                    r.Vendedor = nomFallback;
+
+                if (r.IdCobrador > 0 && nombresUsuario.TryGetValue(r.IdCobrador, out var nomC))
+                    r.UsuarioCobro = nomC;
+
+                if (r.IdTipoNegocio.HasValue
+                    && nombreTipoPorId.TryGetValue(r.IdTipoNegocio.Value, out var nomTipo)
+                    && !string.IsNullOrWhiteSpace(nomTipo))
+                    r.TipoNegocio = nomTipo;
             }
         }
 

@@ -70,11 +70,70 @@
         border-color: rgba(255,255,255,0.15);
         color: #fff;
     }
+
+    .global-loading {
+        position: fixed;
+        inset: 0;
+        background: rgba(6, 10, 20, 0.62);
+        backdrop-filter: blur(2px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+    }
+
+    .global-loading.hidden {
+        display: none !important;
+    }
+
+    .global-loading .loading-box {
+        min-width: 260px;
+        padding: 18px 22px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.16);
+        background: #0f1725;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+        text-align: center;
+    }
+
+    .global-loading .spinner {
+        width: 36px;
+        height: 36px;
+        margin: 0 auto 10px;
+        border-radius: 50%;
+        border: 3px solid rgba(255,255,255,0.2);
+        border-top-color: #58a6ff;
+        animation: vcSpin .8s linear infinite;
+    }
+
+    .global-loading .loading-text {
+        color: #e8f0ff;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: .1px;
+    }
+
+    body.loading {
+        overflow: hidden !important;
+    }
+
+    @@keyframes vcSpin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 
 <body class="ve-dark">
 
     <div class="container-xxl py-4">
+
+        <div id="globalLoading" class="global-loading hidden">
+            <div class="loading-box">
+                <div class="spinner"></div>
+                <div class="loading-text">Cargando tablas...</div>
+            </div>
+        </div>
 
         <!-- ===== HEADER ===== -->
         <header class="d-flex flex-wrap align-items-start gap-3 mb-4">
@@ -859,5 +918,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=3.3"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=3.4"></script>
 }

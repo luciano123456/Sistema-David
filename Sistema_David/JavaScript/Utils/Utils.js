@@ -48,11 +48,25 @@ function formatearFechaParaVista(fecha) {
 
 
 function formatNumber(number) {
-    if (typeof number !== 'number' || isNaN(number)) {
-        return "$0"; // Devuelve un valor predeterminado si 'number' no es válido
+    if (number == null || number === "") return "$0";
+    let n;
+    if (typeof number === "number") {
+        n = number;
+    } else if (typeof number === "string") {
+        const t = String(number).trim().replace(/\s/g, "");
+        if (t === "") return "$0";
+        n = Number(t);
+        if (isNaN(n)) {
+            n = parseFloat(t.replace(/\./g, "").replace(",", "."));
+        }
+    } else {
+        n = Number(number);
+    }
+    if (typeof n !== "number" || isNaN(n)) {
+        return "$0";
     }
 
-    const parts = number.toFixed(0).toString().split(".");
+    const parts = n.toFixed(0).toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     return "$" + parts.join(",");
 }
@@ -356,8 +370,11 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey) {
         api.draw(false);
     }
 
-    const configHasColZero = configColumns.some((c) => c.index === 0);
-    if (!configHasColZero) {
-        filtersRow.find("th").eq(0).html("");
-    }
+    // Columnas sin filtro (p. ej. Acciones): el clone del thead copia el título; dejar la celda vacía.
+    const configuredIndices = new Set(configColumns.map((c) => c.index));
+    filtersRow.find("th").each(function (i) {
+        if (!configuredIndices.has(i)) {
+            $(this).empty();
+        }
+    });
 }
