@@ -153,10 +153,19 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
 
 /** Fecha sugerida para cobro/reprogramación: no antes del vencimiento de la cuota. */
 function defaultFechaCobroCuotaIso(cuota) {
-    const t = moment().startOf("day");
-    if (!cuota?.FechaVencimiento) return todayISO();
+    const t = moment().startOf("day").add(7, "days");
+    if (!cuota?.FechaVencimiento) return t.format("YYYY-MM-DD");
     const v = moment(cuota.FechaVencimiento).startOf("day");
     return (v.isAfter(t) ? v : t).format("YYYY-MM-DD");
+}
+
+function actualizarTextoFechaCobroUI(importe, restante) {
+    const lbl = qs("cb_fecha_label");
+    if (!lbl) return;
+    const esParcial = restante > 0 && importe > 0 && importe < restante;
+    lbl.textContent = (importe === 0 || esParcial)
+        ? "Próxima fecha de cobro"
+        : "Fecha de cobro";
 }
 
 const getModal = (id) => bootstrap.Modal.getOrCreateInstance(qs(id));
@@ -491,69 +500,44 @@ window.abrirModalCobro = async function (idVenta, idCuota) {
 function evaluarFechaCobroUI() {
     const importe = formatearSinMiles(qs("cb_importe").value);
     const restante = Number(qs("cb_montoRestante").value || 0);
-
     const inputFecha = qs("cb_fecha");
     if (!inputFecha) return;
+    const hoy = todayISO();
+    actualizarTextoFechaCobroUI(importe, restante);
 
-    const aplicarMinReprogramacion = () => {
-        if (importe === 0 && cuotaActual?.FechaVencimiento) {
+    // 🔁 Reprogramación: fecha editable (respetando vencimiento mínimo)
+    if (importe === 0) {
+        inputFecha.disabled = false;
+        inputFecha.classList.remove("opacity-50");
+
+        if (cuotaActual?.FechaVencimiento) {
             inputFecha.min = moment(cuotaActual.FechaVencimiento).format("YYYY-MM-DD");
         } else {
             inputFecha.removeAttribute("min");
         }
-    };
 
-    // ===============================
-    // 💰 PAGO TOTAL
-    // ===============================
-    if (importe >= restante && restante > 0) {
-        inputFecha.disabled = true;
-        inputFecha.classList.add("opacity-50");
-        inputFecha.removeAttribute("min");
-
-        // 🔥 opcional: setear hoy igual
-        inputFecha.value = todayISO();
-
-        return;
-    }
-
-    // ===============================
-    // 💸 PARCIAL
-    // ===============================
-    if (importe > 0 && importe < restante) {
-        inputFecha.disabled = false;
-        inputFecha.classList.remove("opacity-50");
-        inputFecha.removeAttribute("min");
-
-        if (!inputFecha.value) {
+        if (!inputFecha.value || inputFecha.value === hoy) {
             inputFecha.value = defaultFechaCobroCuotaIso(cuotaActual);
         }
-
         return;
     }
 
-    // ===============================
-    // 🔁 REPROGRAMACIÓN (0)
-    // ===============================
-    if (importe === 0) {
+    // 💰 Cobro parcial: pago hoy, pero se puede programar próxima fecha de cobro de la cuota.
+    if (restante > 0 && importe > 0 && importe < restante) {
         inputFecha.disabled = false;
         inputFecha.classList.remove("opacity-50");
-        aplicarMinReprogramacion();
-
-        if (!inputFecha.value) {
+        inputFecha.min = hoy;
+        if (!inputFecha.value || inputFecha.value < hoy || inputFecha.value === hoy) {
             inputFecha.value = defaultFechaCobroCuotaIso(cuotaActual);
         }
-
         return;
     }
 
-    // ===============================
-    // 🧼 DEFAULT
-    // ===============================
-    inputFecha.disabled = false;
-    inputFecha.classList.remove("opacity-50");
-    aplicarMinReprogramacion();
-
+    // 💰 Cobro total (o sin restante): fecha de la cuota queda hoy y bloqueada
+    inputFecha.value = todayISO();
+    inputFecha.disabled = true;
+    inputFecha.classList.add("opacity-50");
+    inputFecha.removeAttribute("min");
 }
 /* ===================== CUENTAS (TU ENDPOINT) ===================== */
 async function cargarCuentasTotales() {
@@ -730,6 +714,43 @@ function abrirHistorialCuota() {
         : [];
 
     // =============================
+    // 1.b) FECHA REAL DE PAGO (desde tabla de pagos)
+    //      Si existe, se usa en lugar de FechaCambio del audit.
+    // =============================
+    const pagosCuota = Array.isArray(ventaActual.Pagos)
+        ? ventaActual.Pagos
+            .flatMap((p) => {
+                const detalles = Array.isArray(p.Detalles) ? p.Detalles : [];
+                return detalles
+                    .filter((d) => Number(d.IdCuota ?? d.idCuota) === Number(cuotaActual.Id))
+                    .map((d) => ({
+                        idPago: Number(p.Id ?? p.id),
+                        fechaPago: p.FechaPago ?? p.fechaPago,
+                        importeAplicado: Number(d.ImporteAplicado ?? d.importeAplicado ?? 0)
+                    }));
+            })
+            .sort((a, b) => {
+                const fa = new Date(a.fechaPago).getTime();
+                const fb = new Date(b.fechaPago).getTime();
+                if (fa !== fb) return fa - fb;
+                return a.idPago - b.idPago;
+            })
+        : [];
+
+    const fechaPagoRealPorMovId = new Map();
+    if (movimientos.length && pagosCuota.length) {
+        // Emparejamos en orden cronológico: movimiento i <-> pago i para la misma cuota.
+        const n = Math.min(movimientos.length, pagosCuota.length);
+        for (let i = 0; i < n; i++) {
+            const movId = movimientos[i].Id ?? movimientos[i].id;
+            const fp = pagosCuota[i].fechaPago;
+            if (movId != null && fp) {
+                fechaPagoRealPorMovId.set(String(movId), fp);
+            }
+        }
+    }
+
+    // =============================
     // 2) RECARGOS (NUEVO)
     // =============================
     const recargos = Array.isArray(cuotaActual.Recargos)
@@ -777,10 +798,18 @@ function abrirHistorialCuota() {
     // ordenar todo por fecha (pago usa FechaCambio, recargo ya trae FechaCambio)
     timeline.sort((a, b) => {
         const fa = a._tipo === "PAGO"
-            ? new Date(a.h.FechaCambio ?? a.h.fechaCambio)
+            ? new Date(
+                fechaPagoRealPorMovId.get(String(a.h.Id ?? a.h.id)) ??
+                a.h.FechaCambio ??
+                a.h.fechaCambio
+            )
             : new Date(a.FechaCambio);
         const fb = b._tipo === "PAGO"
-            ? new Date(b.h.FechaCambio ?? b.h.fechaCambio)
+            ? new Date(
+                fechaPagoRealPorMovId.get(String(b.h.Id ?? b.h.id)) ??
+                b.h.FechaCambio ??
+                b.h.fechaCambio
+            )
             : new Date(b.FechaCambio);
         return fa - fb;
     });
@@ -814,8 +843,10 @@ function abrirHistorialCuota() {
         // ---------- PAGO (TU LÓGICA ORIGINAL) ----------
         if (item._tipo === "PAGO") {
             const h = item.h;
-
-            const fechaC = h.FechaCambio ?? h.fechaCambio;
+            const fechaC =
+                fechaPagoRealPorMovId.get(String(h.Id ?? h.id)) ??
+                h.FechaCambio ??
+                h.fechaCambio;
             const fecha = moment(fechaC).format("DD/MM/YYYY HH:mm");
 
             const va = h.ValorAnterior ?? h.valorAnterior;
@@ -924,8 +955,16 @@ async function confirmarCobro() {
     }
 
     const importe = formatearSinMiles(qs("cb_importe").value);
-    const fecha = qs("cb_fecha").value;
+    const restante = Number(qs("cb_montoRestante").value || 0);
+    let fecha = qs("cb_fecha").value;
     const obs = qs("cb_obs").value || "";
+
+    if (importe > 0) {
+        // Fecha real del pago siempre es hoy.
+        if (qs("cb_fecha") && (importe >= restante || restante <= 0)) {
+            qs("cb_fecha").value = todayISO();
+        }
+    }
 
     // ⛔ VALIDACIÓN DE CUOTAS ANTERIORES (MISMA QUE COBROS)
     if ((importe > 0) && !puedeCobrarCuota(ventaActual, cuotaActual?.Id)) {
@@ -995,6 +1034,18 @@ async function confirmarCobro() {
         return;
     }
 
+    const esParcial = restante > 0 && importe < restante;
+    if (esParcial) {
+        if (!fecha) {
+            setCbError("Seleccioná la próxima fecha de cobro para el saldo pendiente.");
+            return;
+        }
+        if (moment(fecha).isBefore(moment(), "day")) {
+            setCbError("La próxima fecha de cobro no puede ser anterior a hoy.");
+            return;
+        }
+    }
+
     const medio = qs("cb_metodo").value;
     if (!medio) {
         setCbError("Seleccioná un método de pago.");
@@ -1013,7 +1064,8 @@ async function confirmarCobro() {
 
     const payload = {
         IdVenta: ventaActual.IdVenta,
-        FechaPago: fecha,
+        FechaPago: todayISO(),
+        FechaCobroCuota: esParcial ? fecha : null,
         MedioPago: medio,
         ImporteTotal: importe,
         Observacion: obs,
@@ -1650,10 +1702,9 @@ function generarPdfVenta(venta) {
 function toggleModoReprogramacion() {
 
     const importe = formatearSinMiles(qs("cb_importe").value);
-    const esReprogramacion = importe <= 0;
+    const esReprogramacion = importe === 0;
 
-    // Fecha
-    qs("cb_fecha").disabled = !esReprogramacion;
+    // Fecha se gobierna en evaluarFechaCobroUI (reprogramación / parcial / total)
 
     // Ocultar grupos de pago
     safeToggle(qs("cb_metodo")?.closest(".col-6, .col-lg-3"), !esReprogramacion);
@@ -1695,9 +1746,6 @@ function esCambioFecha() {
 function aplicarModoCobroUI() {
     const cambioFecha = esCambioFecha();
 
-    // Fecha SIEMPRE editable en cambio de fecha
-    qs("cb_fecha").disabled = false;
-
     // Observación siempre visible
     qs("cb_wrapObs").hidden = false;
 
@@ -1713,6 +1761,8 @@ function aplicarModoCobroUI() {
         clearProgress();
         setComprobanteOpen(false);
     }
+
+    evaluarFechaCobroUI();
 }
 
 

@@ -27,6 +27,9 @@ namespace Sistema_David.Models.Modelo
         public string Zona { get; set; }
 
         public decimal Saldo { get; set; }
+        public decimal SaldoIndumentaria { get; set; }
+        public decimal SaldoElectrodomestico { get; set; }
+        public decimal SaldoTotal { get; set; }
         public DateTime Fecha { get; set; }
         public string Longitud { get; set; }
         public string Latitud { get; set; }
@@ -36,5 +39,13 @@ namespace Sistema_David.Models.Modelo
 
         public virtual VMVenta Ventas { get; set; }
 
+    }
+
+    /// <summary>Totales de cartera (toda la base), para KPIs fijos en pantalla Clientes.</summary>
+    public class VMClientesTotalesCartera
+    {
+        public decimal TotalIndumentaria { get; set; }
+        public decimal TotalElectrodomestico { get; set; }
+        public decimal TotalGeneral { get; set; }
     }
 }

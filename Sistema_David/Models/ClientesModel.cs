@@ -20,15 +20,34 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
 					  INNER JOIN Zonas z on c.IdZona = z.Id
                       INNER JOIN (
-                        SELECT idCliente, COALESCE(SUM(Restante), 0) AS Saldo 
-                        FROM Ventas GROUP BY idCliente
-                      ) s ON s.idCliente = c.Id";
+                        SELECT saldoCli.idCliente, SUM(saldoCli.Saldo) AS Saldo
+                        FROM (
+                            SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS Saldo
+                            FROM Ventas v
+                            GROUP BY v.idCliente
+
+                            UNION ALL
+
+                            SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS Saldo
+                            FROM Ventas_Electrodomesticos ve
+                            GROUP BY ve.IdCliente
+                        ) saldoCli
+                        GROUP BY saldoCli.idCliente
+                      ) s ON s.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS SaldoIndumentaria
+                        FROM Ventas v GROUP BY v.idCliente
+                      ) si ON si.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS SaldoElectrodomestico
+                        FROM Ventas_Electrodomesticos ve GROUP BY ve.IdCliente
+                      ) se ON se.idCliente = c.Id";
 
                 var result = db.Database.SqlQuery<VMCliente>(query).ToList();
 
@@ -40,15 +59,34 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
 					  INNER JOIN Zonas z on c.IdZona = z.Id
                       INNER JOIN (
-                        SELECT idCliente, COALESCE(SUM(Restante), 0) AS Saldo 
-                        FROM Ventas_Electrodomesticos GROUP BY idCliente
-                      ) s ON s.idCliente = c.Id";
+                        SELECT saldoCli.idCliente, SUM(saldoCli.Saldo) AS Saldo
+                        FROM (
+                            SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS Saldo
+                            FROM Ventas v
+                            GROUP BY v.idCliente
+
+                            UNION ALL
+
+                            SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS Saldo
+                            FROM Ventas_Electrodomesticos ve
+                            GROUP BY ve.IdCliente
+                        ) saldoCli
+                        GROUP BY saldoCli.idCliente
+                      ) s ON s.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS SaldoIndumentaria
+                        FROM Ventas v GROUP BY v.idCliente
+                      ) si ON si.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS SaldoElectrodomestico
+                        FROM Ventas_Electrodomesticos ve GROUP BY ve.IdCliente
+                      ) se ON se.idCliente = c.Id";
 
                 var result = db.Database.SqlQuery<VMCliente>(query).ToList();
 
@@ -56,19 +94,55 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
+        /// <summary>Suma de Restante en toda la cartera (indumentaria + electro). No depende de filtros de listado.</summary>
+        public static VMClientesTotalesCartera TotalesSaldosCartera()
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                const string query = @"
+                    SELECT
+                        (SELECT COALESCE(SUM(Restante), 0) FROM Ventas) AS TotalIndumentaria,
+                        (SELECT COALESCE(SUM(Restante), 0) FROM Ventas_Electrodomesticos) AS TotalElectrodomestico,
+                        (SELECT COALESCE(SUM(Restante), 0) FROM Ventas)
+                            + (SELECT COALESCE(SUM(Restante), 0) FROM Ventas_Electrodomesticos) AS TotalGeneral";
+
+                return db.Database.SqlQuery<VMClientesTotalesCartera>(query).FirstOrDefault()
+                    ?? new VMClientesTotalesCartera();
+            }
+        }
+
         public static List<VMCliente> ListaClientes(int idVendedor, string Nombre, string Apellido, string Dni, int idZona)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
 					  INNER JOIN Zonas z on c.IdZona = z.Id
                       LEFT JOIN (
-                        SELECT idCliente, COALESCE(SUM(Restante), 0) AS Saldo 
-                        FROM Ventas GROUP BY idCliente
-                      ) s ON s.idCliente = c.Id";
+                        SELECT saldoCli.idCliente, SUM(saldoCli.Saldo) AS Saldo
+                        FROM (
+                            SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS Saldo
+                            FROM Ventas v
+                            GROUP BY v.idCliente
+
+                            UNION ALL
+
+                            SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS Saldo
+                            FROM Ventas_Electrodomesticos ve
+                            GROUP BY ve.IdCliente
+                        ) saldoCli
+                        GROUP BY saldoCli.idCliente
+                      ) s ON s.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS SaldoIndumentaria
+                        FROM Ventas v GROUP BY v.idCliente
+                      ) si ON si.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS SaldoElectrodomestico
+                        FROM Ventas_Electrodomesticos ve GROUP BY ve.IdCliente
+                      ) se ON se.idCliente = c.Id";
 
                 var result = db.Database.SqlQuery<VMCliente>(query)
                     .Where(x => (x.IdVendedor == idVendedor || idVendedor == -1) &&
@@ -86,15 +160,34 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
 					  INNER JOIN Zonas z on c.IdZona = z.Id
                       INNER JOIN (
-                        SELECT idCliente, COALESCE(SUM(Restante), 0) AS Saldo 
-                        FROM Ventas GROUP BY idCliente
-                      ) s ON s.idCliente = c.Id";
+                        SELECT saldoCli.idCliente, SUM(saldoCli.Saldo) AS Saldo
+                        FROM (
+                            SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS Saldo
+                            FROM Ventas v
+                            GROUP BY v.idCliente
+
+                            UNION ALL
+
+                            SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS Saldo
+                            FROM Ventas_Electrodomesticos ve
+                            GROUP BY ve.IdCliente
+                        ) saldoCli
+                        GROUP BY saldoCli.idCliente
+                      ) s ON s.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS SaldoIndumentaria
+                        FROM Ventas v GROUP BY v.idCliente
+                      ) si ON si.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS SaldoElectrodomestico
+                        FROM Ventas_Electrodomesticos ve GROUP BY ve.IdCliente
+                      ) se ON se.idCliente = c.Id";
 
                 var result = db.Database.SqlQuery<VMCliente>(query)
                      .Where(x => (x.IdVendedor == idVendedor || idVendedor == -1))
@@ -109,15 +202,34 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.LimiteVentas, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.LimiteVentas, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
 					  INNER JOIN Zonas z on c.IdZona = z.Id
                       LEFT JOIN (
-                        SELECT idCliente, COALESCE(SUM(Restante), 0) AS Saldo 
-                        FROM Ventas GROUP BY idCliente
-                      ) s ON s.idCliente = c.Id";
+                        SELECT saldoCli.idCliente, SUM(saldoCli.Saldo) AS Saldo
+                        FROM (
+                            SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS Saldo
+                            FROM Ventas v
+                            GROUP BY v.idCliente
+
+                            UNION ALL
+
+                            SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS Saldo
+                            FROM Ventas_Electrodomesticos ve
+                            GROUP BY ve.IdCliente
+                        ) saldoCli
+                        GROUP BY saldoCli.idCliente
+                      ) s ON s.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS SaldoIndumentaria
+                        FROM Ventas v GROUP BY v.idCliente
+                      ) si ON si.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS SaldoElectrodomestico
+                        FROM Ventas_Electrodomesticos ve GROUP BY ve.IdCliente
+                      ) se ON se.idCliente = c.Id";
 
                 var result = db.Database.SqlQuery<VMCliente>(query)
                     .Where(x => (x.Id == idCliente))
@@ -450,15 +562,34 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.LimiteVentas, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.LimiteVentas, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
 					  INNER JOIN Zonas z on c.IdZona = z.Id
                       LEFT JOIN (
-                        SELECT idCliente, COALESCE(SUM(Restante), 0) AS Saldo 
-                        FROM Ventas GROUP BY idCliente
-                      ) s ON s.idCliente = c.Id";
+                        SELECT saldoCli.idCliente, SUM(saldoCli.Saldo) AS Saldo
+                        FROM (
+                            SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS Saldo
+                            FROM Ventas v
+                            GROUP BY v.idCliente
+
+                            UNION ALL
+
+                            SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS Saldo
+                            FROM Ventas_Electrodomesticos ve
+                            GROUP BY ve.IdCliente
+                        ) saldoCli
+                        GROUP BY saldoCli.idCliente
+                      ) s ON s.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT v.idCliente, COALESCE(SUM(v.Restante), 0) AS SaldoIndumentaria
+                        FROM Ventas v GROUP BY v.idCliente
+                      ) si ON si.idCliente = c.Id
+                      LEFT JOIN (
+                        SELECT ve.IdCliente, COALESCE(SUM(ve.Restante), 0) AS SaldoElectrodomestico
+                        FROM Ventas_Electrodomesticos ve GROUP BY ve.IdCliente
+                      ) se ON se.idCliente = c.Id";
 
                 var result = db.Database.SqlQuery<VMCliente>(query)
                      .Where(x => x.Id == id).FirstOrDefault();
@@ -520,8 +651,13 @@ namespace Sistema_David.Models.Modelo
                                   Restante = v.Restante,
                               }).ToList();
 
-                // Calculamos la suma de los valores restantes
-                decimal totalRestante = ventas.Sum(v => v.Restante ?? 0); // Manejo de nulos si Restante puede ser null
+                // Calculamos la suma de los valores restantes en indumentaria + electrodomesticos.
+                decimal totalRestanteIndumentaria = ventas.Sum(v => v.Restante ?? 0);
+                decimal totalRestanteElectro = db.Ventas_Electrodomesticos
+                    .Where(v => v.IdCliente == idCliente)
+                    .Select(v => (decimal?)v.Restante)
+                    .Sum() ?? 0;
+                decimal totalRestante = totalRestanteIndumentaria + totalRestanteElectro;
 
                 // Devolvemos la lista de ventas y la suma de los restantes
                 return (ventas, totalRestante);

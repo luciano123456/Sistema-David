@@ -165,6 +165,42 @@ VC.restaurarFiltros = function () {
         return false;
     }
 };
+
+VC.showGlobalLoading = function (text = "Cargando datos...") {
+    const loading = document.getElementById("globalLoading");
+    if (!loading) return;
+    loading.classList.remove("hidden");
+    const msg = loading.querySelector(".loading-text");
+    if (msg) msg.textContent = text;
+    document.body.classList.add("loading");
+};
+
+VC.hideGlobalLoading = function () {
+    const loading = document.getElementById("globalLoading");
+    if (!loading) return;
+    loading.classList.add("hidden");
+    document.body.classList.remove("loading");
+};
+
+VC.ajustarTablasPostCarga = function () {
+    const ajustar = (dt) => {
+        if (!dt) return;
+        try { dt.columns.adjust().draw(false); } catch (_) { }
+    };
+
+    // Doble ajuste para cuando DataTables termina de pintar/ancho dinámico.
+    setTimeout(() => {
+        ajustar(tablaCobros);
+        ajustar(tablaPendientes);
+        ajustar(tablaTransferenciasPendientes);
+    }, 120);
+
+    setTimeout(() => {
+        ajustar(tablaCobros);
+        ajustar(tablaPendientes);
+        ajustar(tablaTransferenciasPendientes);
+    }, 420);
+};
 VC.mostrarInfoCliente = function (row) {
 
     const saldo = row.SaldoCliente || 0;
@@ -428,12 +464,13 @@ VC.initEventos = function () {
 
         const idCliente = document.getElementById("f_cliente").value;
 
+        // Sin cliente: recargar listado completo (mismo criterio que "Aplicar" sin filtro de cliente).
         if (!idCliente) {
-            VC.toast("Seleccioná un cliente primero", "warn");
+            VC.guardarFiltros();
+            VC.cargarTabla();
             return;
         }
 
-        // 💣 ESTO ES TODO
         VC.cargarTabla();
     });
 
@@ -457,6 +494,8 @@ VC.initEventos = function () {
     // limpiar
     $("#btnClienteClear").on("click", function () {
         VC.limpiarCliente();
+        VC.guardarFiltros();
+        VC.cargarTabla();
     });
 
     // ✅ Toggle individual (checkbox fila)
@@ -850,8 +889,24 @@ VC.limpiarFiltros = function () {
 
 VC.cargarTabla = async function () {
 
+    VC.showGlobalLoading("Cargando tablas...");
+
     cuotasReprogSel.clear();
     VC.actualizarReprogFabUI();
+
+    const rawCliente = $("#f_cliente").val();
+    const hasClienteFiltro =
+        rawCliente != null &&
+        rawCliente !== "" &&
+        !(Array.isArray(rawCliente) && rawCliente.length === 0) &&
+        String(Array.isArray(rawCliente) ? rawCliente[0] : rawCliente).trim() !== "";
+
+    const rawCobrador = $("#f_cobrador").val();
+    const hasCobradorFiltro =
+        rawCobrador != null &&
+        rawCobrador !== "" &&
+        !(Array.isArray(rawCobrador) && rawCobrador.length === 0) &&
+        String(Array.isArray(rawCobrador) ? rawCobrador[0] : rawCobrador).trim() !== "";
 
     const params = {
         fechaDesde: $("#f_desde").val() || null,
@@ -864,7 +919,10 @@ VC.cargarTabla = async function () {
         // 🔥 nuevos
         idZona: $("#f_zona").val() || null,
         turno: $("#f_turno").val() || null,
-        franjaHoraria: $("#f_franja").val() || null
+        franjaHoraria: $("#f_franja").val() || null,
+
+        // Cliente o cobrador elegidos en UI: el backend no aplica rango de fechas a FechaCobro.
+        omitirRangoFecha: hasClienteFiltro || hasCobradorFiltro
     };
 
     try {
@@ -889,6 +947,7 @@ VC.cargarTabla = async function () {
     } catch (e) {
         console.error(e);
         VC.toast("Error cargando cuotas", "danger");
+        VC.hideGlobalLoading();
         return;
     }
 
@@ -897,6 +956,8 @@ VC.cargarTabla = async function () {
         tablaCobros.clear().rows.add(cuotasCache).draw();
         VC.reabrirAcordeon();
         VC.refrescarSeleccionUI();
+        VC.ajustarTablasPostCarga();
+        VC.hideGlobalLoading();
         return;
     } else {
         inicializarEncabezadoColumnas("#vc_tabla")
@@ -1216,6 +1277,9 @@ VC.cargarTabla = async function () {
         VC.refrescarSeleccionUI();
     });
 
+    VC.ajustarTablasPostCarga();
+    VC.hideGlobalLoading();
+
     /* ===========================================================
        ✅ SELECCIÓN SINGLE (igual Historial) — TABLA PRINCIPAL
     ============================================================ */
@@ -1328,6 +1392,7 @@ VC.cargarCobradores = async function () {
 
         const ddl = $("#ddlCobradorAsignar").empty();
         ddl.append(`<option value="">Seleccionar...</option>`);
+        ddl.append(`<option value="0">Nadie (desasignar)</option>`);
         cobradoresCache.forEach(c => ddl.append(`<option value="${c.Id}">${c.Nombre}</option>`));
 
         // Re-init select2 limpio
@@ -1373,16 +1438,20 @@ VC.abrirAsignarCobrador = async function () {
 };
 
 VC.confirmarAsignarCobrador = async function () {
-    const idCobrador = parseInt($("#ddlCobradorAsignar").val() || "0", 10);
-
-    if (!idCobrador) {
-        VC.toast("Elegí un cobrador", "warn");
+    const raw = $("#ddlCobradorAsignar").val();
+    if (raw === null || raw === undefined || raw === "") {
+        VC.toast("Elegí un cobrador o Nadie", "warn");
+        return;
+    }
+    const idCobrador = parseInt(raw, 10);
+    if (Number.isNaN(idCobrador)) {
+        VC.toast("Valor de cobrador inválido", "warn");
         return;
     }
 
     const idsVentas = Array.from(ventasSeleccionadas);
-
-    if (!confirm(`¿Asignar cobrador a ${idsVentas.length} venta(s)?`)) return;
+    const accionTxt = idCobrador === 0 ? "desasignar cobrador de" : "asignar cobrador a";
+    if (!confirm(`¿Confirmás ${accionTxt} ${idsVentas.length} venta(s)?`)) return;
 
     const resp = await $.ajax({
         url: "/Ventas_Electrodomesticos/AsignarCobradorVentas",
@@ -1392,7 +1461,7 @@ VC.confirmarAsignarCobrador = async function () {
     });
 
     if (resp && resp.success) {
-        VC.toast("Cobrador asignado", "success");
+        VC.toast(idCobrador === 0 ? "Cobrador desasignado" : "Cobrador asignado", "success");
         ventasSeleccionadas.clear();
         VC.closeModal("modalAsignarCobrador");
         await VC.cargarTabla();
@@ -1924,8 +1993,12 @@ VC.buscarCliente = function () {
 
     const term = ($("#txtClienteSearch").val() || "").toLowerCase().trim();
 
+    // Vacío: quitar filtro de cliente y traer toda la lista (como sin buscar por cliente).
     if (!term) {
-        VC.toast("Escribí algo para buscar", "warn");
+        VC.limpiarCliente();
+        $("#clienteSearchPanel").addClass("d-none");
+        VC.guardarFiltros();
+        VC.cargarTabla();
         return;
     }
 
@@ -1943,6 +2016,8 @@ VC.buscarCliente = function () {
 
     // cerrar panel
     $("#clienteSearchPanel").addClass("d-none");
+    VC.guardarFiltros();
+    VC.cargarTabla();
 };
 
 VC.cargarClientesDesdeCobros = function () {

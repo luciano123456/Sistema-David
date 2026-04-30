@@ -7,9 +7,11 @@
 
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/Clientes.css" rel="stylesheet" />
+<link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
-<body>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+<div class="ve-dark clientes-root">
 
 
     @if (@ViewData["ErrorPermisos"] == null)
@@ -17,65 +19,98 @@
 
         @*<div class="row mt-4 table-bordered table-borderless datatablepersonalizado">*@
 
-        <div id="Filtros" class="divFiltros" hidden>
-
-            <label class="lblcliente">Vendedor</label>
-            <select id="VendedoresFiltro" name="select" class="input-nuevo">
-                <option value="" selected>Vendedor</option>
-            </select>
-
-            <label class="lblcliente">Zona</label>
-            <select id="ZonasFiltro" name="select" class="input-nuevo">
-                <option value="" selected>Zona</option>
-            </select>
-
-            <label class="m-lg-2 lblcliente">Nombre:</label>
-            <input type="text" placeholder="" value="" id="NombreFiltro" class="input-nuevo" />
-
-            <label class="m-lg-2 lblcliente">Apellido:</label>
-            <input type="text" placeholder="" value="" id="ApellidoFiltro" class="input-nuevo" />
-
-            <label class="m-lg-2 lblcliente">DNI:</label>
-            <input type="text" placeholder="" value="" id="DniFiltro" class="input-nuevo" />
-
-            <div class="vw-75 d-flex float-lg-end mt-2">
-                <a class="btn btn-success" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
-            </div>
-
-
-
-        </div>
-
-
-
-        <div class="menu-secciones mt-3">
-
-
-
-            <div class="seccion" id="seccionUsuarios">
-                <button class="btn-seccionCliente" id="btnRendMensual" onclick="abrirClientesCero()">
-                    <img src="~/Imagenes/clientes en cero.png" class="img-seccion" />
-                    Clientes en 0
-                </button>
-            </div>
-
-        </div>
-
-        <div class="col-lg-12">
-            <div class="card cardTablePersonalizado">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Clientes</span>
-                    <div class="dropdown ms-auto">
-                        <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa fa-cog me-2"></i> Config. Columnas
+        <div class="container page-99 py-3">
+            <section class="cc-header mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cc-badge">
+                            <i class="fa fa-users"></i>
+                        </div>
+                        <div>
+                            <h2 class="m-0 fw-800">Clientes</h2>
+                            <div class="text-muted-cc">
+                                Gestión de cartera, saldos y seguimiento comercial
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-light" id="btnToggleFiltrosClientes">
+                            <i id="iconFiltrosClientes" class="fa fa-chevron-down me-1"></i> Filtros avanzados
                         </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu">
-                        </ul>
+                        <button class="btn btn-outline-info" type="button" onclick="abrirClientesCero()">
+                            <i class="fa fa-balance-scale me-1"></i> Clientes en 0
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="Filtros" class="card-glass p-3 mb-4 d-none">
+                <div class="row g-3">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Vendedor</label>
+                        <select id="VendedoresFiltro" name="select" class="form-select">
+                            <option value="-1" selected>Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Zona</label>
+                        <select id="ZonasFiltro" name="select" class="form-select">
+                            <option value="-1" selected>Todas</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label">Estado</label>
+                        <select id="EstadoFiltro" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Regular">Regular</option>
+                            <option value="Inhabilitado">Inhabilitado</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" value="" id="NombreFiltro" class="form-control" />
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" value="" id="ApellidoFiltro" class="form-control" />
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">DNI</label>
+                        <input type="text" value="" id="DniFiltro" class="form-control" />
+                    </div>
+                    <div class="col-12 d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary" id="aplicarFiltros" onclick="aplicarFiltros()">
+                            <i class="fa fa-search me-1"></i> Aplicar
+                        </button>
+                        <button class="btn btn-outline-light" type="button" id="btnLimpiarFiltrosClientes">
+                            <i class="fa fa-eraser me-1"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <div class="card-glass p-3 mb-4">
+                <div id="globalLoading" class="global-loading hidden">
+                    <div class="loading-box">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Cargando tablas...</div>
                     </div>
                 </div>
 
-                <div class="card-body">
-                    <table class="display nowrap" id="grdClientes" style="width:100%">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div class="fw-bold text-white">
+                        <i class="fa fa-table me-2"></i> Listado de clientes
+                    </div>
+                    <div class="dropdown ms-auto">
+                        <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-cog me-2"></i> Config. Columnas
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownColumnas" id="configColumnasMenu"></ul>
+                    </div>
+                </div>
+
+                <div class="table-responsive dt-dark-wrap">
+                    <table class="display nowrap dt-dark w-100" id="grdClientes">
                         <thead>
                             <tr>
                                 <th class="text-center">Nombre</th>
@@ -85,25 +120,46 @@
                                 <th class="text-center">Vendedor</th>
                                 <th class="text-center">Zona</th>
                                 <th class="text-center">Estado</th>
-                                <th class="text-center">Saldo</th>
+                                <th class="text-center">Saldo Indumentaria</th>
+                                <th class="text-center">Saldo Electrodomestico</th>
+                                <th class="text-center">Saldo Total</th>
                                 <th class="text-center">Limite</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Aquí va el contenido de tu datatable -->
-                        </tbody>
                     </table>
                 </div>
 
-                <div class="vw-75 d-flex justify-content-end mt-2 mb-4">
+                <div class="d-flex flex-wrap justify-content-end mt-3 gap-2">
                     <a class="btn btn-success" id="exportacionExcel" onclick="exportarExcel()" hidden>Exportar Datos</a>
-                    <a class="btn btn-success ms-2 me-2" id="importacionExcel" onclick="abrirmodalimportacionmasiva()" hidden>Importar Datos</a>
-                    <a id="btnLimite" class="btn btn-warning btnnuevo me-2" onclick="modalLimite()" hidden>Limites</a>
+                    <a class="btn btn-success" id="importacionExcel" onclick="abrirmodalimportacionmasiva()" hidden>Importar Datos</a>
+                    <a id="btnLimite" class="btn btn-warning btnnuevo" onclick="modalLimite()" hidden>Limites</a>
                     <a id="btnNuevo" class="btn btn-primary btnnuevo" onclick="nuevoCliente()" hidden>Nuevo</a>
-
                 </div>
             </div>
+
+            <section class="mb-3" id="resumenSaldosClientes">
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <div class="cc-stat h-100">
+                            <div class="label">Saldo Total Indumentaria</div>
+                            <div class="value" id="totSaldoIndumentaria">0</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="cc-stat h-100">
+                            <div class="label">Saldo Total Electrodomestico</div>
+                            <div class="value" id="totSaldoElectro">0</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="cc-stat h-100">
+                            <div class="label">Saldo Final (Ambos)</div>
+                            <div class="value text-danger" id="totSaldoGeneral">0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
         @*</div>*@
 
@@ -113,52 +169,63 @@
         <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
     }
 
-
-
-</body>
-
-
-<div class="modal fade centered-modal-importar" id="modalLimite" tabindex="-1" aria-labelledby="modalLimiteLabel" aria-hidden="true">
-    <div class="modal-dialog estilolimite">
-        <div class="estilolimite modal-content ">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLimitesLabel">Limite de clientes regulares</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade cc-modal-shell" id="modalLimite" tabindex="-1" aria-labelledby="modalLimiteLabel" aria-hidden="true">
+    <div class="modal-dialog cc-modal-dialog">
+        <div class="modal-content cc-modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div class="cc-modal-head">
+                    <div class="cc-modal-icon cc-modal-icon--warning">
+                        <i class="fa fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0" id="modalLimiteLabel">Límite de ventas</h5>
+                        <div class="cc-modal-subtitle">Clientes en estado regular</div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-
-
-                <input type="text" placeholder="0" id="valorLimite" class="input-whatssap" oninput="formatoMoneda(event)" />
-
-
+            <div class="modal-body pt-3">
+                <label for="valorLimite" class="form-label cc-modal-label">Monto máximo</label>
+                <div class="input-group input-group-lg cc-modal-input-group">
+                    <span class="input-group-addon cc-modal-addon">$</span>
+                    <input type="text" autocomplete="off" placeholder="0" id="valorLimite" class="form-control cc-modal-input" oninput="formatoMoneda(event)" />
+                </div>
+                <p id="limiteModalMsg" class="cc-modal-msg text-danger small mt-3 mb-0 d-none" role="alert"></p>
             </div>
-            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button id="btnRegistrarModificarwsp" type="button" class="btn btn-primary" onclick="modificarLimiteVenta()">Modificar</button>
+            <div class="modal-footer border-0 pt-0 cc-modal-footer-actions">
+                <button type="button" class="btn btn-outline-light" onclick="jQuery('#modalLimite').modal('hide');">Cancelar</button>
+                <button type="button" class="btn btn-warning text-dark cc-modal-btn-primary" id="btnGuardarLimiteCliente" onclick="modificarLimiteVenta()">
+                    <i class="fa fa-check mr-1"></i> Guardar
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade centered-modal-importar" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
-    <div class="modal-dialog estilowpp">
-        <div class="estilowpp modal-content ">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalWhatssapLabel">Enviar mensaje por whatssap</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade cc-modal-shell" id="modalWhatssap" tabindex="-1" aria-labelledby="modalWhatssapLabel" aria-hidden="true">
+    <div class="modal-dialog cc-modal-dialog">
+        <div class="modal-content cc-modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div class="cc-modal-head">
+                    <div class="cc-modal-icon cc-modal-icon--whatsapp">
+                        <i class="fa fa-whatsapp"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0" id="modalWhatssapLabel">WhatsApp</h5>
+                        <div class="cc-modal-subtitle">Redactá el mensaje y abrí la conversación en la app</div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-
-                <input type="Text" id="idClienteWhatssap" class="input-nuevomodif" hidden />
-                <input type="Text" placeholder="Escribe el mensaje" id="mensajewsp" class="input-whatssap" />
-
-
+            <div class="modal-body pt-3">
+                <input type="hidden" id="idClienteWhatssap" />
+                <label for="mensajewsp" class="form-label cc-modal-label">Mensaje</label>
+                <textarea id="mensajewsp" class="form-control cc-modal-textarea" rows="4" placeholder="Escribí el mensaje para el cliente…"></textarea>
+                <p id="wspModalMsg" class="cc-modal-msg text-danger small mt-3 mb-0 d-none" role="alert"></p>
             </div>
-            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button id="btnRegistrarModificarwsp" type="button" class="btn btn-primary" onclick="enviarWhatssap()">Enviar</button>
+            <div class="modal-footer border-0 pt-0 cc-modal-footer-actions">
+                <button type="button" class="btn btn-outline-light" onclick="jQuery('#modalWhatssap').modal('hide');">Cerrar</button>
+                <button type="button" class="btn btn-success cc-modal-btn-primary" id="btnEnviarWhatsappCliente" onclick="enviarWhatssap()">
+                    <i class="fa fa-paper-plane mr-1"></i> Abrir WhatsApp
+                </button>
             </div>
         </div>
     </div>
@@ -191,15 +258,13 @@
     </div>
 </div>
 
-
-<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
-<script src="~/JavaScript/Utils/Utils.js"></script>
-<script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
-
-<script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
-
-<script src="~/Scripts/xlsx.full.min.js.js"></script>
-
-@section scripts{
-    <script src="~/JavaScript/Clientes.js?v=1.7"></script>
+</div>
+@section scripts {
+    @* Mismo orden que Ventas_Electrodomesticos/Cobros: jQuery sale del _Layout; acá DataTables, select2, luego la página. *@
+    <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="~/Scripts/xlsx.full.min.js.js"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=2.0"></script>
+    <script src="~/JavaScript/Clientes.js?v=2.3"></script>
 }

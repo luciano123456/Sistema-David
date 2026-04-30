@@ -820,6 +820,16 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                 { data: "ProximoCobro", render: d => safeDate(d) },
                 { data: "FechaLimite", render: d => safeDate(d) },
                 { data: "TipoNegocio", render: d => safeString(d) },
+                { data: "Vendedor", render: d => safeString(d) },
+                {
+                    data: "UsuarioCobro",
+                    render: function (data, type, row) {
+                        const nombre = safeString(data);
+                        if (nombre) return nombre;
+                        const idCob = safeNumber(row.IdCobrador ?? row.idCobrador);
+                        return idCob > 0 ? `#${idCob}` : "";
+                    }
+                },
                 { data: "Descripcion" },
                 {
                     data: "Id",
@@ -2060,6 +2070,8 @@ function obtenerNombreColumnaRendimiento(index, col) {
         "Proximo Cobro",
         "Vencimiento",
         "Tipo de Negocio",
+        "Vendedor",
+        "Cobrador",
         "Descripcion",
         "Acciones"
     ];

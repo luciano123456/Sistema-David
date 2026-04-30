@@ -3,12 +3,61 @@ const fileInput = document.getElementById("fileImportacionMasiva");
 let gridClientes;
 let userSession;
 
+/** Lee números del JSON aunque vengan en PascalCase / camelCase o como string. */
+function pickNumCliente(row, ...keys) {
+    if (!row) return 0;
+    for (let i = 0; i < keys.length; i++) {
+        const v = row[keys[i]];
+        if (v === undefined || v === null || v === "") continue;
+        if (typeof v === "number" && !isNaN(v)) return v;
+        const t = String(v).trim();
+        let n = Number(t.replace(",", "."));
+        if (!isNaN(n)) return n;
+        n = parseFloat(t.replace(/\./g, "").replace(",", "."));
+        if (!isNaN(n)) return n;
+    }
+    return 0;
+}
+
+function pickNumDesdeObj(obj, ...keys) {
+    if (!obj) return 0;
+    for (let i = 0; i < keys.length; i++) {
+        const v = obj[keys[i]];
+        if (v === undefined || v === null || v === "") continue;
+        const n = typeof v === "number" ? v : Number(String(v).trim().replace(",", "."));
+        if (!isNaN(n)) return n;
+    }
+    return 0;
+}
+
+function clientesAjaxDataSrc(json) {
+    if (!json) return [];
+    if (json.data != null && Array.isArray(json.data)) return json.data;
+    if (json.Data != null && Array.isArray(json.Data)) return json.Data;
+    if (Array.isArray(json)) return json;
+    console.warn("Clientes Listar: formato de respuesta inesperado", json);
+    return [];
+}
+
+function showGlobalLoadingClientes(text) {
+    const loading = document.getElementById("globalLoading");
+    if (!loading) return;
+    loading.classList.remove("hidden");
+    const lt = loading.querySelector(".loading-text");
+    if (lt) lt.textContent = text || "Cargando tablas...";
+    document.body.classList.add("loading");
+}
+
+function hideGlobalLoadingClientes() {
+    const loading = document.getElementById("globalLoading");
+    if (!loading) return;
+    loading.classList.add("hidden");
+    document.body.classList.remove("loading");
+}
+
 $(document).ready(function () {
-
-    $('.datos-error').text('')
-
-    $("#btnClientes").css("background", "#2E4053")
-
+    $('.datos-error').text('');
+    $("#btnClientes").css("background", "#2E4053");
     userSession = JSON.parse(localStorage.getItem('usuario'));
 
     if (userSession.IdRol == 1) { //ROL ADMIN
@@ -16,83 +65,200 @@ $(document).ready(function () {
         $("#importacionExcel").removeAttr("hidden");
         $("#btnNuevo").removeAttr("hidden");
         $("#btnLimite").removeAttr("hidden");
-        $("#Filtros").removeAttr("hidden");
     }
 
-    cargarUsuarios();
-    cargarZonas();
-
-    var NombreFiltro, ApellidoFiltro, DniFiltro;
-
-
-    if (localStorage.getItem("NombreFiltro") != null) {
-        NombreFiltro = localStorage.getItem("NombreFiltro");
-        document.getElementById("NombreFiltro").value = localStorage.getItem("NombreFiltro");
-    } else {
-        NombreFiltro = ""
+    if (userSession.IdRol != 1) {
+        $("#resumenSaldosClientes").hide();
     }
 
-    if (localStorage.getItem("ApellidoFiltro") != null) {
-        ApellidoFiltro = localStorage.getItem("ApellidoFiltro");
-        document.getElementById("ApellidoFiltro").value = localStorage.getItem("ApellidoFiltro");
-    } else {
-        ApellidoFiltro = ""
+    const nombreFiltro = localStorage.getItem("NombreFiltro") || "";
+    const apellidoFiltro = localStorage.getItem("ApellidoFiltro") || "";
+    const dniFiltro = localStorage.getItem("DniFiltro") || "";
+    const estadoFiltro = localStorage.getItem("EstadoFiltroClientes") || "";
+    const vendedorFiltro = localStorage.getItem("IdVendedorFiltroClientes") || (userSession.IdRol == 1 ? "-1" : "");
+    const zonaFiltro = localStorage.getItem("IdZonaFiltroClientes") || (userSession.IdRol == 1 ? "-1" : "");
+
+    document.getElementById("NombreFiltro").value = nombreFiltro;
+    document.getElementById("ApellidoFiltro").value = apellidoFiltro;
+    document.getElementById("DniFiltro").value = dniFiltro;
+    document.getElementById("EstadoFiltro").value = estadoFiltro;
+    document.getElementById("VendedoresFiltro").value = vendedorFiltro;
+    document.getElementById("ZonasFiltro").value = zonaFiltro;
+
+    const resumen = document.getElementById("resumenSaldosClientes");
+    const filtros = document.getElementById("Filtros");
+    if (resumen && filtros && filtros.parentNode) {
+        filtros.parentNode.insertBefore(resumen, filtros);
     }
 
-    if (localStorage.getItem("DniFiltro") != null) {
-        DniFiltro = localStorage.getItem("DniFiltro");
-        document.getElementById("DniFiltro").value = localStorage.getItem("DniFiltro");
-    } else {
-        DniFiltro = ""
-    }
+    $("#btnToggleFiltrosClientes").off("click").on("click", function () {
+        const panel = document.getElementById("Filtros");
+        const icon = document.getElementById("iconFiltrosClientes");
+        panel.classList.toggle("d-none");
+        if (panel.classList.contains("d-none")) {
+            icon.classList.remove("fa-chevron-up");
+            icon.classList.add("fa-chevron-down");
+        } else {
+            icon.classList.remove("fa-chevron-down");
+            icon.classList.add("fa-chevron-up");
+        }
+    });
 
-    if (userSession.IdRol != 1 && userSession.IdRol != 4) {
-        configurarDataTable(userSession.Id, "", "", "", -1);
-    } else {
-        configurarDataTable(-1, NombreFiltro, ApellidoFiltro, DniFiltro, -1);
-    }
+    // En Clientes lo dejamos visible por defecto para que siempre se vea el diseño/filtros.
+    $("#Filtros").removeClass("d-none");
+    $("#iconFiltrosClientes").removeClass("fa-chevron-down").addClass("fa-chevron-up");
 
+    $("#btnLimpiarFiltrosClientes").off("click").on("click", function () {
+        $("#NombreFiltro, #ApellidoFiltro, #DniFiltro").val("");
+        if ($("#VendedoresFiltro option[value='-1']").length) {
+            $("#VendedoresFiltro").val("-1");
+        } else if ($("#VendedoresFiltro option").length) {
+            $("#VendedoresFiltro").val($("#VendedoresFiltro option:first").val());
+        }
+        if ($("#ZonasFiltro option[value='-1']").length) {
+            $("#ZonasFiltro").val("-1");
+        } else if ($("#ZonasFiltro option").length) {
+            $("#ZonasFiltro").val($("#ZonasFiltro option:first").val());
+        }
+        $("#EstadoFiltro").val("");
+        if ($.fn.select2) {
+            $("#VendedoresFiltro, #ZonasFiltro, #EstadoFiltro").trigger("change");
+        }
+        localStorage.removeItem("NombreFiltro");
+        localStorage.removeItem("ApellidoFiltro");
+        localStorage.removeItem("DniFiltro");
+        localStorage.removeItem("EstadoFiltroClientes");
+        localStorage.removeItem("IdVendedorFiltroClientes");
+        localStorage.removeItem("IdZonaFiltroClientes");
+    });
 
-    localStorage.removeItem("NombreFiltro");
-    localStorage.removeItem("ApellidoFiltro");
-    localStorage.removeItem("DniFiltro");
-
-
-
+    Promise.all([cargarUsuarios(), cargarZonas()]).then(function () {
+        if (userSession && userSession.IdRol == 1) {
+            cargarTotalesSaldosKpi();
+        }
+        inicializarSelect2Filtros();
+        if (userSession.IdRol != 1 && userSession.IdRol != 4) {
+            configurarDataTable(userSession.Id, nombreFiltro, apellidoFiltro, dniFiltro, zonaFiltro, estadoFiltro);
+        } else {
+            configurarDataTable(vendedorFiltro, nombreFiltro, apellidoFiltro, dniFiltro, zonaFiltro, estadoFiltro);
+        }
+    });
 });
 
 function aplicarFiltros() {
-    var idVendedor = document.getElementById("VendedoresFiltro").value;
-    var idZona = document.getElementById("ZonasFiltro").value;
+    const idVendedor = document.getElementById("VendedoresFiltro").value || -1;
+    const idZona = document.getElementById("ZonasFiltro").value || -1;
+    const estado = document.getElementById("EstadoFiltro").value || "";
+    const nombre = document.getElementById("NombreFiltro").value || "";
+    const apellido = document.getElementById("ApellidoFiltro").value || "";
+    const dni = document.getElementById("DniFiltro").value || "";
 
-    if (gridClientes) {
-        gridClientes.destroy();
+    if ($.fn.DataTable && $.fn.DataTable.isDataTable("#grdClientes")) {
+        $("#grdClientes").DataTable().destroy();
     }
+    gridClientes = null;
+    $("#grdClientes thead tr.filters").remove();
 
-    configurarDataTable(idVendedor, document.getElementById("NombreFiltro").value, document.getElementById("ApellidoFiltro").value, document.getElementById("DniFiltro").value, idZona);
+    let idVendedorArg = idVendedor;
+    if (userSession && userSession.IdRol != 1 && userSession.IdRol != 4) {
+        idVendedorArg = userSession.Id;
+    }
+    configurarDataTable(idVendedorArg, nombre, apellido, dni, idZona, estado);
 
-    localStorage.setItem("NombreFiltro", document.getElementById("NombreFiltro").value);
-    localStorage.setItem("ApellidoFiltro", document.getElementById("ApellidoFiltro").value);
-    localStorage.setItem("DniFiltro", document.getElementById("DniFiltro").value);
-
+    localStorage.setItem("NombreFiltro", nombre);
+    localStorage.setItem("ApellidoFiltro", apellido);
+    localStorage.setItem("DniFiltro", dni);
+    localStorage.setItem("EstadoFiltroClientes", estado);
+    localStorage.setItem("IdVendedorFiltroClientes", String(idVendedor));
+    localStorage.setItem("IdZonaFiltroClientes", String(idZona));
 }
 
+/** Totales del encabezado: cartera completa (servidor), no cambian con filtros de la grilla. Solo admin. */
+function cargarTotalesSaldosKpi() {
+    if (!userSession || userSession.IdRol != 1) return;
+    $.ajax({
+        url: "/Clientes/TotalesSaldosCartera",
+        type: "GET",
+        dataType: "json"
+    }).done(function (data) {
+        if (!data) return;
+        const ind = pickNumDesdeObj(data, "TotalIndumentaria", "totalIndumentaria");
+        const electro = pickNumDesdeObj(data, "TotalElectrodomestico", "totalElectrodomestico");
+        const gen = pickNumDesdeObj(data, "TotalGeneral", "totalGeneral");
+        $("#totSaldoIndumentaria").text(formatNumber(ind));
+        $("#totSaldoElectro").text(formatNumber(electro));
+        $("#totSaldoGeneral").text(formatNumber(gen));
+    });
+}
 
+function configurarFiltrosPorColumna() {
+    if (!gridClientes) return;
+    const api = gridClientes;
 
+    const columnConfigClientes = [
+        { index: 0, filterType: 'text' },
+        { index: 1, filterType: 'text' },
+        { index: 2, filterType: 'text' },
+        { index: 3, filterType: 'text' },
+        { index: 4, filterType: 'text' },
+        { index: 5, filterType: 'text' },
+        { index: 6, filterType: 'text' },
+        { index: 7, filterType: 'text' },
+        { index: 8, filterType: 'text' },
+        { index: 9, filterType: 'text' },
+        { index: 10, filterType: 'text' }
+    ];
 
+    inicializarFiltrosColumnas(api, columnConfigClientes, "clientes_col_filters_v1");
+}
 
-const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) => {
+function inicializarSelect2Filtros() {
+    if (!window.jQuery || !jQuery.fn || !jQuery.fn.select2) return;
+
+    const initOne = (selector, placeholder) => {
+        const $el = $(selector);
+        if (!$el.length) return;
+        if ($el.hasClass("select2-hidden-accessible")) {
+            $el.select2("destroy");
+        }
+        $el.select2({
+            width: "100%",
+            allowClear: true,
+            placeholder: placeholder,
+            dropdownParent: $("#Filtros")
+        });
+    };
+
+    // Misma idea que Ventas_Electrodomesticos_Cobros.js (select2 tras jQuery del layout)
+    initOne("#VendedoresFiltro", "Todos");
+    initOne("#ZonasFiltro", "Todas");
+    initOne("#EstadoFiltro", "Todos");
+}
+
+const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona, estado) => {
+    // Igual que electro: se clona encabezado antes de inicializar DataTable
+    $('#grdClientes thead tr.filters').remove();
+    inicializarEncabezadoColumnas("#grdClientes");
+
+    showGlobalLoadingClientes("Cargando tablas...");
+
     gridClientes = $('#grdClientes').DataTable({
         "ajax": {
             "url": `/Clientes/Listar?idVendedor=${idVendedor}&Nombre=${Nombre}&Apellido=${Apellido}&Dni=${Dni}&idZona=${idZona}`,
             "type": "GET",
-            "dataType": "json"
+            "dataType": "json",
+            "dataSrc": clientesAjaxDataSrc,
+            "error": function () {
+                hideGlobalLoadingClientes();
+            }
         },
+        "processing": true,
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         },
 
         scrollX: true,
+        orderCellsTop: true,
 
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
 
@@ -152,8 +318,46 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
             { "data": "Vendedor" },
             { "data": "Zona" },
             { "data": "Estado" },
-            { "data": "Saldo" },
-            { "data": "LimiteVentas" },
+            {
+                "data": function (row) {
+                    return pickNumCliente(row, "SaldoIndumentaria", "saldoIndumentaria");
+                },
+                "render": function (data, type) {
+                    const n = typeof data === "number" && !isNaN(data) ? data : 0;
+                    if (type === "sort" || type === "filter" || type === "type") return n;
+                    return formatNumber(n);
+                }
+            },
+            {
+                "data": function (row) {
+                    return pickNumCliente(row, "SaldoElectrodomestico", "saldoElectrodomestico");
+                },
+                "render": function (data, type) {
+                    const n = typeof data === "number" && !isNaN(data) ? data : 0;
+                    if (type === "sort" || type === "filter" || type === "type") return n;
+                    return formatNumber(n);
+                }
+            },
+            {
+                "data": function (row) {
+                    return pickNumCliente(row, "SaldoTotal", "saldoTotal", "Saldo", "saldo");
+                },
+                "render": function (data, type) {
+                    const n = typeof data === "number" && !isNaN(data) ? data : 0;
+                    if (type === "sort" || type === "filter" || type === "type") return n;
+                    return formatNumber(n);
+                }
+            },
+            {
+                "data": function (row) {
+                    return pickNumCliente(row, "LimiteVentas", "limiteVentas");
+                },
+                "render": function (data, type) {
+                    const n = typeof data === "number" && !isNaN(data) ? data : 0;
+                    if (type === "sort" || type === "filter" || type === "type") return n;
+                    return formatNumber(n);
+                }
+            },
             {
                 "data": "Id",
                 "render": function (data, type, full) {
@@ -190,58 +394,51 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona) =>
 
         ],
 
-        "columnDefs": [
-            {
-                "render": function (data, type, row) {
-                    return formatNumber(data); // Formatear número en la columna
-                },
-                "targets": [7, 8] // Saldo y límite
-            }
-        ],
-
         "fnRowCallback": function (nRow, data, row) {
+            $(nRow).removeClass("fila-cliente-regular fila-cliente-inhabilitado");
             if (data.Estado == "Inhabilitado") {
-                $('td', nRow).css('background-color', ' #890E07');
+                $(nRow).addClass("fila-cliente-inhabilitado");
             } else if (data.Estado == "Regular") {
-                $('td', nRow).css('background-color', ' #DED803');
+                $(nRow).addClass("fila-cliente-regular");
             }
-
-
-
         },
 
         "initComplete": function (settings, json) {
 
-            configurarOpcionesColumnas()
+            hideGlobalLoadingClientes();
+
+            configurarOpcionesColumnas();
+            configurarFiltrosPorColumna();
+            if (estado) {
+                gridClientes.column(6).search('^' + estado + '$', true, false).draw();
+            }
 
             const esAdmin = userSession.IdRol == 1;
             const esComprobantes = userSession.IdRol == 4;
 
-            // Acciones → solo Admin y Rol 4
-            gridClientes.column(9).visible(esAdmin || esComprobantes);
-
-            // Saldo → solo Admin
+            // Acciones
+            gridClientes.column(11).visible(esAdmin || esComprobantes);
+            // Saldos y limite: solo admin
             gridClientes.column(7).visible(esAdmin);
+            gridClientes.column(8).visible(esAdmin);
+            gridClientes.column(9).visible(esAdmin);
+            gridClientes.column(10).visible(esAdmin);
         }
     });
 
 
-    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
-    $('#grdClientes tbody').on('click', 'tr', function () {
-        // Remover la clase de la fila anteriormente seleccionada
+    let filaSeleccionada = null;
+    const $tbl = $("#grdClientes");
+    $tbl.off("click.clienteRow").on("click.clienteRow", "tbody tr", function (e) {
+        const $tr = $(this);
+        if ($tr.hasClass("child") || $tr.closest("tr.child").length) return;
+        if ($(e.target).closest("a, button, .btnacciones, .location-icon, .cliente-tooltip, i.fa-pencil").length) return;
+
         if (filaSeleccionada) {
-            $(filaSeleccionada).removeClass('seleccionada');
-            $('td', filaSeleccionada).removeClass('seleccionada');
-
+            $(filaSeleccionada).removeClass("cliente-row-selected");
         }
-
-        // Obtener la fila actual
-        filaSeleccionada = $(this);
-
-        // Agregar la clase a la fila actual
-        $(filaSeleccionada).addClass('seleccionada');
-        $('td', filaSeleccionada).addClass('seleccionada');
-
+        filaSeleccionada = $tr[0];
+        $tr.addClass("cliente-row-selected");
     });
 }
 
@@ -305,37 +502,36 @@ const buscarLimite = async nombre => {
 
         let result = await MakeAjax(options);
 
-        var valorFormateado = (result.data.Valor).toLocaleString('es-CL', {
-            style: 'currency',
-            currency: 'CLP'
+        const payload = result && (result.data != null ? result.data : result.Data);
+        if (!payload || (payload.Valor == null && payload.valor == null)) {
+            $("#limiteModalMsg").text("No se encontró el valor de límite.").removeClass("d-none");
+            return;
+        }
+        const v = payload.Valor != null ? payload.Valor : payload.valor;
+        const valorFormateado = Number(v).toLocaleString("es-CL", {
+            style: "currency",
+            currency: "CLP"
         });
 
-        if (result != null) {
-            document.getElementById("valorLimite").value = valorFormateado;
-        }
-
-
+        document.getElementById("valorLimite").value = valorFormateado;
+        $("#limiteModalMsg").addClass("d-none").text("");
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $("#limiteModalMsg").text("No se pudo cargar el límite.").removeClass("d-none");
     }
 }
 
 function formatoMoneda(event) {
-    // Obtener el valor ingresado por el usuario
     var valorIngresado = event.target.value;
-
-    // Quitar todos los caracteres que no sean dígitos
-    var valorNumerico = parseFloat(valorIngresado.replace(/[^\d]/g, ''));
-
-    // Formatear el valor con separadores de miles y el símbolo de moneda
-    var valorFormateado = valorNumerico.toLocaleString('es-CL', {
-        style: 'currency',
-        currency: 'CLP'
+    var digits = String(valorIngresado).replace(/[^\d]/g, "");
+    if (!digits.length) {
+        event.target.value = "";
+        return;
+    }
+    var valorNumerico = parseInt(digits, 10) || 0;
+    event.target.value = valorNumerico.toLocaleString("es-CL", {
+        style: "currency",
+        currency: "CLP"
     });
-
-    // Actualizar el valor del campo de entrada con el valor formateado
-    event.target.value = valorFormateado;
 }
 
 async function modificarLimiteVenta() {
@@ -362,24 +558,25 @@ async function modificarLimiteVenta() {
 
 
         if (result != null) {
+            $("#limiteModalMsg").addClass("d-none").text("");
             alert("Limite modificado correctamente");
+            $("#modalLimite").modal("hide");
         }
-
-
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $("#limiteModalMsg").text("No se pudo guardar el límite.").removeClass("d-none");
     }
 }
 
 
 function modalLimite() {
-    buscarLimite("ClientesRegulares_Venta")
-    $("#modalLimite").modal('show');
+    $("#limiteModalMsg").addClass("d-none").text("");
+    buscarLimite("ClientesRegulares_Venta");
+    $("#modalLimite").modal("show");
 }
 
 const modalWhatssap = async id => {
-    $("#modalWhatssap").modal('show');
+    $("#wspModalMsg").addClass("d-none").text("");
+    $("#modalWhatssap").modal("show");
     $("#mensajewsp").val("");
     $("#idClienteWhatssap").val(id);
 }
@@ -407,17 +604,16 @@ async function enviarWhatssap() {
 
 
         if (result != null) {
-            const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${result.data.Telefono}&text=${document.getElementById("mensajewsp").value}`;
-            window.open(urlwsp, '_blank');
-
-            $('.datos-error').removeClass('d-none');
+            const msg = encodeURIComponent(document.getElementById("mensajewsp").value || "");
+            const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${result.data.Telefono}&text=${msg}`;
+            window.open(urlwsp, "_blank");
+            $("#wspModalMsg").addClass("d-none").text("");
+            $("#modalWhatssap").modal("hide");
         } else {
-            //$('.datos-error').text('Ha ocurrido un error en los datos.')
-            //$('.datos-error').removeClass('d-none')
+            $("#wspModalMsg").text("No se pudo obtener el teléfono del cliente.").removeClass("d-none");
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $("#wspModalMsg").text("Ha ocurrido un error al preparar el envío.").removeClass("d-none");
     }
 }
 
@@ -898,7 +1094,8 @@ async function cargarZonas() {
                 option.text = result.data[i].Nombre;
                 selectZonas.appendChild(option);
             }
-
+            const idZonaGuardado = localStorage.getItem("IdZonaFiltroClientes");
+            if (idZonaGuardado !== null) $("#ZonasFiltro").val(idZonaGuardado);
 
         }
     } catch (error) {
@@ -946,7 +1143,8 @@ async function cargarUsuarios() {
                 option.text = result.data[i].Nombre;
                 selectUsuarios.appendChild(option);
             }
-
+            const idVendGuardado = localStorage.getItem("IdVendedorFiltroClientes");
+            if (idVendGuardado !== null) $("#VendedoresFiltro").val(idVendGuardado);
 
         }
     } catch (error) {
@@ -1036,6 +1234,21 @@ function configurarOpcionesColumnas() {
 
     container.empty(); // Limpia el contenedor
 
+    const nombres = [
+        "Nombre",
+        "DNI",
+        "Direccion",
+        "Telefono",
+        "Vendedor",
+        "Zona",
+        "Estado",
+        "Saldo Indumentaria",
+        "Saldo Electrodomestico",
+        "Saldo Total",
+        "Limite",
+        "Acciones"
+    ];
+
     columnas.forEach((col, index) => {
         if (col.data && col.data !== "Id") { // Solo agregar columnas que no sean "Id"
             // Recupera el valor guardado en localStorage, si existe. Si no, inicializa en 'false' para no estar marcado.
@@ -1044,8 +1257,7 @@ function configurarOpcionesColumnas() {
             // Asegúrate de que la columna esté visible si el valor es 'true'
             grid.column(index).visible(isChecked);
 
-            const columnName =
-                index === 0 ? "Nombre" : index === 2 ? "Direccion" : col.data;
+            const columnName = nombres[index] || col.data;
 
             // Ahora agregamos el checkbox, asegurándonos de que se marque solo si 'isChecked' es 'true'
             container.append(`
