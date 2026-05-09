@@ -92,113 +92,115 @@ namespace Sistema_David.Models
          * HISTORIAL
          * =========================================================== */
         public static VM_HistorialVentasResp ListarHistorial(
-      DateTime? desde,
-      DateTime? hasta,
-      string estado,
-      int idVendedor,
-      int idRol)
+            DateTime? desde,
+            DateTime? hasta,
+            string estado,
+            int idVendedor,
+            int idRol)
         {
             try
             {
                 using (var db = new Sistema_DavidEntities())
                 {
+                    var q = db.Ventas_Electrodomesticos.AsQueryable();
+
+                    if (desde.HasValue)
+                    {
+                        var d = desde.Value.Date;
+                        q = q.Where(v =>
+                            DbFunctions.TruncateTime(v.FechaVenta) >= DbFunctions.TruncateTime(d));
+                    }
+
+                    if (hasta.HasValue)
+                    {
+                        var h = hasta.Value.Date;
+                        q = q.Where(v =>
+                            DbFunctions.TruncateTime(v.FechaVenta) <= DbFunctions.TruncateTime(h));
+                    }
+
+                    // 🔵 SOLO ADMIN (1) y COMPROBANTES (4) filtran por estado
+                    if (idRol == 1 || idRol == 4)
+                    {
+                        if (!string.IsNullOrWhiteSpace(estado))
+                            q = q.Where(v => v.Estado == estado);
+
+                        if (estado == "")
+                            q = q.Where(v => v.Estado != "Pendiente");
+                    }
+
+                    if (idVendedor > 0)
+                        q = q.Where(v => v.IdVendedor == idVendedor);
+
+                    var ventas = q.ToList();
+
+                    var rows = new List<VM_HistorialVentasRow>();
+
                     var hoy = DateTime.Today;
 
-                    var query =
-                        from v in db.Ventas_Electrodomesticos.AsNoTracking()
-
-                        where
-                            (!desde.HasValue || v.FechaVenta >= desde.Value)
-                            && (!hasta.HasValue || v.FechaVenta < hasta.Value.AddDays(1))
-                            && (idVendedor <= 0 || v.IdVendedor == idVendedor)
-                            && (
-                                (idRol != 1 && idRol != 4)
-                                || (
-                                    string.IsNullOrEmpty(estado)
-                                        ? v.Estado != "Pendiente"
-                                        : v.Estado == estado
-                                   )
-                               )
-
-                        select new
-                        {
-                            v.Id,
-                            v.Comprobante,
-                            v.FechaVenta,
-                            v.ImporteTotal,
-                            v.Entrega,
-                            v.Estado,
-
-                            ClienteNombre = v.Clientes.Nombre,
-                            ClienteApellido = v.Clientes.Apellido,
-                            v.Clientes.Dni,
-                            v.Clientes.Direccion,
-                            v.Clientes.Longitud,
-                            v.Clientes.Latitud,
-                            v.Clientes.Telefono,
-                            v.Clientes.Fecha,
-
-                            Vendedor = v.Usuarios2.Nombre,
-
-                            // 🔥 AGREGACIONES DIRECTO EN SQL
-                            TotalCuotas = v.Ventas_Electrodomesticos_Cuotas
-                                .Sum(c => (decimal?)(
-                                    c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos)) ?? 0,
-
-                            TotalCobradoRealizado = v.Ventas_Electrodomesticos_Cuotas
-                                .Sum(c => (decimal?)c.MontoPagado) ?? 0,
-
-                            CuotasVencidas = v.Ventas_Electrodomesticos_Cuotas
-                                .Count(c =>
-                                    c.Estado != "Pagada" &&
-                                    c.FechaVencimiento < hoy)
-                        };
-
-                    var data = query.ToList();
-
-                    // 🔥 PROCESAMIENTO LIVIANO EN MEMORIA
-                    var rows = data.Select(v =>
+                    foreach (var v in ventas)
                     {
+                        var cuotas = db.Ventas_Electrodomesticos_Cuotas
+                            .Where(c => c.IdVenta == v.Id)
+                            .OrderBy(c => c.NumeroCuota)
+                            .ToList();
+
+                        var totalCuotas = cuotas.Sum(c =>
+                            (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos));
+
+                        // 🔵 SOLO COBROS DE CUOTAS
+                        var totalCobradoRealizado = cuotas.Sum(c => c.MontoPagado);
+
+                        // 🔵 COBROS + ENTREGA (como estaba antes)
+                        var totalPagado = totalCobradoRealizado + v.Entrega;
+
                         var total = Math.Round(v.ImporteTotal, 0);
 
-                        var totalPagado = Math.Round(
-                            (decimal)(v.TotalCobradoRealizado + v.Entrega), 0);
+                        totalPagado = Math.Round((decimal)totalPagado, 0);
 
-                        var pendiente = Math.Round(
-                            total - totalPagado, 0);
+                        var pendiente = Math.Round((decimal)(total - totalPagado), 0);
 
                         var porcentajePago =
-                            v.TotalCuotas == 0
+                            totalCuotas == 0
                                 ? 100
-                                : Math.Round(
-                                    (v.TotalCobradoRealizado / v.TotalCuotas) * 100, 2);
+                                : Math.Round((totalCobradoRealizado / totalCuotas) * 100, 2);
 
-                        return new VM_HistorialVentasRow
+                        var row = new VM_HistorialVentasRow
                         {
                             IdVenta = v.Id,
                             Comprobante = v.Comprobante,
                             Fecha = v.FechaVenta,
-
-                            Cliente = ((v.ClienteNombre ?? "") + " " + (v.ClienteApellido ?? "")).Trim(),
-                            ClienteDni = v.Dni,
-                            ClienteDireccion = v.Direccion,
-                            ClienteLongitud = v.Longitud,
-                            ClienteLatitud = v.Latitud,
-                            ClienteTelefono = v.Telefono,
-                            ClienteFecha = v.Fecha ?? default,
-
-                            Vendedor = v.Vendedor,
+                            Cliente = v.Clientes != null
+                                ? ((v.Clientes.Nombre ?? "") + " " + (v.Clientes.Apellido ?? "")).Trim()
+                                : null,
+                            ClienteDni = v.Clientes?.Dni,
+                            ClienteDireccion = v.Clientes?.Direccion,
+                            ClienteLongitud = v.Clientes?.Longitud,
+                            ClienteLatitud = v.Clientes?.Latitud,
+                            ClienteTelefono = v.Clientes?.Telefono,
+                            ClienteFecha = v.Clientes != null ? (DateTime)v.Clientes.Fecha : default,
+                            Vendedor = v.Usuarios2 != null ? v.Usuarios2.Nombre : null,
 
                             Total = total,
-                            Pagado = totalPagado,
-                            CobradoRealizado = v.TotalCobradoRealizado,
+
+                            // 🔵 incluye entrega
+                            Pagado = (decimal)totalPagado,
+
+                            // 🔵 SOLO COBROS
+                            CobradoRealizado = (decimal)totalCobradoRealizado,
+
                             Pendiente = pendiente,
+
                             PorcentajePago = porcentajePago,
-                            CuotasVencidas = v.CuotasVencidas,
+
+                            CuotasVencidas = cuotas.Count(c =>
+                                c.Estado != "Pagada" &&
+                                c.FechaVencimiento.Date < hoy),
 
                             Estado = v.Estado
                         };
-                    }).ToList();
+
+                        rows.Add(row);
+                    }
 
                     return new VM_HistorialVentasResp
                     {
@@ -206,9 +208,15 @@ namespace Sistema_David.Models
                         Kpis = new
                         {
                             CantidadVentas = rows.Count,
+
                             TotalVendido = rows.Sum(x => x.Total),
+
+                            // 🔵 COBROS + ENTREGA (como antes)
                             TotalCobrado = rows.Sum(x => x.Pagado),
+
+                            // 🔵 SOLO COBROS
                             TotalCobradoRealizado = rows.Sum(x => x.CobradoRealizado),
+
                             TotalPendiente = rows.Sum(x => x.Pendiente)
                         }
                     };
