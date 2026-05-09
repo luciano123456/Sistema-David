@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Web;
 
 namespace Sistema_David.Models.Modelo
@@ -99,6 +100,8 @@ namespace Sistema_David.Models.Modelo
             {
                 int idUsuarioSesion = SessionHelper.GetUsuarioSesion().Id;
 
+                var busqueda = (DNI ?? string.Empty).Trim().ToUpper();
+
                 var result = (from d in db.Ventas
                               join c in db.Clientes on d.idCliente equals c.Id
                               join z in db.Zonas on c.IdZona equals z.Id
@@ -110,18 +113,21 @@ namespace Sistema_David.Models.Modelo
                               from rc in recorridosCobranzasJoin.DefaultIfEmpty()
                               join r in db.Recorridos on rc.IdRecorrido equals r.Id into recorridosJoin
                               from r in recorridosJoin.DefaultIfEmpty()
-                              where ((!string.IsNullOrEmpty(DNI) &&
-                                     (c.Dni.ToUpper().Contains(DNI.ToUpper()) || (c.Nombre + " " + c.Apellido).ToUpper().Contains(DNI.ToUpper())) &&
-                                     d.Restante > 0) ||
-                                    (string.IsNullOrEmpty(DNI) &&
+                              where ((busqueda != "" &&
+                                     d.Restante > 0 &&
+                                     (d.Estado == "" || d.Estado == null)) ||
+                                    (busqueda == "" &&
                                      (d.idVendedor == idVendedor || idVendedor == -1) &&
-                                     (d.idCobrador == idCobradorF || (idCobradorF == -1 && (d.idCobrador == 0 || !string.IsNullOrEmpty(DNI)))) &&
+                                     (idCobradorF == -1
+                                      || d.idCobrador == idCobradorF
+                                      || d.idCobrador == null
+                                      || d.idCobrador == 0
+                                      || (idVendedor == -1 && idCobradorF != -1 && d.idCobrador != null && d.idCobrador != 0 && d.idCobrador != idCobradorF && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta)) &&
                                      (c.IdZona == idZona || idZona == -1) &&
                                      ((idCobradorF == d.idCobrador) || (idCobradorF != d.idCobrador && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta) || (rc.Estado == "Pendiente" && r.IdUsuario == idUsuarioSesion) || (d.CobroPendiente == 1 && CobrosPendientes == 1)) &&
                                      d.Restante > 0) &&
                                      (d.Estado == "" || d.Estado == null) &&
                                      (d.Turno == Turno || Turno == "Todos") &&
-                                     (r == null || r.IdUsuario == idUsuarioSesion || r != null && r.IdUsuario != idUsuarioSesion) &&
                                      (d.IdTipoNegocio == TipoNegocio || TipoNegocio == -1) &&
                                      (d.CobroPendiente == CobrosPendientes || CobrosPendientes == -1)
 
@@ -143,29 +149,16 @@ namespace Sistema_David.Models.Modelo
                                   Direccion = c.Direccion,
                                   Vendedor = u.Nombre,
                                   DniCliente = c.Dni,
-                                  Importante = (int)d.Importante,
+                                  Importante = d.Importante ?? 0,
                                   TelefonoCliente = c.Telefono,
-                                  Orden = (int)d.Orden,
-                                  ValorCuota = (decimal)d.ValorCuota,
-                                  idEstado = (int)c.IdEstado,
+                                  Orden = d.Orden ?? 0,
+                                  ValorCuota = d.ValorCuota ?? 0,
+                                  idEstado = c.IdEstado ?? 0,
                                   EstadoCliente = ec.Nombre,
-                                  idCobrador = (int)d.idCobrador,
-                                  SaldoCliente =
-                                                (decimal)(
-                                                    db.Ventas
-                                                        .Where(v => v.idCliente == c.Id && v.Restante > 0)
-                                                        .Select(v => (decimal?)v.Restante)
-                                                        .Sum() ?? 0
-                                                )
-                                                +
-                                                (decimal)(
-                                                    db.Ventas_Electrodomesticos
-                                                        .Where(v => v.IdCliente == c.Id && v.Restante > 0)
-                                                        .Select(v => (decimal?)v.Restante)
-                                                        .Sum() ?? 0
-                                                ),
+                                  idCobrador = d.idCobrador ?? 0,
+                                  SaldoCliente = 0,
                                   Cobrador = cob != null ? cob.Nombre : string.Empty,
-                                  Comprobante = (int)d.Comprobante,
+                                  Comprobante = d.Comprobante ?? 0,
                                   Latitud = c.Latitud,
                                   Longitud = c.Longitud,
                                   // Campos de RecorridosCobranzas
@@ -178,8 +171,22 @@ namespace Sistema_David.Models.Modelo
                                   IdUsuarioRecorrido = r != null ? (int)r.IdUsuario : 0,
                                   FranjaHoraria = d.FranjaHoraria != null ? d.FranjaHoraria : "",
                                   EstadoCobro = d.EstadoCobro != null ? d.EstadoCobro : "",
-                                  LimiteVentas = (decimal)c.LimiteVentas,
+                                  LimiteVentas = c.LimiteVentas ?? 0,
                               }).ToList();
+
+                if (busqueda != "")
+                {
+                    result = AplicarBusquedaLibre(result, busqueda);
+                }
+
+                // Resolver saldos por cliente en bloque (evita subconsultas por fila y mejora mucho rendimiento).
+                var idsClientes = result.Select(v => v.idCliente).Distinct().ToList();
+                var saldosPorCliente = ObtenerSaldosPorCliente(db, idsClientes);
+                foreach (var item in result)
+                {
+                    if (saldosPorCliente.TryGetValue(item.idCliente, out var saldo))
+                        item.SaldoCliente = saldo;
+                }
 
                 // Ordenar por si está en un recorrido, luego por el orden del recorrido, y finalmente por otra ordenación que desees
                 result = result.OrderBy(v => v.EnRecorrido ? 0 : 1)
@@ -196,68 +203,166 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                List<VMVenta> result = new List<VMVenta>();
+                var busqueda = (DNI ?? string.Empty).Trim().ToUpper();
+                if (clientes == null || clientes.Count == 0)
+                    return new List<VMVenta>();
 
-                foreach (int clienteId in clientes)
+                var idsClientesFiltro = clientes.Distinct().ToList();
+
+                var result = (from d in db.Ventas
+                              join c in db.Clientes on d.idCliente equals c.Id
+                              join z in db.Zonas on c.IdZona equals z.Id
+                              join u in db.Usuarios on d.idVendedor equals u.Id
+                              join ec in db.EstadosClientes on c.IdEstado equals ec.Id
+                              join cob in db.Usuarios on d.idCobrador equals cob.Id into cobradorJoin
+                              from cob in cobradorJoin.DefaultIfEmpty()
+                              where idsClientesFiltro.Contains(d.idCliente) &&
+                                    (
+                                        (busqueda != "" &&
+                                         d.Restante > 0 &&
+                                         (d.Estado == "" || d.Estado == null)) ||
+                                        (busqueda == "" &&
+                                         (d.idVendedor == idVendedor || idVendedor == -1) &&
+                                         (idCobradorF == -1
+                                          || d.idCobrador == idCobradorF
+                                          || d.idCobrador == null
+                                          || d.idCobrador == 0
+                                          || (idVendedor == -1 && idCobradorF != -1 && d.idCobrador != null && d.idCobrador != 0 && d.idCobrador != idCobradorF && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta)) &&
+                                         (c.IdZona == idZona || idZona == -1) &&
+                                         ((idCobradorF == d.idCobrador) || (idCobradorF != d.idCobrador && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta)) &&
+                                         d.Restante > 0) &&
+                                        (d.Estado == "" || d.Estado == null)
+                                    )
+                              select new VMVenta
+                              {
+                                  Id = d.Id,
+                                  idCliente = d.idCliente,
+                                  Fecha = d.Fecha,
+                                  Entrega = d.Entrega,
+                                  Restante = d.Restante,
+                                  FechaCobro = d.FechaCobro,
+                                  FechaLimite = d.FechaLimite,
+                                  idVendedor = d.idVendedor,
+                                  idZona = (int)c.IdZona,
+                                  Zona = z.Nombre,
+                                  Observacion = d.Observacion,
+                                  Cliente = c.Nombre + " " + c.Apellido,
+                                  Direccion = c.Direccion,
+                                  Vendedor = u.Nombre,
+                                  DniCliente = c.Dni,
+                                  Importante = d.Importante ?? 0,
+                                  TelefonoCliente = c.Telefono,
+                                  Orden = d.Orden ?? 0,
+                                  ValorCuota = d.ValorCuota ?? 0,
+                                  idEstado = c.IdEstado ?? 0,
+                                  EstadoCliente = ec.Nombre,
+                                  idCobrador = d.idCobrador ?? 0,
+                                  SaldoCliente = 0,
+                                  Cobrador = cob != null ? cob.Nombre : string.Empty,
+                                  Comprobante = d.Comprobante ?? 0,
+                                  Latitud = c.Latitud,
+                                  Longitud = c.Longitud
+                              }).ToList();
+
+                if (busqueda != "")
                 {
-                    var cobranzas = (from d in db.Ventas
-                                     join c in db.Clientes on d.idCliente equals c.Id
-                                     join z in db.Zonas on c.IdZona equals z.Id
-                                     join u in db.Usuarios on d.idVendedor equals u.Id
-                                     join ec in db.EstadosClientes on c.IdEstado equals ec.Id
-                                     join cob in db.Usuarios on d.idCobrador equals cob.Id into cobradorJoin
-                                     from cob in cobradorJoin.DefaultIfEmpty()
-                                     where
-                                        // Filtro por ID de cliente específico
-                                        d.idCliente == clienteId &&
-                                        (
-                                            (!string.IsNullOrEmpty(DNI) &&
-                                            (c.Dni.ToUpper().Contains(DNI.ToUpper()) || (c.Nombre + " " + c.Apellido).ToUpper().Contains(DNI.ToUpper())) &&
-                                            d.Restante > 0) ||
-                                            (string.IsNullOrEmpty(DNI) &&
-                                            (d.idVendedor == idVendedor || idVendedor == -1) &&
-                                            (d.idCobrador == idCobradorF || (idCobradorF == -1 && (d.idCobrador == 0 || !string.IsNullOrEmpty(DNI)))) &&
-                                            (c.IdZona == idZona || idZona == -1) &&
-                                            ((idCobradorF == d.idCobrador) || (idCobradorF != d.idCobrador && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta)) &&
-                                            d.Restante > 0) &&
-                                            (d.Estado == "" || d.Estado == null)
-                                        )
-                                     select new VMVenta
-                                     {
-                                         Id = d.Id,
-                                         idCliente = d.idCliente,
-                                         Fecha = d.Fecha,
-                                         Entrega = d.Entrega,
-                                         Restante = d.Restante,
-                                         FechaCobro = d.FechaCobro,
-                                         FechaLimite = d.FechaLimite,
-                                         idVendedor = d.idVendedor,
-                                         idZona = (int)c.IdZona,
-                                         Zona = z.Nombre,
-                                         Observacion = d.Observacion,
-                                         Cliente = c.Nombre + " " + c.Apellido,
-                                         Direccion = c.Direccion,
-                                         Vendedor = u.Nombre,
-                                         DniCliente = c.Dni,
-                                         Importante = (int)d.Importante,
-                                         TelefonoCliente = c.Telefono,
-                                         Orden = (int)d.Orden,
-                                         ValorCuota = (decimal)d.ValorCuota,
-                                         idEstado = (int)c.IdEstado,
-                                         EstadoCliente = ec.Nombre,
-                                         idCobrador = (int)d.idCobrador,
-                                         SaldoCliente = (decimal)db.Ventas.Where(v => v.idCliente == c.Id && v.Restante > 0).Sum(v => v.Restante),
-                                         Cobrador = cob != null ? cob.Nombre : string.Empty,
-                                         Comprobante = (int)d.Comprobante,
-                                         Latitud = c.Latitud,
-                                         Longitud = c.Longitud
-                                     }).ToList();
+                    result = AplicarBusquedaLibre(result, busqueda);
+                }
 
-                    result.AddRange(cobranzas);
+                var idsClientes = result.Select(v => v.idCliente).Distinct().ToList();
+                var saldosPorCliente = ObtenerSaldosPorCliente(db, idsClientes);
+                foreach (var item in result)
+                {
+                    if (saldosPorCliente.TryGetValue(item.idCliente, out var saldo))
+                        item.SaldoCliente = saldo;
                 }
 
                 return result;
             }
+        }
+
+        private static Dictionary<int, decimal> ObtenerSaldosPorCliente(Sistema_DavidEntities db, List<int> idsClientes)
+        {
+            if (idsClientes == null || idsClientes.Count == 0)
+                return new Dictionary<int, decimal>();
+
+            var saldoIndumentaria = db.Ventas
+                .Where(v => idsClientes.Contains(v.idCliente) && v.Restante > 0)
+                .GroupBy(v => v.idCliente)
+                .Select(g => new { IdCliente = g.Key, Saldo = g.Sum(x => (decimal?)x.Restante) ?? 0m })
+                .ToList();
+
+            var saldoElectro = db.Ventas_Electrodomesticos
+                .Where(v => idsClientes.Contains(v.IdCliente) && v.Restante > 0)
+                .GroupBy(v => v.IdCliente)
+                .Select(g => new { IdCliente = g.Key, Saldo = g.Sum(x => (decimal?)x.Restante) ?? 0m })
+                .ToList();
+
+            var dict = new Dictionary<int, decimal>();
+            foreach (var row in saldoIndumentaria)
+            {
+                dict[row.IdCliente] = row.Saldo;
+            }
+            foreach (var row in saldoElectro)
+            {
+                if (dict.ContainsKey(row.IdCliente)) dict[row.IdCliente] += row.Saldo;
+                else dict[row.IdCliente] = row.Saldo;
+            }
+
+            return dict;
+        }
+
+        private static List<VMVenta> AplicarBusquedaLibre(List<VMVenta> data, string busqueda)
+        {
+            if (data == null || data.Count == 0) return data ?? new List<VMVenta>();
+
+            var normalizada = NormalizarTextoBusqueda(busqueda);
+            if (string.IsNullOrWhiteSpace(normalizada)) return data;
+
+            var tokens = normalizada
+                .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Distinct()
+                .ToList();
+
+            if (tokens.Count == 0) return data;
+
+            return data.Where(v =>
+            {
+                var nombre = NormalizarTextoBusqueda(v.Cliente);
+                var dni = NormalizarTextoBusqueda(v.DniCliente);
+                var comp = (nombre + " " + dni).Trim();
+                return tokens.All(t => comp.Contains(t));
+            }).ToList();
+        }
+
+        private static string NormalizarTextoBusqueda(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+
+            var formD = input.Trim().ToUpperInvariant().Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder(formD.Length);
+            var prevSpace = false;
+
+            foreach (var ch in formD)
+            {
+                var uc = CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (uc == UnicodeCategory.NonSpacingMark) continue;
+
+                if (char.IsWhiteSpace(ch))
+                {
+                    if (!prevSpace)
+                    {
+                        sb.Append(' ');
+                        prevSpace = true;
+                    }
+                    continue;
+                }
+
+                prevSpace = false;
+                sb.Append(ch);
+            }
+
+            return sb.ToString().Trim();
         }
 
 

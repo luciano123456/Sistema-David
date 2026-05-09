@@ -195,6 +195,15 @@ namespace Sistema_David.Models
 
                     EnriquecerRendimientoDespuesDeSp(db, resultList);
 
+                    // El SP puede filtrar cobranzas por el usuario que registró el movimiento.
+                    // Cuando se elige un vendedor puntual, acá forzamos el filtro por dueño real de la venta.
+                    if (idVendedor > 0)
+                    {
+                        resultList = resultList
+                            .Where(r => r != null && r.IdVendedor == idVendedor)
+                            .ToList();
+                    }
+
                     return resultList;
                 }
             } catch (Exception ex)
@@ -401,13 +410,32 @@ namespace Sistema_David.Models
                 if (r.IdVenta > 0)
                 {
                     int idVend = 0;
-                    if (vendedorIdPorVentaElectro.TryGetValue(r.IdVenta, out var ve))
-                        idVend = ve;
-                    else if (vendedorIdPorVentaClasica.TryGetValue(r.IdVenta, out var vc))
-                        idVend = vc;
+                    var origen = (r.Origen ?? string.Empty).ToUpperInvariant();
+                    var esElectro = origen.Contains("ELECTRO")
+                                    || d.Contains("electro");
 
-                    if (idVend > 0 && nombresUsuario.TryGetValue(idVend, out var nomV))
-                        r.Vendedor = nomV;
+                    // Importante: IdVenta puede coincidir numéricamente entre tablas clásica/electro.
+                    // Elegimos fuente según origen para no mezclar vendedores.
+                    if (esElectro)
+                    {
+                        if (vendedorIdPorVentaElectro.TryGetValue(r.IdVenta, out var ve))
+                            idVend = ve;
+                    }
+                    else
+                    {
+                        if (vendedorIdPorVentaClasica.TryGetValue(r.IdVenta, out var vc))
+                            idVend = vc;
+                    }
+
+                    if (idVend > 0)
+                    {
+                        // Canonizamos IdVendedor con el vendedor dueño de la venta para
+                        // permitir filtrado correcto de cobranzas por vendedor.
+                        r.IdVendedor = idVend;
+
+                        if (nombresUsuario.TryGetValue(idVend, out var nomV))
+                            r.Vendedor = nomV;
+                    }
                 }
 
                 if (string.IsNullOrWhiteSpace(r.Vendedor) && r.IdVendedor > 0
