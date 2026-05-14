@@ -1,0 +1,11 @@
+---
+description: Contexto del repo Sistema-David (MVC5, cobranzas, electro, convenciones)
+alwaysApply: true
+---
+
+# Sistema-David
+
+- Proyecto **ASP.NET MVC 5 / .NET Framework / EF6**. No usar `Program.cs` ni patrones de ASP.NET Core salvo que exista otro proyecto en la solución.
+- Ver **AGENTS.md** en la raíz del repo para rutas de archivos, reglas de Cobranzas, modal de cobro electro y notas de build.
+- Respuestas al usuario en **español** si escribe en español.
+- Cambios focalizados; no reintroducir el módulo **Transportes** salvo pedido explícito.

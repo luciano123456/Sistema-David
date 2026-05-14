@@ -505,16 +505,12 @@ function evaluarFechaCobroUI() {
     const hoy = todayISO();
     actualizarTextoFechaCobroUI(importe, restante);
 
-    // 🔁 Reprogramación: fecha editable (respetando vencimiento mínimo)
+    // 🔁 Reprogramación: fecha editable (sin min/max en el input; el usuario elige el día de cobro)
     if (importe === 0) {
         inputFecha.disabled = false;
         inputFecha.classList.remove("opacity-50");
-
-        if (cuotaActual?.FechaVencimiento) {
-            inputFecha.min = moment(cuotaActual.FechaVencimiento).format("YYYY-MM-DD");
-        } else {
-            inputFecha.removeAttribute("min");
-        }
+        inputFecha.removeAttribute("min");
+        inputFecha.removeAttribute("max");
 
         if (!inputFecha.value || inputFecha.value === hoy) {
             inputFecha.value = defaultFechaCobroCuotaIso(cuotaActual);
@@ -526,6 +522,7 @@ function evaluarFechaCobroUI() {
     if (restante > 0 && importe > 0 && importe < restante) {
         inputFecha.disabled = false;
         inputFecha.classList.remove("opacity-50");
+        inputFecha.removeAttribute("max");
         inputFecha.min = hoy;
         if (!inputFecha.value || inputFecha.value < hoy || inputFecha.value === hoy) {
             inputFecha.value = defaultFechaCobroCuotaIso(cuotaActual);
@@ -538,6 +535,7 @@ function evaluarFechaCobroUI() {
     inputFecha.disabled = true;
     inputFecha.classList.add("opacity-50");
     inputFecha.removeAttribute("min");
+    inputFecha.removeAttribute("max");
 }
 /* ===================== CUENTAS (TU ENDPOINT) ===================== */
 async function cargarCuentasTotales() {
@@ -980,14 +978,6 @@ async function confirmarCobro() {
 
         if (!fecha) {
             setCbError("Seleccioná una fecha válida.");
-            return;
-        }
-
-        if (
-            cuotaActual?.FechaVencimiento &&
-            moment(fecha).isBefore(moment(cuotaActual.FechaVencimiento), "day")
-        ) {
-            setCbError("La fecha de cobro no puede ser anterior al vencimiento de la cuota.");
             return;
         }
 

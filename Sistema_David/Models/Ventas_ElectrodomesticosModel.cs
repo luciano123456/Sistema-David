@@ -1958,9 +1958,6 @@ namespace Sistema_David.Models
                     if (cuota == null)
                         return "Cuota no encontrada";
 
-                    if (nuevaFecha.Date < cuota.FechaVencimiento.Date)
-                        return "La fecha de cobro no puede ser anterior al vencimiento de la cuota.";
-
                     var fechaAnterior = cuota.FechaCobro;
 
                     cuota.FechaCobro = nuevaFecha.Date;

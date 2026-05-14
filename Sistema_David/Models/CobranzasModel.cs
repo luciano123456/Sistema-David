@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using NPOI.SS.Formula.Functions;
 using Sistema_David.Helpers;
 using Sistema_David.Models.DB;
@@ -98,9 +98,10 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                int idUsuarioSesion = SessionHelper.GetUsuarioSesion().Id;
-
                 var busqueda = (DNI ?? string.Empty).Trim().ToUpper();
+                // Fecha cobro: solo si no hay búsqueda DNI/nombre y cobrador = Todos (-1).
+                var fcDesde = FechaCobroDesde.Date;
+                var fcHastaExcl = FechaCobroHasta.Date.AddDays(1);
 
                 var result = (from d in db.Ventas
                               join c in db.Clientes on d.idCliente equals c.Id
@@ -113,25 +114,27 @@ namespace Sistema_David.Models.Modelo
                               from rc in recorridosCobranzasJoin.DefaultIfEmpty()
                               join r in db.Recorridos on rc.IdRecorrido equals r.Id into recorridosJoin
                               from r in recorridosJoin.DefaultIfEmpty()
-                              where ((busqueda != "" &&
-                                     d.Restante > 0 &&
-                                     (d.Estado == "" || d.Estado == null)) ||
-                                    (busqueda == "" &&
-                                     (d.idVendedor == idVendedor || idVendedor == -1) &&
-                                     (idCobradorF == -1
-                                      || d.idCobrador == idCobradorF
-                                      || d.idCobrador == null
-                                      || d.idCobrador == 0
-                                      || (idVendedor == -1 && idCobradorF != -1 && d.idCobrador != null && d.idCobrador != 0 && d.idCobrador != idCobradorF && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta)) &&
-                                     (c.IdZona == idZona || idZona == -1) &&
-                                     ((idCobradorF == d.idCobrador) || (idCobradorF != d.idCobrador && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta) || (rc.Estado == "Pendiente" && r.IdUsuario == idUsuarioSesion) || (d.CobroPendiente == 1 && CobrosPendientes == 1)) &&
-                                     d.Restante > 0) &&
-                                     (d.Estado == "" || d.Estado == null) &&
-                                     (d.Turno == Turno || Turno == "Todos") &&
-                                     (d.IdTipoNegocio == TipoNegocio || TipoNegocio == -1) &&
-                                     (d.CobroPendiente == CobrosPendientes || CobrosPendientes == -1)
-
-                              )
+                              where (busqueda != ""
+                                     || idCobradorF != -1
+                                     || (d.FechaCobro != null && d.FechaCobro >= fcDesde && d.FechaCobro < fcHastaExcl))
+                                    && (
+                                         (busqueda != "" &&
+                                          d.Restante > 0 &&
+                                          (d.Estado == "" || d.Estado == null))
+                                         ||
+                                         (
+                                             (busqueda == "" &&
+                                              (d.idVendedor == idVendedor || idVendedor == -1) &&
+                                              (idCobradorF == -1 || d.idCobrador == idCobradorF) &&
+                                              (c.IdZona == idZona || idZona == -1) &&
+                                              d.Restante > 0)
+                                             &&
+                                             (d.Estado == "" || d.Estado == null) &&
+                                             (d.Turno == Turno || Turno == "Todos") &&
+                                             (d.IdTipoNegocio == TipoNegocio || TipoNegocio == -1) &&
+                                             (d.CobroPendiente == CobrosPendientes || CobrosPendientes == -1)
+                                         )
+                                       )
                               select new VMVenta
                               {
                                   Id = d.Id,
@@ -208,6 +211,8 @@ namespace Sistema_David.Models.Modelo
                     return new List<VMVenta>();
 
                 var idsClientesFiltro = clientes.Distinct().ToList();
+                var fcDesde = FechaCobroDesde.Date;
+                var fcHastaExcl = FechaCobroHasta.Date.AddDays(1);
 
                 var result = (from d in db.Ventas
                               join c in db.Clientes on d.idCliente equals c.Id
@@ -217,21 +222,19 @@ namespace Sistema_David.Models.Modelo
                               join cob in db.Usuarios on d.idCobrador equals cob.Id into cobradorJoin
                               from cob in cobradorJoin.DefaultIfEmpty()
                               where idsClientesFiltro.Contains(d.idCliente) &&
+                                    (busqueda != ""
+                                     || idCobradorF != -1
+                                     || (d.FechaCobro != null && d.FechaCobro >= fcDesde && d.FechaCobro < fcHastaExcl)) &&
                                     (
                                         (busqueda != "" &&
                                          d.Restante > 0 &&
                                          (d.Estado == "" || d.Estado == null)) ||
-                                        (busqueda == "" &&
-                                         (d.idVendedor == idVendedor || idVendedor == -1) &&
-                                         (idCobradorF == -1
-                                          || d.idCobrador == idCobradorF
-                                          || d.idCobrador == null
-                                          || d.idCobrador == 0
-                                          || (idVendedor == -1 && idCobradorF != -1 && d.idCobrador != null && d.idCobrador != 0 && d.idCobrador != idCobradorF && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta)) &&
-                                         (c.IdZona == idZona || idZona == -1) &&
-                                         ((idCobradorF == d.idCobrador) || (idCobradorF != d.idCobrador && d.FechaCobro >= FechaCobroDesde && d.FechaCobro <= FechaCobroHasta)) &&
-                                         d.Restante > 0) &&
-                                        (d.Estado == "" || d.Estado == null)
+                                        ((busqueda == "" &&
+                                          (d.idVendedor == idVendedor || idVendedor == -1) &&
+                                          (idCobradorF == -1 || d.idCobrador == idCobradorF) &&
+                                          (c.IdZona == idZona || idZona == -1) &&
+                                          d.Restante > 0) &&
+                                         (d.Estado == "" || d.Estado == null))
                                     )
                               select new VMVenta
                               {
