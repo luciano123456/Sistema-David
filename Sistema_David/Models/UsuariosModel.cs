@@ -188,16 +188,23 @@ namespace Sistema_David.Models
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
                 // Realiza una consulta utilizando Linq to Entities
+                // Misma base que ListaCobranzas (indumentaria) con CobrosPendientes=0 por defecto en pantalla:
+                // solo ventas con saldo, estado activo de cobranza y sin flag "cobro pendiente".
+                var ventasAsignacionCobrador = db.Ventas.Where(v =>
+                    v.Restante > 0
+                    && (v.Estado == "" || v.Estado == null)
+                    && v.CobroPendiente == 0);
+
                 var listUser = db.Usuarios
                     .Where(u => u.IdRol == 3 || u.IdRol == 1)
                     .Join(db.Roles, u => u.IdRol, r => r.Id, (u, r) => new { Usuario = u, Rol = r })
                     .Join(db.EstadosUsuarios, ur => ur.Usuario.IdEstado, eu => eu.Id, (ur, eu) => new { Usuario = ur.Usuario, Rol = ur.Rol.Nombre, Estado = eu.Nombre })
-                    .GroupJoin(db.Ventas, ur_eu => ur_eu.Usuario.Id, v => v.idCobrador, (ur_eu, ventas) => new
+                    .GroupJoin(ventasAsignacionCobrador, ur_eu => ur_eu.Usuario.Id, v => v.idCobrador, (ur_eu, ventas) => new
                     {
                         Usuario = ur_eu.Usuario,
                         Rol = ur_eu.Rol,
                         Estado = ur_eu.Estado,
-                        TotalCobranzas = ventas.Count() // Cuenta la cantidad de ventas del usuario
+                        TotalCobranzas = ventas.Count()
                     })
                     .Select(res => new VMUser
                     {

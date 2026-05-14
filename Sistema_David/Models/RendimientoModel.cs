@@ -195,12 +195,12 @@ namespace Sistema_David.Models
 
                     EnriquecerRendimientoDespuesDeSp(db, resultList);
 
-                    // El SP puede filtrar cobranzas por el usuario que registró el movimiento.
-                    // Cuando se elige un vendedor puntual, acá forzamos el filtro por dueño real de la venta.
+                    // El SP puede mezclar criterios; al elegir un usuario en la lista izquierda debe verse
+                    // su actividad como vendedor de la venta o como cobrador (cobranzas de cartera ajena).
                     if (idVendedor > 0)
                     {
                         resultList = resultList
-                            .Where(r => r != null && r.IdVendedor == idVendedor)
+                            .Where(r => r != null && (r.IdVendedor == idVendedor || r.IdCobrador == idVendedor))
                             .ToList();
                     }
 

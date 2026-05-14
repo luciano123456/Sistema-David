@@ -28,7 +28,7 @@ Este archivo resume el proyecto y decisiones recientes para **continuar trabajo*
 ### Cobranzas (`ListaCobranzas`)
 
 - **Cobrador**: solo ventas con `d.idCobrador == idCobradorF` (no mezclar cartera de otros).
-- **Filtro “Todos” los cobradores** (`idCobradorF == -1`): sin restricción por cobrador.
+- **Filtro “Todos” los cobradores** (`idCobradorF == -1`) y **sin** búsqueda DNI/nombre: solo ventas **sin asignar** (`idCobrador` null o 0); las ya asignadas no entran en la lista general (solo en el cobrador o al filtrar por ese cobrador / buscar cliente).
 - **Fechas `FechaCobroDesde` / `FechaCobroHasta`**: solo se aplican cuando **no** hay texto de búsqueda (DNI/nombre) **y** el cobrador es **Todos** (`idCobradorF == -1`). Si hay búsqueda libre o cobrador concreto, el rango de fechas no limita el SQL.
 - Rango de día: `fcDesde = FechaCobroDesde.Date`, `fcHastaExcl = FechaCobroHasta.Date.AddDays(1)` sobre `d.FechaCobro`.
 

@@ -98,86 +98,92 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var busqueda = (DNI ?? string.Empty).Trim().ToUpper();
-                // Fecha cobro: solo si no hay búsqueda DNI/nombre y cobrador = Todos (-1).
+                var busqueda = (DNI ?? string.Empty).Trim();
                 var fcDesde = FechaCobroDesde.Date;
                 var fcHastaExcl = FechaCobroHasta.Date.AddDays(1);
 
-                var result = (from d in db.Ventas
-                              join c in db.Clientes on d.idCliente equals c.Id
-                              join z in db.Zonas on c.IdZona equals z.Id
-                              join u in db.Usuarios on d.idVendedor equals u.Id
-                              join ec in db.EstadosClientes on c.IdEstado equals ec.Id
-                              join cob in db.Usuarios on d.idCobrador equals cob.Id into cobradorJoin
-                              from cob in cobradorJoin.DefaultIfEmpty()
-                              join rc in db.RecorridosCobranzas on d.Id equals rc.IdVenta into recorridosCobranzasJoin
-                              from rc in recorridosCobranzasJoin.DefaultIfEmpty()
-                              join r in db.Recorridos on rc.IdRecorrido equals r.Id into recorridosJoin
-                              from r in recorridosJoin.DefaultIfEmpty()
-                              where (busqueda != ""
-                                     || idCobradorF != -1
-                                     || (d.FechaCobro != null && d.FechaCobro >= fcDesde && d.FechaCobro < fcHastaExcl))
-                                    && (
-                                         (busqueda != "" &&
-                                          d.Restante > 0 &&
-                                          (d.Estado == "" || d.Estado == null))
-                                         ||
-                                         (
-                                             (busqueda == "" &&
-                                              (d.idVendedor == idVendedor || idVendedor == -1) &&
-                                              (idCobradorF == -1 || d.idCobrador == idCobradorF) &&
-                                              (c.IdZona == idZona || idZona == -1) &&
-                                              d.Restante > 0)
-                                             &&
-                                             (d.Estado == "" || d.Estado == null) &&
-                                             (d.Turno == Turno || Turno == "Todos") &&
-                                             (d.IdTipoNegocio == TipoNegocio || TipoNegocio == -1) &&
-                                             (d.CobroPendiente == CobrosPendientes || CobrosPendientes == -1)
-                                         )
-                                       )
-                              select new VMVenta
-                              {
-                                  Id = d.Id,
-                                  idCliente = d.idCliente,
-                                  Fecha = d.Fecha,
-                                  Entrega = d.Entrega,
-                                  Restante = d.Restante,
-                                  FechaCobro = d.FechaCobro,
-                                  FechaLimite = d.FechaLimite,
-                                  idVendedor = d.idVendedor,
-                                  idZona = (int)c.IdZona,
-                                  Zona = z.Nombre,
-                                  Observacion = d.Observacion,
-                                  Cliente = c.Nombre + " " + c.Apellido,
-                                  Direccion = c.Direccion,
-                                  Vendedor = u.Nombre,
-                                  DniCliente = c.Dni,
-                                  Importante = d.Importante ?? 0,
-                                  TelefonoCliente = c.Telefono,
-                                  Orden = d.Orden ?? 0,
-                                  ValorCuota = d.ValorCuota ?? 0,
-                                  idEstado = c.IdEstado ?? 0,
-                                  EstadoCliente = ec.Nombre,
-                                  idCobrador = d.idCobrador ?? 0,
-                                  SaldoCliente = 0,
-                                  Cobrador = cob != null ? cob.Nombre : string.Empty,
-                                  Comprobante = d.Comprobante ?? 0,
-                                  Latitud = c.Latitud,
-                                  Longitud = c.Longitud,
-                                  // Campos de RecorridosCobranzas
-                                  IdRecorrido = rc != null ? (int)rc.IdRecorrido : 0,
-                                  EstadoRecorrido = rc != null ? rc.Estado : string.Empty,
-                                  OrdenRecorridoCobro = rc != null ? (int)rc.Orden : 0,
-                                  OrdenRecorrido = r != null ? (int)r.Orden : 0,
-                                  EnRecorrido = rc != null && rc.Estado != "Finalizado",
-                                  Turno = d.Turno != null ? d.Turno : "N/A",
-                                  IdUsuarioRecorrido = r != null ? (int)r.IdUsuario : 0,
-                                  FranjaHoraria = d.FranjaHoraria != null ? d.FranjaHoraria : "",
-                                  EstadoCobro = d.EstadoCobro != null ? d.EstadoCobro : "",
-                                  LimiteVentas = c.LimiteVentas ?? 0,
-                              }).ToList();
+                // Fecha próximo cobro: solo lista "general" (sin texto y cobrador = Todos).
+                var hayBusqueda = !string.IsNullOrWhiteSpace(busqueda);
+                var aplicarFechaCobro = !hayBusqueda && idCobradorF == -1;
+                var tokens = hayBusqueda ? TokensBusquedaCliente(busqueda) : new List<string>();
+                if (hayBusqueda && tokens.Count == 0)
+                    return new List<VMVenta>();
 
-                if (busqueda != "")
+                var query = from d in db.Ventas
+                            join c in db.Clientes on d.idCliente equals c.Id
+                            join z in db.Zonas on c.IdZona equals z.Id
+                            join u in db.Usuarios on d.idVendedor equals u.Id
+                            join ec in db.EstadosClientes on c.IdEstado equals ec.Id
+                            join cob in db.Usuarios on d.idCobrador equals cob.Id into cobradorJoin
+                            from cob in cobradorJoin.DefaultIfEmpty()
+                            join rc in db.RecorridosCobranzas on d.Id equals rc.IdVenta into recorridosCobranzasJoin
+                            from rc in recorridosCobranzasJoin.DefaultIfEmpty()
+                            join r in db.Recorridos on rc.IdRecorrido equals r.Id into recorridosJoin
+                            from r in recorridosJoin.DefaultIfEmpty()
+                            where (!aplicarFechaCobro
+                                   || (d.FechaCobro != null && d.FechaCobro >= fcDesde && d.FechaCobro < fcHastaExcl))
+                                  && d.Restante > 0
+                                  && (d.Estado == "" || d.Estado == null)
+                                  && (d.idVendedor == idVendedor || idVendedor == -1)
+                                  && (c.IdZona == idZona || idZona == -1)
+                                  && (d.Turno == Turno || Turno == "Todos")
+                                  && (d.IdTipoNegocio == TipoNegocio || TipoNegocio == -1)
+                                  && (d.CobroPendiente == CobrosPendientes || CobrosPendientes == -1)
+                                  && (hayBusqueda
+                                      ? (idCobradorF == -1 || d.idCobrador == idCobradorF)
+                                      : (((idCobradorF != -1 && d.idCobrador == idCobradorF)
+                                          || (idCobradorF == -1 && (d.idCobrador == null || d.idCobrador == 0)))))
+                            select new { d, c, z, u, ec, cob, rc, r };
+
+                foreach (var tok in tokens)
+                {
+                    var t = tok;
+                    query = query.Where(x =>
+                        ((x.c.Nombre ?? "") + " " + (x.c.Apellido ?? "") + " " + (x.c.Dni ?? "")).ToUpper().Contains(t));
+                }
+
+                var result = query.Select(x => new VMVenta
+                {
+                    Id = x.d.Id,
+                    idCliente = x.d.idCliente,
+                    Fecha = x.d.Fecha,
+                    Entrega = x.d.Entrega,
+                    Restante = x.d.Restante,
+                    FechaCobro = x.d.FechaCobro,
+                    FechaLimite = x.d.FechaLimite,
+                    idVendedor = x.d.idVendedor,
+                    idZona = (int)x.c.IdZona,
+                    Zona = x.z.Nombre,
+                    Observacion = x.d.Observacion,
+                    Cliente = x.c.Nombre + " " + x.c.Apellido,
+                    Direccion = x.c.Direccion,
+                    Vendedor = x.u.Nombre,
+                    DniCliente = x.c.Dni,
+                    Importante = x.d.Importante ?? 0,
+                    TelefonoCliente = x.c.Telefono,
+                    Orden = x.d.Orden ?? 0,
+                    ValorCuota = x.d.ValorCuota ?? 0,
+                    idEstado = x.c.IdEstado ?? 0,
+                    EstadoCliente = x.ec.Nombre,
+                    idCobrador = x.d.idCobrador ?? 0,
+                    SaldoCliente = 0,
+                    Cobrador = x.cob != null ? x.cob.Nombre : string.Empty,
+                    Comprobante = x.d.Comprobante ?? 0,
+                    Latitud = x.c.Latitud,
+                    Longitud = x.c.Longitud,
+                    IdRecorrido = x.rc != null ? (int)x.rc.IdRecorrido : 0,
+                    EstadoRecorrido = x.rc != null ? x.rc.Estado : string.Empty,
+                    OrdenRecorridoCobro = x.rc != null ? (int)x.rc.Orden : 0,
+                    OrdenRecorrido = x.r != null ? (int)x.r.Orden : 0,
+                    EnRecorrido = x.rc != null && x.rc.Estado != "Finalizado",
+                    Turno = x.d.Turno != null ? x.d.Turno : "N/A",
+                    IdUsuarioRecorrido = x.r != null ? (int)x.r.IdUsuario : 0,
+                    FranjaHoraria = x.d.FranjaHoraria != null ? x.d.FranjaHoraria : "",
+                    EstadoCobro = x.d.EstadoCobro != null ? x.d.EstadoCobro : "",
+                    LimiteVentas = x.c.LimiteVentas ?? 0,
+                }).ToList();
+
+                if (hayBusqueda)
                 {
                     result = AplicarBusquedaLibre(result, busqueda);
                 }
@@ -206,7 +212,7 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var busqueda = (DNI ?? string.Empty).Trim().ToUpper();
+                var busqueda = (DNI ?? string.Empty).Trim();
                 if (clientes == null || clientes.Count == 0)
                     return new List<VMVenta>();
 
@@ -214,60 +220,73 @@ namespace Sistema_David.Models.Modelo
                 var fcDesde = FechaCobroDesde.Date;
                 var fcHastaExcl = FechaCobroHasta.Date.AddDays(1);
 
-                var result = (from d in db.Ventas
-                              join c in db.Clientes on d.idCliente equals c.Id
-                              join z in db.Zonas on c.IdZona equals z.Id
-                              join u in db.Usuarios on d.idVendedor equals u.Id
-                              join ec in db.EstadosClientes on c.IdEstado equals ec.Id
-                              join cob in db.Usuarios on d.idCobrador equals cob.Id into cobradorJoin
-                              from cob in cobradorJoin.DefaultIfEmpty()
-                              where idsClientesFiltro.Contains(d.idCliente) &&
-                                    (busqueda != ""
-                                     || idCobradorF != -1
-                                     || (d.FechaCobro != null && d.FechaCobro >= fcDesde && d.FechaCobro < fcHastaExcl)) &&
-                                    (
-                                        (busqueda != "" &&
-                                         d.Restante > 0 &&
-                                         (d.Estado == "" || d.Estado == null)) ||
-                                        ((busqueda == "" &&
-                                          (d.idVendedor == idVendedor || idVendedor == -1) &&
-                                          (idCobradorF == -1 || d.idCobrador == idCobradorF) &&
-                                          (c.IdZona == idZona || idZona == -1) &&
-                                          d.Restante > 0) &&
-                                         (d.Estado == "" || d.Estado == null))
-                                    )
-                              select new VMVenta
-                              {
-                                  Id = d.Id,
-                                  idCliente = d.idCliente,
-                                  Fecha = d.Fecha,
-                                  Entrega = d.Entrega,
-                                  Restante = d.Restante,
-                                  FechaCobro = d.FechaCobro,
-                                  FechaLimite = d.FechaLimite,
-                                  idVendedor = d.idVendedor,
-                                  idZona = (int)c.IdZona,
-                                  Zona = z.Nombre,
-                                  Observacion = d.Observacion,
-                                  Cliente = c.Nombre + " " + c.Apellido,
-                                  Direccion = c.Direccion,
-                                  Vendedor = u.Nombre,
-                                  DniCliente = c.Dni,
-                                  Importante = d.Importante ?? 0,
-                                  TelefonoCliente = c.Telefono,
-                                  Orden = d.Orden ?? 0,
-                                  ValorCuota = d.ValorCuota ?? 0,
-                                  idEstado = c.IdEstado ?? 0,
-                                  EstadoCliente = ec.Nombre,
-                                  idCobrador = d.idCobrador ?? 0,
-                                  SaldoCliente = 0,
-                                  Cobrador = cob != null ? cob.Nombre : string.Empty,
-                                  Comprobante = d.Comprobante ?? 0,
-                                  Latitud = c.Latitud,
-                                  Longitud = c.Longitud
-                              }).ToList();
+                var hayBusqueda = !string.IsNullOrWhiteSpace(busqueda);
+                var aplicarFechaCobro = !hayBusqueda && idCobradorF == -1;
+                var tokens = hayBusqueda ? TokensBusquedaCliente(busqueda) : new List<string>();
+                if (hayBusqueda && tokens.Count == 0)
+                    return new List<VMVenta>();
 
-                if (busqueda != "")
+                var query = from d in db.Ventas
+                            join c in db.Clientes on d.idCliente equals c.Id
+                            join z in db.Zonas on c.IdZona equals z.Id
+                            join u in db.Usuarios on d.idVendedor equals u.Id
+                            join ec in db.EstadosClientes on c.IdEstado equals ec.Id
+                            join cob in db.Usuarios on d.idCobrador equals cob.Id into cobradorJoin
+                            from cob in cobradorJoin.DefaultIfEmpty()
+                            where idsClientesFiltro.Contains(d.idCliente)
+                                  && (!aplicarFechaCobro
+                                      || (d.FechaCobro != null && d.FechaCobro >= fcDesde && d.FechaCobro < fcHastaExcl))
+                                  && d.Restante > 0
+                                  && (d.Estado == "" || d.Estado == null)
+                                  && (hayBusqueda
+                                      ? ((d.idVendedor == idVendedor || idVendedor == -1)
+                                         && (c.IdZona == idZona || idZona == -1)
+                                         && (idCobradorF == -1 || d.idCobrador == idCobradorF))
+                                      : ((d.idVendedor == idVendedor || idVendedor == -1)
+                                         && (c.IdZona == idZona || idZona == -1)
+                                         && (((idCobradorF != -1 && d.idCobrador == idCobradorF)
+                                              || (idCobradorF == -1 && (d.idCobrador == null || d.idCobrador == 0))))))
+                            select new { d, c, z, u, ec, cob };
+
+                foreach (var tok in tokens)
+                {
+                    var t = tok;
+                    query = query.Where(x =>
+                        ((x.c.Nombre ?? "") + " " + (x.c.Apellido ?? "") + " " + (x.c.Dni ?? "")).ToUpper().Contains(t));
+                }
+
+                var result = query.Select(x => new VMVenta
+                {
+                    Id = x.d.Id,
+                    idCliente = x.d.idCliente,
+                    Fecha = x.d.Fecha,
+                    Entrega = x.d.Entrega,
+                    Restante = x.d.Restante,
+                    FechaCobro = x.d.FechaCobro,
+                    FechaLimite = x.d.FechaLimite,
+                    idVendedor = x.d.idVendedor,
+                    idZona = (int)x.c.IdZona,
+                    Zona = x.z.Nombre,
+                    Observacion = x.d.Observacion,
+                    Cliente = x.c.Nombre + " " + x.c.Apellido,
+                    Direccion = x.c.Direccion,
+                    Vendedor = x.u.Nombre,
+                    DniCliente = x.c.Dni,
+                    Importante = x.d.Importante ?? 0,
+                    TelefonoCliente = x.c.Telefono,
+                    Orden = x.d.Orden ?? 0,
+                    ValorCuota = x.d.ValorCuota ?? 0,
+                    idEstado = x.c.IdEstado ?? 0,
+                    EstadoCliente = x.ec.Nombre,
+                    idCobrador = x.d.idCobrador ?? 0,
+                    SaldoCliente = 0,
+                    Cobrador = x.cob != null ? x.cob.Nombre : string.Empty,
+                    Comprobante = x.d.Comprobante ?? 0,
+                    Latitud = x.c.Latitud,
+                    Longitud = x.c.Longitud
+                }).ToList();
+
+                if (hayBusqueda)
                 {
                     result = AplicarBusquedaLibre(result, busqueda);
                 }
@@ -315,18 +334,23 @@ namespace Sistema_David.Models.Modelo
             return dict;
         }
 
+        /// <summary>Tokens de búsqueda (misma lógica que <see cref="AplicarBusquedaLibre"/>).</summary>
+        private static List<string> TokensBusquedaCliente(string busqueda)
+        {
+            var normalizada = NormalizarTextoBusqueda(busqueda ?? "");
+            if (string.IsNullOrWhiteSpace(normalizada))
+                return new List<string>();
+            return normalizada
+                .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Distinct()
+                .ToList();
+        }
+
         private static List<VMVenta> AplicarBusquedaLibre(List<VMVenta> data, string busqueda)
         {
             if (data == null || data.Count == 0) return data ?? new List<VMVenta>();
 
-            var normalizada = NormalizarTextoBusqueda(busqueda);
-            if (string.IsNullOrWhiteSpace(normalizada)) return data;
-
-            var tokens = normalizada
-                .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                .Distinct()
-                .ToList();
-
+            var tokens = TokensBusquedaCliente(busqueda);
             if (tokens.Count == 0) return data;
 
             return data.Where(v =>
