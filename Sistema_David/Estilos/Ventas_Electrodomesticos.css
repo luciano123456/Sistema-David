@@ -2113,6 +2113,53 @@ input {
     padding: 10px 12px !important;
 }
 
+/* Filtro de columna activo — electro (cobros + historial ventas) */
+#vc_tabla_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#vc_tabla_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+#vc_tabla_pendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#vc_tabla_pendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+#vc_tabla_transferencias_pendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#vc_tabla_transferencias_pendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+#grdVentas_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#grdVentas_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+#grdVentasPendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#grdVentasPendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+.dataTables_scrollHead .ve-table thead > tr:not(.filters) > th.rp-col-filter-active,
+.dataTables_scrollHead .ve-table thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label {
+    color: #ff6b6b !important;
+}
+
+/* Un solo puntito: solo en la fila de títulos del scroll superior */
+.dataTables_scrollHead .ve-table thead > tr:not(.filters) > th .rp-col-filter-dot {
+    display: none;
+    width: 7px;
+    height: 7px;
+    margin-left: 6px;
+    border-radius: 50%;
+    background: #ff6b6b;
+    vertical-align: middle;
+    box-shadow: 0 0 6px rgba(255, 107, 107, 0.55);
+}
+
+.dataTables_scrollHead .ve-table thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-filter-dot {
+    display: inline-block;
+}
+
+#vc_tabla_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#vc_tabla_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+#vc_tabla_pendientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#vc_tabla_pendientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+#vc_tabla_transferencias_pendientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#vc_tabla_transferencias_pendientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+#grdVentas_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#grdVentas_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+#grdVentasPendientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#grdVentasPendientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active {
+    border-color: #ff6b6b !important;
+    box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.45) !important;
+    color: #ffe8e8 !important;
+}
+
 .vc-info-cliente {
     display: flex;
     flex-wrap: wrap;

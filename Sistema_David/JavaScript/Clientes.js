@@ -209,7 +209,7 @@ function configurarFiltrosPorColumna() {
         { index: 10, filterType: 'text' }
     ];
 
-    inicializarFiltrosColumnas(api, columnConfigClientes, "clientes_col_filters_v1");
+    inicializarFiltrosColumnas(api, columnConfigClientes, "clientes_col_filters_v1", true);
 }
 
 function inicializarSelect2Filtros() {

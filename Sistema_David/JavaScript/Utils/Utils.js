@@ -238,18 +238,116 @@ function escapeRegex(value) {
     return String(value ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function columnFilterValueFromCell($cell) {
+    if (!$cell || !$cell.length) return "";
+    const $in = $cell.find(".rp-filter-input");
+    if ($in.length) return String($in.val() || "").trim();
+    const $sel = $cell.find(".rp-filter-select");
+    if ($sel.length) return String($sel.val() || "").trim();
+    return "";
+}
+
+function ensureColumnTitleLabel($titleTh, withDot) {
+    if (!$titleTh || !$titleTh.length) return $();
+    if ($titleTh.find(".rp-filter-input, .rp-filter-select").length) return $();
+    let $label = $titleTh.children(".rp-col-title-label").first();
+    if (!$label.length) {
+        const html = ($titleTh.html() || "")
+            .replace(/<span class="rp-col-filter-dot"[^>]*><\/span>/gi, "")
+            .trim();
+        if (!html) return $();
+        $titleTh.html(`<span class="rp-col-title-label">${html}</span>`);
+        $label = $titleTh.children(".rp-col-title-label").first();
+    }
+    $titleTh.children(".rp-col-filter-dot").remove();
+    if (withDot) {
+        $titleTh.append('<span class="rp-col-filter-dot" aria-hidden="true"></span>');
+    }
+    return $label;
+}
+
+function applyColumnFilterControlMarker($filterCell, active) {
+    if (!$filterCell || !$filterCell.length) return;
+    const $in = $filterCell.find(".rp-filter-input");
+    const $sel = $filterCell.find(".rp-filter-select");
+    $in.add($sel).toggleClass("rp-filter-active", active);
+    $filterCell.toggleClass("rp-col-filter-active", active);
+}
+
+function applyColumnFilterTitleMarker($titleTh, active, showDot) {
+    if (!$titleTh || !$titleTh.length) return;
+    if ($titleTh.find(".rp-filter-input, .rp-filter-select, input[type=checkbox]").length) return;
+
+    ensureColumnTitleLabel($titleTh, !!showDot);
+    const $label = $titleTh.children(".rp-col-title-label").first();
+    const $dot = $titleTh.children(".rp-col-filter-dot").first();
+
+    $titleTh.toggleClass("rp-col-filter-active", active);
+    if ($label.length) {
+        $label.toggleClass("rp-col-filter-active", active);
+        $label.css("color", active ? "#ff6b6b" : "");
+    } else {
+        $titleTh.css("color", active ? "#ff6b6b" : "");
+    }
+    if ($dot.length) $dot.toggle(!!(active && showDot));
+}
+
+/** Marca en rojo título y control de filtro cuando la columna tiene filtro activo. */
+function syncColumnFilterMarkers(api, configColumns) {
+    const $wrapper = $(api.table().container());
+    // Con scrollX los inputs viven en el wrapper, no siempre en api.table().node()
+    const $filtersRow = $wrapper.find("thead tr.filters").first();
+    if (!$filtersRow.length) return;
+
+    const states = configColumns.map((config) => {
+        const $filterCell = $filtersRow.find("th").eq(config.index);
+        return {
+            index: config.index,
+            active: columnFilterValueFromCell($filterCell) !== ""
+        };
+    });
+
+    const $scrollHeadTable = $wrapper.find(".dataTables_scrollHead table").first();
+    const mainTableEl = api.table().node();
+
+    states.forEach(({ index, active }) => {
+        const $filterCell = $filtersRow.find("th").eq(index);
+        applyColumnFilterControlMarker($filterCell, active);
+
+        $wrapper.find("table").each(function () {
+            const $titleTh = $(this).find("thead tr").not(".filters").first().find("th").eq(index);
+            const showDot = $scrollHeadTable.length
+                ? this === $scrollHeadTable[0]
+                : this === mainTableEl;
+            applyColumnFilterTitleMarker($titleTh, active, showDot);
+        });
+    });
+}
+
 /**
  * Filtros por columna en la fila clonada del thead.
  * @param {object} api API DataTables
  * @param {Array<{index:number, filterType:string}>} configColumns
  * @param {string} [storageKey] Si se pasa, guarda/restaura valores en localStorage (solo Cobros).
+ * @param {boolean} [markActiveFilters] Si true, resalta encabezado y control con filtro activo.
  */
-function inicializarFiltrosColumnas(api, configColumns, storageKey) {
+function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFilters) {
 
     const tableContainer = $(api.table().container());
     const filtersRow = tableContainer.find("thead tr.filters");
 
     if (!filtersRow.length) return;
+
+    function refreshFilterMarkers() {
+        if (markActiveFilters) syncColumnFilterMarkers(api, configColumns);
+    }
+
+    if (markActiveFilters) {
+        api.off("draw.rpColFilterMarkers").on("draw.rpColFilterMarkers", refreshFilterMarkers);
+        tableContainer
+            .off("input.rpColFilterMarkers change.rpColFilterMarkers", ".rp-filter-input, .rp-filter-select")
+            .on("input.rpColFilterMarkers change.rpColFilterMarkers", ".rp-filter-input, .rp-filter-select", refreshFilterMarkers);
+    }
 
     let saved = {};
     if (storageKey) {
@@ -334,15 +432,14 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey) {
                 const value = $(this).val();
 
                 if (!value) {
-                    api.column(config.index).search("").draw(false);
-                    persistColumnFilters();
-                    return;
+                    api.column(config.index).search("");
+                } else {
+                    api.column(config.index)
+                        .search("^" + escapeRegex(value) + "$", true, false);
                 }
-
-                api.column(config.index)
-                    .search("^" + escapeRegex(value) + "$", true, false)
-                    .draw(false);
+                api.draw(false);
                 persistColumnFilters();
+                refreshFilterMarkers();
             });
 
         } else {
@@ -359,9 +456,12 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey) {
                 appliedAnySaved = true;
             }
 
-            $inp.on("keyup change", function () {
-                api.column(config.index).search(this.value).draw(false);
+            $inp.on("input keyup change", function () {
+                const q = String(this.value || "");
+                api.column(config.index).search(q.trim() ? q : "");
+                api.draw(false);
                 persistColumnFilters();
+                refreshFilterMarkers();
             });
         }
     }
@@ -377,4 +477,6 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey) {
             $(this).empty();
         }
     });
+
+    refreshFilterMarkers();
 }

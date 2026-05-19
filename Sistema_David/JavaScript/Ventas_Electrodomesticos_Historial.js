@@ -416,7 +416,7 @@ function renderTablaBase(selector, data, tipo) {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfig);
+            inicializarFiltrosColumnas(api, columnConfig, null, true);
 
             $(api.table().container()).find('thead tr.filters th').eq(12).html('');
         }
@@ -664,7 +664,7 @@ function renderTabla(data) {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfig);
+            inicializarFiltrosColumnas(api, columnConfig, null, true);
 
             $(api.table().container()).find('thead tr.filters th').eq(12).html('');
             

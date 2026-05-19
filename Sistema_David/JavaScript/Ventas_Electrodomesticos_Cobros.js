@@ -1267,7 +1267,7 @@ VC.cargarTabla = async function () {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfigCobros, VC_COL_FILTER_MAIN);
+            inicializarFiltrosColumnas(api, columnConfigCobros, VC_COL_FILTER_MAIN, true);
 
             $(api.table().container()).find('thead tr.filters th').eq(1).html('');
             $(api.table().container()).find('thead tr.filters th').eq(16).html('');
@@ -2290,7 +2290,7 @@ VC.cargarCobrosPendientes = async function () {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfigCobrosPendientes, VC_COL_FILTER_PEND);
+            inicializarFiltrosColumnas(api, columnConfigCobrosPendientes, VC_COL_FILTER_PEND, true);
 
             $(api.table().container()).find('thead tr.filters th').eq(0).html('');
             $(api.table().container()).find('thead tr.filters th').eq(16).html('');
@@ -2641,7 +2641,7 @@ VC.cargarTransferenciasPendientes = async function () {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfigTransferenciasPendientes, VC_COL_FILTER_TRANSF);
+            inicializarFiltrosColumnas(api, columnConfigTransferenciasPendientes, VC_COL_FILTER_TRANSF, true);
 
             const container = $(api.table().container());
 
