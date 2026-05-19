@@ -5,7 +5,7 @@
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
 <link href="~/Estilos/bootstrap.min.css" rel="stylesheet" />
-<link href="~/Estilos/pagosnuevomodif.css?v=3.1" rel="stylesheet" />
+<link href="~/Estilos/pagosnuevomodif.css?v=3.2" rel="stylesheet" />
 
 <style>
     /* Lightbox simple para previsualización de comprobante (imágenes) */
@@ -160,7 +160,8 @@
                         <table class="table table-dark table-hover align-middle mb-0" id="tblDetalle">
                             <thead>
                                 <tr>
-                                    <th style="min-width:320px">Descripción</th>
+                                    <th style="min-width:180px">Origen</th>
+                                    <th style="min-width:220px">Descripción</th>
                                     <th class="text-end">Base</th>
                                     <th class="text-end">% </th>
                                     <th class="text-end">Importe</th>
@@ -168,7 +169,7 @@
                             </thead>
                             <tbody>
                                 <tr class="empty-row">
-                                    <td colspan="4" class="text-center text-muted py-5">
+                                    <td colspan="5" class="text-center text-muted py-5">
                                         <div class="empty">
                                             <i class="bi bi-ui-checks-grid"></i>
                                             <div class="empty-title">Sin detalle</div>
@@ -179,7 +180,7 @@
                             </tbody>
                             <tfoot class="d-none" id="tfootDetalle">
                                 <tr>
-                                    <th class="text-end pe-3">Totales</th>
+                                    <th colspan="2" class="text-end pe-3">Totales</th>
 
                                     <th></th>
                                     <th></th>
@@ -462,5 +463,5 @@
 
 @section scripts{
     <script>window.PAGOS_ID_SUELDO = @(id.HasValue ? id.Value : 0);</script>
-    <script src="~/JavaScript/pagosnuevomodif.js?v=3.6"></script>
+    <script src="~/JavaScript/pagosnuevomodif.js?v=3.7"></script>
 }

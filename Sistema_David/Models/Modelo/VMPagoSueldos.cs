@@ -25,6 +25,8 @@ namespace Sistema_David.Models.Modelo
     {
         public byte TipoOrigen { get; set; }         // 1 ventas, 2 cobranzas
         public int? IdTipoNegocio { get; set; }
+        /// <summary>Ej.: "Ventas · Indumentaria", "Cobranzas · Electrodomésticos".</summary>
+        public string RubroComision { get; set; }
         public decimal BaseMonto { get; set; }
         public decimal Porcentaje { get; set; }
         public decimal ImporteCalc { get; set; }

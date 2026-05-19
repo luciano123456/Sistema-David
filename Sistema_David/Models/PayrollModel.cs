@@ -140,10 +140,10 @@ namespace Sistema_David.Models
 
         // TRAMOS (Marginal vs NoMarginal/Banda)
         private static (decimal total, List<VMSueldoDetalle> det)
-            AplicarTramos(decimal monto, byte tipo, int? idTipoNegocio, string obsBase = "", bool marginal = false)
+            AplicarTramos(decimal monto, byte tipo, int? idTipoNegocio, string obsBase = "", bool marginal = false, bool ignorarDetallePrecalculado = false)
         {
             // --- Fast-path para COBROS (tipo = 2) usando detalle precalculado ---
-            if (tipo == 2)
+            if (tipo == 2 && !ignorarDetallePrecalculado)
             {
                 var keyTN = idTipoNegocio ?? 0;
                 if (_ultimoDetalleCobros != null && _ultimoDetalleCobros.TryGetValue(keyTN, out var detPre) && detPre != null && detPre.Count > 0)
@@ -476,6 +476,58 @@ namespace Sistema_David.Models
             }
         }
 
+        /// <summary>Ventas clásicas por TN + ventas electro (misma clave TN=3 que <see cref="TotalesVentasElectro"/>).</summary>
+        private static Dictionary<int?, decimal> MergeVentasIndumentariaYElectro(int idUsuario, DateTime desde, DateTime hasta)
+        {
+            var clasic = TotalesVentasPorTipoNegocio(idUsuario, desde, hasta) ?? new Dictionary<int?, decimal>();
+            var electro = TotalesVentasElectro(idUsuario, desde, hasta) ?? new Dictionary<int?, decimal>();
+            foreach (var kv in electro)
+            {
+                if (!clasic.TryGetValue(kv.Key, out var acc))
+                    acc = 0m;
+                clasic[kv.Key] = acc + kv.Value;
+            }
+            return clasic;
+        }
+
+        private static Dictionary<int, string> CargarNombresTipoNegocio()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                db.Configuration.ProxyCreationEnabled = false;
+                return db.TipoNegocio.AsNoTracking()
+                    .ToDictionary(t => t.Id, t => (t.Nombre ?? "").Trim());
+            }
+        }
+
+        private static bool EsExcepcionSinReglas(Exception ex) =>
+            ex != null && ex.Message != null && ex.Message.IndexOf("SIN_REGLAS", StringComparison.Ordinal) >= 0;
+
+        /// <summary>Texto para el detalle (Ventas/Cobranzas · nombre tipo negocio).</summary>
+        private static string EtiquetaRubro(byte tipoOrigen, int? idTipoNegocioLogico, IReadOnlyDictionary<int, string> nombresTn)
+        {
+            var pref = tipoOrigen == (byte)1 ? "Ventas" : "Cobranzas";
+            if (!idTipoNegocioLogico.HasValue || idTipoNegocioLogico.Value == 0)
+                return $"{pref} · General / sin tipo";
+            if (nombresTn != null && nombresTn.TryGetValue(idTipoNegocioLogico.Value, out var nom) && !string.IsNullOrWhiteSpace(nom))
+                return $"{pref} · {nom}";
+            if (idTipoNegocioLogico.Value == 3)
+                return $"{pref} · Electrodomésticos";
+            return $"{pref} · Tipo #{idTipoNegocioLogico.Value}";
+        }
+
+        private static void AsignarRubroDetalles(IEnumerable<VMSueldoDetalle> lista, byte tipoOrigen, int? idTipoNegocioLogico, IReadOnlyDictionary<int, string> nombresTn)
+        {
+            if (lista == null) return;
+            var rubro = EtiquetaRubro(tipoOrigen, idTipoNegocioLogico, nombresTn);
+            foreach (var d in lista)
+            {
+                d.RubroComision = rubro;
+                if (!d.IdTipoNegocio.HasValue && idTipoNegocioLogico.HasValue)
+                    d.IdTipoNegocio = idTipoNegocioLogico;
+            }
+        }
+
 
         /* ============================ Calcular ============================ */
         public static VMSueldoCalc Calcular(
@@ -488,10 +540,11 @@ namespace Sistema_David.Models
 
             try
             {
-                bool esElectro =
-                    !string.IsNullOrWhiteSpace(tipoNegocio) &&
-                    tipoNegocio.Equals("Electrodomesticos",
-                        StringComparison.OrdinalIgnoreCase);
+                var tnRaw = (tipoNegocio ?? string.Empty).Trim();
+                bool esTodos = tnRaw.Equals("Todos", StringComparison.OrdinalIgnoreCase);
+                bool esElectroSolo = !esTodos
+                    && (tnRaw.Equals("Electrodomesticos", StringComparison.OrdinalIgnoreCase)
+                        || tnRaw.IndexOf("electro", StringComparison.OrdinalIgnoreCase) >= 0);
 
                 var vm = new VMSueldoCalc
                 {
@@ -506,59 +559,139 @@ namespace Sistema_David.Models
                     ImporteTotal = 0
                 };
 
+                var nombresTn = CargarNombresTipoNegocio();
+
                 /* ======================================
                    VENTAS
                 ====================================== */
 
-                var ventasTN = esElectro
-                    ? TotalesVentasElectro(idUsuario, desde, hasta)
-                    : TotalesVentasPorTipoNegocio(idUsuario, desde, hasta);
+                Dictionary<int?, decimal> ventasTN;
+                if (esTodos)
+                    ventasTN = MergeVentasIndumentariaYElectro(idUsuario, desde, hasta);
+                else if (esElectroSolo)
+                    ventasTN = TotalesVentasElectro(idUsuario, desde, hasta);
+                else
+                    ventasTN = TotalesVentasPorTipoNegocio(idUsuario, desde, hasta);
 
                 foreach (var kv in ventasTN)
                 {
                     vm.TotalVentas += kv.Value;
-
-                    var ap = AplicarAcumulativoVentas(
-                        kv.Value,
-                        kv.Key,
-                        "Ventas."
-                    );
-
-                    vm.ImporteVentas += ap.total;
-                    vm.Detalles.AddRange(ap.det);
+                    try
+                    {
+                        var ap = AplicarAcumulativoVentas(kv.Value, kv.Key, "Ventas.");
+                        vm.ImporteVentas += ap.total;
+                        AsignarRubroDetalles(ap.det, 1, kv.Key, nombresTn);
+                        vm.Detalles.AddRange(ap.det);
+                    }
+                    catch (InvalidOperationException ex) when (EsExcepcionSinReglas(ex))
+                    {
+                        // Sin reglas de ventas para este tipo: no suma comisión (sí cuenta la base en TotalVentas).
+                    }
                 }
 
                 /* ======================================
                    COBRANZAS
                 ====================================== */
 
-                var cobrosTN = esElectro
-                    ? TotalesCobrosElectro(idUsuario, desde, hasta)
-                    : TotalesCobrosPorTipoNegocio(idUsuario, desde, hasta);
-
-                foreach (var kv in cobrosTN)
+                if (esTodos)
                 {
-                    vm.TotalCobranzas += kv.Value;
-
-                    var idtiponegocio = 2;
-
-                    if(tipoNegocio == "Electrodomesticos")
+                    var cobrosClassic = TotalesCobrosPorTipoNegocio(idUsuario, desde, hasta);
+                    foreach (var kv in cobrosClassic)
                     {
-                        idtiponegocio = 3;
-                    } else
-                    {
-                        idtiponegocio = kv.Key;
+                        vm.TotalCobranzas += kv.Value;
+                        try
+                        {
+                            var idTipoCobro = kv.Key;
+                            var ap = AplicarTramos(
+                                kv.Value,
+                                2,
+                                idTipoCobro,
+                                "Cobranzas."
+                            );
+
+                            vm.ImporteCobranzas += ap.total;
+                            var idRubro = idTipoCobro == 0 ? (int?)null : idTipoCobro;
+                            AsignarRubroDetalles(ap.det, 2, idRubro, nombresTn);
+                            vm.Detalles.AddRange(ap.det);
+                        }
+                        catch (InvalidOperationException ex) when (EsExcepcionSinReglas(ex))
+                        {
+                        }
                     }
 
-                        var ap = AplicarTramos(
-                            kv.Value,
-                            2,
-                            idtiponegocio,
-                            "Cobranzas."
-                        );
+                    var cobrosElectro = TotalesCobrosElectro(idUsuario, desde, hasta);
+                    if (cobrosElectro != null && cobrosElectro.TryGetValue(0, out var impElectro) && impElectro > 0m)
+                    {
+                        vm.TotalCobranzas += impElectro;
+                        try
+                        {
+                            var apEl = AplicarTramos(
+                                impElectro,
+                                2,
+                                3,
+                                "Cobranzas.",
+                                false,
+                                ignorarDetallePrecalculado: true);
 
-                    vm.ImporteCobranzas += ap.total;
-                    vm.Detalles.AddRange(ap.det);
+                            vm.ImporteCobranzas += apEl.total;
+                            AsignarRubroDetalles(apEl.det, 2, 3, nombresTn);
+                            vm.Detalles.AddRange(apEl.det);
+                        }
+                        catch (InvalidOperationException ex) when (EsExcepcionSinReglas(ex))
+                        {
+                        }
+                    }
+                }
+                else if (esElectroSolo)
+                {
+                    var cobrosTN = TotalesCobrosElectro(idUsuario, desde, hasta);
+                    foreach (var kv in cobrosTN)
+                    {
+                        vm.TotalCobranzas += kv.Value;
+                        try
+                        {
+                            var ap = AplicarTramos(
+                                kv.Value,
+                                2,
+                                3,
+                                "Cobranzas.",
+                                false,
+                                ignorarDetallePrecalculado: true);
+
+                            vm.ImporteCobranzas += ap.total;
+                            AsignarRubroDetalles(ap.det, 2, 3, nombresTn);
+                            vm.Detalles.AddRange(ap.det);
+                        }
+                        catch (InvalidOperationException ex) when (EsExcepcionSinReglas(ex))
+                        {
+                        }
+                    }
+                }
+                else
+                {
+                    var cobrosTN = TotalesCobrosPorTipoNegocio(idUsuario, desde, hasta);
+                    foreach (var kv in cobrosTN)
+                    {
+                        vm.TotalCobranzas += kv.Value;
+                        try
+                        {
+                            var idtiponegocio = kv.Key;
+                            var ap = AplicarTramos(
+                                kv.Value,
+                                2,
+                                idtiponegocio,
+                                "Cobranzas."
+                            );
+
+                            vm.ImporteCobranzas += ap.total;
+                            var idRubro = idtiponegocio == 0 ? (int?)null : idtiponegocio;
+                            AsignarRubroDetalles(ap.det, 2, idRubro, nombresTn);
+                            vm.Detalles.AddRange(ap.det);
+                        }
+                        catch (InvalidOperationException ex) when (EsExcepcionSinReglas(ex))
+                        {
+                        }
+                    }
                 }
 
                 vm.ImporteTotal =
@@ -587,7 +720,7 @@ namespace Sistema_David.Models
 
                 using (var db = new Sistema_DavidEntities())
                 {
-                    var data =
+                    var rows =
                         (from v in db.Ventas_Electrodomesticos
                          where v.IdVendedor == idUsuario
                             && v.FechaVenta >= d0
@@ -598,12 +731,15 @@ namespace Sistema_David.Models
                              IdTipoNegocio = (int?)3,
                              Total = g.Sum()
                          })
-                        .ToDictionary(
+                        .ToList();
+
+                    if (rows.Count == 0)
+                        return new Dictionary<int?, decimal>();
+
+                    return rows.ToDictionary(
                             x => x.IdTipoNegocio,
                             x => (decimal)x.Total
                         );
-
-                    return data;
                 }
             }
             catch (Exception ex)
@@ -627,7 +763,7 @@ namespace Sistema_David.Models
 
                 using (var db = new Sistema_DavidEntities())
                 {
-                    var pagos =
+                    var rows =
                         (from p in db.Ventas_Electrodomesticos_Pagos
                          where p.UsuarioCreacion == idUsuario
                             && p.FechaPago >= d0
@@ -638,12 +774,15 @@ namespace Sistema_David.Models
                              TN = 0,
                              Total = g.Sum()
                          })
-                        .ToDictionary(
-                            x => x.TN,
-                            x => (decimal)(x.Total) 
-                        );
+                        .ToList();
 
-                    return pagos;
+                    if (rows.Count == 0)
+                        return new Dictionary<int, decimal>();
+
+                    return rows.ToDictionary(
+                            x => x.TN,
+                            x => (decimal)(x.Total)
+                        );
                 }
             }
             catch (Exception ex)

@@ -294,16 +294,17 @@
         // Filtrado por segmentación
         const detFiltrado = (tipoSel === 0) ? det : det.filter(d => d.TipoOrigen === tipoSel);
 
-        // Agrupación por TipoOrigen + Porcentaje
+        // Agrupación por rubro (tipo negocio) + TipoOrigen + %
         const groupsMap = {};
         for (const d of detFiltrado) {
             const pct = Number(d.Porcentaje);
-            const key = `${d.TipoOrigen}|${pct.toFixed(2)}`;
-            if (!groupsMap[key]) groupsMap[key] = { tipo: d.TipoOrigen, pct, base: 0, imp: 0 };
+            const rubro = (d.RubroComision || '').trim() || (d.TipoOrigen === 1 ? 'Ventas' : 'Cobranzas');
+            const key = `${d.TipoOrigen}|${rubro}|${pct.toFixed(4)}`;
+            if (!groupsMap[key]) groupsMap[key] = { tipo: d.TipoOrigen, rubro, pct, base: 0, imp: 0 };
             groupsMap[key].base += (+d.BaseMonto || 0);
             groupsMap[key].imp += (+d.ImporteCalc || 0);
         }
-        const groups = Object.values(groupsMap).sort((a, b) => (a.tipo - b.tipo) || (a.pct - b.pct));
+        const groups = Object.values(groupsMap).sort((a, b) => (a.tipo - b.tipo) || a.rubro.localeCompare(b.rubro) || (a.pct - b.pct));
 
         // Render
         $tblDet.empty();
@@ -312,7 +313,7 @@
         if (!groups.length) {
             $tblDet.append(`
                 <tr class="empty-row">
-                    <td colspan="4" class="text-center text-muted py-5">
+                    <td colspan="5" class="text-center text-muted py-5">
                         <div class="empty">
                             <i class="bi bi-ui-checks-grid"></i>
                             <div class="empty-title">Sin detalle</div>
@@ -329,10 +330,12 @@
 
         for (const g of groups) {
             const pctTxt = g.pct.toLocaleString('es-AR', { maximumFractionDigits: 2 });
-            const desc = `Comisión por ${g.tipo === 1 ? 'Ventas' : 'Cobranzas'} al ${pctTxt}%`;
+            const rubroHtml = escapeHtml(g.rubro || '');
+            const desc = `Comisión al ${pctTxt}%`;
             $tblDet.append(`
                 <tr>
-                    <td>${desc}</td>
+                    <td class="text-nowrap">${rubroHtml}</td>
+                    <td>${escapeHtml(desc)}</td>
                     <td class="text-end">${formatNumber(g.base)}</td>
                     <td class="text-end">${pctTxt}%</td>
                     <td class="text-end">${formatNumber(g.imp)}</td>
@@ -534,6 +537,7 @@
                 Detalles: det.map(d => ({
                     TipoOrigen: d.TipoOrigen,
                     IdTipoNegocio: d.IdTipoNegocio,
+                    RubroComision: d.RubroComision,
                     BaseMonto: d.BaseMonto,
                     Porcentaje: d.Porcentaje,
                     ImporteCalc: d.ImporteCalc,
@@ -733,14 +737,18 @@
         const ensureSpace = (needs) => { if (y > H - needs) { doc.addPage(); y = 40; footer(); } };
 
         newSection('Detalle de Comisión');
-        let x = 40; doc.text('Descripción', x, y); x = 325; doc.text('Base', x, y); x = 400; doc.text('%', x, y); x = 480; doc.text('Importe', x, y);
+        let x = 40; doc.text('Origen', x, y); x = 150; doc.text('Detalle', x, y); x = 300; doc.text('Base', x, y); x = 380; doc.text('%', x, y); x = 460; doc.text('Importe', x, y);
         y += 8; doc.line(40, y, W - 40, y); y += 12;
 
         $('#tblDetalle tbody tr').each(function () {
             const $tds = $(this).find('td'); if (!$tds.length) return;
-            const d = ($($tds[0]).text() || '').trim(), base = ($($tds[1]).text() || '').trim(), pct = ($($tds[2]).text() || '').trim(), imp = ($($tds[3]).text() || '').trim();
+            const rubro = ($($tds[0]).text() || '').trim();
+            const d = ($($tds[1]).text() || '').trim();
+            const base = ($($tds[2]).text() || '').trim();
+            const pct = ($($tds[3]).text() || '').trim();
+            const imp = ($($tds[4]).text() || '').trim();
             ensureSpace(120);
-            x = 40; doc.text(d, x, y); right(base, 380, y); right(pct, 440, y); right(imp, 560, y);
+            x = 40; doc.text(rubro.substring(0, 28), x, y); x = 150; doc.text(d.substring(0, 40), x, y); right(base, 360, y); right(pct, 420, y); right(imp, 560, y);
             y += 18;
         });
 
@@ -892,9 +900,22 @@
         const fetchReglas = (tipo, idTN) => $.getJSON('/Pagos/ListarReglas', { tipo, idTipoNegocio: (idTN ?? '') });
 
         const pedidos = [fetchReglas(1, ''), fetchReglas(2, '')];
+
         if (tnSel && tnSel !== '-1' && tnSel !== '') {
             pedidos.push(fetchReglas(1, tnSel));
             pedidos.push(fetchReglas(2, tnSel));
+        } else if (tnSel === '-1') {
+            // "Todos": alcanza con tener reglas globales o de cualquier tipo de negocio cargado en el sistema
+            const rTn = await $.getJSON('/Usuarios/ListarTipoNegocio');
+            const list = (rTn && rTn.data) || [];
+            const ids = new Set();
+            for (const x of list) {
+                const id = String(x.Id);
+                if (ids.has(id)) continue;
+                ids.add(id);
+                pedidos.push(fetchReglas(1, id));
+                pedidos.push(fetchReglas(2, id));
+            }
         }
 
         const res = await Promise.allSettled(pedidos);

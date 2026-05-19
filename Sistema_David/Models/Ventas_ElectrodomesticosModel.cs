@@ -133,15 +133,26 @@ namespace Sistema_David.Models
 
                     var ventas = q.ToList();
 
+                    // Ventas con cuotas en "cobro pendiente" (validación) van solo a Cobros pendientes, no al historial general.
+                    var idsVentasConCobroPendiente = new HashSet<int>(
+                        db.Ventas_Electrodomesticos_Cuotas
+                            .Where(c => c.CobroPendiente == 1 && c.Estado != "Pagada")
+                            .Select(c => c.IdVenta)
+                            .Distinct());
+
                     var rows = new List<VM_HistorialVentasRow>();
 
                     var hoy = DateTime.Today;
 
                     foreach (var v in ventas)
                     {
+                        if (idsVentasConCobroPendiente.Contains(v.Id))
+                            continue;
+
                         var cuotas = db.Ventas_Electrodomesticos_Cuotas
                             .Where(c => c.IdVenta == v.Id)
                             .OrderBy(c => c.NumeroCuota)
+
                             .ToList();
 
                         var totalCuotas = cuotas.Sum(c =>
@@ -1388,14 +1399,14 @@ namespace Sistema_David.Models
                 if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)
                     q = q.Where(x => x.Venta.IdVendedor == f.IdVendedor.Value);
 
-                var idSesionPendientes = f.IdUsuarioSesion;
-                if (idSesionPendientes > 0)
-                {
-                    q = q.Where(x =>
-                        x.Venta.IdCobrador == null
-                        || x.Venta.IdCobrador == 0
-                        || x.Venta.IdCobrador == idSesionPendientes);
-                }
+                //var idSesionPendientes = f.IdUsuarioSesion;
+                //if (idSesionPendientes > 0)
+                //{
+                //    q = q.Where(x =>
+                //        x.Venta.IdCobrador == null
+                //        || x.Venta.IdCobrador == 0
+                //        || x.Venta.IdCobrador == idSesionPendientes);
+                //}
 
 
 
@@ -1766,8 +1777,13 @@ namespace Sistema_David.Models
                     join cob in db.Usuarios
                         on v.IdCobrador equals cob.Id into cobradoresJoin
                     from cob in cobradoresJoin.DefaultIfEmpty()
-                    where (c.CobroPendiente == 0 || c.CobroPendiente == null)
-                      && (c.TransferenciaPendiente == 0 || c.TransferenciaPendiente == null)
+                    where (c.CobroPendiente == null || c.CobroPendiente == 0)
+                      && (c.TransferenciaPendiente == null || c.TransferenciaPendiente == 0)
+                      // Si la venta tiene alguna cuota en cobro pendiente (validación), no listar ninguna cuota acá.
+                      && !db.Ventas_Electrodomesticos_Cuotas.Any(cp =>
+                            cp.IdVenta == v.Id
+                            && cp.CobroPendiente == 1
+                            && cp.Estado != "Pagada")
                     select new
                     {
                         Cuota = c,

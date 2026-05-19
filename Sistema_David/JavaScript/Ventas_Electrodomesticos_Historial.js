@@ -938,6 +938,10 @@ function renderCuotas(v) {
         const fechaVto = moment(c.FechaVencimiento).startOf("day");
         const diasAtraso = hoy.diff(fechaVto, "days");
 
+        if (Number(c.CobroPendiente) === 1 || Number(c.TransferenciaPendiente) === 1) {
+            return;
+        }
+
         const estaVencida =
             diasAtraso > 0 &&
             c.Estado !== "Pagada" &&

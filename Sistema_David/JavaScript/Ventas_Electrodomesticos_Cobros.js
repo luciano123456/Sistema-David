@@ -931,8 +931,12 @@ VC.cargarTabla = async function () {
             params
         );
 
-        // mismas cuotas que antes
-        const cuotas = (resp?.data || []).filter(x => x && x.Estado !== "Pagada");
+        // mismas cuotas que antes (sin cobro/transferencia pendiente de validación)
+        const cuotas = (resp?.data || []).filter(x =>
+            x && x.Estado !== "Pagada"
+            && Number(x.CobroPendiente) !== 1
+            && Number(x.TransferenciaPendiente) !== 1
+        );
 
         // agrupar por venta manteniendo columnas
         cuotasCache = agruparCobrosPorVentaManteniendoColumnas(cuotas);
@@ -1659,6 +1663,11 @@ VC.renderCuotas = function (v) {
 
         const estaVencida = diasAtraso > 0 && c.Estado !== "Pagada";
         const venceHoy = diasAtraso === 0 && c.Estado !== "Pagada" && Number(c.MontoRestante || 0) > 0.0001;
+
+        // Cobro/transferencia pendiente de validación → sección propia (no acordeón de cobros normales).
+        if (Number(c.CobroPendiente) === 1 || Number(c.TransferenciaPendiente) === 1) {
+            return;
+        }
 
         if (c.Estado === "Pagada") {
             countFin++;
