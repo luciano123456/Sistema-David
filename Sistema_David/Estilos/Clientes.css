@@ -770,15 +770,15 @@ body {
     outline: none;
 }
 
-/* Filtro de columna activo */
-#grdClientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
-#grdClientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
-#grdClientes_wrapper .dataTables_scrollHead thead > tr:not(.filters) > th.rp-col-filter-active,
-#grdClientes_wrapper .dataTables_scrollHead thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label {
+/* Filtro de columna activo (por encima de .dt-dark thead th de redisenopantallas) */
+.dt-dark-wrap #grdClientes_wrapper table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active,
+.dt-dark-wrap #grdClientes_wrapper table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+.dt-dark-wrap #grdClientes_wrapper .dataTables_scrollHead table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active,
+.dt-dark-wrap #grdClientes_wrapper .dataTables_scrollHead table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label {
     color: #ff6b6b !important;
 }
 
-#grdClientes_wrapper .dataTables_scrollHead thead > tr:not(.filters) > th .rp-col-filter-dot {
+.dt-dark-wrap #grdClientes_wrapper .dataTables_scrollHead table.dt-dark thead > tr:not(.filters) > th .rp-col-filter-dot {
     display: none;
     width: 7px;
     height: 7px;
@@ -789,12 +789,12 @@ body {
     box-shadow: 0 0 6px rgba(255, 107, 107, 0.55);
 }
 
-#grdClientes_wrapper .dataTables_scrollHead thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-filter-dot {
+.dt-dark-wrap #grdClientes_wrapper .dataTables_scrollHead table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-filter-dot {
     display: inline-block;
 }
 
-#grdClientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
-#grdClientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active {
+.dt-dark-wrap #grdClientes_wrapper table.dt-dark thead tr.filters .rp-filter-input.rp-filter-active,
+.dt-dark-wrap #grdClientes_wrapper table.dt-dark thead tr.filters .rp-filter-select.rp-filter-active {
     border-color: #ff6b6b !important;
     box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.45) !important;
     color: #ffe8e8 !important;

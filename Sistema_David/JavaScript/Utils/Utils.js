@@ -266,12 +266,52 @@ function ensureColumnTitleLabel($titleTh, withDot) {
     return $label;
 }
 
+function rpSetFilterColor($el, active) {
+    if (!$el || !$el.length) return;
+    const node = $el[0];
+    if (!node || !node.style) return;
+    if (active) node.style.setProperty("color", "#ff6b6b", "important");
+    else node.style.removeProperty("color");
+}
+
+function rpSetFilterControlHighlight($controls, active) {
+    if (!$controls || !$controls.length) return;
+    $controls.each(function () {
+        if (active) {
+            this.style.setProperty("border-color", "#ff6b6b", "important");
+            this.style.setProperty("box-shadow", "0 0 0 1px rgba(255, 107, 107, 0.45)", "important");
+            this.style.setProperty("color", "#ffe8e8", "important");
+        } else {
+            this.style.removeProperty("border-color");
+            this.style.removeProperty("box-shadow");
+            this.style.removeProperty("color");
+        }
+    });
+}
+
+function getDataTableWrapper(api) {
+    if (!api) return $();
+    try {
+        if (api.table && api.table()) {
+            const $c = $(api.table().container());
+            if ($c.length) return $c;
+        }
+    } catch (e) { /* ignore */ }
+    try {
+        const s = api.settings && api.settings()[0];
+        if (s && s.nTableWrapper) return $(s.nTableWrapper);
+        if (s && s.sTableId) return $("#" + s.sTableId + "_wrapper");
+    } catch (e) { /* ignore */ }
+    return $();
+}
+
 function applyColumnFilterControlMarker($filterCell, active) {
     if (!$filterCell || !$filterCell.length) return;
     const $in = $filterCell.find(".rp-filter-input");
     const $sel = $filterCell.find(".rp-filter-select");
     $in.add($sel).toggleClass("rp-filter-active", active);
     $filterCell.toggleClass("rp-col-filter-active", active);
+    rpSetFilterControlHighlight($in.add($sel), active);
 }
 
 function applyColumnFilterTitleMarker($titleTh, active, showDot) {
@@ -285,16 +325,16 @@ function applyColumnFilterTitleMarker($titleTh, active, showDot) {
     $titleTh.toggleClass("rp-col-filter-active", active);
     if ($label.length) {
         $label.toggleClass("rp-col-filter-active", active);
-        $label.css("color", active ? "#ff6b6b" : "");
+        rpSetFilterColor($label, active);
     } else {
-        $titleTh.css("color", active ? "#ff6b6b" : "");
+        rpSetFilterColor($titleTh, active);
     }
     if ($dot.length) $dot.toggle(!!(active && showDot));
 }
 
 /** Marca en rojo título y control de filtro cuando la columna tiene filtro activo. */
 function syncColumnFilterMarkers(api, configColumns) {
-    const $wrapper = $(api.table().container());
+    const $wrapper = getDataTableWrapper(api);
     // Con scrollX los inputs viven en el wrapper, no siempre en api.table().node()
     const $filtersRow = $wrapper.find("thead tr.filters").first();
     if (!$filtersRow.length) return;
@@ -333,7 +373,7 @@ function syncColumnFilterMarkers(api, configColumns) {
  */
 function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFilters) {
 
-    const tableContainer = $(api.table().container());
+    const tableContainer = getDataTableWrapper(api);
     const filtersRow = tableContainer.find("thead tr.filters");
 
     if (!filtersRow.length) return;
