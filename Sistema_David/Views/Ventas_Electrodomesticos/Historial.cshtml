@@ -5,7 +5,7 @@
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
-<link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.5" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.8" rel="stylesheet" />
 
 <style>
     /* ====== Venta seleccionada ====== */
@@ -144,9 +144,9 @@
             </div>
 
             <div class="ve-card-body">
-                <div class="table-responsive">
+                <div class="table-responsive vc-cobros-dt">
                     <table id="grdVentasPendientes"
-                           class="table ve-table align-middle nowrap w-100">
+                           class="table ve-table ve-table-cobros align-middle nowrap w-100">
                         <thead>
                             <tr>
                                 <th style="width:40px"></th>
@@ -238,11 +238,12 @@
 
 
                 <!-- ===== TABLA PRINCIPAL ===== -->
-                <div class="table-responsive">
+                <p class="vc-dt-scroll-hint d-md-none text-muted small mb-2">
+                    <i class="fa fa-arrows-h me-1"></i> Deslizá horizontalmente para ver todas las columnas y filtros.
+                </p>
+                <div class="table-responsive vc-cobros-dt">
 
-
-
-                    <table id="grdVentas" class="table ve-table align-middle nowrap w-100">
+                    <table id="grdVentas" class="table ve-table ve-table-cobros align-middle nowrap w-100">
                         <thead>
                             <tr>
                                 <th style="width:40px"></th>
@@ -372,8 +373,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
 
-    <script src="~/JavaScript/Utils/Utils.js?v=2.4"></script>
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Historial.js?v=2.8"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=2.6"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Historial.js?v=2.9"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {

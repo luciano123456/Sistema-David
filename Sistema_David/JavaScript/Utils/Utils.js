@@ -370,13 +370,33 @@ function syncColumnFilterMarkers(api, configColumns) {
  * @param {Array<{index:number, filterType:string}>} configColumns
  * @param {string} [storageKey] Si se pasa, guarda/restaura valores en localStorage (solo Cobros).
  * @param {boolean} [markActiveFilters] Si true, resalta encabezado y control con filtro activo.
+ * @param {object} [uiOptions] skin: 'cobros', placeholder, inputType ('search'|'text')
  */
-function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFilters) {
+function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFilters, uiOptions) {
 
     const tableContainer = getDataTableWrapper(api);
     const filtersRow = tableContainer.find("thead tr.filters");
+    uiOptions = uiOptions || {};
+    const useCobrosSkin = uiOptions.skin === "cobros";
+    const filterPlaceholder = uiOptions.placeholder || "Buscar...";
+    const filterInputType = uiOptions.inputType || "text";
 
     if (!filtersRow.length) return;
+
+    if (useCobrosSkin) {
+        filtersRow.addClass("rp-filters-row-cobros");
+        tableContainer.addClass("vc-cobros-filters-on");
+    }
+
+    function mountFilterControl($control, $cell, isSelect) {
+        if (useCobrosSkin) {
+            const $wrap = $('<div class="rp-filter-cell"/>');
+            if (isSelect) $wrap.addClass("rp-filter-cell--select");
+            $wrap.append($control).appendTo($cell);
+        } else {
+            $control.appendTo($cell);
+        }
+    }
 
     function refreshFilterMarkers() {
         if (markActiveFilters) syncColumnFilterMarkers(api, configColumns);
@@ -439,10 +459,11 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFi
         if (config.filterType === "select" || config.filterType === "select_local") {
 
             const $select = $(`
-                <select class="rp-filter-select" style="width:100%">
+                <select class="rp-filter-select">
                     <option value="">Todos</option>
                 </select>
-            `).appendTo(cell);
+            `);
+            mountFilterControl($select, cell, true);
 
             const uniques = new Set();
 
@@ -486,9 +507,12 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFi
 
             const $inp = $("<input>", {
                 class: "rp-filter-input",
-                type: "text",
-                placeholder: "Buscar..."
-            }).appendTo(cell);
+                type: filterInputType,
+                placeholder: filterPlaceholder,
+                autocomplete: "off",
+                spellcheck: false
+            });
+            mountFilterControl($inp, cell, false);
 
             if (savedVal) {
                 $inp.val(savedVal);

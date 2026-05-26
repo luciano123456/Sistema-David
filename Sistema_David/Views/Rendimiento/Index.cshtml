@@ -7,6 +7,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
 <link href="~/Estilos/rendimiento.css?v4.1" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.0" rel="stylesheet" />
 
 <body class="ve-dark">
     @if (ViewData["ErrorPermisos"] == null)
@@ -233,8 +234,11 @@
                                 </div>
                             </div>
 
-                            <div class="table-responsive dt-dark-wrap">
-                                <table class="display nowrap dt-dark w-100" id="grdRendimiento">
+                            <p class="vc-dt-scroll-hint d-md-none text-muted small mb-2">
+                                <i class="fa fa-arrows-h me-1"></i> Deslizá horizontalmente para ver todas las columnas y filtros.
+                            </p>
+                            <div class="table-responsive dt-dark-wrap vc-cobros-dt">
+                                <table class="display nowrap dt-dark ve-table-cobros w-100" id="grdRendimiento">
                                     <thead>
                                         <tr>
                                             <th>Fecha</th>
@@ -265,8 +269,8 @@
                                 <i class="fa fa-user-times me-2"></i> Clientes Ausentes
                             </div>
 
-                            <div class="table-responsive dt-dark-wrap">
-                                <table class="display nowrap dt-dark w-100" id="grdClientesAusentes">
+                            <div class="table-responsive dt-dark-wrap vc-cobros-dt">
+                                <table class="display nowrap dt-dark ve-table-cobros w-100" id="grdClientesAusentes">
                                     <thead>
                                         <tr>
                                             <th>Fecha</th>
@@ -327,8 +331,8 @@
                                 <i class="fa fa-area-chart me-2"></i> Rendimiento Mensual por día
                             </div>
 
-                            <div class="table-responsive dt-dark-wrap">
-                                <table class="display nowrap dt-dark w-100" id="grdRendimientoGeneral">
+                            <div class="table-responsive dt-dark-wrap vc-cobros-dt">
+                                <table class="display nowrap dt-dark ve-table-cobros w-100" id="grdRendimientoGeneral">
                                     <thead>
                                         <tr>
                                             <th>Fecha</th>
@@ -349,8 +353,8 @@
                                 <i class="fa fa-money me-2"></i> Cobros de vendedores
                             </div>
 
-                            <div class="table-responsive dt-dark-wrap">
-                                <table class="display nowrap dt-dark w-100" id="grdRendimientoCobrado">
+                            <div class="table-responsive dt-dark-wrap vc-cobros-dt">
+                                <table class="display nowrap dt-dark ve-table-cobros w-100" id="grdRendimientoCobrado">
                                     <thead>
                                         <tr>
                                             <th>Vendedor</th>
@@ -408,5 +412,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="~/JavaScript/Rendimiento.js?v=4.9"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=2.6"></script>
+    <script src="~/JavaScript/Rendimiento.js?v=5.0"></script>
 }

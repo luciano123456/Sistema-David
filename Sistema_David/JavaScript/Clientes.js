@@ -209,7 +209,10 @@ function configurarFiltrosPorColumna() {
         { index: 10, filterType: 'text' }
     ];
 
-    inicializarFiltrosColumnas(api, columnConfigClientes, "clientes_col_filters_v1", true);
+    const CC_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
+    inicializarFiltrosColumnas(api, columnConfigClientes, "clientes_col_filters_v1", true, CC_COL_FILTER_UI);
+
+    $(api.table().container()).find("thead tr.filters th").eq(11).html("");
 }
 
 function inicializarSelect2Filtros() {

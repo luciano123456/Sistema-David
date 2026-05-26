@@ -28,6 +28,10 @@ const columnConfig = [
     { index: 11, filterType: 'text' },
 ];
 
+const VE_HIST_COL_FILTER_MAIN = "ve_hist_col_filtros_main";
+const VE_HIST_COL_FILTER_PEND = "ve_hist_col_filtros_pend";
+const VE_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
+
 
 /* ------------ HELPERS ------------ */
 
@@ -416,8 +420,9 @@ function renderTablaBase(selector, data, tipo) {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfig, null, true);
+            inicializarFiltrosColumnas(api, columnConfig, VE_HIST_COL_FILTER_PEND, true, VE_COL_FILTER_UI);
 
+            $(api.table().container()).find('thead tr.filters th').eq(0).html('');
             $(api.table().container()).find('thead tr.filters th').eq(12).html('');
         }
     });
@@ -664,10 +669,10 @@ function renderTabla(data) {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfig, null, true);
+            inicializarFiltrosColumnas(api, columnConfig, VE_HIST_COL_FILTER_MAIN, true, VE_COL_FILTER_UI);
 
+            $(api.table().container()).find('thead tr.filters th').eq(0).html('');
             $(api.table().container()).find('thead tr.filters th').eq(12).html('');
-            
 
             const rol = userSession?.IdRol;
 

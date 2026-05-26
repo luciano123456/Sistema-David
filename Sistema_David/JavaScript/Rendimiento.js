@@ -4,6 +4,64 @@ let usuarioSeleccionadoId = null;
 let isRenderingDashboard = false;
 let rendimientoRowSelectedId = null;
 
+const REND_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
+const REND_COL_FILTER_DIARIO_KEY = "rendimiento_diario_col_v1";
+const REND_COL_FILTER_AUSENTES_KEY = "rendimiento_ausentes_col_v1";
+const REND_COL_FILTER_GENERAL_KEY = "rendimiento_general_col_v1";
+const REND_COL_FILTER_COBRADO_KEY = "rendimiento_cobrado_col_v1";
+
+const columnConfigRendimientoDiario = [
+    { index: 0, filterType: "text" },
+    { index: 1, filterType: "text" },
+    { index: 2, filterType: "text" },
+    { index: 3, filterType: "text" },
+    { index: 4, filterType: "text" },
+    { index: 5, filterType: "text" },
+    { index: 6, filterType: "text" },
+    { index: 7, filterType: "text" },
+    { index: 8, filterType: "text" },
+    { index: 9, filterType: "text" },
+    { index: 10, filterType: "text" },
+    { index: 11, filterType: "text" },
+    { index: 12, filterType: "text" },
+    { index: 13, filterType: "text" },
+    { index: 14, filterType: "text" }
+];
+
+const columnConfigRendimientoAusentes = [
+    { index: 0, filterType: "text" },
+    { index: 1, filterType: "text" },
+    { index: 2, filterType: "text" },
+    { index: 3, filterType: "text" }
+];
+
+const columnConfigRendimientoGeneral = [
+    { index: 0, filterType: "text" },
+    { index: 1, filterType: "text" },
+    { index: 2, filterType: "text" },
+    { index: 3, filterType: "text" },
+    { index: 4, filterType: "text" }
+];
+
+const columnConfigRendimientoCobrado = [
+    { index: 0, filterType: "text" },
+    { index: 1, filterType: "text" }
+];
+
+function prepararEncabezadoFiltrosColumnas(selector) {
+    $(`${selector} thead tr.filters`).remove();
+    inicializarEncabezadoColumnas(selector);
+}
+
+function aplicarFiltrosColumnasRendimiento(selector, columnConfig, storageKey, clearFilterIndices) {
+    if (!$.fn.DataTable.isDataTable(selector)) return;
+    const api = $(selector).DataTable();
+    inicializarFiltrosColumnas(api, columnConfig, storageKey, true, REND_COL_FILTER_UI);
+    const $row = $(api.table().container()).find("thead tr.filters");
+    (clearFilterIndices || []).forEach((i) => $row.find("th").eq(i).empty());
+    ajustarTablasRendimiento();
+}
+
 $(document).ready(async function () {
     moment.locale('es');
 
@@ -764,6 +822,8 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
     if (!tableExists) {
 
+        prepararEncabezadoFiltrosColumnas("#grdRendimiento");
+
         gridRendimiento = $('#grdRendimiento').DataTable({
             ajax: {
                 url: url,
@@ -872,7 +932,12 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                 cargarVentas(-1);
                 scheduleRenderDashboard(180);
                 await configurarOpcionesColumnas();
-                ajustarTablasRendimiento();
+                aplicarFiltrosColumnasRendimiento(
+                    "#grdRendimiento",
+                    columnConfigRendimientoDiario,
+                    REND_COL_FILTER_DIARIO_KEY,
+                    [15]
+                );
 
                 // 🔥 CLICK + SELECCIÓN
                 $('#grdRendimiento tbody')
@@ -925,6 +990,8 @@ const configurarDataTableClientesAusentes = async (fechadesde, fechahasta, data 
     const tableExists = $.fn.DataTable.isDataTable('#grdClientesAusentes');
 
     if (!tableExists) {
+        prepararEncabezadoFiltrosColumnas("#grdClientesAusentes");
+
         $('#grdClientesAusentes').DataTable({
             "ajax": {
                 "url": `/Rendimiento/MostrarClientesAusentes?fechadesde=${fechadesde}&fechahasta=${fechahasta}`,
@@ -964,7 +1031,12 @@ const configurarDataTableClientesAusentes = async (fechadesde, fechahasta, data 
             ],
             "order": [[0, "ddMmYyyy-desc"], [1, "asc"]],
             "initComplete": function () {
-                ajustarTablasRendimiento();
+                aplicarFiltrosColumnasRendimiento(
+                    "#grdClientesAusentes",
+                    columnConfigRendimientoAusentes,
+                    REND_COL_FILTER_AUSENTES_KEY,
+                    [4]
+                );
             }
         });
 
@@ -1018,6 +1090,8 @@ const configurarDataTableGeneral = async (selectorTabla, fechadesde, fechahasta,
     const tableExists = $.fn.DataTable.isDataTable(selectorTabla);
 
     if (!tableExists) {
+        prepararEncabezadoFiltrosColumnas(selectorTabla);
+
         $(selectorTabla).DataTable({
             "data": datos,
             "columns": [
@@ -1049,7 +1123,11 @@ const configurarDataTableGeneral = async (selectorTabla, fechadesde, fechahasta,
                 "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
             },
             "initComplete": function () {
-                ajustarTablasRendimiento();
+                aplicarFiltrosColumnasRendimiento(
+                    selectorTabla,
+                    columnConfigRendimientoGeneral,
+                    REND_COL_FILTER_GENERAL_KEY
+                );
             }
         });
     } else {
@@ -1076,6 +1154,8 @@ const configurarDataTableCobrado = async (selectorTabla, fechadesde, fechahasta,
     const tableExists = $.fn.DataTable.isDataTable(selectorTabla);
 
     if (!tableExists) {
+        prepararEncabezadoFiltrosColumnas(selectorTabla);
+
         $(selectorTabla).DataTable({
             "data": datos,
             "columns": [
@@ -1090,15 +1170,20 @@ const configurarDataTableCobrado = async (selectorTabla, fechadesde, fechahasta,
                     "targets": [1]
                 },
             ],
+            responsive: false,
+            scrollX: true,
             "order": [[1, "asc"]],
             "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
             },
             "initComplete": function () {
-                ajustarTablasRendimiento();
-
-                hideGlobalLoading(); // 🔥 ACA LIBERÁS TODO
+                aplicarFiltrosColumnasRendimiento(
+                    selectorTabla,
+                    columnConfigRendimientoCobrado,
+                    REND_COL_FILTER_COBRADO_KEY
+                );
+                hideGlobalLoading();
             }
         });
     } else {

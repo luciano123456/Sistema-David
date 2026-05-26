@@ -7,7 +7,7 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-<link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.5" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.5" rel="stylesheet" />
 
 <style>
     /* ====== Venta seleccionada / acordeón ====== */
@@ -319,9 +319,12 @@
                 </form>
 
                 <!-- ===== TABLA PRINCIPAL ===== -->
-                <div class="table-responsive">
+                <p class="vc-dt-scroll-hint d-md-none text-muted small mb-2">
+                    <i class="fa fa-arrows-h me-1"></i> Deslizá horizontalmente para ver todas las columnas y filtros.
+                </p>
+                <div class="table-responsive vc-cobros-dt">
 
-                    <table id="vc_tabla" class="table ve-table align-middle nowrap w-100">
+                    <table id="vc_tabla" class="table ve-table ve-table-cobros align-middle nowrap w-100">
                         <thead>
                             <tr>
                                 <th style="width:40px;"></th>  @* Columna 0: flecha acordeón *@
@@ -360,8 +363,8 @@
                         <i class="fa fa-clock-o me-2"></i> Cobros pendientes
                     </h4>
 
-                    <div class="table-responsive">
-                        <table id="vc_tabla_pendientes" class="table ve-table align-middle nowrap w-100">
+                    <div class="table-responsive vc-cobros-dt">
+                        <table id="vc_tabla_pendientes" class="table ve-table ve-table-cobros align-middle nowrap w-100">
                             <thead>
                                 <tr>
                                     <th style="width:40px;"></th>
@@ -398,8 +401,8 @@
                         <i class="fa fa-exclamation-circle me-2"></i> Transferencias pendientes
                     </h4>
 
-                    <div class="table-responsive">
-                        <table id="vc_tabla_transferencias_pendientes" class="table ve-table align-middle nowrap w-100">
+                    <div class="table-responsive vc-cobros-dt">
+                        <table id="vc_tabla_transferencias_pendientes" class="table ve-table ve-table-cobros align-middle nowrap w-100">
                             <thead>
                                 <tr>
 
@@ -917,7 +920,7 @@
     <!-- JS de Select2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
-    <script src="~/JavaScript/Utils/Utils.js?v=2.4"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=2.6"></script>
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=3.8"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=3.9"></script>
 }

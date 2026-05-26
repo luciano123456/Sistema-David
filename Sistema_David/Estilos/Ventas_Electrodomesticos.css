@@ -2104,13 +2104,431 @@ input {
     margin-bottom: 6px;
 }
 
-.rp-filter-input, .rp-filter-select {
+/* Histórico / genérico (no Cobros) */
+:not(.vc-cobros-dt) .rp-filter-input,
+:not(.vc-cobros-dt) .rp-filter-select {
     width: 100%;
     border-radius: 12px !important;
     background: var(--dt-row-zebra) !important;
     border: 1px solid rgba(255,255,255,.10) !important;
     color: #fff !important;
     padding: 10px 12px !important;
+}
+
+/* ===== Cobros — encabezados y filtros por columna ===== */
+.vc-cobros-dt {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    border: 1px solid rgba(88, 166, 255, 0.18);
+    background: rgba(5, 10, 24, 0.55);
+}
+
+.vc-dt-scroll-hint {
+    letter-spacing: 0.02em;
+}
+
+/* Títulos (fila superior + scrollHead) */
+.vc-cobros-dt .dataTables_scrollHead table.ve-table-cobros thead > tr:not(.filters) > th,
+.vc-cobros-dt .dataTables_wrapper table.ve-table-cobros thead > tr:not(.filters) > th {
+    font-size: 0.6875rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    color: #c8d6f5 !important;
+    padding: 0.55rem 0.45rem !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    line-height: 1.25 !important;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.28) !important;
+    background: rgba(12, 22, 52, 0.98) !important;
+}
+
+.vc-cobros-dt .dataTables_scrollHead table.ve-table-cobros thead > tr:not(.filters) > th .rp-col-title-label {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+/* Fila de filtros */
+.vc-cobros-dt .dataTables_wrapper table.ve-table-cobros thead tr.filters th,
+.vc-cobros-dt table.ve-table-cobros thead tr.rp-filters-row-cobros th {
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    font-weight: 400 !important;
+    padding: 0.35rem 0.3rem 0.5rem !important;
+    vertical-align: middle !important;
+    background: rgba(7, 12, 28, 0.98) !important;
+    border-bottom: 2px solid rgba(88, 166, 255, 0.22) !important;
+}
+
+.vc-cobros-dt .rp-filter-cell {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+
+.vc-cobros-dt .rp-filter-cell::before {
+    content: "\f002";
+    font-family: FontAwesome;
+    font-size: 0.7rem;
+    color: rgba(168, 190, 230, 0.55);
+    position: absolute;
+    left: 0.55rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.vc-cobros-dt .rp-filter-input,
+.vc-cobros-dt .rp-filter-select {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    min-height: 2rem;
+    padding: 0.4rem 0.5rem 0.4rem 1.65rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 400 !important;
+    line-height: 1.3 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    color: #eef3ff !important;
+    background: rgba(15, 24, 48, 0.95) !important;
+    border: 1px solid rgba(118, 158, 255, 0.32) !important;
+    border-radius: 8px !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.vc-cobros-dt .rp-filter-select {
+    padding-left: 0.55rem !important;
+    cursor: pointer;
+}
+
+.vc-cobros-dt .rp-filter-cell--select::before {
+    display: none;
+}
+
+.vc-cobros-dt .rp-filter-input::placeholder {
+    color: rgba(168, 190, 230, 0.5) !important;
+    font-size: 0.75rem !important;
+    opacity: 1 !important;
+}
+
+.vc-cobros-dt .rp-filter-input:hover,
+.vc-cobros-dt .rp-filter-select:hover {
+    border-color: rgba(136, 180, 255, 0.5) !important;
+    background: rgba(18, 30, 58, 0.98) !important;
+}
+
+.vc-cobros-dt .rp-filter-input:focus,
+.vc-cobros-dt .rp-filter-select:focus {
+    outline: none !important;
+    border-color: rgba(88, 166, 255, 0.85) !important;
+    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.22), inset 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+    background: rgba(20, 34, 68, 1) !important;
+}
+
+/* Anchos mínimos por columna (alineación título / filtro / datos) */
+.vc-cobros-dt #vc_tabla thead th:nth-child(3),
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(2),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(1) {
+    min-width: 4.75rem;
+}
+
+.vc-cobros-dt #vc_tabla thead th:nth-child(4),
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(3),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(2) {
+    min-width: 4.25rem;
+}
+
+.vc-cobros-dt #vc_tabla thead th:nth-child(5),
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(4),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(3) {
+    min-width: 6.5rem;
+}
+
+.vc-cobros-dt #vc_tabla thead th:nth-child(6),
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(5),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(4) {
+    min-width: 8.5rem;
+}
+
+.vc-cobros-dt #vc_tabla thead th:nth-child(7),
+.vc-cobros-dt #vc_tabla thead th:nth-child(8),
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(6),
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(7),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(5),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(6),
+.vc-cobros-dt #vc_tabla tbody td:nth-child(7),
+.vc-cobros-dt #vc_tabla tbody td:nth-child(8),
+.vc-cobros-dt #vc_tabla_pendientes tbody td:nth-child(6),
+.vc-cobros-dt #vc_tabla_pendientes tbody td:nth-child(7),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(5),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(6) {
+    min-width: 6.25rem;
+}
+
+.vc-cobros-dt #vc_tabla thead th:nth-child(9),
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(8),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(7) {
+    min-width: 5.5rem;
+}
+
+.vc-cobros-dt #vc_tabla thead th:nth-child(10),
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(9),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(8) {
+    min-width: 7rem;
+}
+
+/* Turno, Franja, Pagado, Restante — Cobros electro */
+.vc-cobros-dt #vc_tabla thead th:nth-child(11),
+.vc-cobros-dt #vc_tabla tbody td:nth-child(11) {
+    min-width: 6.5rem;
+}
+
+.vc-cobros-dt #vc_tabla thead th:nth-child(12),
+.vc-cobros-dt #vc_tabla tbody td:nth-child(12) {
+    min-width: 8.5rem;
+}
+
+.vc-cobros-dt #vc_tabla thead th:nth-child(15),
+.vc-cobros-dt #vc_tabla thead th:nth-child(16),
+.vc-cobros-dt #vc_tabla tbody td:nth-child(15),
+.vc-cobros-dt #vc_tabla tbody td:nth-child(16) {
+    min-width: 7.25rem;
+}
+
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(10),
+.vc-cobros-dt #vc_tabla_pendientes tbody td:nth-child(10) {
+    min-width: 6.5rem;
+}
+
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(11),
+.vc-cobros-dt #vc_tabla_pendientes tbody td:nth-child(11) {
+    min-width: 8.5rem;
+}
+
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(14),
+.vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(15),
+.vc-cobros-dt #vc_tabla_pendientes tbody td:nth-child(14),
+.vc-cobros-dt #vc_tabla_pendientes tbody td:nth-child(15) {
+    min-width: 7.25rem;
+}
+
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(9),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(9) {
+    min-width: 6.5rem;
+}
+
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(10),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(10) {
+    min-width: 8.5rem;
+}
+
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(13),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(14),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(13),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(14) {
+    min-width: 7.25rem;
+}
+
+/* Clientes — anchos mínimos */
+.vc-cobros-dt #grdClientes thead th:nth-child(1),
+.vc-cobros-dt #grdClientes tbody td:nth-child(1) {
+    min-width: 9rem;
+}
+
+.vc-cobros-dt #grdClientes thead th:nth-child(2),
+.vc-cobros-dt #grdClientes tbody td:nth-child(2) {
+    min-width: 5.5rem;
+}
+
+.vc-cobros-dt #grdClientes thead th:nth-child(3),
+.vc-cobros-dt #grdClientes tbody td:nth-child(3) {
+    min-width: 7.5rem;
+}
+
+.vc-cobros-dt #grdClientes thead th:nth-child(4),
+.vc-cobros-dt #grdClientes tbody td:nth-child(4) {
+    min-width: 5.5rem;
+}
+
+.vc-cobros-dt #grdClientes thead th:nth-child(5),
+.vc-cobros-dt #grdClientes tbody td:nth-child(5) {
+    min-width: 6.25rem;
+}
+
+.vc-cobros-dt #grdClientes thead th:nth-child(6),
+.vc-cobros-dt #grdClientes tbody td:nth-child(6) {
+    min-width: 5.5rem;
+}
+
+.vc-cobros-dt #grdClientes thead th:nth-child(7),
+.vc-cobros-dt #grdClientes tbody td:nth-child(7) {
+    min-width: 5.5rem;
+}
+
+.vc-cobros-dt #grdClientes thead th:nth-child(8),
+.vc-cobros-dt #grdClientes thead th:nth-child(9),
+.vc-cobros-dt #grdClientes thead th:nth-child(10),
+.vc-cobros-dt #grdClientes thead th:nth-child(11),
+.vc-cobros-dt #grdClientes tbody td:nth-child(8),
+.vc-cobros-dt #grdClientes tbody td:nth-child(9),
+.vc-cobros-dt #grdClientes tbody td:nth-child(10),
+.vc-cobros-dt #grdClientes tbody td:nth-child(11) {
+    min-width: 5.75rem;
+}
+
+/* Rendimiento diario — anchos mínimos */
+.vc-cobros-dt #grdRendimiento thead th:nth-child(4),
+.vc-cobros-dt #grdRendimiento tbody td:nth-child(4) {
+    min-width: 10rem;
+}
+
+.vc-cobros-dt #grdRendimiento thead th:nth-child(6),
+.vc-cobros-dt #grdRendimiento thead th:nth-child(7),
+.vc-cobros-dt #grdRendimiento thead th:nth-child(8),
+.vc-cobros-dt #grdRendimiento tbody td:nth-child(6),
+.vc-cobros-dt #grdRendimiento tbody td:nth-child(7),
+.vc-cobros-dt #grdRendimiento tbody td:nth-child(8) {
+    min-width: 7rem;
+}
+
+.vc-cobros-dt #grdRendimiento thead th:nth-child(13),
+.vc-cobros-dt #grdRendimiento thead th:nth-child(14),
+.vc-cobros-dt #grdRendimiento tbody td:nth-child(13),
+.vc-cobros-dt #grdRendimiento tbody td:nth-child(14) {
+    min-width: 7.5rem;
+}
+
+.vc-cobros-dt #grdRendimiento thead th:nth-child(15),
+.vc-cobros-dt #grdRendimiento tbody td:nth-child(15) {
+    min-width: 11rem;
+}
+
+/* Historial ventas — anchos mínimos (misma estructura de columnas) */
+.vc-cobros-dt #grdVentas thead th:nth-child(2),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(2),
+.vc-cobros-dt #grdVentas tbody td:nth-child(2),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(2) {
+    min-width: 4.25rem;
+}
+
+.vc-cobros-dt #grdVentas thead th:nth-child(3),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(3),
+.vc-cobros-dt #grdVentas tbody td:nth-child(3),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(3) {
+    min-width: 6.25rem;
+}
+
+.vc-cobros-dt #grdVentas thead th:nth-child(4),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(4),
+.vc-cobros-dt #grdVentas tbody td:nth-child(4),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(4) {
+    min-width: 8.5rem;
+}
+
+.vc-cobros-dt #grdVentas thead th:nth-child(5),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(5),
+.vc-cobros-dt #grdVentas tbody td:nth-child(5),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(5) {
+    min-width: 6.25rem;
+}
+
+.vc-cobros-dt #grdVentas thead th:nth-child(6),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(6),
+.vc-cobros-dt #grdVentas tbody td:nth-child(6),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(6) {
+    min-width: 5.5rem;
+}
+
+.vc-cobros-dt #grdVentas thead th:nth-child(7),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(7),
+.vc-cobros-dt #grdVentas tbody td:nth-child(7),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(7) {
+    min-width: 7rem;
+}
+
+.vc-cobros-dt #grdVentas thead th:nth-child(8),
+.vc-cobros-dt #grdVentas thead th:nth-child(9),
+.vc-cobros-dt #grdVentas thead th:nth-child(10),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(8),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(9),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(10),
+.vc-cobros-dt #grdVentas tbody td:nth-child(8),
+.vc-cobros-dt #grdVentas tbody td:nth-child(9),
+.vc-cobros-dt #grdVentas tbody td:nth-child(10),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(8),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(9),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(10) {
+    min-width: 5.5rem;
+}
+
+.vc-cobros-dt #grdVentas thead th:nth-child(11),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(11),
+.vc-cobros-dt #grdVentas tbody td:nth-child(11),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(11) {
+    min-width: 6.5rem;
+}
+
+.vc-cobros-dt #grdVentas thead th:nth-child(12),
+.vc-cobros-dt #grdVentasPendientes thead th:nth-child(12),
+.vc-cobros-dt #grdVentas tbody td:nth-child(12),
+.vc-cobros-dt #grdVentasPendientes tbody td:nth-child(12) {
+    min-width: 5.5rem;
+}
+
+/* DataTables wrapper — buscador global */
+.vc-cobros-filters-on.dataTables_wrapper .dataTables_filter label {
+    font-size: 0.8125rem;
+    color: #b8c9e8;
+}
+
+.vc-cobros-filters-on.dataTables_wrapper .dataTables_filter input {
+    min-height: 2.25rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8125rem;
+    border-radius: 8px;
+    border: 1px solid rgba(118, 158, 255, 0.35);
+    background: rgba(12, 20, 42, 0.95);
+    color: #eef3ff;
+}
+
+@media (max-width: 768px) {
+    .vc-cobros-dt .dataTables_scrollHead table.ve-table-cobros thead > tr:not(.filters) > th,
+    .vc-cobros-dt .dataTables_wrapper table.ve-table-cobros thead > tr:not(.filters) > th {
+        font-size: 0.625rem !important;
+        padding: 0.45rem 0.35rem !important;
+    }
+
+    .vc-cobros-dt .dataTables_wrapper table.ve-table-cobros thead tr.filters th {
+        padding: 0.3rem 0.25rem 0.4rem !important;
+    }
+
+    .vc-cobros-dt .rp-filter-input,
+    .vc-cobros-dt .rp-filter-select {
+        min-height: 2.5rem;
+        font-size: 1rem !important;
+        padding: 0.45rem 0.45rem 0.45rem 1.75rem !important;
+    }
+
+    .vc-cobros-dt .rp-filter-input::placeholder {
+        font-size: 0.875rem !important;
+    }
+
+    .vc-cobros-filters-on.dataTables_wrapper .dataTables_filter input {
+        min-height: 2.5rem;
+        font-size: 1rem;
+    }
 }
 
 /* Filtro de columna activo — electro (cobros + historial ventas) */
@@ -2120,6 +2538,16 @@ input {
 #vc_tabla_pendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
 #vc_tabla_transferencias_pendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
 #vc_tabla_transferencias_pendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+#grdClientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#grdClientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+#grdRendimiento_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#grdRendimiento_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+#grdClientesAusentes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#grdClientesAusentes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+#grdRendimientoGeneral_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#grdRendimientoGeneral_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
+#grdRendimientoCobrado_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
+#grdRendimientoCobrado_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
 #grdVentas_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
 #grdVentas_wrapper thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
 #grdVentasPendientes_wrapper thead > tr:not(.filters) > th.rp-col-filter-active,
@@ -2145,12 +2573,38 @@ input {
     display: inline-block;
 }
 
+.vc-cobros-dt #vc_tabla_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+.vc-cobros-dt #vc_tabla_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+.vc-cobros-dt #vc_tabla_pendientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+.vc-cobros-dt #vc_tabla_pendientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+.vc-cobros-dt #vc_tabla_transferencias_pendientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+.vc-cobros-dt #vc_tabla_transferencias_pendientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
 #vc_tabla_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
 #vc_tabla_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
 #vc_tabla_pendientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
 #vc_tabla_pendientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
 #vc_tabla_transferencias_pendientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
 #vc_tabla_transferencias_pendientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+.vc-cobros-dt #grdClientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+.vc-cobros-dt #grdClientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+.vc-cobros-dt #grdRendimiento_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+.vc-cobros-dt #grdRendimiento_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+.vc-cobros-dt #grdClientesAusentes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+.vc-cobros-dt #grdClientesAusentes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+.vc-cobros-dt #grdRendimientoGeneral_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+.vc-cobros-dt #grdRendimientoGeneral_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+.vc-cobros-dt #grdRendimientoCobrado_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+.vc-cobros-dt #grdRendimientoCobrado_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+#grdRendimiento_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#grdRendimiento_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+#grdClientesAusentes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#grdClientesAusentes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+#grdRendimientoGeneral_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#grdRendimientoGeneral_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+#grdRendimientoCobrado_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#grdRendimientoCobrado_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
+#grdClientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
+#grdClientes_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
 #grdVentas_wrapper thead tr.filters .rp-filter-input.rp-filter-active,
 #grdVentas_wrapper thead tr.filters .rp-filter-select.rp-filter-active,
 #grdVentasPendientes_wrapper thead tr.filters .rp-filter-input.rp-filter-active,

@@ -689,27 +689,7 @@ body {
     border-radius: 8px !important;
 }
 
-#grdClientes thead tr.filters th {
-    padding: 6px !important;
-    background: rgba(9,15,35,.98) !important;
-}
-
-#grdClientes thead tr.filters .rp-filter-input,
-#grdClientes thead tr.filters .rp-filter-select {
-    width: 100%;
-    min-height: 34px;
-    border-radius: 8px !important;
-    border: 1px solid rgba(118, 158, 255, 0.35);
-    background: #0c1731;
-    color: #eaf1ff;
-    padding: .3rem .45rem;
-    font-size: .78rem;
-}
-
-#grdClientes thead tr.filters .rp-filter-select option {
-    color: #fff;
-    background: #0c1731;
-}
+/* Filtros por columna: estilos en Ventas_Electrodomesticos.css (.vc-cobros-dt) */
 
 /* Estado de cliente como antes */
 #grdClientes tbody tr.fila-cliente-inhabilitado td {
@@ -759,47 +739,6 @@ body {
     box-shadow: inset 3px 0 0 rgba(88, 166, 255, 0.95);
 }
 
-#grdClientes thead tr.filters .rp-filter-input::placeholder {
-    color: #8ea3d1;
-}
-
-#grdClientes thead tr.filters .rp-filter-input:focus,
-#grdClientes thead tr.filters .rp-filter-select:focus {
-    border-color: rgba(88, 166, 255, .95);
-    box-shadow: 0 0 0 .15rem rgba(88,166,255,.35);
-    outline: none;
-}
-
-/* Filtro de columna activo (por encima de .dt-dark thead th de redisenopantallas) */
-.dt-dark-wrap #grdClientes_wrapper table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active,
-.dt-dark-wrap #grdClientes_wrapper table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label,
-.dt-dark-wrap #grdClientes_wrapper .dataTables_scrollHead table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active,
-.dt-dark-wrap #grdClientes_wrapper .dataTables_scrollHead table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-title-label {
-    color: #ff6b6b !important;
-}
-
-.dt-dark-wrap #grdClientes_wrapper .dataTables_scrollHead table.dt-dark thead > tr:not(.filters) > th .rp-col-filter-dot {
-    display: none;
-    width: 7px;
-    height: 7px;
-    margin-left: 6px;
-    border-radius: 50%;
-    background: #ff6b6b;
-    vertical-align: middle;
-    box-shadow: 0 0 6px rgba(255, 107, 107, 0.55);
-}
-
-.dt-dark-wrap #grdClientes_wrapper .dataTables_scrollHead table.dt-dark thead > tr:not(.filters) > th.rp-col-filter-active .rp-col-filter-dot {
-    display: inline-block;
-}
-
-.dt-dark-wrap #grdClientes_wrapper table.dt-dark thead tr.filters .rp-filter-input.rp-filter-active,
-.dt-dark-wrap #grdClientes_wrapper table.dt-dark thead tr.filters .rp-filter-select.rp-filter-active {
-    border-color: #ff6b6b !important;
-    box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.45) !important;
-    color: #ffe8e8 !important;
-}
-
 @media (max-width: 767.98px) {
     .cc-header {
         padding: 14px;
@@ -812,10 +751,6 @@ body {
     }
 
     #grdClientes tfoot {
-        display: none;
-    }
-
-    #grdClientes thead tr.filters {
         display: none;
     }
 }

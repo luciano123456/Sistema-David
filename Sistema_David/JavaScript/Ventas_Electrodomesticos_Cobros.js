@@ -24,6 +24,8 @@ const VC_STORAGE_KEY = "vc_filtros_cobranzas_v2";
 const VC_COL_FILTER_MAIN = "vc_col_filtros_cobros_main";
 const VC_COL_FILTER_PEND = "vc_col_filtros_cobros_pendientes";
 const VC_COL_FILTER_TRANSF = "vc_col_filtros_transferencias";
+/** UI filtros por columna (Cobros) */
+const VC_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
 
 const columnConfigCobros = [
     { index: 1, filterType: 'text' },
@@ -1267,7 +1269,7 @@ VC.cargarTabla = async function () {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfigCobros, VC_COL_FILTER_MAIN, true);
+            inicializarFiltrosColumnas(api, columnConfigCobros, VC_COL_FILTER_MAIN, true, VC_COL_FILTER_UI);
 
             $(api.table().container()).find('thead tr.filters th').eq(1).html('');
             $(api.table().container()).find('thead tr.filters th').eq(16).html('');
@@ -2290,7 +2292,7 @@ VC.cargarCobrosPendientes = async function () {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfigCobrosPendientes, VC_COL_FILTER_PEND, true);
+            inicializarFiltrosColumnas(api, columnConfigCobrosPendientes, VC_COL_FILTER_PEND, true, VC_COL_FILTER_UI);
 
             $(api.table().container()).find('thead tr.filters th').eq(0).html('');
             $(api.table().container()).find('thead tr.filters th').eq(16).html('');
@@ -2641,7 +2643,7 @@ VC.cargarTransferenciasPendientes = async function () {
 
             const api = this.api();
 
-            inicializarFiltrosColumnas(api, columnConfigTransferenciasPendientes, VC_COL_FILTER_TRANSF, true);
+            inicializarFiltrosColumnas(api, columnConfigTransferenciasPendientes, VC_COL_FILTER_TRANSF, true, VC_COL_FILTER_UI);
 
             const container = $(api.table().container());
 
