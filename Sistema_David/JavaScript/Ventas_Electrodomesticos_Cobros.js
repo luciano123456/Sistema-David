@@ -139,7 +139,30 @@ let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
     document.head.appendChild(st);
 })();
 
+VC.esCobradorSesion = function () {
+    return Number(userSession?.IdRol) === 3;
+};
+
+/** Fechas efectivas del listado (cobrador: siempre hoy; admin: inputs o hoy). */
+VC.fechasFiltroCobros = function () {
+    const hoy = moment().format("YYYY-MM-DD");
+    if (VC.esCobradorSesion()) {
+        return { desde: hoy, hasta: hoy };
+    }
+    return {
+        desde: $("#f_desde").val() || hoy,
+        hasta: $("#f_hasta").val() || hoy
+    };
+};
+
+VC.aplicarFechasHoyCobrador = function () {
+    const hoy = moment().format("YYYY-MM-DD");
+    $("#f_desde").val(hoy);
+    $("#f_hasta").val(hoy);
+};
+
 VC.guardarFiltros = function () {
+    if (VC.esCobradorSesion()) return;
 
     const estado = {
         desde: $("#f_desde").val(),
@@ -150,6 +173,7 @@ VC.guardarFiltros = function () {
 };
 
 VC.restaurarFiltros = function () {
+    if (VC.esCobradorSesion()) return false;
 
     const raw = localStorage.getItem(VC_STORAGE_KEY);
     if (!raw) return false;
@@ -410,12 +434,14 @@ $(document).ready(async function () {
 
     await VC.cargarCombos();
 
-    // ✅ DESPUÉS restaurar
-    const restaurado = VC.restaurarFiltros();
-
-    if (!restaurado) {
-        $("#f_desde").val(hoy);
-        $("#f_hasta").val(hasta);
+    if (VC.esCobradorSesion()) {
+        VC.aplicarFechasHoyCobrador();
+    } else {
+        const restaurado = VC.restaurarFiltros();
+        if (!restaurado) {
+            $("#f_desde").val(hoy);
+            $("#f_hasta").val(hasta);
+        }
     }
 
    
@@ -429,6 +455,10 @@ VC.initEventos = function () {
 
     $(document).on("change", "#f_desde, #f_hasta", function () {
         VC.guardarFiltros();
+    });
+
+    $("#btnLimpiarFiltrosColumnasCobros").off("click.vcColFiltros").on("click.vcColFiltros", function () {
+        VC.limpiarFiltrosColumnas();
     });
 
     // Mostrar / Ocultar filtros
@@ -875,8 +905,9 @@ VC.aplicarFiltros = () => {
 };
 VC.limpiarFiltros = function () {
     const hoy = moment().format("YYYY-MM-DD");
+    const hasta = VC.esCobradorSesion() ? hoy : moment(hoy).add(7, "days").format("YYYY-MM-DD");
     $("#f_desde").val(hoy);
-    $("#f_hasta").val(hoy);
+    $("#f_hasta").val(hasta);
     $("#f_cliente").val("").trigger("change");
     $("#f_vendedor").val("").trigger("change");
     $("#f_estado").val("");
@@ -885,11 +916,28 @@ VC.limpiarFiltros = function () {
     VC.cargarTabla();
 };
 
+/** Limpia filtros por columna en las 3 tablas de Cobros (principal, pendientes, transferencias). */
+VC.limpiarFiltrosColumnas = function () {
+    if (tablaCobros) {
+        limpiarFiltrosColumnas(tablaCobros, columnConfigCobros, VC_COL_FILTER_MAIN);
+    }
+    if (tablaPendientes) {
+        limpiarFiltrosColumnas(tablaPendientes, columnConfigCobrosPendientes, VC_COL_FILTER_PEND);
+    }
+    if (tablaTransferenciasPendientes) {
+        limpiarFiltrosColumnas(tablaTransferenciasPendientes, columnConfigTransferenciasPendientes, VC_COL_FILTER_TRANSF);
+    }
+};
+
 /* ===========================================================
    TABLA PRINCIPAL
 =========================================================== */
 
 VC.cargarTabla = async function () {
+
+    if (VC.esCobradorSesion()) {
+        VC.aplicarFechasHoyCobrador();
+    }
 
     VC.showGlobalLoading("Cargando tablas...");
 
@@ -910,9 +958,11 @@ VC.cargarTabla = async function () {
         !(Array.isArray(rawCobrador) && rawCobrador.length === 0) &&
         String(Array.isArray(rawCobrador) ? rawCobrador[0] : rawCobrador).trim() !== "";
 
+    const fechas = VC.fechasFiltroCobros();
+
     const params = {
-        fechaDesde: $("#f_desde").val() || null,
-        fechaHasta: $("#f_hasta").val() || null,
+        fechaDesde: fechas.desde,
+        fechaHasta: fechas.hasta,
         idCliente: $("#f_cliente").val() || null,
         idVendedor: $("#f_vendedor").val() || null,
         idCobrador: $("#f_cobrador").val() || null,

@@ -1823,16 +1823,17 @@ namespace Sistema_David.Models
                 if (f.IdCliente.HasValue && f.IdCliente.Value > 0)
                     q = q.Where(x => x.Venta.IdCliente == f.IdCliente.Value);
 
-                // Si el usuario eligió cliente o cobrador en la pantalla, no acotar por fecha (flag desde el front).
-                if (!f.OmitirRangoFecha)
+                // Rango FechaCobro solo para ventas sin cobrador asignado.
+                // Si IdCobrador está asignado, la cuota se lista siempre (aunque FechaCobro sea futura).
+                if (!f.OmitirRangoFecha && (desde.HasValue || hasta.HasValue))
                 {
-                    if (desde.HasValue)
-                        q = q.Where(x =>
-                            DbFunctions.TruncateTime(x.Cuota.FechaCobro) >= desde.Value);
-
-                    if (hasta.HasValue)
-                        q = q.Where(x =>
-                            DbFunctions.TruncateTime(x.Cuota.FechaCobro) <= hasta.Value);
+                    q = q.Where(x =>
+                        (x.Venta.IdCobrador != null && x.Venta.IdCobrador != 0)
+                        || (
+                            (x.Venta.IdCobrador == null || x.Venta.IdCobrador == 0)
+                            && (!desde.HasValue || DbFunctions.TruncateTime(x.Cuota.FechaCobro) >= desde.Value)
+                            && (!hasta.HasValue || DbFunctions.TruncateTime(x.Cuota.FechaCobro) <= hasta.Value)
+                        ));
                 }
 
                 if (f.IdVendedor.HasValue && f.IdVendedor.Value > 0)

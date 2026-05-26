@@ -110,11 +110,20 @@ namespace Sistema_David.Controllers
 
                 var filtraPorCliente = filtro.IdCliente.HasValue && filtro.IdCliente.Value > 0;
 
-                if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
+                if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR / COBRADOR
                 {
                     filtro.IdVendedor = usuarioSesion.Id;
                     // Si se busca por cliente, no restringir por cobrador para mostrar todos sus cobros.
                     filtro.IdCobrador = filtraPorCliente ? (int?)null : usuarioSesion.Id;
+                }
+
+                // Cobrador electro: sin panel de fechas; rango hoy para cartera sin asignar (asignadas ignoran fecha en el modelo).
+                if (usuarioSesion != null && usuarioSesion.IdRol == 3 && !filtraPorCliente)
+                {
+                    var hoy = DateTime.Today;
+                    filtro.FechaDesde = hoy;
+                    filtro.FechaHasta = hoy;
+                    filtro.OmitirRangoFecha = false;
                 }
 
                 var data = Ventas_ElectrodomesticosModel.ListarCuotasACobrar(filtro);

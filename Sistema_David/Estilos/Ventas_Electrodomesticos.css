@@ -2127,6 +2127,16 @@ input {
     letter-spacing: 0.02em;
 }
 
+/* Icono escoba — Limpiar filtros de columnas (Cobros) */
+.vc-ico-broom::before {
+    content: "🧹";
+    display: inline-block;
+    margin-right: 0.35rem;
+    vertical-align: -0.08em;
+    font-size: 1.05em;
+    line-height: 1;
+}
+
 /* Títulos (fila superior + scrollHead) */
 .vc-cobros-dt .dataTables_scrollHead table.ve-table-cobros thead > tr:not(.filters) > th,
 .vc-cobros-dt .dataTables_wrapper table.ve-table-cobros thead > tr:not(.filters) > th {

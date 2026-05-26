@@ -7,7 +7,7 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.5" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.6" rel="stylesheet" />
 
 <style>
     /* ====== Venta seleccionada / acordeón ====== */
@@ -199,7 +199,14 @@
                     <span class="ve-card-title">Cuotas a cobrar</span>
                 </div>
 
-                <div class="d-flex flex-wrap gap-2" id="divFiltros">
+                <div class="d-flex flex-wrap gap-2 align-items-center" id="divFiltros">
+                    <button type="button"
+                            class="btn btn-outline-warning btn-sm"
+                            id="btnLimpiarFiltrosColumnasCobros"
+                            title="Quitar todos los filtros de columnas (las 3 tablas)">
+                        <span class="vc-ico-broom" aria-hidden="true"></span>
+                        Limpiar Filtros
+                    </button>
                     <button id="btnToggleFiltros" class="btn btn-outline-light btn-sm" hidden>
                         <i id="iconFiltros" class="fa fa-chevron-down"></i> Mas Filtros
                     </button>
@@ -920,7 +927,7 @@
     <!-- JS de Select2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
-    <script src="~/JavaScript/Utils/Utils.js?v=2.6"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=2.7"></script>
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=3.9"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=4.1"></script>
 }

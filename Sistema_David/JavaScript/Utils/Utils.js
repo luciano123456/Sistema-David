@@ -544,3 +544,37 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFi
 
     refreshFilterMarkers();
 }
+
+/**
+ * Limpia filtros por columna de una DataTable (inputs, búsquedas y localStorage).
+ * @param {object} api API DataTables
+ * @param {Array<{index:number, filterType:string}>} configColumns
+ * @param {string} [storageKey]
+ */
+function limpiarFiltrosColumnas(api, configColumns, storageKey) {
+    if (!api || !configColumns || !configColumns.length) return;
+
+    if (storageKey) {
+        try {
+            localStorage.removeItem(storageKey);
+        } catch (e) { /* ignore */ }
+    }
+
+    for (const config of configColumns) {
+        api.column(config.index).search("");
+    }
+
+    const tableContainer = getDataTableWrapper(api);
+    const filtersRow = tableContainer.find("thead tr.filters");
+    if (filtersRow.length) {
+        for (const config of configColumns) {
+            const cell = filtersRow.find("th").eq(config.index);
+            if (!cell.length) continue;
+            cell.find(".rp-filter-input").val("");
+            cell.find(".rp-filter-select").val("");
+        }
+    }
+
+    api.draw(false);
+    syncColumnFilterMarkers(api, configColumns);
+}
