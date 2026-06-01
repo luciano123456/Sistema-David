@@ -1221,8 +1221,7 @@ async function enviarWhatssapDesdeRow(rowEncoded) {
     try {
         const row = JSON.parse(decodeURIComponent(rowEncoded || ""));
         const descripcion = row?.Descripcion || "";
-
-        const esElectro = descripcion.toLowerCase().includes("electro");
+        const esElectro = esElectrodomesticosRendimiento(row);
 
         if (esElectro) {
             const idMovimiento = obtenerIdCorrectoElectro(row);
@@ -1253,7 +1252,7 @@ async function enviarWhatssap(rowOrId, descripcion = "") {
 
         const row = rowOrId || {};
         const desc = String(row.Descripcion || descripcion || "");
-        const esElectro = desc.toLowerCase().includes("electro");
+        const esElectro = esElectrodomesticosRendimiento(row);
 
         if (esElectro) {
             const idMovimiento = obtenerIdCorrectoElectro(row);
@@ -1281,15 +1280,24 @@ function obtenerNumeroCuota(descripcion) {
 function obtenerIdCorrectoElectro(row) {
 
     const desc = (row.Descripcion || "").toLowerCase();
+    const idOriginal = Number(row?.IdOriginal || 0);
+    const idActual = Number(row?.Id || 0);
 
     // 🔥 SI TENÉS IDCUOTA (futuro)
     if (row.IdCuota) {
         return row.IdCuota;
     }
 
+    // 🔥 AJUSTES (recargo/descuento) en rendimiento suelen venir con IdOriginal
+    if (desc.includes("recargo") || desc.includes("descuento") || desc.includes("ajuste")) {
+        if (idOriginal > 0) return idOriginal;
+        if (idActual > 0) return idActual;
+    }
+
     // 🔥 COBRANZA → usar pago
-    if (desc.includes("cobranza") && row.Id) {
-        return row.Id;
+    if (desc.includes("cobranza")) {
+        if (idOriginal > 0) return idOriginal;
+        if (idActual > 0) return idActual;
     }
 
     // 🔥 VENTA → usar venta
@@ -1297,7 +1305,8 @@ function obtenerIdCorrectoElectro(row) {
         return row.IdVenta;
     }
 
-    return row.Id;
+    if (idOriginal > 0) return idOriginal;
+    return idActual;
 }
 
 async function enviarWhatssapNormalDesdeApi(id) {
@@ -1391,12 +1400,18 @@ async function enviarWhatssapElectro(idMovimiento, descripcion, nroCuota = null)
     abrirWhatsapp(base.Cliente.ClienteTelefono, mensaje);
 
     // 🔥 SOLO SI TENÉS ENDPOINT
+    const tipoMensaje = obtenerTipoMensajeElectro(descripcion);
+    const esAjuste = tipoMensaje === "recargo" || tipoMensaje === "descuento";
+    const idMarcado = esAjuste
+        ? idMovimiento
+        : Number(base.IdPagoActual || 0);
+
     await MakeAjax({
         type: "POST",
         url: "/Ventas_Electrodomesticos/MarcarWhatssapPago",
         async: true,
         data: JSON.stringify({
-            id: base.IdPagoActual,
+            id: idMarcado,
             descripcion: descripcion
         }),
         contentType: "application/json",
@@ -1409,6 +1424,7 @@ function obtenerTipoMensajeElectro(descripcion = "") {
     if (d.includes("venta")) return "venta";
     if (d.includes("cobranza")) return "cobro";
     if (d.includes("recargo")) return "recargo";
+    if (d.includes("descuento") || d.includes("ajuste")) return "descuento";
 
     return "venta";
 }

@@ -570,6 +570,23 @@ namespace Sistema_David.Models
                         .FirstOrDefault();
                 }
 
+                // 🟠 DESCUENTO / AJUSTE
+                if (desc.Contains("descuento") || desc.Contains("ajuste"))
+                {
+                    var idVentaDesdeRecargo = db.Ventas_Electrodomesticos_Cuotas_Recargos
+                        .Where(r => r.Id == idMovimiento)
+                        .Select(r => (int?)r.Ventas_Electrodomesticos_Cuotas.IdVenta)
+                        .FirstOrDefault();
+
+                    if (idVentaDesdeRecargo.HasValue)
+                        return idVentaDesdeRecargo;
+
+                    return db.Ventas_Electrodomesticos_Cuotas
+                        .Where(c => c.Id == idMovimiento)
+                        .Select(c => (int?)c.IdVenta)
+                        .FirstOrDefault();
+                }
+
                 return null;
             }
         }
@@ -1612,8 +1629,51 @@ namespace Sistema_David.Models
             {
                 try
                 {
+                    var desc = (descripcion ?? string.Empty).ToLowerInvariant();
 
-                    if (!descripcion.Contains("Venta"))
+                    if (desc.Contains("recargo") || desc.Contains("descuento") || desc.Contains("ajuste"))
+                    {
+                        // En electro, recargos/descuentos no tienen campo Whatssap propio.
+                        // Recargos: marcamos en tabla de recargos (campo Whatssap nuevo).
+                        // Descuento/ajuste: si no se puede asociar a recargo puntual, fallback a venta.
+                        var marcadoRecargo = false;
+
+                        if (desc.Contains("recargo") || desc.Contains("descuento"))
+                        {
+                            var filas = db.Database.ExecuteSqlCommand(
+                                "UPDATE Ventas_Electrodomesticos_Cuotas_Recargos SET Whatssap = 1 WHERE Id = @p0",
+                                id
+                            );
+                            marcadoRecargo = filas > 0;
+                        }
+
+                        if (marcadoRecargo)
+                        {
+                            db.SaveChanges();
+                            tx.Commit();
+                            return "OK";
+                        }
+
+                        int? idVentaElectro = ResolverIdVentaDesdeMovimiento(id, descripcion);
+
+                        if (!idVentaElectro.HasValue || idVentaElectro.Value <= 0)
+                        {
+                            var existeVentaDirecta = db.Ventas_Electrodomesticos.Any(v => v.Id == id);
+                            if (existeVentaDirecta) idVentaElectro = id;
+                        }
+
+                        if (!idVentaElectro.HasValue || idVentaElectro.Value <= 0)
+                            return "Movimiento electro no encontrado";
+
+                        var ventaElectro = db.Ventas_Electrodomesticos
+                            .FirstOrDefault(v => v.Id == idVentaElectro.Value);
+
+                        if (ventaElectro == null)
+                            return "Venta electro no encontrada";
+
+                        ventaElectro.Whatssap = 1;
+                    }
+                    else if (!desc.Contains("venta"))
                     {
                         var venta = db.Ventas_Electrodomesticos_Pagos
                             .FirstOrDefault(c => c.Id == id);

@@ -15,6 +15,11 @@ namespace Sistema_David.Models
 {
     public class RendimientosModel
     {
+        private sealed class IdWhatsRow
+        {
+            public int Id { get; set; }
+            public int? Whatssap { get; set; }
+        }
 
         public static List<VMRendimiento> ListaUsuarios()
         {
@@ -305,6 +310,7 @@ namespace Sistema_David.Models
             db.Configuration.LazyLoadingEnabled = false;
 
             var idsPagoElectro = new HashSet<int>();
+            var idsRecargoElectro = new HashSet<int>();
             var idsInformacionClasica = new HashSet<int>();
             var idVentas = new HashSet<int>();
 
@@ -318,6 +324,11 @@ namespace Sistema_David.Models
 
                 if (d.Contains("electro") && d.Contains("cobranza"))
                     idsPagoElectro.Add(r.Id);
+                else if (d.Contains("electro") && (d.Contains("recargo") || d.Contains("descuento") || d.Contains("ajuste")))
+                {
+                    if (r.Id > 0) idsRecargoElectro.Add(r.Id);
+                    if (r.IdOriginal.HasValue && r.IdOriginal.Value > 0) idsRecargoElectro.Add(r.IdOriginal.Value);
+                }
                 else if (!d.Contains("electro"))
                     idsInformacionClasica.Add(r.Id);
             }
@@ -336,6 +347,18 @@ namespace Sistema_David.Models
                 .Select(iv => new { iv.Id, iv.idCobrador })
                 .ToList()
                 .ToDictionary(x => x.Id, x => x.idCobrador);
+
+            var whatssapRecargoPorId = new Dictionary<int, int?>();
+            if (idsRecargoElectro.Count > 0)
+            {
+                var csvIds = string.Join(",", idsRecargoElectro.Where(x => x > 0).Distinct());
+                if (!string.IsNullOrWhiteSpace(csvIds))
+                {
+                    var q = $"SELECT Id, Whatssap FROM Ventas_Electrodomesticos_Cuotas_Recargos WHERE Id IN ({csvIds})";
+                    var rowsRec = db.Database.SqlQuery<IdWhatsRow>(q).ToList();
+                    whatssapRecargoPorId = rowsRec.ToDictionary(x => x.Id, x => x.Whatssap);
+                }
+            }
 
             var vendedorIdPorVentaElectro = db.Ventas_Electrodomesticos
                 .AsNoTracking()
@@ -400,6 +423,12 @@ namespace Sistema_David.Models
                 {
                     if (usuarioPorPagoId.TryGetValue(r.Id, out var idUc))
                         r.IdCobrador = idUc;
+                }
+                else if (d.Contains("electro") && (d.Contains("recargo") || d.Contains("descuento") || d.Contains("ajuste")))
+                {
+                    var idRec = r.IdOriginal.HasValue && r.IdOriginal.Value > 0 ? r.IdOriginal.Value : r.Id;
+                    if (idRec > 0 && whatssapRecargoPorId.TryGetValue(idRec, out var ws))
+                        r.whatssap = ws ?? 0;
                 }
                 else if (!d.Contains("electro"))
                 {

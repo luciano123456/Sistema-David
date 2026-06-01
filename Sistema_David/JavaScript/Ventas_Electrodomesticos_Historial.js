@@ -154,8 +154,12 @@ async function iniciarFiltros() {
 
     var FechaDesde, FechaHasta;
 
-    if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+    if (userSession.IdRol == 1) {
         FechaDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
+        FechaHasta = moment().format('YYYY-MM-DD');
+        document.getElementById("btnLimite").style.display = "block";
+    } else if (userSession.IdRol == 4) {
+        FechaDesde = moment().format('YYYY-MM-DD');
         FechaHasta = moment().format('YYYY-MM-DD');
         document.getElementById("btnLimite").style.display = "block";
     } else {
@@ -176,13 +180,37 @@ async function iniciarFiltros() {
 
 }
 
-function aplicarFiltros() { cargarTabla(); }
+function aplicarFiltros() {
+
+    if (Number(userSession?.IdRol) === 4) {
+        const fechaDesde = $("#txtFechaDesde").val();
+        const fechaDesdeDate = new Date(fechaDesde);
+        const fechaActual = new Date();
+
+        fechaActual.setUTCHours(fechaActual.getUTCHours() - 3);
+
+        const sieteDiasAntes = new Date(fechaActual);
+        sieteDiasAntes.setDate(sieteDiasAntes.getDate() - 7);
+
+        if (fechaDesde && fechaDesdeDate < sieteDiasAntes) {
+            alert("No puedes filtrar datos de más de siete días atrás de la fecha actual.");
+            return;
+        }
+    }
+
+    cargarTabla();
+}
 
 async function limpiarFiltros() {
 
     
     if (userSession.IdRol == 1) {
         var FechaDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
+        var FechaHasta = moment().format('YYYY-MM-DD');
+        $("#txtFechaDesde").val(FechaDesde);
+        $("#txtFechaHasta").val(FechaHasta);
+    } else if (userSession.IdRol == 4) {
+        var FechaDesde = moment().format('YYYY-MM-DD');
         var FechaHasta = moment().format('YYYY-MM-DD');
         $("#txtFechaDesde").val(FechaDesde);
         $("#txtFechaHasta").val(FechaHasta);
