@@ -1984,6 +1984,26 @@ namespace Sistema_David.Models
                     cuota.UsuarioModificacion = usuario;
                     cuota.FechaModificacion = DateTime.Now;
 
+                    var venta = cuota.Ventas_Electrodomesticos;
+                    if (venta != null && venta.IdCobrador.HasValue && venta.IdCobrador.Value != 0)
+                    {
+                        var cobradorAnterior = venta.IdCobrador.Value.ToString();
+                        venta.IdCobrador = null;
+                        venta.UsuarioModificacion = usuario;
+                        venta.FechaModificacion = DateTime.Now;
+
+                        Audit(
+                            db,
+                            venta.Id,
+                            null,
+                            usuario,
+                            "AsignarCobradorVenta",
+                            cobradorAnterior,
+                            "(sin)",
+                            "Cobrador desasignado por reprogramación de cobro"
+                        );
+                    }
+
                     var obsDefault = esAdminOComprobantes
                         ? "Reprogramación de fecha"
                         : "Cobro pendiente";
