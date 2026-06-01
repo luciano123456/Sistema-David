@@ -427,37 +427,67 @@ namespace Sistema_David.Controllers
         [HttpPost]
         public ActionResult EnvWhatssapElectro(int id, string descripcion, int? nroCuota)
         {
-            var idVenta = Ventas_ElectrodomesticosModel
-                .ResolverIdVentaDesdeMovimiento(id, descripcion);
-
-            if (!idVenta.HasValue)
-                return Json(null);
-
-            var data = Ventas_ElectrodomesticosModel.ObtenerVenta(idVenta.Value);
-
-            if (data == null)
-                return Json(null);
-
-            // 🔥 ACA ESTA LA CLAVE
-            var pagosPendientes = Ventas_ElectrodomesticosModel
-                .ObtenerPagosWhatssapPendientes(idVenta.Value);
-
-            return Json(new
+            try
             {
-                Venta = data,
-                Cliente = new
+                var idVenta = Ventas_ElectrodomesticosModel
+                    .ResolverIdVentaDesdeMovimiento(id, descripcion);
+
+                if (!idVenta.HasValue)
                 {
-                    data.ClienteNombre,
-                    data.ClienteTelefono
-                },
-                Pagos = data.Pagos,
-                IdPagoActual = id,
-                NroCuota = nroCuota,
-                PagosPendientesWhatssap = pagosPendientes, // 🔥 CLAVE
-                EsVenta = (descripcion ?? "").Contains("Venta"),
-                Descripcion = descripcion ?? "",
-                IdVenta = idVenta.Value
-            });
+                    return Json(new
+                    {
+                        success = false,
+                        message = "No se pudo resolver la venta asociada al movimiento."
+                    });
+                }
+
+                var data = Ventas_ElectrodomesticosModel.ObtenerVenta(idVenta.Value);
+
+                if (data == null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "No se encontró la venta para enviar WhatsApp."
+                    });
+                }
+
+                var pagosPendientes = Ventas_ElectrodomesticosModel
+                    .ObtenerPagosWhatssapPendientes(idVenta.Value);
+
+                var json = Json(new
+                {
+                    success = true,
+                    Venta = data,
+                    Cliente = new
+                    {
+                        data.ClienteNombre,
+                        data.ClienteTelefono
+                    },
+                    Pagos = data.Pagos,
+                    IdPagoActual = id,
+                    NroCuota = nroCuota,
+                    PagosPendientesWhatssap = pagosPendientes,
+                    EsVenta = (descripcion ?? "").Contains("Venta"),
+                    Descripcion = descripcion ?? "",
+                    IdVenta = idVenta.Value
+                }, JsonRequestBehavior.AllowGet);
+
+                json.MaxJsonLength = 999999999;
+                return json;
+            }
+            catch (Exception ex)
+            {
+                var detalle = ex.InnerException != null
+                    ? (ex.Message + " | " + ex.InnerException.Message)
+                    : ex.Message;
+
+                return Json(new
+                {
+                    success = false,
+                    message = "Error al preparar WhatsApp Electro: " + detalle
+                });
+            }
         }
 
 

@@ -1238,7 +1238,7 @@ async function enviarWhatssapDesdeRow(rowEncoded) {
 
     } catch (error) {
         console.error(error);
-        alert("Error en WhatsApp");
+        mostrarError(obtenerMensajeErrorAjax(error, "Error al enviar WhatsApp."));
     }
 }
 
@@ -1266,7 +1266,7 @@ async function enviarWhatssap(rowOrId, descripcion = "") {
         aplicarFiltros();
     } catch (error) {
         console.error(error);
-        $('.datos-error').text('Ha ocurrido un error.');
+        $('.datos-error').text(obtenerMensajeErrorAjax(error, "Ha ocurrido un error al enviar WhatsApp."));
         $('.datos-error').removeClass('d-none');
     }
 }
@@ -1333,7 +1333,12 @@ async function enviarWhatssapElectro(idMovimiento, descripcion, nroCuota = null)
         dataType: "json"
     });
 
-    if (!base || !base.Venta) return;
+    if (base && base.success === false) {
+        throw new Error(base.message || "No se pudo obtener la información para WhatsApp.");
+    }
+    if (!base || !base.Venta) {
+        throw new Error("No se encontró la venta o no tiene datos para WhatsApp.");
+    }
 
     const pagos = Array.isArray(base.Pagos) ? base.Pagos : [];
     const pendientes = Array.isArray(base.PagosPendientesWhatssap)
@@ -2312,6 +2317,41 @@ function formatNumber(number) {
 
 function mostrarError(mensaje) {
     alert(mensaje || "Ha ocurrido un error.");
+}
+
+function obtenerMensajeErrorAjax(error, fallback = "Ha ocurrido un error.") {
+    if (!error) return fallback;
+
+    // Error manual generado por throw new Error(...)
+    if (error.message) return error.message;
+
+    // jqXHR de jQuery.ajax
+    if (error.responseJSON && error.responseJSON.message) {
+        return error.responseJSON.message;
+    }
+
+    if (error.responseText) {
+        try {
+            const parsed = JSON.parse(error.responseText);
+            if (parsed && parsed.message) return parsed.message;
+        } catch (e) {
+            // responseText no JSON (ej. error page de ASP.NET): mostrar una pista corta.
+            const plain = String(error.responseText || "")
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+            if (plain) {
+                const recorte = plain.substring(0, 220);
+                return `${fallback} (${recorte}${plain.length > 220 ? "..." : ""})`;
+            }
+        }
+    }
+
+    const status = error.status ? `HTTP ${error.status}` : "";
+    const statusText = error.statusText || "";
+    const detalle = [status, statusText].filter(Boolean).join(" - ");
+
+    return detalle ? `${fallback} (${detalle})` : fallback;
 }
 
 
