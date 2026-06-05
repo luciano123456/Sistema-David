@@ -64,7 +64,6 @@ const columnConfigCobrosPendientes = [
 ];
 
 const columnConfigTransferenciasPendientes = [
-    { index: 0, filterType: 'text' },
     { index: 1, filterType: 'text' },
     { index: 2, filterType: 'text' },
     { index: 3, filterType: 'text' },
@@ -78,7 +77,8 @@ const columnConfigTransferenciasPendientes = [
     { index: 11, filterType: 'text' },
     { index: 12, filterType: 'text' },
     { index: 13, filterType: 'text' },
-    { index: 14, filterType: 'text' }
+    { index: 14, filterType: 'text' },
+    { index: 15, filterType: 'text' }
 ];
 
 
@@ -2480,6 +2480,16 @@ VC.cargarTransferenciasPendientes = async function () {
 
         columns: [
 
+            {
+                data: null,
+                className: "details-control text-center",
+                orderable: false,
+                width: "40px",
+                render: () => `
+                    <button class="btn btn-link p-0 text-accent btn-row-detail-transf" title="Ver detalle venta">
+                        <i class="fa fa-chevron-down"></i>
+                    </button>`
+            },
 
             { data: "IdVenta" },
             { data: "NumeroCuota" },
@@ -2675,7 +2685,7 @@ VC.cargarTransferenciasPendientes = async function () {
                 if (!tablaTransferenciasPendientes) return;
 
                 // si clic en acordeón/acciones => no seleccionar
-                if ($(e.target).closest("button.btn-row-detail, .btn-accion").length) return;
+                if ($(e.target).closest("button.btn-row-detail-transf, .btn-accion").length) return;
 
                 // si clic en inputs/selects/labels => no seleccionar
                 if ($(e.target).closest("a, input, select, textarea, label").length) return;
@@ -2709,9 +2719,46 @@ VC.cargarTransferenciasPendientes = async function () {
 
             const container = $(api.table().container());
 
-            container.find("thead tr.filters th").eq(15).html("");
+            container.find("thead tr.filters th").eq(0).html("");
+            container.find("thead tr.filters th").eq(16).html("");
         }
     });
+
+    $("#vc_tabla_transferencias_pendientes tbody")
+        .off("click.vcAcordeonTransf")
+        .on("click.vcAcordeonTransf", "button.btn-row-detail-transf", async function (e) {
+
+            e.stopPropagation();
+
+            const tr = $(this).closest("tr");
+            const row = tablaTransferenciasPendientes.row(tr);
+            const data = row.data();
+            const icon = $(this).find("i");
+
+            if (!data) return;
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass("shown");
+                icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                return;
+            }
+
+            tablaTransferenciasPendientes.rows().every(function () {
+                if (this.child.isShown()) {
+                    this.child.hide();
+                    $(this.node()).removeClass("shown");
+                    $(this.node()).find("button.btn-row-detail-transf i")
+                        .removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                }
+            });
+
+            row.child(VC.formarAcordeonVenta(data)).show();
+            tr.addClass("shown");
+            icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
+
+            await VC.cargarDetalleVenta(data.IdVenta);
+        });
 };
 
 

@@ -2250,25 +2250,25 @@ input {
 /* Anchos mínimos por columna (alineación título / filtro / datos) */
 .vc-cobros-dt #vc_tabla thead th:nth-child(3),
 .vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(2),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(1) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(2) {
     min-width: 4.75rem;
 }
 
 .vc-cobros-dt #vc_tabla thead th:nth-child(4),
 .vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(3),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(2) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(3) {
     min-width: 4.25rem;
 }
 
 .vc-cobros-dt #vc_tabla thead th:nth-child(5),
 .vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(4),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(3) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(4) {
     min-width: 6.5rem;
 }
 
 .vc-cobros-dt #vc_tabla thead th:nth-child(6),
 .vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(5),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(4) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(5) {
     min-width: 8.5rem;
 }
 
@@ -2276,26 +2276,26 @@ input {
 .vc-cobros-dt #vc_tabla thead th:nth-child(8),
 .vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(6),
 .vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(7),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(5),
 .vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(6),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(7),
 .vc-cobros-dt #vc_tabla tbody td:nth-child(7),
 .vc-cobros-dt #vc_tabla tbody td:nth-child(8),
 .vc-cobros-dt #vc_tabla_pendientes tbody td:nth-child(6),
 .vc-cobros-dt #vc_tabla_pendientes tbody td:nth-child(7),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(5),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(6) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(6),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(7) {
     min-width: 6.25rem;
 }
 
 .vc-cobros-dt #vc_tabla thead th:nth-child(9),
 .vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(8),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(7) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(8) {
     min-width: 5.5rem;
 }
 
 .vc-cobros-dt #vc_tabla thead th:nth-child(10),
 .vc-cobros-dt #vc_tabla_pendientes thead th:nth-child(9),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(8) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(9) {
     min-width: 7rem;
 }
 
@@ -2334,20 +2334,20 @@ input {
     min-width: 7.25rem;
 }
 
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(9),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(9) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(10),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(10) {
     min-width: 6.5rem;
 }
 
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(10),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(10) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(11),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(11) {
     min-width: 8.5rem;
 }
 
-.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(13),
 .vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(14),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(13),
-.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(14) {
+.vc-cobros-dt #vc_tabla_transferencias_pendientes thead th:nth-child(15),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(14),
+.vc-cobros-dt #vc_tabla_transferencias_pendientes tbody td:nth-child(15) {
     min-width: 7.25rem;
 }
 

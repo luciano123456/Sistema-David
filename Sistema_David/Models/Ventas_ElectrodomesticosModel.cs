@@ -19,6 +19,15 @@ namespace Sistema_David.Models
         private static decimal R2(decimal v) =>
             Math.Round(v, 2, MidpointRounding.AwayFromZero);
 
+        /// <summary>Saldo pendiente real: suma de (original + recargos − descuentos − pagado) por cuota.</summary>
+        private static decimal SaldoPendienteDesdeCuotas(
+            IEnumerable<Ventas_Electrodomesticos_Cuotas> cuotas)
+        {
+            if (cuotas == null) return 0m;
+            return R2(cuotas.Sum(c =>
+                (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado));
+        }
+
         public class LimiteVentaExcedidoException : Exception
         {
             public LimiteVentaResultado Detalle { get; }
@@ -431,13 +440,13 @@ namespace Sistema_David.Models
         private static void RecalcularEstadoVenta(Sistema_DavidEntities db,
             Ventas_Electrodomesticos venta, int usuario)
         {
-            var saldo = db.Ventas_Electrodomesticos_Cuotas
+            var cuotas = db.Ventas_Electrodomesticos_Cuotas
                 .Where(c => c.IdVenta == venta.Id)
-                .Select(c => (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado)
-                .DefaultIfEmpty(0m)
-                .Sum();
+                .ToList();
 
-            var nuevo = R2(saldo) <= 0 ? "Cancelada" : "Activa";
+            var saldo = SaldoPendienteDesdeCuotas(cuotas);
+
+            var nuevo = saldo <= 0 ? "Cancelada" : "Activa";
 
             if (!string.Equals(nuevo, venta.Estado, StringComparison.OrdinalIgnoreCase))
             {
@@ -449,7 +458,7 @@ namespace Sistema_David.Models
                 Audit(db, venta.Id, null, usuario, "EstadoVenta", ant, nuevo);
             }
 
-            venta.Restante = R2(saldo);
+            venta.Restante = saldo;
         }
 
         /* ===========================================================
@@ -872,13 +881,10 @@ namespace Sistema_David.Models
                     venta.IdCobrador = null;
 
                     // ===============================
-                    // 🔒 RESTANTE TOTAL DE LA VENTA
+                    // 🔒 RESTANTE TOTAL DE LA VENTA (incluye recargos en cuotas)
                     // ===============================
-                    decimal totalVenta = R2(venta.ImporteTotal);
-                    decimal totalPagado = venta.Ventas_Electrodomesticos_Cuotas
-                        .Sum(c => c.MontoPagado);
-
-                    decimal restanteVenta = R2(totalVenta - totalPagado);
+                    decimal restanteVenta = SaldoPendienteDesdeCuotas(
+                        venta.Ventas_Electrodomesticos_Cuotas);
 
                     if (m.ImporteTotal <= 0)
                         throw new Exception("Importe inválido");
