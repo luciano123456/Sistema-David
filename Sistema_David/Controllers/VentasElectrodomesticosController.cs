@@ -152,13 +152,16 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListarTransferenciasPendientes(int? idCliente, int? idVendedor)
         {
+            var usuarioSesion = SessionHelper.GetUsuarioSesion();
+
+            if (usuarioSesion == null || (usuarioSesion.IdRol != 1 && usuarioSesion.IdRol != 4))
+                return Json(new { data = new object[0] }, JsonRequestBehavior.AllowGet);
+
             var filtro = new VM_Ventas_Electrodomesticos_FiltroCobros
             {
                 IdCliente = idCliente,
                 IdVendedor = idVendedor
             };
-
-            var usuarioSesion = SessionHelper.GetUsuarioSesion();
 
             if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
             {

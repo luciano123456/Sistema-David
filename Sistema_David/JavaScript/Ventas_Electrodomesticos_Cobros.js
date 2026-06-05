@@ -143,6 +143,11 @@ VC.esCobradorSesion = function () {
     return Number(userSession?.IdRol) === 3;
 };
 
+VC.esAdminOComprobantes = function () {
+    const rol = Number(userSession?.IdRol);
+    return rol === 1 || rol === 4;
+};
+
 /** Fechas efectivas del listado (cobrador: siempre hoy; admin: inputs o hoy). */
 VC.fechasFiltroCobros = function () {
     const hoy = moment().format("YYYY-MM-DD");
@@ -998,7 +1003,9 @@ VC.cargarTabla = async function () {
         });
 
         await VC.cargarCobrosPendientes();
-        await VC.cargarTransferenciasPendientes();
+        if (VC.esAdminOComprobantes()) {
+            await VC.cargarTransferenciasPendientes();
+        }
 
     } catch (e) {
         console.error(e);
@@ -2423,6 +2430,11 @@ VC.cargarCobrosPendientes = async function () {
 
 VC.cargarTransferenciasPendientes = async function () {
 
+    if (!VC.esAdminOComprobantes()) {
+        $("#divTransferenciasPendientes").attr("hidden", true);
+        return;
+    }
+
     const resp = await $.getJSON(
         "/Ventas_Electrodomesticos/ListarTransferenciasPendientes",
         {
@@ -2728,7 +2740,9 @@ VC.transferenciaPendiente = async function (estado, idCuota) {
         );
 
         VC.cargarTabla();
-        VC.cargarTransferenciasPendientes();
+        if (VC.esAdminOComprobantes()) {
+            VC.cargarTransferenciasPendientes();
+        }
 
     } else {
         VC.toast(resp.message || "Error", "danger");
