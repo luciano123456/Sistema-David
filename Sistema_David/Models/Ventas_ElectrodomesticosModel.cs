@@ -19,6 +19,78 @@ namespace Sistema_David.Models
         private static decimal R2(decimal v) =>
             Math.Round(v, 2, MidpointRounding.AwayFromZero);
 
+        public class LimiteVentaExcedidoException : Exception
+        {
+            public LimiteVentaResultado Detalle { get; }
+            public LimiteVentaExcedidoException(LimiteVentaResultado detalle)
+                : base(detalle?.Mensaje ?? "El cliente supera su límite de ventas.")
+            {
+                Detalle = detalle;
+            }
+        }
+
+        /// <summary>
+        /// Valida que el saldo total del cliente (indumentaria + electro) más el restante de la nueva venta no supere su límite.
+        /// </summary>
+        public static LimiteVentaResultado ValidarLimiteClienteVenta(Sistema_DavidEntities db, int idCliente, decimal restanteNuevaVenta)
+        {
+            var cliente = db.Clientes.FirstOrDefault(c => c.Id == idCliente);
+            if (cliente == null)
+            {
+                return new LimiteVentaResultado
+                {
+                    Excedido = true,
+                    Mensaje = "Cliente no encontrado."
+                };
+            }
+
+            decimal restanteInd = db.Ventas
+                .Where(v => v.idCliente == idCliente)
+                .Sum(v => (decimal?)v.Restante) ?? 0;
+
+            decimal restanteElectro = db.Ventas_Electrodomesticos
+                .Where(v => v.IdCliente == idCliente)
+                .Sum(v => (decimal?)v.Restante) ?? 0;
+
+            decimal totalRestante = R2(restanteInd + restanteElectro);
+            decimal totalConNueva = R2(totalRestante + restanteNuevaVenta);
+            decimal limiteVentas = cliente.LimiteVentas ?? 0;
+
+            if (limiteVentas > 0 && totalConNueva > limiteVentas)
+            {
+                return new LimiteVentaResultado
+                {
+                    Excedido = true,
+                    Mensaje = "El cliente supera su límite de ventas.",
+                    Limite = limiteVentas,
+                    RestanteActual = totalRestante,
+                    NuevaVenta = R2(restanteNuevaVenta),
+                    Total = totalConNueva,
+                    Exceso = R2(totalConNueva - limiteVentas)
+                };
+            }
+
+            if (cliente.IdEstado == 2 && limiteVentas == 0)
+            {
+                var limiteGlobal = db.Limites.FirstOrDefault(x => x.Nombre == "ClientesRegulares_Venta");
+                if (limiteGlobal != null && totalConNueva > limiteGlobal.Valor)
+                {
+                    return new LimiteVentaResultado
+                    {
+                        Excedido = true,
+                        Mensaje = "El cliente regular supera el límite global permitido.",
+                        Limite = (decimal)limiteGlobal.Valor,
+                        RestanteActual = totalRestante,
+                        NuevaVenta = R2(restanteNuevaVenta),
+                        Total = totalConNueva,
+                        Exceso = R2((decimal)(totalConNueva - limiteGlobal.Valor))
+                    };
+                }
+            }
+
+            return new LimiteVentaResultado { Excedido = false };
+        }
+
         /// <summary>
         /// Nombre a mostrar para quien registró el cobro (UsuarioCreacion del último pago que afecta la cuota).
         /// </summary>
@@ -390,6 +462,12 @@ namespace Sistema_David.Models
             {
                 try
                 {
+                    decimal entregaValidacion = m.Entrega ?? 0;
+                    decimal restanteNuevaVenta = R2(Math.Max(0, m.ImporteTotal - entregaValidacion));
+                    var limiteRes = ValidarLimiteClienteVenta(db, m.IdCliente, restanteNuevaVenta);
+                    if (limiteRes.Excedido)
+                        throw new LimiteVentaExcedidoException(limiteRes);
+
                     /* ===============================
                      * 1️⃣ VALIDAR STOCK
                      * =============================== */

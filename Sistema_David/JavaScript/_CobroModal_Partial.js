@@ -1765,29 +1765,62 @@ async function preguntarWhatsappDespuesCobro(idMovimiento, descripcion) {
             async: true,
             data: JSON.stringify({
                 id: idMovimiento,
-                descripcion: descripcion // ✅ AHORA DINÁMICO
+                descripcion: descripcion
             }),
             contentType: "application/json",
             dataType: "json"
         });
 
-        if (!base || !base.Venta || !base.Cliente || !base.Cliente.ClienteTelefono) {
-            return;
-        }
+        if (base?.success === false) return;
+        if (!base || !base.Venta || !base.Cliente?.ClienteTelefono) return;
 
-        const mensaje = armarMensajeWhatsappElectro(
-            base,
-            descripcion,
-            idMovimiento
-        );
-
+        const mensaje = armarMensajeWhatsappElectro(base, descripcion, idMovimiento);
         if (!mensaje) return;
 
         abrirWhatsapp(base.Cliente.ClienteTelefono, mensaje);
 
+        const tipoMensaje = obtenerTipoMensajeElectro(descripcion);
+        const esAjuste = tipoMensaje === "recargo" || tipoMensaje === "descuento";
+        const idMarcado = esAjuste
+            ? idMovimiento
+            : Number(base.IdPagoActual || idMovimiento);
+
+        const marca = await MakeAjax({
+            type: "POST",
+            url: "/Ventas_Electrodomesticos/MarcarWhatssapPago",
+            async: true,
+            data: JSON.stringify({
+                id: idMarcado,
+                descripcion: descripcion
+            }),
+            contentType: "application/json",
+            dataType: "json"
+        });
+
+        if (marca?.success) {
+            marcarWhatssapEnRendimientoGrilla(idMarcado);
+            if (window.gridRendimiento?.ajax?.reload) {
+                gridRendimiento.ajax.reload(null, false);
+            }
+        }
+
     } catch (e) {
         console.warn("No se pudo enviar WhatsApp", e);
     }
+}
+
+/** Pone el ícono de WhatsApp en verde en Rendimiento (misma fila del cobro). */
+function marcarWhatssapEnRendimientoGrilla(idMovimiento) {
+    if (!window.gridRendimiento || !idMovimiento) return;
+
+    gridRendimiento.rows().every(function () {
+        const d = this.data();
+        if (Number(d.Id) === Number(idMovimiento)) {
+            d.whatssap = 1;
+            this.data(d);
+            this.invalidate().draw(false);
+        }
+    });
 }
 
 async function enviarWhatssapElectro(idMovimiento, descripcion) {

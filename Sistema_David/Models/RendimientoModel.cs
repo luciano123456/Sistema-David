@@ -333,13 +333,19 @@ namespace Sistema_David.Models
                     idsInformacionClasica.Add(r.Id);
             }
 
-            var usuarioPorPagoId = db.Ventas_Electrodomesticos_Pagos
+            var pagosElectroPorId = db.Ventas_Electrodomesticos_Pagos
                 .AsNoTracking()
                 .Where(p => idsPagoElectro.Contains(p.Id))
-                .Select(p => new { p.Id, p.UsuarioCreacion })
+                .Select(p => new { p.Id, p.UsuarioCreacion, p.Whatssap })
                 .ToList()
                 .GroupBy(x => x.Id)
-                .ToDictionary(g => g.Key, g => g.First().UsuarioCreacion);
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var usuarioPorPagoId = pagosElectroPorId
+                .ToDictionary(kv => kv.Key, kv => kv.Value.UsuarioCreacion);
+
+            var whatssapPagoPorId = pagosElectroPorId
+                .ToDictionary(kv => kv.Key, kv => kv.Value.Whatssap ?? 0);
 
             var cobradorPorInformacionId = db.InformacionVentas
                 .AsNoTracking()
@@ -423,6 +429,8 @@ namespace Sistema_David.Models
                 {
                     if (usuarioPorPagoId.TryGetValue(r.Id, out var idUc))
                         r.IdCobrador = idUc;
+                    if (whatssapPagoPorId.TryGetValue(r.Id, out var wsPago))
+                        r.whatssap = wsPago;
                 }
                 else if (d.Contains("electro") && (d.Contains("recargo") || d.Contains("descuento") || d.Contains("ajuste")))
                 {

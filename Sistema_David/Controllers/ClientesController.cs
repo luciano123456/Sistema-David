@@ -108,6 +108,8 @@ namespace Sistema_David.Controllers
         public ActionResult GetCliente(string Dni)
         {
             var result = ClientesModel.BuscarCliente(Dni);
+            if (result != null && result.Id > 0)
+                result = ClientesModel.BuscarCliente(result.Id);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 

@@ -216,6 +216,22 @@
         toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
     }
 
+    function fmtLimiteVenta(n) {
+        return Number(n || 0).toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+    }
+
+    function mostrarErrorLimiteVenta(res) {
+        const msg =
+            `${res.message || "El cliente supera su límite de ventas."}\n\n` +
+            `Límite permitido: ${fmtLimiteVenta(res.limite)}\n` +
+            `Crédito actual: ${fmtLimiteVenta(res.restanteActual)}\n` +
+            `Nueva venta: ${fmtLimiteVenta(res.nuevaVenta)}\n` +
+            `Total: ${fmtLimiteVenta(res.total)}\n` +
+            `Exceso: ${fmtLimiteVenta(res.exceso)}`;
+        alert(msg);
+        showToast(res.message || "El cliente supera su límite de ventas.", "danger");
+    }
+
     /* ====================== ESTADO GLOBAL ====================== */
 
 
@@ -1691,6 +1707,23 @@
             UsuarioOperador: userSession.Id
         };
 
+        const restanteVenta = total - entrega;
+        if (cliente.LimiteVentas > 0) {
+            const saldoActual = Number(cliente.SaldoTotal ?? cliente.Saldo ?? 0);
+            const totalProyectado = saldoActual + restanteVenta;
+            if (totalProyectado > Number(cliente.LimiteVentas)) {
+                mostrarErrorLimiteVenta({
+                    message: "El cliente supera su límite de ventas.",
+                    limite: cliente.LimiteVentas,
+                    restanteActual: saldoActual,
+                    nuevaVenta: restanteVenta,
+                    total: totalProyectado,
+                    exceso: totalProyectado - Number(cliente.LimiteVentas)
+                });
+                return false;
+            }
+        }
+
         try {
             const res = await $.ajax({
                 url: '/Ventas_Electrodomesticos/CrearVenta',
@@ -1698,6 +1731,11 @@
                 contentType: 'application/json',
                 data: JSON.stringify(payload)
             });
+
+            if (res.limiteExcedido) {
+                mostrarErrorLimiteVenta(res);
+                return false;
+            }
 
             if (!res.success) {
                 showToast(res.message || "Error al registrar venta.", "danger");

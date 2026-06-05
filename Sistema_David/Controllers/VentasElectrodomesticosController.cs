@@ -218,6 +218,21 @@ namespace Sistema_David.Controllers
 
                 return Json(new { success = true, idVenta });
             }
+            catch (Ventas_ElectrodomesticosModel.LimiteVentaExcedidoException ex)
+            {
+                var d = ex.Detalle;
+                return Json(new
+                {
+                    success = false,
+                    limiteExcedido = true,
+                    message = d.Mensaje,
+                    limite = d.Limite,
+                    restanteActual = d.RestanteActual,
+                    nuevaVenta = d.NuevaVenta,
+                    total = d.Total,
+                    exceso = d.Exceso
+                });
+            }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = ex.Message });

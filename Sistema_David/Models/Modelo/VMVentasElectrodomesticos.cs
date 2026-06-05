@@ -63,6 +63,18 @@ namespace Sistema_David.Models.ViewModels
 
 
 
+    /// <summary>Resultado de validar límite de crédito al registrar venta electro.</summary>
+    public class LimiteVentaResultado
+    {
+        public bool Excedido { get; set; }
+        public string Mensaje { get; set; }
+        public decimal Limite { get; set; }
+        public decimal RestanteActual { get; set; }
+        public decimal NuevaVenta { get; set; }
+        public decimal Total { get; set; }
+        public decimal Exceso { get; set; }
+    }
+
     // ====== Crear Venta ======
     public class VM_Ventas_Electrodomesticos_Crear
     {
