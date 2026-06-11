@@ -7,7 +7,7 @@
 
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
-<link href="~/Estilos/Clientes.css?v=1.3" rel="stylesheet" />
+<link href="~/Estilos/Clientes.css?v=1.6" rel="stylesheet" />
 <link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.8" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
@@ -262,6 +262,8 @@
     </div>
 </div>
 
+@Html.Partial("_HistorialDireccionModal")
+
 </div>
 @section scripts {
     @* Mismo orden que Ventas_Electrodomesticos/Cobros: jQuery sale del _Layout; acá DataTables, select2, luego la página. *@
@@ -270,5 +272,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="~/Scripts/xlsx.full.min.js.js"></script>
     <script src="~/JavaScript/Utils/Utils.js?v=2.6"></script>
-    <script src="~/JavaScript/Clientes.js?v=2.6"></script>
+    <script src="~/JavaScript/ClientesHistorialDireccion.js?v=1.3" charset="utf-8"></script>
+    <script src="~/JavaScript/Clientes.js?v=2.8"></script>
 }

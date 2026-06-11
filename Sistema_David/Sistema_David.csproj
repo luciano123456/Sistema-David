@@ -507,6 +507,7 @@
     <Compile Include="Models\Modelo\VMVentasElectrodomesticos.cs" />
     <Compile Include="Models\Modelo\VMTiposNegocio.cs" />
     <Compile Include="Models\Modelo\VMClienteNuevaDireccion.cs" />
+    <Compile Include="Models\Modelo\VMClienteHistorialDireccion.cs" />
     <Compile Include="Models\Modelo\VMInformacionClienteAsignado.cs" />
     <Compile Include="Models\Modelo\VMComprobantesImagenes.cs" />
     <Compile Include="Models\Modelo\VMInformacionVenta.cs" />
@@ -625,6 +626,8 @@
     <Content Include="JavaScript\Stock.js" />
     <Content Include="JavaScript\ImportacionExcelClientes.js" />
     <Content Include="JavaScript\Clientes.js" />
+    <Content Include="JavaScript\ClientesHistorialDireccion.js" />
+    <Content Include="Scripts\Clientes_HistorialDireccion.sql" />
     <Content Include="Estilos\NuevoModif.css" />
     <Content Include="Estilos\Productos.css" />
     <Content Include="Estilos\Usuarios.css" />
@@ -729,6 +732,7 @@
     <Content Include="Views\ClientesCero\Informacion.cshtml" />
     <Content Include="Views\Clientes\Editar.cshtml" />
     <Content Include="Views\Clientes\Index.cshtml" />
+    <Content Include="Views\Clientes\_HistorialDireccionModal.cshtml" />
     <Content Include="Views\Cobranzas\Index.cshtml" />
     <Content Include="Views\Login\Index.cshtml" />
     <Content Include="Views\Pagos\Index.cshtml" />

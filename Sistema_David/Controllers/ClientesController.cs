@@ -258,7 +258,8 @@ namespace Sistema_David.Controllers
             try
             {
 
-                var result = ClientesModel.NuevaDireccion(model.IdCliente, model.Longitud, model.Latitud);
+                var idUsuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var result = ClientesModel.NuevaDireccion(model.IdCliente, model.Longitud, model.Latitud, idUsuario);
 
                 return Json(new { Status = result });
             }
@@ -360,7 +361,8 @@ namespace Sistema_David.Controllers
             try
             {
 
-                var result = ClientesModel.Editar(model);
+                var idUsuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var result = ClientesModel.Editar(model, idUsuario);
 
                 if (result)
                     return Json(new { Status = true });
@@ -373,6 +375,38 @@ namespace Sistema_David.Controllers
                 return Json(new { Status = false });
             }
 
+        }
+
+        [HttpGet]
+        public ActionResult ListarHistorialDireccion(int idCliente)
+        {
+            try
+            {
+                var lista = ClientesModel.ListarHistorialDireccion(idCliente);
+                var esAdmin = SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 1;
+                return Json(new { Status = true, Data = lista, EsAdmin = esAdmin }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false, Message = "No se pudo cargar el historial." }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult EliminarHistorialDireccion(int id)
+        {
+            try
+            {
+                if (SessionHelper.GetUsuarioSesion() == null || SessionHelper.GetUsuarioSesion().IdRol != 1)
+                    return Json(new { Status = false, Message = "Sin permisos." });
+
+                var ok = ClientesModel.EliminarHistorialDireccion(id);
+                return Json(new { Status = ok, Message = ok ? "Registro eliminado." : "No se pudo eliminar el registro." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false, Message = "Ha ocurrido un error." });
+            }
         }
 
         [HttpPost]

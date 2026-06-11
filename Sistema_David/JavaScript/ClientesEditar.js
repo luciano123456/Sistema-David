@@ -1,4 +1,33 @@
 ﻿
+function setBotonGuardarTexto(texto) {
+    var icono = '<i class="fa fa-check me-1"></i> ';
+    var btn = document.getElementById("btnRegistrarModificar");
+    var btnMob = document.getElementById("btnRegistrarModificarMobile");
+    if (btn) btn.innerHTML = icono + texto;
+    if (btnMob) btnMob.innerHTML = icono + texto;
+}
+
+function setEncabezadoCliente(titulo, subtitulo) {
+    var titleEl = document.getElementById("cePageTitle");
+    var subEl = document.getElementById("cePageSubtitle");
+    if (titleEl && titulo) titleEl.textContent = titulo;
+    if (subEl && subtitulo) subEl.textContent = subtitulo;
+}
+
+function obtenerCoordenadaTexto(id) {
+    var el = document.getElementById(id);
+    if (!el) return "";
+    return (el.textContent || el.value || "").toString().trim();
+}
+
+function volverListadoClientes() {
+    if (localStorage.getItem("EdicionCobranza") == 1) {
+        AccionBtnCancelar();
+        return;
+    }
+    document.location.href = "../Index/";
+}
+
 $(document).ready(function () {
 
     userSession = JSON.parse(localStorage.getItem('usuario'));
@@ -151,14 +180,22 @@ async function cargarDatosUsuario() {
             }
 
             document.getElementById("IdCliente").value = result.Usuario.Id;
+            var btnHistorial = document.getElementById("btnHistorialDireccionEdicion");
+            if (btnHistorial) {
+                if (result.Usuario.Id) {
+                    btnHistorial.removeAttribute("hidden");
+                } else {
+                    btnHistorial.setAttribute("hidden", "hidden");
+                }
+            }
             document.getElementById("Nombre").value = result.Usuario.Nombre;
             document.getElementById("Apellido").value = result.Usuario.Apellido;
             document.getElementById("Dni").value = result.Usuario.Dni;
             document.getElementById("Direccion").value = result.Usuario.Direccion;
             document.getElementById("Telefono").value = result.Usuario.Telefono;
-            document.getElementById("lbllongitud").value = result.Usuario.Longitud;
-            document.getElementById("lbllatitud").value = result.Usuario.Latitud;
-            document.getElementById("lbldireccion").value = result.Usuario.Direccion;
+            document.getElementById("lbllongitud").textContent = result.Usuario.Longitud || "\u2014";
+            document.getElementById("lbllatitud").textContent = result.Usuario.Latitud || "\u2014";
+            document.getElementById("lbldireccion").textContent = result.Usuario.Direccion || "";
             document.getElementById("LimiteVentas").value = formatearMiles(result.Usuario.LimiteVentas);
 
 
@@ -168,7 +205,11 @@ async function cargarDatosUsuario() {
             document.getElementById("Estados").removeAttribute("hidden");
             /*document.getElementById("lblEstados").removeAttribute("hidden");*/
             document.getElementById("Usuarios").value = result.Usuario.IdVendedor;
-            document.getElementById("btnRegistrarModificar").textContent = "Modificar";
+            setBotonGuardarTexto("Modificar");
+            setEncabezadoCliente(
+                "Editar cliente",
+                (result.Usuario.Nombre || "") + " " + (result.Usuario.Apellido || "") + " \u00b7 DNI " + (result.Usuario.Dni || "")
+            );
 
             
 
@@ -181,7 +222,9 @@ async function cargarDatosUsuario() {
 }
 
 async function AccionBtn() {
-    if (document.getElementById("btnRegistrarModificar").textContent == "Registrar") {
+    var btn = document.getElementById("btnRegistrarModificar");
+    var esRegistro = !btn || btn.textContent.indexOf("Registrar") >= 0;
+    if (esRegistro) {
         await registrarCliente();
     } else {
         await modificarCliente();
@@ -345,12 +388,16 @@ async function initMap() {
     } else {
         await cargarUsuariosyEstados();
         document.getElementById("LimiteVentas").value = formatearMiles(130000);
-
+        setBotonGuardarTexto("Registrar");
+        setEncabezadoCliente("Nuevo cliente", "Complet\u00e1 los datos y ubic\u00e1 al cliente en el mapa");
     }
 
-    if (document.getElementById("lbllatitud").value && document.getElementById("lbllongitud").value) {
-        lat = parseFloat(document.getElementById("lbllatitud").value);
-        lng = parseFloat(document.getElementById("lbllongitud").value);
+    var latTxt = obtenerCoordenadaTexto("lbllatitud");
+    var lngTxt = obtenerCoordenadaTexto("lbllongitud");
+
+    if (latTxt && lngTxt && latTxt !== "\u2014" && lngTxt !== "\u2014") {
+        lat = parseFloat(latTxt);
+        lng = parseFloat(lngTxt);
         initializeMap({ lat: lat, lng: lng });
     } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -446,6 +493,8 @@ function initializeMap(location) {
 function updateCoordinates(lat, lng) {
     document.getElementById('lbllatitud').textContent = lat.toFixed(6);
     document.getElementById('lbllongitud').textContent = lng.toFixed(6);
+    document.getElementById('lbllatitud').value = lat.toFixed(6);
+    document.getElementById('lbllongitud').value = lng.toFixed(6);
 
     // Crear una instancia del geocodificador inverso
     const geocoder = new google.maps.Geocoder();
@@ -457,8 +506,8 @@ function updateCoordinates(lat, lng) {
     geocoder.geocode({ 'location': latLng }, (results, status) => {
         if (status === 'OK') {
             if (results[0]) {
-                let direccion = document.getElementById('lbldireccion').value;
-                if (direccion == undefined) document.getElementById('Direccion').value = results[0].formatted_address;
+                let direccion = obtenerCoordenadaTexto('lbldireccion');
+                if (!direccion) document.getElementById('Direccion').value = results[0].formatted_address;
             } else {
                 alert('No se encontraron resultados para estas coordenadas.');
             }
@@ -518,6 +567,8 @@ function AccionBtnCancelar() {
         }
 
         localStorage.removeItem("EdicionCobranza");
+    } else {
+        document.location.href = "../Index/";
     }
 }
 

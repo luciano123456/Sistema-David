@@ -305,12 +305,16 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona, es
 
                         return '<div class="location-cell">' +
                             '<i title="Ir a Google Maps" class="fa fa-map-marker fa-2x text-warning location-icon" onclick="obtenerUbicacionYMostrarRecorrido(\'' + direccionCompleta + '\', ' + latDestino + ', ' + lonDestino + ')"></i> ' +
-                            '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + direccionCompleta + '\', ' + latDestino + ', ' + lonDestino + ')" class="direccion-link">' + direccionCorta + '</a>' +
+                            '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + direccionCompleta + '\', ' + latDestino + ', ' + lonDestino + ')" class="direccion-link">' + direccionCorta + '</a> ' +
+                            iconoHistorialDireccionHtml(row.Id) +
                             '</div>';
                     }
 
-                    // Si no hay coordenadas, solo muestra la dirección
-                    return '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + row.Direccion + '\', 0, 0)" class="direccion-link">' + row.Direccion + '</a>';
+                    var dirTexto = row.Direccion || "";
+                    return '<span>' +
+                        '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + dirTexto + '\', 0, 0)" class="direccion-link">' + dirTexto + '</a> ' +
+                        iconoHistorialDireccionHtml(row.Id) +
+                        '</span>';
                 }
             }
 

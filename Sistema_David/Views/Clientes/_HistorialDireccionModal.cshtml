@@ -1,0 +1,38 @@
+<div class="modal fade cc-modal-shell" id="modalHistorialDireccion" tabindex="-1" aria-labelledby="modalHistorialDireccionLabel" aria-hidden="true">
+    <div class="modal-dialog cc-modal-dialog cc-modal-dialog--historial">
+        <div class="modal-content cc-modal-content hd-modal-content">
+            <div class="modal-header border-0 hd-modal-header">
+                <div class="cc-modal-head">
+                    <div class="cc-modal-icon cc-modal-icon--historial">
+                        <i class="fa fa-map-marker" aria-hidden="true"></i>
+                    </div>
+                    <div class="hd-modal-head-text">
+                        <h5 class="modal-title mb-0" id="modalHistorialDireccionLabel">Historial de direcci&oacute;n</h5>
+                        <div class="cc-modal-subtitle">Cada modificaci&oacute;n de direcci&oacute;n o coordenadas queda registrada ac&aacute;</div>
+                    </div>
+                </div>
+                <button type="button" class="hd-modal-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body hd-modal-body">
+                <div class="hd-toolbar">
+                    <span id="hdContadorCambios" class="hd-badge-count">-</span>
+                    <span class="hd-toolbar-hint"><i class="fa fa-info-circle"></i> Solo se listan los campos que cambiaron en cada registro</span>
+                </div>
+                <div id="hdListaCambios" class="hd-timeline" role="list">
+                    <div class="hd-state hd-state--loading" id="hdEstadoCarga">
+                        <div class="hd-skeleton-card"></div>
+                        <div class="hd-skeleton-card"></div>
+                        <div class="hd-skeleton-card hd-skeleton-card--short"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 hd-modal-footer">
+                <button type="button" class="btn btn-outline-light hd-btn-cerrar" data-bs-dismiss="modal">
+                    <i class="fa fa-times-circle-o me-1"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

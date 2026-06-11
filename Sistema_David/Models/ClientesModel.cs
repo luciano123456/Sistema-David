@@ -276,7 +276,7 @@ namespace Sistema_David.Models.Modelo
         }
 
 
-        public static int NuevaDireccion(int idCliente, string Longitud, string Latitud)
+        public static int NuevaDireccion(int idCliente, string Longitud, string Latitud, int idUsuarioOperador = 0)
         {
             try
             {
@@ -287,11 +287,20 @@ namespace Sistema_David.Models.Modelo
                     if (client == null)
                         return 2; // Cliente no encontrado
 
+                    var dirAnt = client.Direccion;
+                    var latAnt = client.Latitud;
+                    var lonAnt = client.Longitud;
+
                     client.Latitud = Latitud;
                     client.Longitud = Longitud;
 
                     db.Entry(client).Property(c => c.Latitud).IsModified = true;
                     db.Entry(client).Property(c => c.Longitud).IsModified = true;
+
+                    if (idUsuarioOperador > 0)
+                    {
+                        RegistrarHistorialDireccion(db, idCliente, dirAnt, dirAnt, latAnt, Latitud, lonAnt, Longitud, idUsuarioOperador, "Cobranza");
+                    }
 
                     db.SaveChanges();
                     return 0;
@@ -353,7 +362,7 @@ namespace Sistema_David.Models.Modelo
             }
         }
 
-        public static bool Editar(VMCliente model)
+        public static bool Editar(VMCliente model, int idUsuarioOperador = 0)
         {
 
             try
@@ -364,6 +373,13 @@ namespace Sistema_David.Models.Modelo
                     if (model != null)
                     {
                         var result = db.Clientes.Find(model.Id);
+                        if (result == null)
+                            return false;
+
+                        var dirAnt = result.Direccion;
+                        var latAnt = result.Latitud;
+                        var lonAnt = result.Longitud;
+
                         result.Nombre = model.Nombre;
                         result.Apellido = model.Apellido;
                         result.Dni = model.Dni;
@@ -375,6 +391,11 @@ namespace Sistema_David.Models.Modelo
                         result.Longitud = model.Longitud;
                         result.Latitud = model.Latitud;
                         result.LimiteVentas = model.LimiteVentas != null ? model.LimiteVentas : 0;
+
+                        if (idUsuarioOperador > 0)
+                        {
+                            RegistrarHistorialDireccion(db, model.Id, dirAnt, model.Direccion, latAnt, model.Latitud, lonAnt, model.Longitud, idUsuarioOperador, "Edicion");
+                        }
 
                         db.Entry(result).State = System.Data.Entity.EntityState.Modified;
                         db.SaveChanges();
@@ -708,6 +729,91 @@ namespace Sistema_David.Models.Modelo
             catch (Exception e)
             {
                 return null;
+            }
+        }
+
+        private static string NormUbicacion(string valor)
+        {
+            return (valor ?? "").Trim();
+        }
+
+        private static bool HayCambioUbicacion(string dirAnt, string latAnt, string lonAnt, string dirNue, string latNue, string lonNue)
+        {
+            return NormUbicacion(dirAnt) != NormUbicacion(dirNue)
+                || NormUbicacion(latAnt) != NormUbicacion(latNue)
+                || NormUbicacion(lonAnt) != NormUbicacion(lonNue);
+        }
+
+        private static object ValorHistorial(string valor)
+        {
+            var normalizado = NormUbicacion(valor);
+            return string.IsNullOrEmpty(normalizado) ? (object)DBNull.Value : normalizado;
+        }
+
+        public static void RegistrarHistorialDireccion(Sistema_DavidEntities db, int idCliente,
+            string dirAnt, string dirNue, string latAnt, string latNue, string lonAnt, string lonNue,
+            int idUsuario, string origen)
+        {
+            if (!HayCambioUbicacion(dirAnt, latAnt, lonAnt, dirNue, latNue, lonNue))
+                return;
+
+            db.Database.ExecuteSqlCommand(@"
+                INSERT INTO Clientes_HistorialDireccion
+                    (IdCliente, DireccionAnterior, DireccionNueva, LatitudAnterior, LatitudNueva, LongitudAnterior, LongitudNueva, IdUsuario, FechaCambio, Origen)
+                VALUES
+                    (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9)",
+                idCliente,
+                ValorHistorial(dirAnt),
+                ValorHistorial(dirNue),
+                ValorHistorial(latAnt),
+                ValorHistorial(latNue),
+                ValorHistorial(lonAnt),
+                ValorHistorial(lonNue),
+                idUsuario,
+                DateTime.Now,
+                string.IsNullOrWhiteSpace(origen) ? (object)DBNull.Value : origen.Trim());
+        }
+
+        public static List<VMClienteHistorialDireccion> ListarHistorialDireccion(int idCliente)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                return db.Database.SqlQuery<VMClienteHistorialDireccion>(@"
+                    SELECT
+                        h.Id,
+                        h.IdCliente,
+                        h.DireccionAnterior,
+                        h.DireccionNueva,
+                        h.LatitudAnterior,
+                        h.LatitudNueva,
+                        h.LongitudAnterior,
+                        h.LongitudNueva,
+                        h.IdUsuario,
+                        ISNULL(u.Nombre, '') AS UsuarioNombre,
+                        h.FechaCambio,
+                        h.Origen
+                    FROM Clientes_HistorialDireccion h
+                    LEFT JOIN Usuarios u ON u.Id = h.IdUsuario
+                    WHERE h.IdCliente = @p0
+                    ORDER BY h.FechaCambio DESC, h.Id DESC",
+                    idCliente).ToList();
+            }
+        }
+
+        public static bool EliminarHistorialDireccion(int id)
+        {
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                {
+                    var filas = db.Database.ExecuteSqlCommand(
+                        "DELETE FROM Clientes_HistorialDireccion WHERE Id = @p0", id);
+                    return filas > 0;
+                }
+            }
+            catch
+            {
+                return false;
             }
         }
 
