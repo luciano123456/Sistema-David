@@ -1643,10 +1643,15 @@ VC.formarAcordeonVenta = function (rowData) {
 VC.cargarDetalleVenta = async function (idVenta) {
 
     try {
-        const resp = await $.getJSON("/Ventas_Electrodomesticos/GetDetalleVenta", { idVenta });
+        const resp = await $.ajax({
+            url: "/Ventas_Electrodomesticos/GetDetalleVenta",
+            method: "GET",
+            data: { idVenta },
+            dataType: "json"
+        });
 
-        if (!resp.success) {
-            VC.toast(resp.message || "Error obteniendo detalle", "danger");
+        if (!resp || !resp.success) {
+            VC.toast((resp && resp.message) ? resp.message : "Error obteniendo detalle", "danger");
             return;
         }
 
@@ -1657,7 +1662,16 @@ VC.cargarDetalleVenta = async function (idVenta) {
 
     } catch (e) {
         console.error("Error detalle venta", e);
-        VC.toast("Error obteniendo detalle", "danger");
+        let msg = "Error obteniendo detalle";
+        if (e && e.responseJSON && e.responseJSON.message) {
+            msg = e.responseJSON.message;
+        } else if (e && e.responseText) {
+            try {
+                const parsed = JSON.parse(e.responseText);
+                if (parsed.message) msg = parsed.message;
+            } catch (_) { /* ignore */ }
+        }
+        VC.toast(msg, "danger");
     }
 };
 

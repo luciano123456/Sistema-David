@@ -204,9 +204,9 @@ namespace Sistema_David.Models.Modelo
             {
                 var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.LimiteVentas, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
-                      INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
-                      INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
-					  INNER JOIN Zonas z on c.IdZona = z.Id
+                      LEFT JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
+                      LEFT JOIN Usuarios u ON c.IdVendedor = u.Id 
+					  LEFT JOIN Zonas z on c.IdZona = z.Id
                       LEFT JOIN (
                         SELECT saldoCli.idCliente, SUM(saldoCli.Saldo) AS Saldo
                         FROM (

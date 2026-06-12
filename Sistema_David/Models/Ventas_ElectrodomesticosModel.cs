@@ -688,17 +688,17 @@ namespace Sistema_David.Models
             using (var db = new Sistema_DavidEntities())
             {
                 var v = db.Ventas_Electrodomesticos
-                    .Include(x => x.Clientes)
-                    .Include(x => x.Ventas_Electrodomesticos_Detalle)
-                    .Include(x => x.Ventas_Electrodomesticos_Cuotas
-                        .Select(c => c.Ventas_Electrodomesticos_Cuotas_Recargos))
-                    .Include(x => x.Ventas_Electrodomesticos_Pagos
-                        .Select(p => p.Ventas_Electrodomesticos_Pagos_Detalle))
-                    .Include(x => x.Ventas_Electrodomesticos_Historial)
+                    .Include("Clientes")
+                    .Include("Ventas_Electrodomesticos_Detalle")
+                    .Include("Ventas_Electrodomesticos_Cuotas.Ventas_Electrodomesticos_Cuotas_Recargos")
+                    .Include("Ventas_Electrodomesticos_Pagos.Ventas_Electrodomesticos_Pagos_Detalle")
+                    .Include("Ventas_Electrodomesticos_Historial")
                     .FirstOrDefault(x => x.Id == idVenta);
 
                 if (v == null)
                     return null;
+
+                var infoCliente = ClientesModel.InformacionCliente(v.IdCliente);
 
                 var vm = new VM_Ventas_Electrodomesticos_Detalle
                 {
@@ -708,7 +708,7 @@ namespace Sistema_David.Models
                         : null,
                     ClienteDireccion = v.Clientes?.Direccion,
                     ClienteTelefono = v.Clientes?.Telefono,
-                    ClienteEstado = ClientesModel.InformacionCliente(v.IdCliente).Estado,
+                    ClienteEstado = infoCliente?.Estado,
                     ClienteDNI = v.Clientes?.Dni,
 
                     /* ================= HEADER VENTA ================= */
@@ -815,7 +815,7 @@ namespace Sistema_David.Models
                         p.ImporteTotal,
                         p.Observacion,
                         p.ClienteAusente,
-                        p.Imagen,
+                        TieneImagen = !string.IsNullOrEmpty(p.Imagen),
                         p.IdCuentaBancaria,
                         p.TipoInteres,
                         p.ActualizoUbicacion,
