@@ -121,6 +121,51 @@ namespace Sistema_David.Models
             }
         }
 
+        public static List<VMProducto> ListaProductosActivosConStock()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var result = (from p in db.Productos
+                              join c in db.Categorias on p.idCategoria equals c.Id
+                              where p.Activo == 1 && p.Stock != null && p.Stock > 0
+                              orderby p.Nombre
+                              select new
+                              {
+                                  p.Id,
+                                  p.Codigo,
+                                  p.Nombre,
+                                  p.idCategoria,
+                                  Categoria = c.Nombre,
+                                  p.Stock,
+                                  p.PrecioCompra,
+                                  p.PrecioVenta,
+                                  p.PorcVenta,
+                                  Total = p.PrecioCompra * p.Stock,
+                                  p.DiasVencimiento,
+                                  p.Activo
+                              })
+                              .AsEnumerable()
+                              .Select(x => new VMProducto
+                              {
+                                  Id = x.Id,
+                                  Codigo = x.Codigo,
+                                  Nombre = x.Nombre,
+                                  idCategoria = x.idCategoria,
+                                  Categoria = x.Categoria,
+                                  Stock = x.Stock,
+                                  PrecioCompra = x.PrecioCompra,
+                                  PrecioVenta = x.PrecioVenta,
+                                  Total = x.Total,
+                                  PorcVenta = x.PorcVenta,
+                                  DiasVencimiento = x.DiasVencimiento,
+                                  Activo = x.Activo ?? 0
+                              })
+                              .ToList();
+
+                return result;
+            }
+        }
+
         public static List<VMCategoria> ListaCategorias()
         {
             using (var db = new Sistema_DavidEntities())

@@ -1,504 +1,519 @@
-﻿.cards-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-}
+﻿/* =========================================================
+   Stock Pendiente — skin oscuro (Clientes / Stock)
+   ========================================================= */
 
-.card {
-    border-radius: 5px;
-    padding: 0px;
-    text-align: center;
-}
-
-    .card img {
-        max-width: 100%;
-        height: auto;
-    }
-
-.buttons {
-    margin-top: 10px;
-}
-
-.half-blue {
-    background-color: #7c2ae8; /* Violeta */
-    border-radius: 10px 10px 0px 0px;
-    color: #6a0dad;
-    height: 180px; /* Ajustar altura como desees */
-    width: 100%; /* Ancho del 100% */
-    position: relative; /* Agregado para posicionar elementos hijos */
-    z-index: 1;
-}
-
-.half-transferencia {
-    background-color: green; /* Violeta */
-    border-radius: 10px 10px 0px 0px;
-    color: #6a0dad;
-    height: 180px; /* Ajustar altura como desees */
-    width: 100%; /* Ancho del 100% */
-    position: relative; /* Agregado para posicionar elementos hijos */
-    z-index: 1;
-}
-
-.half-white {
-    background-color: white;
-    border-radius: 0px 0px 10px 10px;
-    color: #495057;
-    height: 180px; /* Ajustar altura como desees */
-    width: 100%; /* Ancho del 100% */
-    position: relative; /* Agregado para posicionar elementos hijos */
-    z-index: 1;
-}
-
-.input-nuevomodif {
-    display: flex;
-    border: none;
-    border-bottom: 10px;
-    border-bottom: solid blue;
-    width: 70%;
-    display: block;
-    position: relative;
-    left: 17%;
-    font-size: 30px;
-    margin-bottom: 20px;
-    color: black;
-    text-align: center;
-    font-size: 1.3vw;
-    max-width: 500px !important;
-    color: black !important;
-}
-
-    .input-nuevomodif:active {
-        border: none;
-        border-bottom: solid blue;
-    }
-
-    .input-nuevomodif::placeholder {
-        color: black;
-        opacity: 1 !important;
-    }
-
-    .input-nuevomodif:hover {
-        outline: none !important;
-    }
-
-    .input-nuevomodif:focus {
-        outline: none !important;
-        border-bottom: solid red;
-    }
-
-
-/* Estilos para la descripción y botones */
-.card-description {
-    position: absolute;
-    bottom: 0;
+.sp-root.ve-dark {
+    min-height: 100vh;
     width: 100%;
-    padding: 10px;
-    box-sizing: border-box;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
-.card {
-    border: none;
-    border-radius: 30px 30px 10px 10px;
-    padding: 0px;
-    text-align: center;
+.sp-root .page-99 {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
-.card-buttons {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    padding: 10px;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: space-between;
+.sp-root .sp-badge {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 55%, #b45309 100%);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(245, 158, 11, 0.35);
 }
 
-
-.round-image {
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    border: 3px solid white;
-    margin: 20px auto;
-    background-size: 100%; /* La imagen se ajustará al 100% del redondel */
-    background-position: center;
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 999;
+.sp-filter-label,
+.sp-modal-label {
+    color: #d9e3f5;
+    font-weight: 600;
+    font-size: 0.82rem;
+    margin-bottom: 0.35rem;
 }
 
-
-.icons-container {
-    top: 30%;
-    transform: translateY(-30%);
+.sp-root .sp-filter-input,
+.sp-root .sp-modal-input {
+    min-height: 42px;
+    border-radius: 11px !important;
+    background: #0c1731 !important;
+    color: #f0f5ff !important;
+    border: 1px solid rgba(118, 158, 255, 0.35) !important;
 }
 
-.icons-containereliminar {
-    top: 45%;
-    transform: translateY(-45%);
+.sp-root .sp-filter-input:focus,
+.sp-root .sp-modal-input:focus {
+    border-color: rgba(88, 166, 255, 0.75) !important;
+    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2) !important;
 }
 
-.btn {
-    font-size: 1.5vh; /* Tamaño de fuente para los botones */
-    
-}
-
-
-
-
-.edit-icon:hover,
-.delete-icon:hover {
-    cursor: pointer;
-    font-size: 1.2em; /* Cambiar el tamaño del icono al pasar el mouse */
-}
-
-.edit-icon:hover {
-    color: yellow; /* Cambiar el color del icono de editar al pasar el mouse */
-}
-
-.delete-icon:hover {
-    color: red; /* Cambiar el color del icono de eliminar al pasar el mouse */
-}
-
-
-
-.full-width {
-    width: 95% !important;
-}
-
-.botones {
-    display: flex; /* Utilizar flexbox para alinear los elementos */
-    justify-content: center; /* Centrar los elementos horizontalmente */
-    align-items: center; /* Centrar los elementos verticalmente */
-    margin: 0 !important;
-
-}
-
-.form-check-input:checked {
-    background-color: green;
-    border-color: green;
-}
-
-.divFiltros {
-    padding: 5px 5px 5px 5px;
-    border: 3px solid;
-    border: solid blue;
-    display: flex;
-    width: 100%;
-    display: block;
-    position: relative;
-    margin-top: 20px;
-    color: black;
-
-    
-}
-
-
-
-.lblNombreInput {
-    display: flex;
+.sp-count-badge {
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    text-align: center !important;
-    color: #05056C;
-    font-size: 1vw;
+    min-width: 1.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(88, 166, 255, 0.18);
+    color: #9ec5ff;
+    font-size: 0.78rem;
+    font-weight: 700;
 }
 
-.lblcliente {
-    margin-left: 30px;
-    font-size: 0.8vw;
-}
-
-.lblvendedor {
-    margin-left: 7px;
-    font-size: 0.7vw;
-}
-
-
-label {
-    color: white;
-}
-
-.input-nuevo {
-    border: none;
-    border-bottom: 0px;
-    border-bottom: solid blue;
-    width: 50%;
-    margin-bottom: 20px;
-    color: black;
-    text-align: center !important;
-    font-size: 0.6vw;
-    max-width: 150px !important;
-    background: #1B2631 !important;
-    color: white !important;
-}
-
-select {
-    font-size: 0.8vw !important;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator {
+.sp-select-all {
+    display: inline-flex;
+    align-items: center;
+    color: rgba(210, 222, 245, 0.9);
+    font-size: 0.88rem;
     cursor: pointer;
-    border-radius: 4px;
-    margin-right: 2px;
-    opacity: 0.9;
-    filter: invert(0.9);
+    user-select: none;
 }
 
-
-.input-checkbox {
-    margin: 0px 0px 0px 0px !important;
+.sp-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+    color: rgba(180, 198, 230, 0.85);
 }
 
-.obs {
-    max-width: 500px !important;
-    width: 100% !important;
+.sp-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: rgba(160, 178, 210, 0.85);
 }
 
-.input-nuevo:active {
-    border: none;
-    border-bottom: solid blue;
+/* ── Grid ── */
+.sp-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.15rem;
 }
 
-.input-nuevo::placeholder {
-    opacity: 1 !important;
+/* ── Card shell ── */
+.sp-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(118, 158, 255, 0.18);
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(12, 22, 46, 0.98) 0%, rgba(8, 14, 32, 0.98) 100%);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-.input-nuevo:hover {
-    outline: none !important;
+.sp-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(118, 158, 255, 0.38);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
 }
 
-.input-nuevo:focus {
-    outline: none !important;
-    border-bottom: solid red;
+.sp-card.is-selected {
+    border-color: rgba(32, 201, 151, 0.65);
+    box-shadow: 0 0 0 1px rgba(32, 201, 151, 0.35), 0 16px 40px rgba(0, 0, 0, 0.38);
 }
 
-@media (max-width: 767px) {
-    .botones {
-        display: flex;
-        
-    }
-
-    .ms-2{
-        margin-left: 0px !important;
-    }
-    .half-white {
-        height: 240px; /* Ajustar altura como desees */
-    }
-   
+.sp-card--aceptado {
+    border-color: rgba(32, 201, 151, 0.28);
 }
 
-@media (max-width: 1000px) {
-
-
-    .input-nuevo {
-        width: 100% !important;
-        display: block !important;
-        max-width: 1500px !important;
-        font-size: 4vw !important;
-    }
-    .btn-pendiente {
-        margin-top: -5px;
-    }
-
-
-
-    .lblcliente {
-        font-size: 4vw !important;
-        display: block;
-    }
-
-    select {
-        max-width: 1500px !important;
-        font-size: 4vw !important;
-    }
-
-    .btnnuevo {
-        width: 150px !important;
-    }
-
-    .obs {
-        width: 99% !important;
-    }
-
-    .lblNombreInput {
-        font-size: 4vw !important;
-    }
-
-    .btnaccion {
-        width: 150px !important;
-    }
-
-
-    .btnaccionp {
-        width: 400px !important;
-    }
-
-    .dataTables_info {
-        font-size: 2.7vw !important;
-    }
-
-    option {
-        font-size: 2.7vw !important;
-    }
+.sp-card--rechazado {
+    border-color: rgba(220, 53, 69, 0.28);
 }
 
-@media (max-width: 600px) {
-
-
-    #grdProductosVenta {
-        font-size: 3vw !important;
-    }
-
-    .dataTables_info {
-        font-size: 2.7vw !important;
-    }
-
-    .divProducto {
-        display: block !important;
-        position: relative !important;
-        margin-left: 0px !important;
-    }
-
-    .input-nuevomodif {
-        font-size: 4vw !important;
-    }
-
-    .lblNombreInput {
-        font-size: 4vw !important;
-    }
-
-    .btnaccion {
-        width: 175px !important;
-    }
-
-    .btnaccionp {
-        width: 450px !important;
-    }
-
-    option {
-        font-size: 3vw !important;
-    }
-
-    .half-white {
-        height: 300px; /* Ajustar altura como desees */
-    }
-
+/* ── Topbar (checkbox + acciones admin) ── */
+.sp-card-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.65rem;
+    background: rgba(0, 0, 0, 0.28);
+    border-bottom: 1px solid rgba(118, 158, 255, 0.12);
 }
 
-@media (max-width: 400px) {
-
-    .lblNombreInput {
-        font-size: 6vw !important;
-    }
-
-   
-    .input-nuevomodif {
-        font-size: 6vw !important;
-    }
-
-    .btnaccionp {
-        width: 450px !important;
-    }
-
-    option {
-        font-size: 5vw !important;
-    }
-
-   
-
+.sp-card-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
 }
 
-
-@media (max-width: 300px) {
-
-
-    .lblNombreInput {
-        font-size: 8vw !important;
-    }
-
-    .input-nuevomodif {
-        font-size: 8vw !important;
-    }
-
-    .btnaccion {
-        width: 200px !important;
-    }
-
-    .btnaccionp {
-        width: 450px !important;
-    }
+.sp-card-check {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
 }
 
-@media (max-width: 260px) {
-
-    .divProducto {
-        font-size: 5vw;
-    }
-
-    .btnaccion {
-        width: 200px !important;
-    }
-
-    .btnaccionp {
-        width: 350px !important;
-    }
+.sp-card-select-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    border: 2px solid rgba(118, 158, 255, 0.45);
+    background: rgba(12, 23, 49, 0.9);
+    color: transparent;
+    font-size: 0.72rem;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.half-white {
+.sp-card-check:checked + .sp-card-select-box {
+    background: #20c997;
+    border-color: #20c997;
+    color: #062a22;
+}
+
+.sp-card-select-text {
+    color: rgba(190, 206, 235, 0.82);
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.sp-card-tools {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.sp-card-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.12s ease, border-color 0.15s ease;
+}
+
+.sp-card-tool-btn:hover {
+    transform: translateY(-1px);
+}
+
+.sp-card-tool-btn--edit {
+    color: #ffc107;
+    border-color: rgba(255, 193, 7, 0.35);
+}
+
+.sp-card-tool-btn--edit:hover {
+    background: rgba(255, 193, 7, 0.16);
+}
+
+.sp-card-tool-btn--delete {
+    color: #ff7b8a;
+    border-color: rgba(220, 53, 69, 0.35);
+}
+
+.sp-card-tool-btn--delete:hover {
+    background: rgba(220, 53, 69, 0.16);
+}
+
+/* ── Hero (cabecera de color) ── */
+.sp-card-hero {
+    position: relative;
+    padding: 1.1rem 1rem 1.25rem;
+    text-align: center;
+}
+
+.sp-card-hero--usuario {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 48%, #3730a3 100%);
+}
+
+.sp-card-hero--transferencia {
+    background: linear-gradient(135deg, #059669 0%, #047857 48%, #065f46 100%);
+}
+
+.sp-card-hero--admin {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 48%, #5b21b6 100%);
+}
+
+.sp-card-estado-pill {
+    position: absolute;
+    top: 0.65rem;
+    right: 0.65rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.sp-card-estado-pill--pendiente {
+    background: rgba(245, 158, 11, 0.22);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.sp-card-estado-pill--aceptado {
+    background: rgba(32, 201, 151, 0.22);
+    color: #6ee7b7;
+    border: 1px solid rgba(32, 201, 151, 0.45);
+}
+
+.sp-card-estado-pill--rechazado {
+    background: rgba(220, 53, 69, 0.22);
+    color: #fca5a5;
+    border: 1px solid rgba(220, 53, 69, 0.45);
+}
+
+.sp-card-badge {
+    display: inline-block;
+    margin-bottom: 0.55rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sp-card-recibe-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 10px;
-    width: 100%;
-    overflow: hidden; /* Evita desbordes */
+    gap: 0.15rem;
+    padding: 0 0.5rem;
 }
 
-.divBotones {
+.sp-card-recibe-label {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.sp-card-recibe-name {
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.25;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+/* ── Cuerpo ── */
+.sp-card-body {
     display: flex;
-    flex-wrap: nowrap; /* No permite que los botones pasen a otra línea */
-    justify-content: center;
-    gap: 10px; /* Espacio entre los botones */
-    width: 100%;
-}
-
-.botones {
-    width: 100%;
-}
-
-    .divBotones button {
-        flex: 1; /* Distribuye el espacio equitativamente */
-        max-width: 45%; /* Asegura que cada botón ocupe la mitad del espacio disponible */
-        min-width: 100px; /* Evita que los botones sean demasiado pequeños */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-size: 0.9em;
-    }
-
-/* ✅ Botón "Pendiente" debe ocupar el 90% del ancho */
-.btn-pendiente {
-    width: 90%;
-    max-width: 90%;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    padding: 1rem 1rem 1.1rem;
     text-align: center;
 }
 
-.card {
-    opacity: 0; /* Inicialmente transparente */
-    transform: scale(0.9); /* Inicialmente más pequeñas */
-    animation: appear 0.6s ease-out forwards; /* Animación */
+.sp-card-img-wrap {
+    width: 96px;
+    height: 96px;
+    margin-bottom: 0.85rem;
+    border-radius: 16px;
+    border: 2px solid rgba(118, 158, 255, 0.28);
+    overflow: hidden;
+    background: rgba(8, 14, 32, 0.85);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
 }
 
-@keyframes appear {
-    0% {
-        opacity: 0;
-        transform: scale(0.9); /* Comienza pequeña */
+.sp-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.sp-card-img.sp-card-img--error {
+    object-fit: contain;
+    padding: 0.35rem;
+    opacity: 0.55;
+}
+
+.sp-card-meta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.65rem;
+    margin-bottom: 0.55rem;
+    border-radius: 999px;
+    background: rgba(118, 158, 255, 0.1);
+    color: rgba(180, 198, 230, 0.9);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.sp-card-product {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+    margin-bottom: 0.55rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(118, 158, 255, 0.12);
+}
+
+.sp-card-qty {
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.sp-card-product-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.sp-card-product--suma .sp-card-qty {
+    color: #4ade80;
+}
+
+.sp-card-product--suma .sp-card-product-name {
+    color: #bbf7d0;
+}
+
+.sp-card-product--resta .sp-card-qty {
+    color: #f87171;
+}
+
+.sp-card-product--resta .sp-card-product-name {
+    color: #fecaca;
+}
+
+.sp-card-envia {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    margin-bottom: 0.75rem;
+    color: rgba(180, 198, 230, 0.82);
+    font-size: 0.8rem;
+}
+
+.sp-card-envia strong {
+    color: #eef4ff;
+    font-weight: 700;
+}
+
+.sp-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 0.15rem;
+}
+
+.sp-card-actions .btn {
+    min-height: 40px;
+    border-radius: 11px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.01em;
+}
+
+.sp-card-actions .btn-success {
+    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.28);
+}
+
+.sp-card-actions .btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.28);
+}
+
+.sp-card-actions .btn-success,
+.sp-card-actions .btn-danger {
+    flex: 1 1 calc(50% - 0.25rem);
+    max-width: calc(50% - 0.25rem);
+}
+
+.sp-card-actions .btn-status {
+    width: 100%;
+    pointer-events: none;
+    opacity: 0.92;
+}
+
+.sp-card-actions .btn-warning.btn-pendiente {
+    width: 100%;
+    background: rgba(245, 158, 11, 0.14) !important;
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+    color: #fbbf24 !important;
+}
+
+.sp-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    padding: 0.75rem 1.1rem 1rem !important;
+}
+
+@media (min-width: 1200px) {
+    .sp-cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .sp-root .cc-header > .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
     }
 
-    100% {
-        opacity: 1;
-        transform: scale(1); /* Tamaño final */
+    .sp-root .sp-header-actions {
+        width: 100%;
+        margin-left: 0 !important;
+    }
+
+    .sp-root .sp-header-actions .sp-header-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .sp-toolbar {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .sp-toolbar-actions {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .sp-bulk-actions .btn {
+        flex: 1 1 auto;
+    }
+
+    .sp-cards-container {
+        grid-template-columns: 1fr;
+    }
+
+    .sp-card-select-text {
+        display: none;
+    }
+
+    .sp-modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .sp-modal-footer .btn {
+        width: 100%;
+        min-height: 44px;
     }
 }

@@ -4,6 +4,7 @@ using Sistema_David.Models.Modelo;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -257,46 +258,91 @@ namespace Sistema_David.Models
             }
         }
 
+        public static Dictionary<int, int> ContarStockPendienteAceptarPorUsuarios()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                const string sql = @"
+                    SELECT x.UsuarioId, COUNT(*) AS Cnt
+                    FROM (
+                        SELECT CASE
+                            WHEN UPPER(ISNULL(sp.Asignacion, '')) = 'TRANSFERENCIA'
+                                THEN ISNULL(sp.IdUsuarioAsignado, sp.IdUsuario)
+                            WHEN UPPER(ISNULL(sp.Asignacion, '')) IN ('ADMINISTRADOR', 'USUARIO')
+                                THEN sp.IdUsuario
+                            ELSE NULL
+                        END AS UsuarioId
+                        FROM StocksPendientes sp
+                        WHERE sp.Estado = 'Pendiente'
+                          AND sp.Cantidad > 0
+                          AND sp.IdProducto > 0
+                    ) x
+                    WHERE x.UsuarioId IS NOT NULL
+                    GROUP BY x.UsuarioId";
+
+                return db.Database.SqlQuery<StockPendienteUsuarioCountRow>(sql)
+                    .ToDictionary(row => row.UsuarioId, row => row.Cnt);
+            }
+        }
+
+        private class StockPendienteUsuarioCountRow
+        {
+            public int UsuarioId { get; set; }
+            public int Cnt { get; set; }
+        }
+
 
         public static List<VMStockPendiente> ListarStockPendiente(int idUser, string Estado, DateTime? Fecha, string Asignacion)
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            using (var db = new Sistema_DavidEntities())
             {
-                var result = (from d in db.StocksPendientes
-                            .SqlQuery("select sp.Id, sp.IdUsuario, sp.IdUsuarioAsignado, sp.Fecha, sp.IdProducto, sp.Cantidad, sp.Estado, sp.Tipo, p.Nombre, u.Nombre, sp.Asignacion from StocksPendientes sp inner join Productos p on p.Id = sp.IdProducto inner join Usuarios u on sp.IdUsuarioAsignado = u.Id ")
-                              select new VMStockPendiente
-                              {
-                                  Id = d.Id,
-                                  IdProducto = d.IdProducto,
-                                  Cantidad = d.Cantidad,
-                                  IdUsuario = d.IdUsuario,
-                                  IdUsuarioAsignado = d.IdUsuarioAsignado,
-                                  UsuarioAsignado = d.Usuarios1.Nombre,
-                                  Usuario = d.Usuarios != null ? d.Usuarios.Nombre : "",
-                                  Producto = d.Productos.Nombre,
-                                  Estado = d.Estado,
-                                  Fecha = d.Fecha?.Date,
-                                  Asignacion = d.Asignacion != null ? d.Asignacion : "ADMINISTRADOR",
-                                  Tipo = d.Tipo
-                              })
-                            .Where(x =>
-    ((x.IdUsuario == idUser || idUser == -1) &&
-     (x.Estado == Estado || Estado == "Todos") &&
-     (x.Asignacion.ToUpper() == Asignacion.ToUpper() || Asignacion == "Todos") &&
-     (
-         !Fecha.HasValue ||
-         (Estado == "Pendiente" && x.Fecha <= Fecha) ||
-         (Estado != "Pendiente" && x.Fecha == Fecha)
-     )
-    )
-    ||
-    (x.IdUsuarioAsignado == idUser && x.Asignacion == "TRANSFERENCIA" && x.Estado == "Pendiente")
-)
+                const string sql = @"
+                    SELECT sp.Id,
+                           sp.IdUsuario,
+                           sp.IdUsuarioAsignado,
+                           sp.Fecha,
+                           sp.IdProducto,
+                           sp.Cantidad,
+                           sp.Estado,
+                           sp.Tipo,
+                           ISNULL(sp.Asignacion, 'ADMINISTRADOR') AS Asignacion,
+                           p.Nombre AS Producto,
+                           ISNULL(ur.Nombre, '') AS Usuario,
+                           ua.Nombre AS UsuarioAsignado
+                    FROM StocksPendientes sp
+                    INNER JOIN Productos p ON p.Id = sp.IdProducto
+                    LEFT JOIN Usuarios ur ON ur.Id = sp.IdUsuario
+                    INNER JOIN Usuarios ua ON ua.Id = sp.IdUsuarioAsignado
+                    WHERE (
+                        (
+                            (@idUser = -1 OR sp.IdUsuario = @idUser)
+                            AND (@estado = 'Todos' OR sp.Estado = @estado)
+                            AND (@asignacion = 'Todos' OR UPPER(ISNULL(sp.Asignacion, '')) = UPPER(@asignacion))
+                            AND (
+                                @fecha IS NULL
+                                OR (@estado = 'Pendiente' AND CAST(sp.Fecha AS DATE) <= CAST(@fecha AS DATE))
+                                OR (@estado <> 'Pendiente' AND @estado <> 'Todos' AND CAST(sp.Fecha AS DATE) = CAST(@fecha AS DATE))
+                            )
+                        )
+                        OR (
+                            @idUser <> -1
+                            AND sp.IdUsuarioAsignado = @idUser
+                            AND UPPER(ISNULL(sp.Asignacion, '')) = 'TRANSFERENCIA'
+                            AND sp.Estado = 'Pendiente'
+                        )
+                    )
+                    ORDER BY sp.Fecha DESC";
 
-                            .OrderByDescending(x => x.Fecha) // Ordenar por fecha más nueva
-                            .ToList();
+                var estadoParam = string.IsNullOrWhiteSpace(Estado) ? "Todos" : Estado;
+                var asignacionParam = string.IsNullOrWhiteSpace(Asignacion) ? "Todos" : Asignacion;
+                var fechaParam = Fecha.HasValue ? (object)Fecha.Value.Date : DBNull.Value;
 
-                return result;
+                return db.Database.SqlQuery<VMStockPendiente>(sql,
+                    new SqlParameter("@idUser", idUser),
+                    new SqlParameter("@estado", estadoParam),
+                    new SqlParameter("@asignacion", asignacionParam),
+                    new SqlParameter("@fecha", fechaParam)
+                ).ToList();
             }
         }
 

@@ -1,4 +1,53 @@
 ﻿let userSession;
+let gridUsuarios = null;
+
+const USUARIOS_COL_FILTER_KEY = "usuarios_col_filters_v1";
+const USUARIOS_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
+const columnConfigUsuarios = [
+    { index: 0, filterType: "text" },
+    { index: 1, filterType: "text" },
+    { index: 2, filterType: "text" },
+    { index: 3, filterType: "text" },
+    { index: 4, filterType: "text" },
+    { index: 5, filterType: "select" },
+    { index: 6, filterType: "select" },
+    { index: 7, filterType: "select" }
+];
+
+function escapeHtmlUsuarios(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderUsuarioConCarrito(data, full) {
+    let html = '<span class="usr-nombre-cell">';
+    html += '<span class="usr-nombre-text">' + escapeHtmlUsuarios(data) + '</span>';
+
+    if (full.StockPendienteAceptar && full.StockPendienteAceptar > 0) {
+        const tooltip = full.StockPendienteAceptar === 1
+            ? 'Tiene stock por aceptar'
+            : 'Tiene ' + full.StockPendienteAceptar + ' stocks por aceptar';
+
+        html += '<button type="button" class="usr-stock-pendiente-cart" ' +
+            'data-tooltip="' + escapeHtmlUsuarios(tooltip) + '" ' +
+            'aria-label="' + escapeHtmlUsuarios(tooltip) + '" ' +
+            'onclick="event.stopPropagation(); abrirstockPendienteUsuario(' + full.Id + ')">' +
+            '<i class="fa fa-shopping-cart" aria-hidden="true"></i>';
+
+        if (full.StockPendienteAceptar > 1) {
+            html += '<span class="usr-stock-pendiente-count">' + full.StockPendienteAceptar + '</span>';
+        }
+
+        html += '</button>';
+    }
+
+    html += '</span>';
+    return html;
+}
 
 const eliminarUsuario = async id => {
      if (userSession.IdRol == 2) { //ROL VENDEDOR
@@ -41,111 +90,188 @@ const eliminarUsuario = async id => {
 $(document).ready(function () {
     userSession = JSON.parse(localStorage.getItem('usuario'));
     configurarDataTable();
+    initUsuariosDropdownColumnas();
     $("#btnUsuarios").css("background", "#2E4053");
-   
 });
 
+function initUsuariosDropdownColumnas() {
+    const btn = document.getElementById('dropdownColumnas');
+    const menu = document.getElementById('configColumnasMenu');
+    if (!btn || !menu || btn.dataset.usuariosDropdownInit) return;
+    btn.dataset.usuariosDropdownInit = '1';
+
+    btn.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isOpen = menu.classList.contains('show');
+        document.querySelectorAll('.dropdown-menu.show').forEach(function (el) {
+            el.classList.remove('show');
+        });
+        document.querySelectorAll('.usuarios-columns-toggle[aria-expanded="true"]').forEach(function (el) {
+            el.setAttribute('aria-expanded', 'false');
+        });
+
+        if (!isOpen) {
+            menu.classList.add('show');
+            btn.setAttribute('aria-expanded', 'true');
+        }
+    });
+
+    menu.addEventListener('click', function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener('click', function (event) {
+        if (btn.contains(event.target) || menu.contains(event.target)) return;
+        menu.classList.remove('show');
+        btn.setAttribute('aria-expanded', 'false');
+    });
+}
+
 async function configurarDataTable() {
-    $('#grdUsuarios').DataTable({
-        "ajax": {
-            "url": "/Usuarios/Listar",
-            "type": "GET",
-            "dataType": "json"
-        },
-        "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
-        },
+    $('#grdUsuarios thead tr.filters').remove();
+    inicializarEncabezadoColumnas("#grdUsuarios");
 
+    gridUsuarios = $('#grdUsuarios').DataTable({
+        ajax: {
+            url: "/Usuarios/Listar",
+            type: "GET",
+            dataType: "json"
+        },
+        processing: true,
+        deferRender: true,
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+        },
         scrollX: true,
-
-        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-
-        "order": [[8, 'asc']],
-
-        "columns": [
-            { "data": "Usuario" },
-            { "data": "Nombre" },
-            { "data": "Apellido" },
-            { "data": "Telefono" },
+        scrollCollapse: true,
+        autoWidth: false,
+        orderCellsTop: true,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        order: [[7, 'asc']],
+        columns: [
             {
-                "data": "Direccion", // Cambia esto a la dirección completa en tus datos
-                "render": function (value) {
-                    // Si tiene más de 20 caracteres, devolver los 10 primeros + '...'
-                    if (value != null && value.length > 25) {
-                        return '<span class="direccion-tooltip" data-toggle="tooltip" data-placement="bottom" data-trigger="hover touch" title="' + value + '">' +
-                            '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + value + '\')" class="direccion-link">' + value.substr(0, 25) + '...</a></span>';
+                data: "Usuario",
+                className: 'text-center',
+                render: function (data, type, full) {
+                    if (type === 'sort' || type === 'filter' || type === 'type') {
+                        return data || '';
                     }
-                    return value;
-                },
-                width: "200px",
+                    return renderUsuarioConCarrito(data, full);
+                }
             },
-            { "data": "TipoNegocio" },
-            { "data": "Rol" },
-            { "data": "Estado" },
+            { data: "Nombre", className: 'text-center' },
+            { data: "Apellido", className: 'text-center' },
+            { data: "Telefono", className: 'text-center' },
             {
-                "data": "Id", "render": function (data, type, full) {
+                data: "Direccion",
+                className: 'text-center',
+                render: function (value, type) {
+                    if (type === 'sort' || type === 'filter' || type === 'type') {
+                        return value || '';
+                    }
+                    if (value != null && value.length > 25) {
+                        return '<span class="direccion-tooltip" title="' + escapeHtmlUsuarios(value) + '">' +
+                            '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + value.replace(/'/g, "\\'") + '\')" class="direccion-link">' +
+                            escapeHtmlUsuarios(value.substr(0, 25)) + '...</a></span>';
+                    }
+                    return escapeHtmlUsuarios(value);
+                },
+                width: "200px"
+            },
+            { data: "TipoNegocio", className: 'text-center' },
+            { data: "Rol", className: 'text-center' },
+            { data: "Estado", className: 'text-center' },
+            {
+                data: "Id",
+                className: 'text-center',
+                orderable: false,
+                searchable: false,
+                render: function (data, type, full) {
+                    if (type === 'sort' || type === 'filter' || type === 'type') {
+                        return '';
+                    }
                     var activo = full.BloqueoSistema === 1;
                     var color = activo ? "success" : "danger";
                     var titulo = activo ? "Desbloquear" : "Bloquear";
                     var estadoInverso = full.BloqueoSistema ? 0 : 1;
 
-                    // Ícono de vista stock
                     var iconoVista = full.VistaStock == 0 ? 'fa-eye-slash' : 'fa-eye';
                     var nuevoVista = full.VistaStock == 1 ? 0 : 1;
 
-                    let botones = "";
+                    let botones = '<div class="usr-actions-cell">';
 
-                    botones += "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='toggleVistaStock(" + data + ", " + nuevoVista + ")' title='Mostrar/Ocultar stock'><i class='fa " + iconoVista + " fa-lg text-info' aria-hidden='true'></i></button> ";
+                    botones += "<button class='btn btn-sm btnacciones usr-btn-vista' type='button' onclick='event.stopPropagation(); toggleVistaStock(" + data + ", " + nuevoVista + ")' title='Mostrar/Ocultar stock'><i class='fa " + iconoVista + " fa-lg text-info' aria-hidden='true'></i></button>";
 
-                    botones += "<button class='btn btn-sm btn-" + color + " btnacciones' type='button' onclick='bloqueoSistema(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white' aria-hidden='true'></i></button>";
+                    botones += "<button class='btn btn-sm btn-" + color + " btnacciones usr-btn-bloqueo' type='button' onclick='event.stopPropagation(); bloqueoSistema(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white' aria-hidden='true'></i></button>";
 
-                    botones += "<button class='ms-1 btn btn-sm btneditar btnacciones' type='button' onclick='editarUsuario(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>";
+                    botones += "<button class='btn btn-sm btnacciones usr-btn-editar' type='button' onclick='event.stopPropagation(); editarUsuario(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg' aria-hidden='true'></i></button>";
 
-                    botones += "<button class='btn btn-sm btnacciones' type='button' onclick='stockUsuario(" + data + ")' title='Stock'><i class='fa fa-shopping-basket fa-lg text-white' aria-hidden='true'></i></button>";
+                    botones += "<button class='btn btn-sm btnacciones usr-btn-stock' type='button' onclick='event.stopPropagation(); stockUsuario(" + data + ")' title='Ver stock'><i class='fa fa-shopping-basket fa-lg' aria-hidden='true'></i></button>";
 
-                    botones += "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarUsuario(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>";
+                    botones += "<button class='btn btn-sm btnacciones usr-btn-eliminar' type='button' onclick='event.stopPropagation(); eliminarUsuario(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>";
 
+                    botones += '</div>';
                     return botones;
                 }
             }
         ],
-
-        "fnRowCallback": function (nRow, data, row) {
+        fnRowCallback: function (nRow, data) {
+            $(nRow).removeClass('fila-usuario-bloqueado fila-usuario-inactivo');
             if (data.Estado == "Bloqueado") {
-                $('td', nRow).css('background-color', ' #890E07');
+                $(nRow).addClass('fila-usuario-bloqueado');
             } else if (data.Estado == "Inactivo") {
-                $('td', nRow).css('background-color', ' #DED803');
+                $(nRow).addClass('fila-usuario-inactivo');
             }
         },
-
-         "initComplete": function (settings, json) {
-
-            configurarOpcionesColumnas()
-
+        initComplete: function () {
+            configurarOpcionesColumnas();
+            configurarFiltrosPorColumnaUsuarios();
+            this.api().columns.adjust();
+        },
+        drawCallback: function () {
+            if (typeof syncColumnFilterMarkers === 'function') {
+                syncColumnFilterMarkers(this.api(), columnConfigUsuarios);
+            }
         }
-
-      
-
     });
 
+    $(window).on('resize.usuariosDt orientationchange.usuariosDt', function () {
+        if ($.fn.DataTable.isDataTable('#grdUsuarios')) {
+            $('#grdUsuarios').DataTable().columns.adjust();
+        }
+    });
 
-    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
-    $('#grdUsuarios tbody').on('click', 'tr', function () {
-        // Remover la clase de la fila anteriormente seleccionada
+    let filaSeleccionada = null;
+    const $tbl = $('#grdUsuarios');
+    $tbl.off('click.usuarioRow').on('click.usuarioRow', 'tbody tr', function (e) {
+        const $tr = $(this);
+        if ($(e.target).closest('a, button, .btnacciones, .usr-stock-pendiente-cart, .direccion-link').length) return;
+
         if (filaSeleccionada) {
-            $(filaSeleccionada).removeClass('seleccionada');
-            $('td', filaSeleccionada).removeClass('seleccionada');
-
+            $(filaSeleccionada).removeClass('usuario-row-selected');
         }
-
-        // Obtener la fila actual
-        filaSeleccionada = $(this);
-
-        // Agregar la clase a la fila actual
-        $(filaSeleccionada).addClass('seleccionada');
-        $('td', filaSeleccionada).addClass('seleccionada');
-
+        filaSeleccionada = $tr[0];
+        $tr.addClass('usuario-row-selected');
     });
+}
+
+function limpiarFiltrosColumnasUsuarios() {
+    if (!gridUsuarios) return;
+    limpiarFiltrosColumnas(gridUsuarios, columnConfigUsuarios, USUARIOS_COL_FILTER_KEY);
+}
+
+function configurarFiltrosPorColumnaUsuarios() {
+    if (!gridUsuarios) return;
+    inicializarFiltrosColumnas(
+        gridUsuarios,
+        columnConfigUsuarios,
+        USUARIOS_COL_FILTER_KEY,
+        true,
+        USUARIOS_COL_FILTER_UI
+    );
+    getDataTableWrapper(gridUsuarios).find("thead tr.filters th").eq(8).html("");
 }
 
 async function AccionBtn() {
@@ -480,18 +606,23 @@ function mostrarDireccionCompleta(direccion) {
 
 function togglePassword() {
     var passwordField = document.getElementById("Contrasena");
-    var passwordIcon = document.querySelector(".show-password");
+    var passwordIcon = document.querySelector(".usuarios-show-password i");
 
     if (passwordField.type === "password") {
         passwordField.type = "text";
-        passwordIcon.textContent = "👁️";
+        if (passwordIcon) passwordIcon.className = "fa fa-eye-slash";
     } else {
         passwordField.type = "password";
-        passwordIcon.textContent = "👁️";
+        if (passwordIcon) passwordIcon.className = "fa fa-eye";
     }
 }
 
 function abrirstockPendiente() {
+    document.location.href = "../../StockPendiente/Index/";
+}
+
+function abrirstockPendienteUsuario(id) {
+    localStorage.setItem("idUserStock", id);
     document.location.href = "../../StockPendiente/Index/";
 }
 
@@ -623,6 +754,7 @@ function configurarOpcionesColumnas() {
         savedConfig[`col_${columnIdx}`] = isChecked;
         localStorage.setItem(storageKey, JSON.stringify(savedConfig));
         grid.column(columnIdx).visible(isChecked);
+        grid.columns.adjust();
     });
 }
 

@@ -1,258 +1,290 @@
-﻿
-@{
-    ViewBag.Title = "Index";
+﻿@{
+    ViewBag.Title = "Stock";
 }
 
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
-<link href="~/Estilos/Stock.css?v=1.0" rel="stylesheet" />
-<link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
+<link href="~/Estilos/Clientes.css?v=1.6" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.8" rel="stylesheet" />
+<link href="~/Estilos/Stock.css?v=2.8" rel="stylesheet" />
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
-<body>
+<div class="ve-dark stock-root">
 
-    <script src="~/Scripts/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <div class="container-fluid page-99 py-3">
 
-    <div class="divPrecio mt-3">
-        <label class="lblNombreInput text-white">Stock de </label>
-        <label class="lblNombreInput ms-2 text-white" id="lblnombreusuario"></label>
-        <label class="lblNombreInput ms-2 text-white" id="lbltelefono" hidden></label>
-        <a class="btn btn-wspstock" title="Contactar vía WhatsApp" onclick="enviarWhatssap()">
-            <i class="fa fa-whatsapp"></i>
-        </a>
-    </div>
-
-    <div class="divStock" id="divStock" hidden>
-        <label class="" id="">Dinero en stock: </label>
-        <label class="" id="precioventa">0</label>
-    </div>
-
-    <div class="col-lg-12">
-        <div class="card cardTablePersonalizado">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                Stock
-                <div class="dropdown ms-auto">
-                    <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fa fa-cog me-2"></i> Config. Columnas
+        <section class="cc-header mb-4 stock-header">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="cc-badge stock-badge">
+                        <i class="fa fa-cubes"></i>
+                    </div>
+                    <div>
+                        <h2 class="m-0 fw-800">Stock</h2>
+                        <div class="stock-user-line text-muted-cc">
+                            <span>Stock de</span>
+                            <strong id="lblnombreusuario" class="stock-user-name">—</strong>
+                            <span id="lbltelefono" hidden></span>
+                            <button type="button" class="btn btn-stock-wsp" title="Contactar v&iacute;a WhatsApp" onclick="enviarWhatssap()">
+                                <i class="fa fa-whatsapp"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="stock-header-actions d-flex flex-wrap gap-2 ms-auto">
+                    <button type="button" class="btn btn-outline-warning stock-header-btn" id="btnStockPendiente" onclick="abrirstockPendiente()">
+                        <i class="fa fa-clock-o me-1"></i>
+                        <span class="d-none d-sm-inline">Stock pendiente</span>
+                        <span class="d-inline d-sm-none">Pendiente</span>
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu">
-                    </ul>
+                    <button type="button" class="btn btn-primary stock-header-btn" id="btnAgregarProd" onclick="abrirmodal()">
+                        <i class="fa fa-plus me-1"></i>
+                        <span class="d-none d-sm-inline">Agregar producto</span>
+                        <span class="d-inline d-sm-none">Agregar</span>
+                    </button>
                 </div>
             </div>
-            <div class="card-body">
-                <table class="display nowrap" id="grdStock" style="width:100%">
+        </section>
+
+        <section id="divStock" class="mb-4" hidden>
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="cc-stat h-100">
+                        <div class="label">Dinero en stock</div>
+                        <div class="value text-success" id="precioventa">0</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="card-glass p-3 mb-4 stock-table-card">
+            <div class="stock-table-toolbar d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="fw-bold text-white stock-table-title">
+                    <i class="fa fa-table me-2"></i> Productos en stock
+                </div>
+                <div class="d-flex flex-wrap gap-2 ms-auto stock-toolbar-actions">
+                    <button type="button" class="btn btn-outline-light stock-clear-filters-btn" onclick="limpiarFiltrosColumnasStock()" title="Limpiar filtros de columnas">
+                        <i class="fa fa-eraser me-1"></i> Limpiar filtros
+                    </button>
+                    <div class="dropdown stock-toolbar-dropdown">
+                        <button class="btn btn-outline-light stock-columns-toggle d-flex align-items-center" type="button" id="dropdownColumnas" aria-expanded="false">
+                            <i class="fa fa-cog me-2"></i> Config. columnas
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end cc-dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <p class="stock-dt-hint d-lg-none text-muted small mb-2">
+                <i class="fa fa-arrows-h me-1"></i> Desliz&aacute; horizontalmente para ver todas las columnas y filtros.
+            </p>
+
+            <div class="table-responsive dt-dark-wrap stock-dt-wrap vc-cobros-dt">
+                <table class="display nowrap dt-dark ve-table-cobros w-100 stock-dt" id="grdStock">
                     <thead>
                         <tr>
                             <th class="text-center">Imagen</th>
                             <th class="text-center">Producto</th>
                             <th class="text-center">Cantidad</th>
-                            <th class="text-center">Precio Unitario</th>
+                            <th class="text-center">Precio unitario</th>
                             <th class="text-center">Total</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- Aquí va el contenido de tu datatable -->
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
 
-            <div class="vw-75 d-flex justify-content-end mt-2 mb-4">
-                <button id="btnExportarPdf" type="button" class="btn btn-danger me-2" onclick="exportarPdf()" hidden>
-                    <i class="fa fa-file-pdf-o"></i> Exportar PDF
+            <div class="d-flex flex-wrap justify-content-end mt-3 gap-2 stock-footer-actions">
+                <button id="btnExportarPdf" type="button" class="btn btn-outline-danger" onclick="exportarPdf()" hidden>
+                    <i class="fa fa-file-pdf-o me-1"></i> Exportar PDF
                 </button>
-
-                <button id="btnStockPendiente" type="button" class="btn btn-warning me-2" onclick="abrirstockPendiente()">Stock Pendiente</button>
-                <a class="btn btn-primary" id="btnAgregarProd" onclick="abrirmodal()">Agregar</a>
-
             </div>
         </div>
     </div>
 
-
-
-
-    <!-- Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imageModalLabel">Imagen Ampliada</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+    <!-- Imagen ampliada -->
+    <div class="modal fade cc-modal-shell" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog cc-modal-dialog cc-modal-dialog--image modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content cc-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="cc-modal-head">
+                        <div class="cc-modal-icon cc-modal-icon--info">
+                            <i class="fa fa-picture-o"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="imageModalLabel">Imagen del producto</h5>
+                        </div>
+                    </div>
+                    <button type="button" class="hd-modal-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                        <i class="fa fa-times"></i>
                     </button>
                 </div>
-                <div class="modal-body text-center">
-                    <img id="modalImage" src="" class="img-fluid" alt="Imagen Ampliada" />
+                <div class="modal-body text-center pt-3">
+                    <img id="modalImage" src="" class="stock-modal-img img-fluid" alt="Imagen ampliada" />
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="nuevoProductoModal" tabindex="-1" aria-labelledby="nuevoProductoModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="nuevoProductoModalLabel">Añadir producto</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Añadir / editar stock -->
+    <div class="modal fade cc-modal-shell stock-modal" id="nuevoProductoModal" tabindex="-1" aria-labelledby="nuevoProductoModalLabel" aria-hidden="true">
+        <div class="modal-dialog cc-modal-dialog stock-modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable">
+            <div class="modal-content cc-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="cc-modal-head">
+                        <div class="cc-modal-icon cc-modal-icon--stock">
+                            <i class="fa fa-plus-square-o"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="nuevoProductoModalLabel">A&ntilde;adir producto</h5>
+                            <div class="cc-modal-subtitle">Gestion&aacute; cantidades del stock</div>
+                        </div>
+                    </div>
+                    <button type="button" class="hd-modal-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                        <i class="fa fa-times"></i>
+                    </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body pt-3">
+                    <input type="text" id="IdStock" hidden />
 
-                    <input type="Text" id="IdStock" class="input-nuevomodif" hidden />
-
-                    <label class="lblNombreInput">Producto</label>
-                    <select id="Productos" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
-                        <option value="" selected>Seleccione Producto</option>
+                    <label class="form-label stock-modal-label" for="Productos">Producto</label>
+                    <select id="Productos" name="select" class="form-select stock-modal-select select-modal-personalizado">
+                        <option value="" selected>Seleccione producto</option>
                     </select>
 
-                    <label class="lblNombreInput" hidden>Producto Precio</label>
-                    <select id="ProductosPrecio" name="select" class="input-nuevomodif select-modal-personalizado mt-3" hidden>
-                        <option value="" selected>Seleccione Producto</option>
+                    <select id="ProductosPrecio" name="select" class="form-select stock-modal-select select-modal-personalizado mt-3" hidden>
+                        <option value="" selected>Seleccione producto</option>
                     </select>
 
-                    <!-- Cantidad (no editable) -->
-                    <label class="lblNombreInput">Cantidad</label>
-                    <input type="number" value="1" id="Cantidad" class="input-nuevomodif" disabled /> <!-- Desactivado -->
-                    <!-- Precio Total -->
-                    <div class="divPrecio mt-3">
-                        <label class="lblNombreInput">Precio Total: </label>
-                        <label class="lblNombreInput" id="precioTotal">0</label>
+                    <label class="form-label stock-modal-label mt-3" for="Cantidad">Cantidad actual</label>
+                    <input type="number" value="1" id="Cantidad" class="form-control stock-modal-input" disabled />
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-6">
+                            <div class="stock-kpi-mini">
+                                <span class="stock-kpi-mini__label">Precio total</span>
+                                <span class="stock-kpi-mini__value" id="precioTotal">0</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stock-kpi-mini">
+                                <span class="stock-kpi-mini__label">Stock</span>
+                                <span class="stock-kpi-mini__value" id="stock">0</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="divPrecio mt-3">
-                        <label class="lblNombreInput">Stock: </label>
-                        <label class="lblNombreInput" id="stock">0</label>
+                    <label id="lblAgregarQuitar" class="form-label stock-modal-label mt-3">Agregar / quitar</label>
+                    <div class="stock-qty-controls">
+                        <button type="button" id="btnQuitar" class="btn btn-outline-danger btn-sm" onclick="restarStockCantidad('Quitar')">
+                            <i class="fa fa-minus"></i> Quitar
+                        </button>
+                        <input type="number" id="CantidadNueva" value="1" class="form-control stock-qty-input text-center" />
+                        <button type="button" id="btnAgregar" class="btn btn-outline-success btn-sm" onclick="agregarStockCantidad('Agregar')">
+                            <i class="fa fa-plus"></i> Agregar
+                        </button>
                     </div>
-
-                    <!-- Nueva sección con cantidad nueva -->
-                    <label id="lblAgregarQuitar" class="lblNombreInput mt-3">Agregar / Quitar</label>
-                    <div class="d-flex justify-content-center">
-                        <!-- Botón Quitar a la izquierda -->
-                        <button type="button" id="btnQuitar" class="btn btn-danger" onclick="restarStockCantidad('Quitar')">Quitar</button>
-
-                        <!-- Campo de Cantidad Nueva -->
-                        <input type="number" id="CantidadNueva" value="1" class="input-nuevomodifCantidadNueva text-center" />
-
-                        <!-- Botón Agregar a la derecha -->
-                        <button type="button" id="btnAgregar" class="btn btn-success" onclick="agregarStockCantidad('Agregar')">Agregar</button>
-                    </div>
-
-
-
                 </div>
-                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="agregarStock()">Añadir</button>
+                <p id="datos" class="mb-0 px-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer border-0 stock-modal-footer">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="agregarStock()">A&ntilde;adir</button>
                 </div>
             </div>
         </div>
     </div>
 
-
-
-    <div class="modal fade" id="transferenciaModal" tabindex="-1" aria-labelledby="transferenciaModallLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="transferenciaModalLabel">Transferir Stock</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Transferir -->
+    <div class="modal fade cc-modal-shell stock-modal" id="transferenciaModal" tabindex="-1" aria-labelledby="transferenciaModalLabel" aria-hidden="true">
+        <div class="modal-dialog cc-modal-dialog stock-modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable">
+            <div class="modal-content cc-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="cc-modal-head">
+                        <div class="cc-modal-icon cc-modal-icon--stock">
+                            <i class="fa fa-exchange"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="transferenciaModalLabel">Transferir stock</h5>
+                        </div>
+                    </div>
+                    <button type="button" class="hd-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"><i class="fa fa-times"></i></button>
                 </div>
-                <div class="modal-body">
-
-                    <label class="lblNombreInput">Usuario</label>
-                    <select id="Usuarios" name="select" class="input-nuevomodif select-modal-personalizado mt-3">
-                        <option value="" selected>Seleccione Usuario</option>
+                <div class="modal-body pt-3">
+                    <input type="text" id="IdStockTransferencia" hidden />
+                    <label class="form-label stock-modal-label" for="Usuarios">Usuario destino</label>
+                    <select id="Usuarios" name="select" class="form-select stock-modal-select select-modal-personalizado">
+                        <option value="" selected>Seleccione usuario</option>
                     </select>
-
-                    <input type="Text" id="IdStockTransferencia" class="input-nuevomodif" hidden />
-
-                    <label class="lblNombreInput">Cantidad</label>
-                    <input type="number" placeholder="1" value="1" id="CantidadTransferencia" class="input-nuevomodif" />
-
+                    <label class="form-label stock-modal-label mt-3" for="CantidadTransferencia">Cantidad</label>
+                    <input type="number" placeholder="1" value="1" id="CantidadTransferencia" class="form-control stock-modal-input" />
                 </div>
-                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="transferenciaStock()">Transferir</button>
-
+                <div class="modal-footer border-0 stock-modal-footer">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="transferenciaStock()">Transferir</button>
                 </div>
             </div>
         </div>
     </div>
 
-
-
-    <div class="modal fade" id="agregarStockModal" tabindex="-1" aria-labelledby="agregarStockModallLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="agregarStockModalLabel">Agregar Stock</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Agregar cantidad -->
+    <div class="modal fade cc-modal-shell stock-modal" id="agregarStockModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog cc-modal-dialog cc-modal-dialog--sm stock-modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable">
+            <div class="modal-content cc-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="cc-modal-head">
+                        <div class="cc-modal-icon cc-modal-icon--stock"><i class="fa fa-plus"></i></div>
+                        <div><h5 class="modal-title mb-0">Agregar stock</h5></div>
+                    </div>
+                    <button type="button" class="hd-modal-close" data-bs-dismiss="modal"><i class="fa fa-times"></i></button>
                 </div>
-                <div class="modal-body">
-
-
-                    <input type="Text" id="IdStockAgregar" class="input-nuevomodif" hidden />
-                    <input type="Text" id="IdProductoAgregar" class="input-nuevomodif" hidden />
-
-                    <label class="lblNombreInput">Cantidad</label>
-                    <input type="number" placeholder="1" value="1" id="CantidadAgregarStock" class="input-nuevomodif" />
-
+                <div class="modal-body pt-3">
+                    <input type="text" id="IdStockAgregar" hidden />
+                    <input type="text" id="IdProductoAgregar" hidden />
+                    <label class="form-label stock-modal-label" for="CantidadAgregarStock">Cantidad</label>
+                    <input type="number" placeholder="1" value="1" id="CantidadAgregarStock" class="form-control stock-modal-input" />
                 </div>
-                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="sumaStock()">Aceptar</button>
-
+                <div class="modal-footer border-0 stock-modal-footer">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="sumaStock()">Aceptar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="restarStockModal" tabindex="-1" aria-labelledby="restarStockModallLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="restarStockModalLabel">Restar Stock</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Restar cantidad -->
+    <div class="modal fade cc-modal-shell stock-modal" id="restarStockModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog cc-modal-dialog cc-modal-dialog--sm stock-modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable">
+            <div class="modal-content cc-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="cc-modal-head">
+                        <div class="cc-modal-icon cc-modal-icon--stock"><i class="fa fa-minus"></i></div>
+                        <div><h5 class="modal-title mb-0">Restar stock</h5></div>
+                    </div>
+                    <button type="button" class="hd-modal-close" data-bs-dismiss="modal"><i class="fa fa-times"></i></button>
                 </div>
-                <div class="modal-body">
-
-
-                    <input type="Text" id="IdStockRestar" class="input-nuevomodif" hidden />
-                    <input type="Text" id="IdProductoResta" class="input-nuevomodif" hidden />
-
-                    <label class="lblNombreInput">Cantidad</label>
-                    <input type="number" placeholder="1" value="1" id="CantidadRestarStock" class="input-nuevomodif" />
-
+                <div class="modal-body pt-3">
+                    <input type="text" id="IdStockRestar" hidden />
+                    <input type="text" id="IdProductoResta" hidden />
+                    <label class="form-label stock-modal-label" for="CantidadRestarStock">Cantidad</label>
+                    <input type="number" placeholder="1" value="1" id="CantidadRestarStock" class="form-control stock-modal-input" />
                 </div>
-                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="restaStock()">Aceptar</button>
-
+                <div class="modal-footer border-0 stock-modal-footer">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="restaStock()">Aceptar</button>
                 </div>
             </div>
         </div>
     </div>
 
+</div>
 
-</body>
-
-
-
-<script src="~/Scripts/bootstrap.min.js"></script>
-<script src="~/JavaScript/Utils/Utils.js"></script>
-<link href="~/Content/font-awesome.css" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
-
-
-
-@section scripts{
-
-    <!-- JS de Select2 -->
+@section scripts {
+    <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-
-    <script src="~/JavaScript/Stock.js?v=2.2"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=2.6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="~/JavaScript/Stock.js?v=3.2"></script>
 }

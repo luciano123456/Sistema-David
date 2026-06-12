@@ -13,36 +13,54 @@ namespace Sistema_David.Models
     {
         public static List<VMUser> ListaUsuarios()
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            using (var db = new Sistema_DavidEntities())
             {
+                const string sql = @"
+                    SELECT u.Id,
+                           u.Usuario,
+                           u.Nombre,
+                           u.Apellido,
+                           u.Dni,
+                           u.Telefono,
+                           u.Direccion,
+                           u.IdRol,
+                           u.CantVentas,
+                           u.IdEstado,
+                           u.UltimaExportacion,
+                           u.UrlExportacion,
+                           u.ClientesCero,
+                           u.IdTipoNegocio,
+                           u.BloqueoSistema,
+                           u.VistaStock,
+                           r.Nombre AS Rol,
+                           eu.Nombre AS Estado,
+                           tn.Nombre AS TipoNegocio,
+                           ISNULL(spc.Cnt, 0) AS StockPendienteAceptar
+                    FROM Usuarios u
+                    INNER JOIN Roles r ON u.IdRol = r.Id
+                    INNER JOIN EstadosUsuarios eu ON u.IdEstado = eu.Id
+                    INNER JOIN TipoNegocio tn ON u.IdTipoNegocio = tn.Id
+                    LEFT JOIN (
+                        SELECT x.UsuarioId, COUNT(*) AS Cnt
+                        FROM (
+                            SELECT CASE
+                                WHEN UPPER(ISNULL(sp.Asignacion, '')) = 'TRANSFERENCIA'
+                                    THEN ISNULL(sp.IdUsuarioAsignado, sp.IdUsuario)
+                                WHEN UPPER(ISNULL(sp.Asignacion, '')) IN ('ADMINISTRADOR', 'USUARIO')
+                                    THEN sp.IdUsuario
+                                ELSE NULL
+                            END AS UsuarioId
+                            FROM StocksPendientes sp
+                            WHERE sp.Estado = 'Pendiente'
+                              AND sp.Cantidad > 0
+                              AND sp.IdProducto > 0
+                        ) x
+                        WHERE x.UsuarioId IS NOT NULL
+                        GROUP BY x.UsuarioId
+                    ) spc ON spc.UsuarioId = u.Id
+                    ORDER BY u.IdEstado";
 
-                var listUser = (from d in db.Usuarios
-                            .SqlQuery("select u.Id, u.Usuario, u.Nombre, u.Apellido, u.Dni, u.Telefono, u.Direccion, u.VistaStock, u.IdRol, u.Contrasena, u.CantVentas, u.IdEstado, u.UltimaExportacion, u.UrlExportacion, u.ClientesCero,  r.Nombre as Rol, eu.Nombre as Estado, u.IdTipoNegocio, tn.Nombre, u.BloqueoSistema from Usuarios u inner join Roles r on u.IdRol = r.Id inner join EstadosUsuarios eu on u.IdEstado = eu.Id  inner join TipoNegocio tn on u.IdTipoNegocio = tn.Id order by u.IdEstado")
-                                select new VMUser
-                                {
-                                    Id = d.Id,
-                                    Usuario = d.Usuario,
-                                    Nombre = d.Nombre,
-                                    Apellido = d.Apellido,
-                                    Dni = d.Dni,
-                                    Telefono = d.Telefono,
-                                    Direccion = d.Direccion,
-                                    IdRol = d.IdRol,
-                                    Contrasena = d.Contrasena,
-                                    CantVentas = d.CantVentas,
-                                    IdEstado = d.IdEstado,
-                                    Estado = d.EstadosUsuarios.Nombre,
-                                    Rol = d.Roles.Nombre,
-                                    UltimaExportacion = d.UltimaExportacion,
-                                    UrlExportacion = d.UrlExportacion,
-                                    ClientesCero = (int)d.ClientesCero,
-                                    IdTipoNegocio = d.IdTipoNegocio, 
-                                    BloqueoSistema = d.BloqueoSistema,
-                                    VistaStock = d.VistaStock,
-                                    TipoNegocio = db.TipoNegocio.FirstOrDefault(u => u.Id == d.IdTipoNegocio).Nombre,
-                                }).ToList();
-
-                return listUser;
+                return db.Database.SqlQuery<VMUser>(sql).ToList();
             }
         }
 

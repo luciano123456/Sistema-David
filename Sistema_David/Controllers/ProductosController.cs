@@ -112,6 +112,12 @@ namespace Sistema_David.Controllers
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
+        public ActionResult ListarActivosConStock()
+        {
+            var result = ProductosModel.ListaProductosActivosConStock();
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
         public ActionResult ListarCategorias()
         {
             var result = ProductosModel.ListaCategorias();

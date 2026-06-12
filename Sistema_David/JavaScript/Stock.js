@@ -5,6 +5,17 @@ let userSession;
 let idUserStock = 0;
 let productoNombres = {};
 let nombreUser;
+let gridStock = null;
+let mostrarCantidad = true;
+
+const STOCK_COL_FILTER_KEY = "stock_col_filters_v1";
+const STOCK_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
+const columnConfigStock = [
+    { index: 1, filterType: "text" },
+    { index: 2, filterType: "text" },
+    { index: 3, filterType: "text" },
+    { index: 4, filterType: "text" }
+];
 
 
 $(document).ready(function () {
@@ -22,6 +33,7 @@ $(document).ready(function () {
 
 
     configurarDataTable();
+    initStockDropdownColumnas();
 
     cargarNombre();
 
@@ -41,7 +53,52 @@ $(document).ready(function () {
 
 
 
+function initStockDropdownColumnas() {
+    const btn = document.getElementById('dropdownColumnas');
+    const menu = document.getElementById('configColumnasMenu');
+    if (!btn || !menu || btn.dataset.stockDropdownInit) return;
+    btn.dataset.stockDropdownInit = '1';
+
+    btn.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isOpen = menu.classList.contains('show');
+        document.querySelectorAll('.dropdown-menu.show').forEach(function (el) {
+            el.classList.remove('show');
+        });
+        document.querySelectorAll('.stock-columns-toggle[aria-expanded="true"]').forEach(function (el) {
+            el.setAttribute('aria-expanded', 'false');
+        });
+
+        if (!isOpen) {
+            menu.classList.add('show');
+            btn.setAttribute('aria-expanded', 'true');
+        }
+    });
+
+    menu.addEventListener('click', function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener('click', function (event) {
+        if (btn.contains(event.target) || menu.contains(event.target)) return;
+        menu.classList.remove('show');
+        btn.setAttribute('aria-expanded', 'false');
+    });
+}
+
+
+
 async function configurarDataTable() {
+    if ($.fn.DataTable.isDataTable('#grdStock')) {
+        $('#grdStock').DataTable().destroy();
+        $('#grdStock tbody').empty();
+    }
+
+    $('#grdStock thead tr.filters').remove();
+    inicializarEncabezadoColumnas("#grdStock");
+
     const response = await $.ajax({
         url: "/Stock/BuscarStock/" + idUserStock,
         type: "GET",
@@ -56,47 +113,75 @@ async function configurarDataTable() {
         language: {
             url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         },
+        processing: true,
+        deferRender: true,
         scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        orderCellsTop: true,
         columns: [
             {
                 data: "Imagen",
+                className: 'stock-col-img text-center',
+                orderable: false,
                 render: function (data, type, row) {
+                    if (type === 'sort' || type === 'filter' || type === 'type') {
+                        return '';
+                    }
                     var imgUrl = '/Productos/ObtenerImagen/' + row.IdProducto;
-                    return '<img src="' + imgUrl + '" height="45px" width="45px" class="img-thumbnail" style="background-color: transparent; cursor: pointer;" onclick="openModal(\'' + imgUrl + '\')" />';
+                    return '<img src="' + imgUrl + '" height="45" width="45" class="img-thumbnail stock-thumb" alt="" onclick="openModal(\'' + imgUrl + '\')" />';
                 }
             },
-            { data: "Producto" },
+            { data: "Producto", className: 'stock-col-producto' },
             {
                 data: "Cantidad",
-                render: function (data, type, row) {
-                    return mostrarCantidad ? data : "-";
+                className: 'stock-col-cantidad text-center',
+                render: function (data, type) {
+                    if (type === 'sort' || type === 'filter' || type === 'type') {
+                        return mostrarCantidad ? (data ?? '') : '';
+                    }
+                    return mostrarCantidad ? data : '-';
                 }
             },
-            { data: "PrecioVenta" },
-            { data: "Total" },
+            {
+                data: "PrecioVenta",
+                className: 'stock-col-precio text-end',
+                render: function (data, type) {
+                    if (type === 'sort' || type === 'filter' || type === 'type') {
+                        return data ?? '';
+                    }
+                    return formatNumber(data);
+                }
+            },
+            {
+                data: "Total",
+                className: 'stock-col-total text-end',
+                render: function (data, type) {
+                    if (type === 'sort' || type === 'filter' || type === 'type') {
+                        return data ?? '';
+                    }
+                    return formatNumber(data);
+                }
+            },
             {
                 data: "Id",
-                render: function (data, type, row) {
-                    //let botones = "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='transferirStock(" + data + ", " + row.IdProducto + ")' title='Transferir'><i class='fa fa-exchange fa-lg text-success' aria-hidden='true'></i></button>";
+                className: 'stock-col-acciones text-center',
+                render: function (data, type) {
+                    if (type === 'sort' || type === 'filter' || type === 'type') {
+                        return '';
+                    }
                     let botones = "";
 
-                    botones += "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg text-white' aria-hidden='true'></i></button>" +
-                        "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white' aria-hidden='true'></i></button>";
+                    botones += "<button class='btn btn-sm btnacciones stock-action-btn stock-btn-editar' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg' aria-hidden='true'></i></button>" +
+                        "<button class='btn btn-sm btnacciones stock-action-btn stock-btn-eliminar' type='button' onclick='eliminarStock(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg' aria-hidden='true'></i></button>";
 
-                    return botones;
+                    return '<div class="stock-actions-cell">' + botones + '</div>';
                 },
-                orderable: true,
-                searchable: true,
-                width: "100px"
+                orderable: false,
+                searchable: false
             }
         ],
         columnDefs: [
-            {
-                render: function (data, type, row) {
-                    return formatNumber(data);
-                },
-                targets: [3, 4]
-            },
             {
                 targets: [4],
                 visible: (userSession.IdRol == 1)
@@ -104,26 +189,54 @@ async function configurarDataTable() {
         ],
         initComplete: async function () {
             await configurarOpcionesColumnas();
+            configurarFiltrosPorColumnaStock();
+            this.api().columns.adjust();
+        },
+        drawCallback: function () {
+            actualizarPrecio();
+            if (typeof syncColumnFilterMarkers === 'function') {
+                syncColumnFilterMarkers(this.api(), columnConfigStock);
+            }
         }
     };
 
-    $('#grdStock').DataTable(dataTableOptions);
+    gridStock = $('#grdStock').DataTable(dataTableOptions);
 
-    $('#grdStock').DataTable().on("draw", function () {
-        actualizarPrecio();
+    $(window).on('resize.stockDt orientationchange.stockDt', function () {
+        if ($.fn.DataTable.isDataTable('#grdStock')) {
+            $('#grdStock').DataTable().columns.adjust();
+        }
     });
 
     let filaSeleccionada = null;
-    $('#grdStock tbody').on('click', 'tr', function () {
-        if (filaSeleccionada) {
-            $(filaSeleccionada).removeClass('seleccionada');
-            $('td', filaSeleccionada).removeClass('seleccionada');
-        }
+    const $tblStock = $('#grdStock');
+    $tblStock.off('click.stockRow').on('click.stockRow', 'tbody tr', function (e) {
+        const $tr = $(this);
+        if ($tr.hasClass('child')) return;
+        if ($(e.target).closest('a, button, .btnacciones, .stock-action-btn, .stock-thumb, img').length) return;
 
-        filaSeleccionada = $(this);
-        $(filaSeleccionada).addClass('seleccionada');
-        $('td', filaSeleccionada).addClass('seleccionada');
+        if (filaSeleccionada) {
+            $(filaSeleccionada).removeClass('stock-row-selected');
+        }
+        filaSeleccionada = $tr[0];
+        $tr.addClass('stock-row-selected');
     });
+}
+
+function configurarFiltrosPorColumnaStock() {
+    if (!gridStock) return;
+    inicializarFiltrosColumnas(
+        gridStock,
+        columnConfigStock,
+        STOCK_COL_FILTER_KEY,
+        true,
+        STOCK_COL_FILTER_UI
+    );
+}
+
+function limpiarFiltrosColumnasStock() {
+    if (!gridStock) return;
+    limpiarFiltrosColumnas(gridStock, columnConfigStock, STOCK_COL_FILTER_KEY);
 }
 
 
@@ -168,8 +281,7 @@ const editarStock = async id => {
             $("#btnRegistrarModificar").text("Editar");
 
 
-            $("#IdStock").text(id);
-            $("#IdStock").value = id;
+            $("#IdStock").val(id);
 
 
 
@@ -291,7 +403,7 @@ async function abrirmodal() {
 
 async function cargarProductos() {
     try {
-        var url = "/Productos/ListarActivos";
+        var url = "/Productos/ListarActivosConStock";
 
         let value = JSON.stringify({
         });
@@ -312,11 +424,23 @@ async function cargarProductos() {
             selectProductos = document.getElementById("Productos");
 
             $('#Productos option').remove();
+            precioVenta.length = 0;
+            stock.length = 0;
+
+            if (!result.data || result.data.length === 0) {
+                option = document.createElement("option");
+                option.value = "";
+                option.text = "Sin productos con stock disponible";
+                selectProductos.appendChild(option);
+                $("#precioTotal").text("0");
+                $("#stock").text("0");
+                return;
+            }
+
             for (var i = 0; i < result.data.length; i++) {
                 option = document.createElement("option");
                 option.value = result.data[i].Id;
                 option.text = result.data[i].Nombre;
-                /*precioVenta[result.data[i].Id] = result.data[i].PrecioVenta;*/
                 precioVenta[i] = result.data[i].PrecioVenta;
                 stock[i] = result.data[i].Stock;
 
@@ -486,7 +610,7 @@ async function agregarStockCantidad() {
 
         let value = JSON.stringify({
             Cantidad: document.getElementById("CantidadNueva").value,
-            Id: document.getElementById("IdStock").innerText
+            Id: $("#IdStock").val()
         });
 
         let options = {
@@ -519,7 +643,7 @@ async function restarStockCantidad() {
 
         let value = JSON.stringify({
             Cantidad: document.getElementById("CantidadNueva").value,
-            Id: document.getElementById("IdStock").innerText
+            Id: $("#IdStock").val()
         });
 
         let options = {
@@ -554,7 +678,7 @@ async function modificarStockuser() {
 
         let value = JSON.stringify({
             Cantidad: document.getElementById("Cantidad").value,
-            Id: document.getElementById("IdStock").innerText
+            Id: $("#IdStock").val()
         });
 
         let options = {
@@ -1009,5 +1133,6 @@ function configurarOpcionesColumnas() {
         savedConfig[`col_${columnIdx}`] = isChecked;
         localStorage.setItem(storageKey, JSON.stringify(savedConfig));
         grid.column(columnIdx).visible(isChecked);
+        grid.columns.adjust();
     });
 }

@@ -1,105 +1,144 @@
-﻿
-@{
-    ViewBag.Title = "Index";
+﻿@{
+    ViewBag.Title = "Stock pendiente";
 }
 
-<link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
-<link href="~/Estilos/StockPendiente.css" rel="stylesheet" />
-<link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
+<link href="~/Estilos/Clientes.css?v=1.6" rel="stylesheet" />
+<link href="~/Estilos/StockPendiente.css?v=2.1" rel="stylesheet" />
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
 
+<div class="ve-dark sp-root">
 
+    <div class="container-fluid page-99 py-3">
 
-<body>
-
-    <div id="Filtros" class="divFiltros" hidden>
-
-
-
-        <label class="lblcliente">Vendedor</label>
-        <select id="Vendedores" name="select" class="input-nuevo">
-            <option value="" selected>Vendedor</option>
-        </select>
-
-        <label class="lblcliente">Estados</label>
-        <select id="Estados" name="select" class="input-nuevo">
-            <option value="" selected>Estado</option>
-        </select>
-
-        <label class="lblcliente">Asignación</label>
-        <select id="Asignacion" name="select" class="input-nuevo">
-            <option value="Todos">Todos</option>
-            <option value="Usuario" selected>Usuario</option>
-            <option value="Administrador">Administrador</option>
-            <option value="Transferencia">Transferencia</option>
-        </select>
-
-
-        <label class="m-lg-2 lblcliente">Fecha:</label>
-        <input type="date" placeholder="" value="" id="Fecha" class="input-nuevo" />
-
-        <div class="vw-75 d-flex float-lg-end">
-            <a class="btn btn-success btnaccion" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
-        </div>
-    </div>
-
-
-    <div class="modal fade centered-modal-importar" id="modalEdit" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="estilowpp modal-content ">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalEditLabel">Modificar cantidad</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <section class="cc-header mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="cc-badge sp-badge">
+                        <i class="fa fa-clock-o"></i>
+                    </div>
+                    <div>
+                        <h2 class="m-0 fw-800">Stock pendiente</h2>
+                        <div class="text-muted-cc">
+                            Asignaciones, transferencias y movimientos por confirmar
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-body">
-
-
-                    <input type="number" placeholder="Importe" value="0" id="idStock" class="input-nuevomodif" hidden />
-
-                    <label class="lblNombreInput" id="lblImporte"> Cantidad: </label>
-
-                    <input type="number" placeholder="Importe" value="0" id="Cantidad" class="input-nuevomodif" />
-                    <label class="lblNombreInput text-danger mb-2 mt-0" id="errorImporteCobranza" hidden></label>
-
-
+                <div class="sp-header-actions d-flex flex-wrap gap-2 ms-auto">
+                    <button type="button" class="btn btn-outline-light sp-header-btn" id="btnToggleFiltrosSp" hidden>
+                        <i class="fa fa-filter me-1"></i> Filtros
+                    </button>
                 </div>
-                <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btnaccion" data-bs-dismiss="modal">Cerrar</button>
-                    <button id="btnRegistrarModificar" type="button" class="btn btn-success btnaccion" onclick="modificarStock()">Modificar</button>
+            </div>
+        </section>
+
+        <section id="Filtros" class="card-glass p-3 mb-4 sp-filters-card" hidden>
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="sp-filter-label" for="Vendedores">Vendedor</label>
+                    <select id="Vendedores" class="form-select ve-input sp-filter-input">
+                        <option value="">Vendedor</option>
+                    </select>
                 </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label class="sp-filter-label" for="Estados">Estado</label>
+                    <select id="Estados" class="form-select ve-input sp-filter-input">
+                        <option value="">Estado</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label class="sp-filter-label" for="Asignacion">Asignaci&oacute;n</label>
+                    <select id="Asignacion" class="form-select ve-input sp-filter-input">
+                        <option value="Todos">Todos</option>
+                        <option value="Usuario" selected>Usuario</option>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Transferencia">Transferencia</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label class="sp-filter-label" for="Fecha">Fecha</label>
+                    <input type="date" id="Fecha" class="form-control ve-input sp-filter-input" />
+                </div>
+                <div class="col-12 col-lg-3 d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-primary flex-fill" id="aplicarFiltros" onclick="aplicarFiltros()">
+                        <i class="fa fa-search me-1"></i> Aplicar
+                    </button>
+                    <button type="button" class="btn btn-outline-light flex-fill" onclick="limpiarFiltrosSp()">
+                        <i class="fa fa-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <div class="card-glass p-3 mb-4 sp-cards-panel">
+            <div class="sp-toolbar d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="fw-bold text-white">
+                    <i class="fa fa-th-large me-2"></i> Movimientos
+                    <span class="sp-count-badge ms-2" id="spCountBadge">0</span>
+                </div>
+                <div class="sp-toolbar-actions d-flex flex-wrap align-items-center gap-3">
+                    <label class="sp-select-all mb-0" id="wrapSelectAll" hidden>
+                        <input type="checkbox" id="selectAllCheckbox" class="form-check-input me-2" />
+                        Seleccionar todos
+                    </label>
+                    <div class="sp-bulk-actions d-flex flex-wrap gap-2" id="spBulkActions" hidden>
+                        <button type="button" class="btn btn-success btn-sm" id="btnAceptarTodas" onclick="aceptarStocks()">
+                            <i class="fa fa-check me-1"></i> Aceptar
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" id="btnRechazarTodas" onclick="rechazarStocks()">
+                            <i class="fa fa-times me-1"></i> Rechazar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="spCardsLoading" class="sp-loading d-none">
+                <i class="fa fa-spinner fa-spin me-2"></i> Cargando movimientos…
+            </div>
+
+            <div class="sp-cards-container cards-container"></div>
+
+            <div id="spCardsEmpty" class="sp-empty d-none">
+                <i class="fa fa-inbox fa-2x mb-2"></i>
+                <p class="mb-0">No hay movimientos para los filtros seleccionados.</p>
             </div>
         </div>
     </div>
 
-    <div id="divSeleccionarTodos">
-        <p>Seleccionar Todos <input type="checkbox" class="mt-5" id="selectAllCheckbox"></p>
-    </div>
-
-    <div class="cards-container mt-5">
-    </div>
-
-    @*<div id="btnAceptarTodas" class="float-lg-start mt-2 mb-4 m-lg-2" style="display: none;">
-            <a class="btn btn-success btnnuevo" onclick="aceptarStocks()">Aceptar Todas</a>
+    <div class="modal fade cc-modal-shell sp-modal" id="modalEdit" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
+        <div class="modal-dialog cc-modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content cc-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="cc-modal-head">
+                        <div class="cc-modal-icon cc-modal-icon--warning">
+                            <i class="fa fa-pencil-square-o"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="modalEditLabel">Modificar cantidad</h5>
+                        </div>
+                    </div>
+                    <button type="button" class="hd-modal-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body pt-3">
+                    <input type="number" id="idStock" hidden />
+                    <label class="sp-modal-label" for="Cantidad">Cantidad</label>
+                    <input type="number" id="Cantidad" class="form-control ve-input sp-modal-input" value="0" min="1" />
+                    <label class="sp-modal-error text-danger mt-2 mb-0" id="errorImporteCobranza" hidden></label>
+                </div>
+                <p id="datos" class="mb-0 px-3 text-center text-danger datos-error d-none"></p>
+                <div class="modal-footer border-0 sp-modal-footer">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnRegistrarModificar" onclick="modificarStock()">Modificar</button>
+                </div>
+            </div>
         </div>
-        <div id="btnRechazarTodas" class="float-lg-start mt-2 mb-4" style="display: none;">
-            <a class="btn btn-danger btnnuevo" onclick="rechazarStocks()">Rechazar Todas</a>
-        </div>*@
-
-
-    <div class="vw-75 d-flex float-lg-start mt-2 mb-4">
-        <a id="btnAceptarTodas" class="btn btn-success btnnuevo me-2" onclick="aceptarStocks()" style="display: none;">Aceptar Todas</a>
-        <a id="btnRechazarTodas" class="btn btn-danger btnnuevo" onclick="rechazarStocks()" style="display: none;">Rechazar Todas</a>
     </div>
+</div>
 
-</body>
-
-
-<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
-<script src="~/Scripts/bootstrap.min.js"></script>
-<script src="~/JavaScript/Utils/Utils.js"></script>
-<link href="~/Content/font-awesome.css" rel="stylesheet" />
-
-@section scripts{
-    <script src="~/JavaScript/StockPendiente.js?v=1.3"></script>
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=2.6"></script>
+    <script src="~/JavaScript/StockPendiente.js?v=2.1"></script>
 }

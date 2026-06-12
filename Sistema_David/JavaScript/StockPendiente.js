@@ -1,646 +1,587 @@
-﻿const precioVenta = [];
-const productos = [];
-let userSession;
+﻿let userSession;
 let idUserStock = 0;
 let cardsSeleccionadas = [];
 let enProceso = false;
 
-$(document).ready(async function () {
-    userSession = JSON.parse(localStorage.getItem('usuario'));
-
-
-
-    if (userSession.IdRol == 1) {
-        idUserStock = localStorage.getItem("idUserStock");
-        $("#Filtros").removeAttr("hidden");
-    } else {
-        idUserStock = userSession.Id;
-    }
-
-
-    document.getElementById("Fecha").value = moment().format('YYYY-MM-DD');;
-
-
-    cargarEstados();
-    cargarUsuarios();
-
-
-
-
-
-
-    if (userSession.IdRol == 1) { //Administrador
-        await cargarStock(-1, "Pendiente", document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
-        $("#btnUsuarios").css("background", "#2E4053");
-        $('#selectAllCheckbox').prop('checked', false);   // Desmarca el checkbox
-     
-    } else {
-        cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value, "Todos");
-        $("#btnStock").css("background", "#2E4053");
-
-    }
-
-
-
-});
-
-
-async function aplicarFiltros() {
-
-    document.querySelector('.cards-container').innerHTML = '';
-
-    var idVendedor = document.getElementById("Vendedores").value;
-    var estado = document.getElementById("Estados").options[document.getElementById("Estados").selectedIndex].text;;
-
-
-    if (userSession.IdRol == 1) { //Administrador
-        await cargarStock(idVendedor, estado, document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
-        $("#btnUsuarios").css("background", "#2E4053");
-    } else {
-        cargarStock(userSession.Id, "Pendiente", document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
-        $("#btnStock").css("background", "#2E4053");
-    }
-
-
-
+function escapeSpHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
-async function cargarEstados() {
-    try {
-
-        selectEstados = document.getElementById("Estados");
-
-        $('#Estados option').remove();
-
-        option = document.createElement("option");
-        option.value = -1;
-        option.text = "Todos";
-        selectEstados.appendChild(option);
-
-        option = document.createElement("option");
-        option.value = 1;
-        option.text = "Aceptado";
-        selectEstados.appendChild(option);
-
-        option = document.createElement("option");
-        option.value = 2;
-        option.text = "Rechazado";
-        selectEstados.appendChild(option);
-
-        option = document.createElement("option");
-        option.value = 3;
-        option.text = "Pendiente";
-        selectEstados.appendChild(option);
-
-        selectEstados.value = 3;
-
-
-    } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+function setCardsLoading(loading) {
+    const $loading = $('#spCardsLoading');
+    const $empty = $('#spCardsEmpty');
+    const $container = $('.sp-cards-container');
+    if (loading) {
+        $loading.removeClass('d-none');
+        $empty.addClass('d-none');
+        $container.empty();
+    } else {
+        $loading.addClass('d-none');
     }
+}
+
+function updateCardsCount(count) {
+    $('#spCountBadge').text(count);
+    const $empty = $('#spCardsEmpty');
+    const $container = $('.sp-cards-container');
+    if (count === 0) {
+        $empty.removeClass('d-none');
+        $container.empty();
+    } else {
+        $empty.addClass('d-none');
+    }
+}
+
+function toggleBulkActionsVisibility() {
+    const visible = cardsSeleccionadas.length > 0;
+    $('#spBulkActions').prop('hidden', !visible);
+}
+
+function getFiltrosPayload() {
+    const idVendedorEl = document.getElementById('Vendedores');
+    const estadosEl = document.getElementById('Estados');
+    const idVendedor = idVendedorEl && idVendedorEl.value !== '' ? idVendedorEl.value : -1;
+    const estado = estadosEl && estadosEl.selectedIndex >= 0
+        ? estadosEl.options[estadosEl.selectedIndex].text
+        : 'Pendiente';
+    const fecha = document.getElementById('Fecha').value;
+    const asignacionEl = document.getElementById('Asignacion');
+    const asignacion = asignacionEl ? asignacionEl.value : 'Todos';
+
+    if (userSession.IdRol == 1) {
+        return {
+            idUsuario: parseInt(idVendedor, 10) || -1,
+            Estado: estado,
+            Fecha: fecha,
+            Asignacion: asignacion
+        };
+    }
+
+    return {
+        idUsuario: userSession.Id,
+        Estado: 'Pendiente',
+        Fecha: fecha,
+        Asignacion: 'Todos'
+    };
+}
+
+function buildCardFooter(item) {
+    const id = item.Id;
+    const e = item.Estado;
+    const a = (item.Asignacion || '').toUpperCase();
+    const rol = userSession.IdRol;
+    const uid = userSession.Id;
+    const iu = item.IdUsuario;
+
+    if (e === 'Aceptado') {
+        return '<div class="sp-card-actions"><button type="button" class="btn btn-success btn-status"><i class="fa fa-check me-1"></i> Aceptado</button></div>';
+    }
+    if (e === 'Rechazado') {
+        return '<div class="sp-card-actions"><button type="button" class="btn btn-danger btn-status"><i class="fa fa-times me-1"></i> Rechazado</button></div>';
+    }
+
+    const pair =
+        '<div class="sp-card-actions">' +
+        '<button type="button" class="btn btn-success" onclick="aceptarStock(' + id + ')"><i class="fa fa-check me-1"></i> Aceptar</button>' +
+        '<button type="button" class="btn btn-danger" onclick="rechazarStock(' + id + ')"><i class="fa fa-times me-1"></i> Rechazar</button>' +
+        '</div>';
+
+    const pending =
+        '<div class="sp-card-actions"><button type="button" class="btn btn-warning btn-pendiente"><i class="fa fa-clock-o me-1"></i> Pendiente</button></div>';
+
+    if (uid === iu && e === 'Pendiente' && (a === 'ADMINISTRADOR' || a === 'TRANSFERENCIA') && rol != 1) return pair;
+    if (uid == iu && e === 'Pendiente' && (a === 'USUARIO' || a === 'TRANSFERENCIA') && rol != 1) return pending;
+    if (uid === iu && e === 'Pendiente' && (a === 'ADMINISTRADOR' || a === 'TRANSFERENCIA') && rol == 1) return pair;
+    if (uid === iu && e === 'Pendiente' && (a === 'USUARIO' || a === 'TRANSFERENCIA') && rol == 1) return pair;
+    if (uid !== iu && e === 'Pendiente' && a === 'USUARIO') return pair;
+    if (uid !== iu && e === 'Pendiente') return pending;
+    return '';
+}
+
+function buildCardElement(item) {
+    const cardId = item.Id;
+    const asignacion = (item.Asignacion || '').toUpperCase();
+    const isTransferencia = asignacion === 'TRANSFERENCIA';
+    const isResta = item.Tipo === 'ELIMINAR' || item.Tipo === 'RESTAR';
+    const fechaTxt = item.Fecha ? moment(item.Fecha).format('DD/MM/YYYY') : '—';
+    const signo = isResta ? '−' : '+';
+    const productClass = isResta ? 'sp-card-product--resta' : 'sp-card-product--suma';
+    const estado = item.Estado || 'Pendiente';
+
+    let heroClass = 'sp-card-hero--admin';
+    if (isTransferencia) heroClass = 'sp-card-hero--transferencia';
+    else if (asignacion === 'USUARIO') heroClass = 'sp-card-hero--usuario';
+
+    let estadoClass = '';
+    if (estado === 'Aceptado') estadoClass = ' sp-card--aceptado';
+    else if (estado === 'Rechazado') estadoClass = ' sp-card--rechazado';
+    else if (estado === 'Pendiente') estadoClass = ' sp-card--pendiente';
+
+    const showAdminTools = userSession.IdRol === 1 && estado === 'Pendiente' && asignacion === 'USUARIO';
+    const showCheckboxOnly = userSession.IdRol != 1 && estado === 'Pendiente' && asignacion !== 'USUARIO';
+
+    let topbar = '';
+    if (showAdminTools || showCheckboxOnly) {
+        topbar = '<div class="sp-card-topbar">' +
+            '<label class="sp-card-select" for="checkbox-' + cardId + '">' +
+            '<input type="checkbox" class="sp-card-check" data-card-id="' + cardId + '" id="checkbox-' + cardId + '" onclick="toggleCheckbox(' + cardId + ')" />' +
+            '<span class="sp-card-select-box" aria-hidden="true"><i class="fa fa-check"></i></span>' +
+            '<span class="sp-card-select-text">Seleccionar</span>' +
+            '</label>';
+
+        if (showAdminTools) {
+            topbar +=
+                '<div class="sp-card-tools">' +
+                '<button type="button" class="sp-card-tool-btn sp-card-tool-btn--edit" aria-label="Editar" onclick="editarStock(' + cardId + ')"><i class="fa fa-pencil-square-o"></i></button>' +
+                '<button type="button" class="sp-card-tool-btn sp-card-tool-btn--delete" aria-label="Eliminar" onclick="eliminarStock(' + cardId + ')"><i class="fa fa-trash-o"></i></button>' +
+                '</div>';
+        }
+
+        topbar += '</div>';
+    }
+
+    const card = document.createElement('article');
+    card.id = String(cardId);
+    card.className = 'sp-card' + estadoClass;
+    card.innerHTML =
+        topbar +
+        '<div class="sp-card-hero ' + heroClass + '">' +
+        '<span class="sp-card-estado-pill sp-card-estado-pill--' + escapeSpHtml(estado.toLowerCase()) + '">' + escapeSpHtml(estado) + '</span>' +
+        '<span class="sp-card-badge">' + escapeSpHtml(item.Asignacion || 'ADMINISTRADOR') + '</span>' +
+        '<div class="sp-card-recibe-wrap">' +
+        '<span class="sp-card-recibe-label">Recibe</span>' +
+        '<span class="sp-card-recibe-name">' + escapeSpHtml(item.Usuario) + '</span>' +
+        '</div>' +
+        '</div>' +
+        '<div class="sp-card-body">' +
+        '<div class="sp-card-img-wrap">' +
+        '<img class="sp-card-img" src="/Productos/ObtenerImagen/' + item.IdProducto + '" alt="' + escapeSpHtml(item.Producto) + '" loading="lazy" decoding="async" onerror="this.classList.add(\'sp-card-img--error\')" />' +
+        '</div>' +
+        '<div class="sp-card-meta"><i class="fa fa-calendar-o"></i><span>' + fechaTxt + '</span></div>' +
+        '<div class="sp-card-product ' + productClass + '">' +
+        '<span class="sp-card-qty">' + signo + escapeSpHtml(item.Cantidad) + '</span>' +
+        '<span class="sp-card-product-name">' + escapeSpHtml(item.Producto) + '</span>' +
+        '</div>' +
+        '<div class="sp-card-envia"><i class="fa fa-share me-1"></i><span>Env&iacute;a <strong>' + escapeSpHtml(item.UsuarioAsignado) + '</strong></span></div>' +
+        buildCardFooter(item) +
+        '</div>';
+
+    return card;
+}
+
+function renderCards(items) {
+    const container = document.querySelector('.sp-cards-container');
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < items.length; i++) {
+        fragment.appendChild(buildCardElement(items[i]));
+    }
+
+    container.innerHTML = '';
+    container.appendChild(fragment);
+    updateCardsCount(items.length);
+    desmarcarCheckBoxes();
+}
+
+$(document).ready(async function () {
+    userSession = JSON.parse(localStorage.getItem('usuario'));
+    document.getElementById('Fecha').value = moment().format('YYYY-MM-DD');
+
+    if (userSession.IdRol == 1) {
+        idUserStock = localStorage.getItem('idUserStock') || -1;
+        $('#Filtros').prop('hidden', false);
+        $('#wrapSelectAll').prop('hidden', false);
+    } else {
+        idUserStock = userSession.Id;
+        $('#wrapSelectAll').prop('hidden', false);
+    }
+
+    cargarEstados();
+
+    const filtros = getFiltrosPayload();
+    if (userSession.IdRol == 1) {
+        await Promise.all([
+            cargarUsuarios(),
+            cargarStock(filtros)
+        ]);
+        $('#btnUsuarios').css('background', '#2E4053');
+    } else {
+        await cargarStock(filtros);
+        $('#btnStock').css('background', '#2E4053');
+    }
+
+    $('#btnToggleFiltrosSp').on('click', function () {
+        $('#Filtros').toggleClass('d-none');
+    });
+
+    $('#selectAllCheckbox').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        cardsSeleccionadas = [];
+
+        $('.sp-card-check:visible').each(function () {
+            $(this).prop('checked', isChecked);
+            const cardId = parseInt($(this).data('card-id'), 10);
+            const $card = $(this).closest('.sp-card');
+            if (isChecked) {
+                if (!cardsSeleccionadas.includes(cardId)) cardsSeleccionadas.push(cardId);
+                $card.addClass('is-selected');
+            } else {
+                $card.removeClass('is-selected');
+            }
+        });
+
+        toggleBulkActionsVisibility();
+    });
+});
+
+async function aplicarFiltros() {
+    await cargarStock(getFiltrosPayload());
+    if (userSession.IdRol == 1) {
+        $('#btnUsuarios').css('background', '#2E4053');
+    } else {
+        $('#btnStock').css('background', '#2E4053');
+    }
+}
+
+function limpiarFiltrosSp() {
+    document.getElementById('Fecha').value = moment().format('YYYY-MM-DD');
+    if (userSession.IdRol == 1) {
+        const vendedores = document.getElementById('Vendedores');
+        if (vendedores) vendedores.value = -1;
+        document.getElementById('Asignacion').value = 'Usuario';
+    }
+    cargarEstados();
+    aplicarFiltros();
+}
+
+function cargarEstados() {
+    const selectEstados = document.getElementById('Estados');
+    if (!selectEstados) return;
+
+    selectEstados.innerHTML = '';
+    const estados = [
+        { value: -1, text: 'Todos' },
+        { value: 1, text: 'Aceptado' },
+        { value: 2, text: 'Rechazado' },
+        { value: 3, text: 'Pendiente' }
+    ];
+
+    estados.forEach(function (e) {
+        const option = document.createElement('option');
+        option.value = e.value;
+        option.text = e.text;
+        selectEstados.appendChild(option);
+    });
+
+    selectEstados.value = 3;
 }
 
 async function cargarUsuarios() {
     try {
-        var url = "/usuarios/ListarUserActivos";
-
-        let value = JSON.stringify({
-        });
-
-        let options = {
-            type: "POST",
-            url: url,
+        const options = {
+            type: 'POST',
+            url: '/usuarios/ListarUserActivos',
             async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
+            data: JSON.stringify({}),
+            contentType: 'application/json',
+            dataType: 'json'
         };
 
-        let result = await MakeAjax(options);
+        const result = await MakeAjax(options);
+        const selectUsuarios = document.getElementById('Vendedores');
+        if (!selectUsuarios || !result || !result.data) return;
 
-        if (result != null) {
-            selectUsuarios = document.getElementById("Vendedores");
+        selectUsuarios.innerHTML = '';
 
+        if (userSession.IdRol == 1) {
+            const optTodos = document.createElement('option');
+            optTodos.value = -1;
+            optTodos.text = 'Todos';
+            selectUsuarios.appendChild(optTodos);
+        }
 
-
-
-            $('#Vendedores option').remove();
-
-            if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
-                option = document.createElement("option");
-                option.value = -1;
-                option.text = "Todos";
-                selectUsuarios.appendChild(option);
-            }
-
-            for (i = 0; i < result.data.length; i++) {
-                option = document.createElement("option");
-                option.value = result.data[i].Id;
-                option.text = result.data[i].Nombre;
-                selectUsuarios.appendChild(option);
-            }
-
-
+        for (let i = 0; i < result.data.length; i++) {
+            const option = document.createElement('option');
+            option.value = result.data[i].Id;
+            option.text = result.data[i].Nombre;
+            selectUsuarios.appendChild(option);
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.').removeClass('d-none');
     }
 }
 
-async function cargarStock(idUsuario, Estado, Fecha, Asignacion) {
+async function cargarStock(filtros) {
+    filtros = filtros || getFiltrosPayload();
+    setCardsLoading(true);
+
     try {
-        var url = "/StockPendiente/ListarStockPendiente";
-
-        let value = JSON.stringify({
-            Id: idUsuario,
-            Estado: Estado,
-            Fecha: Fecha,
-            Asignacion: Asignacion
-        });
-
-        let options = {
-            type: "POST",
-            url: url,
+        const options = {
+            type: 'POST',
+            url: '/StockPendiente/ListarStockPendiente',
             async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
+            data: JSON.stringify({
+                Id: filtros.idUsuario,
+                Estado: filtros.Estado,
+                Fecha: filtros.Fecha,
+                Asignacion: filtros.Asignacion
+            }),
+            contentType: 'application/json',
+            dataType: 'json'
         };
 
-        let result = await MakeAjax(options);
+        const result = await MakeAjax(options);
+        setCardsLoading(false);
 
-        if (result != null) {
-            var cardsContainer = document.querySelector('.cards-container');
-            for (let i = 0; i < result.data.length; i++) {
-                var cardId = result.data[i].Id;
-                var newCard = document.createElement('div');
-                newCard.id = cardId;
-                newCard.classList.add('card', 'mb-3', 'position-relative');
-
-                // Construcción del contenido de la tarjeta
-                let cardContent = `
-                <div class="${result.data[i].Asignacion.toUpperCase() === 'TRANSFERENCIA' ? 'half-transferencia' : 'half-blue'}">
-                    <span class="texto-titulo text-white">Recibe: ${result.data[i].Usuario}</span>
-                    <div class="round-image"></div>
-                    ${userSession.IdRol === 1 && result.data[i].Estado === "Pendiente" && (result.data[i].Asignacion == "USUARIO") ? `
-                        <input type="checkbox" class="form-check-input checkbox position-absolute top-0 end-0 me-2" id="checkbox-${cardId}" onclick="toggleCheckbox(${cardId})">
-                        <label for="checkbox-${cardId}" class="form-check-label position-absolute top-0 end-0"></label>
-                       
-                        <div class="icons-container position-absolute top-45 end-0 translate-middle-y" style="margin-right: 35px !important">
-                            <i class="fa fa-pencil-square-o text-yellow edit-icon" aria-hidden="true" onclick="editarStock(${cardId})" style="font-size: 1.2em; color: yellow; cursor: pointer;"></i>
-                        </div>
-                        <div class="icons-containereliminar position-absolute top-45 end-0 translate-middle-y me-2" style="margin-top: -17px !important">
-                            <i class="fa fa-times text-red delete-icon" aria-hidden="true" onclick="eliminarStock(${cardId})" style="font-size: 1.2em; color: red; cursor: pointer;"></i>
-                        </div>` : ''}
-                           ${userSession.IdRol != 1 && result.data[i].Estado === "Pendiente" && (result.data[i].Asignacion != "USUARIO")  ? `
-                        <input type="checkbox" class="form-check-input checkbox position-absolute top-0 end-0 me-2" id="checkbox-${cardId}" onclick="toggleCheckbox(${cardId})">
-                        <label for="checkbox-${cardId}" class="form-check-label position-absolute top-0 end-0"></label>
-                       
-                       ` : ''}
-                </div>
-                <div class="half-white">
-                    <div class="mt-1 text-center">
-                        <i class="fa fa-info-circle me-1 mb-1" title="Fecha"></i>
-                        <span class="texto-titulo" style="font-weight: bold; color: black;">${moment(result.data[i].Fecha).format("DD-MM-YYYY")}</span>
-                    </div>
-                    <div class="mt-1 text-center">
-                        <i class="fa fa-info-circle me-1 mb-1" title="Nombre del producto"></i>
-                        <span class="texto-titulo" style="font-weight: bold; color: ${result.data[i].Tipo === 'ELIMINAR' || result.data[i].Tipo === 'RESTAR' ? 'red' : 'green'};">
-                            ${result.data[i].Tipo === 'ELIMINAR' || result.data[i].Tipo === 'RESTAR'  ? '-' : '+'} ${result.data[i].Cantidad} ${result.data[i].Producto}
-                        </span>
-                    </div>
-
-                    <div class="text-center">
-                        <i class="fa fa-user me-1 mb-3" title="Usuario que te asigno el stock"></i>
-                        <span class="texto-titulo">Envia: ${result.data[i].UsuarioAsignado}</span>
-                    </div>
-                    <div class="botones mt-2">
-                        ${result.data[i].Estado === 'Aceptado' ?
-                        `<button class="btn btn-success full-width mt-4"><i class="fa fa-check"></i> Aceptado</button>` :
-                        result.data[i].Estado === 'Rechazado' ?
-                            `<button class="btn btn-danger full-width mt-4"><i class="fa fa-times"></i> Rechazado</button>` :
-                            userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "ADMINISTRADOR" || result.data[i].Asignacion.toUpperCase() == "TRANSFERENCIA") && userSession.IdRol != 1 ?
-                                `<div class="divBotones botones-row mt-4 row justify-content-center">
-                                    <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
-                                    <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
-                                </div>` :
-                                userSession.Id == result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "USUARIO" || result.data[i].Asignacion.toUpperCase() == "TRANSFERENCIA") && userSession.IdRol != 1 ?
-                                `<button class="btn btn-warning btn-pendiente mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` :
-                                userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "ADMINISTRADOR" || (result.data[i].Asignacion.toUpperCase() === "TRANSFERENCIA")) && userSession.IdRol == 1 ?
-                                    `<div class="divBotones botones-row mt-4 row justify-content-center">
-                                    <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
-                                    <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
-                                </div>` :
-                                    userSession.Id === result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && (result.data[i].Asignacion == "USUARIO" || (result.data[i].Asignacion.toUpperCase() === "TRANSFERENCIA")) && userSession.IdRol == 1 ?
-                                        `<div class="divBotones botones-row mt-4 row justify-content-center">
-                                    <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
-                                    <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
-                                </div>` :
-                                        userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' && result.data[i].Asignacion == "USUARIO" ?
-                                            `<div class="divBotones botones-row mt-4 row justify-content-center">
-                                    <button class="btn btn-success col-md-5 mb-2" onclick="aceptarStock(${cardId})"><i class="fa fa-check"></i> Aceptar</button>
-                                    <button class="btn btn-danger col-md-5 ms-2 mb-2" onclick="rechazarStock(${cardId})"><i class="fa fa-times"></i> Rechazar</button>
-                                </div>` :
-                                            userSession.Id !== result.data[i].IdUsuario && result.data[i].Estado === 'Pendiente' ?
-                                                `<button class="btn btn-warning btn-pendiente mt-4"><i class="fa fa-clock-o"></i> Pendiente</button>` : ''
-                    }
-                    </div>
-                </div>`;
-
-                // Asignar contenido HTML a la tarjeta
-                newCard.innerHTML = cardContent;
-
-                // Asignar la imagen
-                var roundImage = newCard.querySelector('.round-image');
-                var imageUrl = '/Productos/ObtenerImagen/' + result.data[i].IdProducto;
-                roundImage.style.backgroundImage = `url(${imageUrl})`;
-
-                // Añadir la tarjeta al contenedor
-                cardsContainer.appendChild(newCard);
-            }
-
-            // Mostrar el nombre del usuario
-            let nombrecompleto = result.Nombre + " " + result.Apellido;
-            $("#lblnombreusuario").text(nombrecompleto);
+        if (result && result.data) {
+            renderCards(result.data);
         } else {
-            alert("Ha ocurrido un error en los datos");
+            updateCardsCount(0);
+            alert('Ha ocurrido un error en los datos');
         }
-
     } catch (error) {
-        alert("Ha ocurrido un error en los datos");
+        setCardsLoading(false);
+        updateCardsCount(0);
+        alert('Ha ocurrido un error en los datos');
     }
 }
-
 
 async function modificarStock() {
-
     try {
-        var url = "/StockPendiente/ModificarStock";
-
-        let value = JSON.stringify({
-            id: document.querySelector("#idStock").value,
-            cantidad: document.querySelector("#Cantidad").value
-        });
-
-        let options = {
-            type: "POST",
-            url: url,
+        const options = {
+            type: 'POST',
+            url: '/StockPendiente/ModificarStock',
             async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
+            data: JSON.stringify({
+                id: document.querySelector('#idStock').value,
+                cantidad: document.querySelector('#Cantidad').value
+            }),
+            contentType: 'application/json',
+            dataType: 'json'
         };
 
-        let result = await MakeAjax(options);
-
-
+        const result = await MakeAjax(options);
 
         if (result != null) {
-
-            $("#modalEdit").modal("hide");
-
-            alert("Stock modificado correctamente");
-            document.querySelector('.cards-container').innerHTML = '';
-            cargarStock(-1, "Pendiente", document.getElementById("Fecha").value, document.getElementById("Asignacion").value);
-
+            $('#modalEdit').modal('hide');
+            alert('Stock modificado correctamente');
+            await aplicarFiltros();
         } else {
-            alert("Ha ocurrido un error en los datos");
+            alert('Ha ocurrido un error en los datos');
         }
     } catch (error) {
-        alert("Ha ocurrido un error en los datos");
+        alert('Ha ocurrido un error en los datos');
     }
 }
-
-
 
 const editarStock = async id => {
-
     try {
-        var url = "/StockPendiente/EditarInfo";
-
-        let value = JSON.stringify({
-            Id: id
-        });
-
-        let options = {
-            type: "POST",
-            url: url,
+        const options = {
+            type: 'POST',
+            url: '/StockPendiente/EditarInfo',
             async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
+            data: JSON.stringify({ Id: id }),
+            contentType: 'application/json',
+            dataType: 'json'
         };
 
-        let result = await MakeAjax(options);
-
-
+        const result = await MakeAjax(options);
 
         if (result != null) {
-
-            $("#modalEdit").modal("show");
-
-            document.getElementById("idStock").value = result.data.Id;
-            document.getElementById("Cantidad").value = result.data.Cantidad;
-
+            $('#modalEdit').modal('show');
+            document.getElementById('idStock').value = result.data.Id;
+            document.getElementById('Cantidad').value = result.data.Cantidad;
         } else {
-            alert("Ha ocurrido un error en los datos");
+            alert('Ha ocurrido un error en los datos');
         }
     } catch (error) {
-        alert("Ha ocurrido un error en los datos");
+        alert('Ha ocurrido un error en los datos');
     }
-}
+};
 
 async function aceptarStock(id) {
-    if (enProceso) return; // Si ya está ejecutándose, no continuar
+    if (enProceso) return;
     enProceso = true;
 
     try {
-        var url = "/StockPendiente/AceptarStock";
-
-        let value = JSON.stringify({
-            Id: id
-        });
-
-        let options = {
-            type: "POST",
-            url: url,
+        const options = {
+            type: 'POST',
+            url: '/StockPendiente/AceptarStock',
             async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
+            data: JSON.stringify({ Id: id }),
+            contentType: 'application/json',
+            dataType: 'json'
         };
 
-        let result = await MakeAjax(options);
+        const result = await MakeAjax(options);
 
         if (result != null) {
-            alert("Stock pendiente aceptado correctamente.");
-            aplicarFiltros();
+            alert('Stock pendiente aceptado correctamente.');
+            await aplicarFiltros();
             desmarcarCheckBoxes();
         } else {
-            alert("Ha ocurrido un error en los datos");
+            alert('Ha ocurrido un error en los datos');
         }
     } catch (error) {
-        alert("Ha ocurrido un error en los datos");
+        alert('Ha ocurrido un error en los datos');
     } finally {
-        enProceso = false; // Se libera la variable para permitir una nueva ejecución
+        enProceso = false;
     }
 }
-
-
 
 async function rechazarStock(id) {
-    if (enProceso) return; // Evita que se ejecute si ya está en proceso
+    if (enProceso) return;
     enProceso = true;
 
     try {
-        var url = "/StockPendiente/RechazarStock";
-
-        let value = JSON.stringify({ Id: id });
-
-        let options = {
-            type: "POST",
-            url: url,
+        const options = {
+            type: 'POST',
+            url: '/StockPendiente/RechazarStock',
             async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
+            data: JSON.stringify({ Id: id }),
+            contentType: 'application/json',
+            dataType: 'json'
         };
 
-        let result = await MakeAjax(options);
+        const result = await MakeAjax(options);
 
         if (result != null) {
-            alert("Has rechazado el stock.");
-            aplicarFiltros();
+            alert('Has rechazado el stock.');
+            await aplicarFiltros();
             desmarcarCheckBoxes();
         } else {
-            alert("Ha ocurrido un error en los datos");
+            alert('Ha ocurrido un error en los datos');
         }
     } catch (error) {
-        alert("Ha ocurrido un error en los datos");
+        alert('Ha ocurrido un error en los datos');
     } finally {
-        enProceso = false; // Se libera después de terminar
+        enProceso = false;
     }
 }
-
-
-
-
-
-
 
 function toggleCheckbox(cardId) {
-    const checkbox = document.getElementById(`checkbox-${cardId}`);
+    const checkbox = document.getElementById('checkbox-' + cardId);
+    const $card = $('#' + cardId);
+
     if (checkbox.checked) {
-        checkbox.nextElementSibling.style.backgroundColor = 'green'; // Cambia el color de fondo a verde cuando se marca
-        cardsSeleccionadas.push(cardId); // Agrega la ID de la card al array de cards seleccionadas
+        if (!cardsSeleccionadas.includes(cardId)) cardsSeleccionadas.push(cardId);
+        $card.addClass('is-selected');
     } else {
-        checkbox.nextElementSibling.style.backgroundColor = ''; // Elimina el color de fondo cuando se desmarca
         const index = cardsSeleccionadas.indexOf(cardId);
-        if (index > -1) {
-            cardsSeleccionadas.splice(index, 1); // Elimina la ID de la card del array de cards seleccionadas
-        }
+        if (index > -1) cardsSeleccionadas.splice(index, 1);
+        $card.removeClass('is-selected');
     }
 
-    if (cardsSeleccionadas.length > 0) {
-        document.getElementById("btnAceptarTodas").style.display = "block";
-        document.getElementById("btnRechazarTodas").style.display = "block";
-    } else {
-        document.getElementById("btnAceptarTodas").style.display = "none";
-        document.getElementById("btnRechazarTodas").style.display = "none";
-    }
-
-    console.log(cardsSeleccionadas)
+    toggleBulkActionsVisibility();
 }
 
-
-
-function toggleCheckboxAll() {
-
-    if (cardsSeleccionadas.length > 0) {
-        document.getElementById("btnAceptarTodas").style.display = "block";
-        document.getElementById("btnRechazarTodas").style.display = "block";
-    } else {
-        document.getElementById("btnAceptarTodas").style.display = "none";
-        document.getElementById("btnRechazarTodas").style.display = "none";
+function desmarcarCheckBoxes(resetSelectAll) {
+    if (resetSelectAll !== false) {
+        cardsSeleccionadas = [];
     }
-}
-
-
-
-
-function desmarcarCheckBoxes() {
-    cardsSeleccionadas = []; // Vacía el array de cartas seleccionadas
-    const checkboxes = document.querySelectorAll('[id^="checkbox-"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false; // Desmarca todas las casillas
-        checkbox.nextElementSibling.style.backgroundColor = ''; // Restaura el color de fondo
+    document.querySelectorAll('.sp-card-check').forEach(function (checkbox) {
+        checkbox.checked = false;
+        $(checkbox).closest('.sp-card').removeClass('is-selected');
     });
-    document.getElementById("btnAceptarTodas").style.display = "none"; // Oculta el botón Aceptar Todas
-    document.getElementById("btnRechazarTodas").style.display = "none"; // Oculta el botón Rechazar Todas
+    $('#selectAllCheckbox').prop('checked', false);
+    toggleBulkActionsVisibility();
 }
 
 const eliminarStock = async id => {
-
     try {
-        if (confirm("¿Está seguro que desea eliminar este stock?")) {
-            var url = "/StockPendiente/EliminarStock";
-
-            let value = JSON.stringify({
-                Id: id
-            });
-
-            let options = {
-                type: "POST",
-                url: url,
+        if (confirm('¿Está seguro que desea eliminar este stock?')) {
+            const options = {
+                type: 'POST',
+                url: '/StockPendiente/EliminarStock',
                 async: true,
-                data: value,
-                contentType: "application/json",
-                dataType: "json"
+                data: JSON.stringify({ Id: id }),
+                contentType: 'application/json',
+                dataType: 'json'
             };
 
-            let result = await MakeAjax(options);
+            const result = await MakeAjax(options);
 
             if (result.data) {
                 alert('Stock eliminado correctamente.');
-                $('.datos-error').removeClass('d-none');
-                aplicarFiltros();
+                await aplicarFiltros();
                 desmarcarCheckBoxes();
             } else {
-                $('.datos-error').text('Ha ocurrido un error en los datos.')
-                $('.datos-error').removeClass('d-none')
+                $('.datos-error').text('Ha ocurrido un error en los datos.').removeClass('d-none');
             }
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.').removeClass('d-none');
     }
-}
-
-
+};
 
 async function aceptarStocks() {
-    if (enProceso) return; // Si ya está ejecutándose, no continuar
+    if (enProceso) return;
     enProceso = true;
 
     try {
-        var url = "/StockPendiente/ModificarEstadoStockList";
-
-        let value = JSON.stringify({
-            stocks: JSON.stringify(cardsSeleccionadas),
-            estado: "Aceptado",
-        });
-
-        let options = {
-            type: "POST",
-            url: url,
+        const options = {
+            type: 'POST',
+            url: '/StockPendiente/ModificarEstadoStockList',
             async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
+            data: JSON.stringify({
+                stocks: JSON.stringify(cardsSeleccionadas),
+                estado: 'Aceptado'
+            }),
+            contentType: 'application/json',
+            dataType: 'json'
         };
 
-        let result = await MakeAjax(options);
+        const result = await MakeAjax(options);
 
         if (result) {
-            $("#modalEdit").modal("hide");
-            document.getElementById("btnAceptarTodas").style.display = "none";
-            document.getElementById("btnRechazarTodas").style.display = "none";
-            $('#selectAllCheckbox').prop('checked', false);
-            alert("Stocks aceptados exitosamente.");
-            aplicarFiltros();
+            $('#modalEdit').modal('hide');
+            alert('Stocks aceptados exitosamente.');
+            await aplicarFiltros();
             desmarcarCheckBoxes();
         } else {
-            alert("No se han podido cambiar los estados correctamente.");
+            alert('No se han podido cambiar los estados correctamente.');
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.');
-        $('.datos-error').removeClass('d-none');
+        $('.datos-error').text('Ha ocurrido un error.').removeClass('d-none');
     } finally {
-        enProceso = false; // Se libera la variable para permitir una nueva ejecución
+        enProceso = false;
     }
 }
-
-
-
-
-
 
 async function rechazarStocks() {
-
     try {
-        var url = "/StockPendiente/ModificarEstadoStockList";
-
-        let value = JSON.stringify({
-            stocks: JSON.stringify(cardsSeleccionadas),
-            estado: "Rechazado",
-        });
-
-        let options = {
-            type: "POST",
-            url: url,
+        const options = {
+            type: 'POST',
+            url: '/StockPendiente/ModificarEstadoStockList',
             async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
+            data: JSON.stringify({
+                stocks: JSON.stringify(cardsSeleccionadas),
+                estado: 'Rechazado'
+            }),
+            contentType: 'application/json',
+            dataType: 'json'
         };
 
-        let result = await MakeAjax(options);
-
+        const result = await MakeAjax(options);
 
         if (result) {
-            $("#modalEdit").modal("hide");
-            document.getElementById("btnAceptarTodas").style.display = "none";
-            document.getElementById("btnRechazarTodas").style.display = "none";
-            $('#selectAllCheckbox').prop('checked', false);  // Asumiendo que tu checkbox "Seleccionar Todos" tiene el id "select-all-checkbox"
-            alert("Stocks rechazados exitosamente.")
-            aplicarFiltros();
+            $('#modalEdit').modal('hide');
+            alert('Stocks rechazados exitosamente.');
+            await aplicarFiltros();
             desmarcarCheckBoxes();
         } else {
-            alert("No se han podido cambiar los estado correctamente.")
+            alert('No se han podido cambiar los estados correctamente.');
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        $('.datos-error').text('Ha ocurrido un error.').removeClass('d-none');
     }
 }
 
-
-
 function abrirstockPendiente() {
-    document.location.href = "../../StockPendiente/Index/";
+    document.location.href = '../../StockPendiente/Index/';
 }
-
-$('#selectAllCheckbox').on('click', function () {
-    var isChecked = $(this).is(':checked'); // Verifica si está seleccionado
-    var visibleCheckboxes = $('.cards-container .checkbox:visible'); // Selecciona los checkboxes visibles
-
-    cardsSeleccionadas = [];
-
-    // Recorrer cada fila visible y manejar la selección
-    $(visibleCheckboxes).each(function () {
-        $(this).prop('checked', isChecked).trigger('change'); // Marca o desmarca los checkboxes
-        var checkbox = $(this).find('.custom-checkbox .fa'); // Encuentra el ícono de checkbox en la fila
-        var cardId = parseInt($(this).closest('.card').attr('id')); // Obtiene el id del contenedor .card
-
-        // Si "Seleccionar Todos" está marcado, selecciona todas las filas visibles
-        if (isChecked) {
-            if (!checkbox.hasClass('checked')) {
-                checkbox.addClass('checked fa-check-square').removeClass('fa-square-o'); // Marcar el ícono
-                if (!cardsSeleccionadas.includes(cardId)) {
-                    cardsSeleccionadas.push(cardId); // Agregar al array de seleccionados si no está ya
-                }
-            }
-        } else {
-            // Si no está marcado, deselecciona todas las filas visibles
-
-            checkbox.removeClass('checked fa-check-square').addClass('fa-square-o'); // Desmarcar el ícono
-
-        }
-    });
-
-
-    // Mostrar u ocultar botones basados en el estado de selectedCheckboxes
-    toggleCheckboxAll();
-});
