@@ -347,6 +347,20 @@ namespace Sistema_David.Models.ViewModels
 
 
 
+    /// <summary>Cuota/venta atrasada ofrecida para reprogramar junto con otra del mismo cliente.</summary>
+    public class VM_ReprogAtrasadaItem
+    {
+        public int Id { get; set; }
+        public string Modulo { get; set; }
+        public int IdVenta { get; set; }
+        public int NumeroCuota { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public DateTime? FechaCobroActual { get; set; }
+        public decimal MontoRestante { get; set; }
+        public string Etiqueta { get; set; }
+        public bool EsCuotaActual { get; set; }
+    }
+
     public class VM_AsignarCobradorVentasReq
     {
         public int IdCobrador { get; set; }

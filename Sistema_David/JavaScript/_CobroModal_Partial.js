@@ -981,11 +981,43 @@ async function confirmarCobro() {
             return;
         }
 
+        const obsReprog = (obs || "").trim() || "Cambio de fecha de cobro";
+
+        if (typeof ReprogAtrasadas !== "undefined" && ventaActual?.IdCliente && cuotaActual?.Id) {
+            try {
+                const result = await ReprogAtrasadas.confirmarReprogramacion({
+                    idCliente: ventaActual.IdCliente,
+                    idCuotaActual: cuotaActual.Id,
+                    nuevaFecha: fecha,
+                    observacion: obsReprog,
+                    clienteNombre: ventaActual.ClienteNombre,
+                    onRefresh: actualizarGrillaCobros
+                });
+
+                if (result.error) {
+                    setCbError(result.error);
+                    notificarErrorCobrosUi(result.error);
+                    return;
+                }
+
+                if (result.confirmed && result.applied > 0) {
+                    getModal("mdCobro").hide();
+                    await actualizarGrillaCobros();
+                }
+                return;
+            } catch {
+                const m = "Error de conexión al cambiar la fecha.";
+                setCbError(m);
+                notificarErrorCobrosUi(m);
+                return;
+            }
+        }
+
         try {
             const body = new URLSearchParams({
                 idCuota: String(cuotaActual.Id),
                 nuevaFecha: fecha,
-                observacion: (obs || "").trim() || "Cambio de fecha de cobro"
+                observacion: obsReprog
             });
 
             const resp = await fetch("/Ventas_Electrodomesticos/ReprogramarCobroCuota", {

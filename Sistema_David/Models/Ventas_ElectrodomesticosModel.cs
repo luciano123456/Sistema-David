@@ -2177,6 +2177,68 @@ namespace Sistema_David.Models
             }
         }
 
+        /// <summary>Cuotas vencidas del cliente + la cuota en edición (sin excluir).</summary>
+        public static List<VM_ReprogAtrasadaItem> ListarCuotasAtrasadasReprogramacion(
+            int idCliente, int idCuotaActual, int idUsuarioSesion, int? idRol)
+        {
+            if (idCliente <= 0)
+                return new List<VM_ReprogAtrasadaItem>();
+
+            var hoy = DateTime.Today;
+            var esAdminOComprobantes = idRol == 1 || idRol == 4;
+
+            using (var db = new Sistema_DavidEntities())
+            {
+                var q =
+                    from c in db.Ventas_Electrodomesticos_Cuotas
+                    join v in db.Ventas_Electrodomesticos on c.IdVenta equals v.Id
+                    where v.IdCliente == idCliente
+                          && c.Estado != "Pagada"
+                          && (c.CobroPendiente == null || c.CobroPendiente == 0)
+                          && (c.TransferenciaPendiente == null || c.TransferenciaPendiente == 0)
+                          && (DbFunctions.TruncateTime(c.FechaVencimiento) < hoy || c.Id == idCuotaActual)
+                    select new { Cuota = c, Venta = v };
+
+                if (!esAdminOComprobantes)
+                {
+                    q = q.Where(x =>
+                        x.Venta.IdCobrador == null
+                        || x.Venta.IdCobrador == 0
+                        || x.Venta.IdCobrador == idUsuarioSesion);
+                }
+
+                return q
+                    .ToList()
+                    .Select(x =>
+                    {
+                        var rest = R2(
+                            (x.Cuota.MontoOriginal + x.Cuota.MontoRecargos - x.Cuota.MontoDescuentos)
+                            - x.Cuota.MontoPagado);
+                        if (rest <= 0) return null;
+
+                        var venc = x.Cuota.FechaVencimiento.ToString("dd/MM/yyyy");
+                        var esActual = x.Cuota.Id == idCuotaActual;
+                        return new VM_ReprogAtrasadaItem
+                        {
+                            Id = x.Cuota.Id,
+                            Modulo = "Electro",
+                            IdVenta = x.Cuota.IdVenta,
+                            NumeroCuota = x.Cuota.NumeroCuota,
+                            FechaVencimiento = x.Cuota.FechaVencimiento,
+                            FechaCobroActual = x.Cuota.FechaCobro,
+                            MontoRestante = rest,
+                            Etiqueta = "Cuota " + x.Cuota.NumeroCuota + (esActual ? " (actual)" : " (venc. " + venc + ")"),
+                            EsCuotaActual = esActual
+                        };
+                    })
+                    .Where(x => x != null)
+                    .OrderByDescending(x => x.EsCuotaActual)
+                    .ThenBy(x => x.IdVenta)
+                    .ThenBy(x => x.NumeroCuota)
+                    .ToList();
+            }
+        }
+
         private static string NormalizarTurno(string turno)
         {
             if (string.IsNullOrWhiteSpace(turno)) return null;

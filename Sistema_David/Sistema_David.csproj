@@ -587,6 +587,7 @@
     <Content Include="Estilos\StockPendiente.css" />
     <Content Include="Estilos\Stock.css" />
     <Content Include="Estilos\DireccionModal.css" />
+    <Content Include="Estilos\ReprogAtrasadasModal.css" />
     <Content Include="Estilos\Clientes.css" />
     <Content Include="Estilos\Rendimiento.css" />
     <Content Include="Estilos\Pedidos.css" />
@@ -619,6 +620,7 @@
     <Content Include="JavaScript\PagosNuevoModif.js" />
     <Content Include="JavaScript\RecorridoCobranzas.js" />
     <Content Include="JavaScript\Recorrido.js" />
+    <Content Include="JavaScript\ReprogAtrasadasModal.js" />
     <Content Include="JavaScript\Cobranzas.js" />
     <Content Include="JavaScript\InformacionVenta.js" />
     <Content Include="JavaScript\PedidosEditar.js" />

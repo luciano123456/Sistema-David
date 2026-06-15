@@ -558,6 +558,26 @@ namespace Sistema_David.Controllers
             }
         }
 
+        [HttpGet]
+        public ActionResult CuotasAtrasadasReprogramacion(int idCliente, int idCuotaActual)
+        {
+            try
+            {
+                var ses = SessionHelper.GetUsuarioSesion();
+                var data = Ventas_ElectrodomesticosModel.ListarCuotasAtrasadasReprogramacion(
+                    idCliente,
+                    idCuotaActual,
+                    ses?.Id ?? 0,
+                    ses?.IdRol);
+
+                return Json(new { success = true, data }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
         [HttpPost]
         public ActionResult AsignarCobradorVentas(VM_AsignarCobradorVentasReq req)
         {
