@@ -147,6 +147,202 @@ namespace Sistema_David.Models
         }
 
 
+        public static List<VMProductoStockFiltro> CatalogoProductosEnVendedores(bool soloEnVendedores = false)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var list = (from s in db.StockUsuarios
+                            join u in db.Usuarios on s.IdUsuario equals u.Id
+                            join p in db.Productos on s.IdProducto equals p.Id
+                            where u.IdEstado == 1 && s.Cantidad > 0
+                            group new { s, p } by new { p.Id, p.Nombre, StockDep = p.Stock } into g
+                            select new VMProductoStockFiltro
+                            {
+                                Id = g.Key.Id,
+                                Nombre = g.Key.Nombre,
+                                StockDeposito = g.Key.StockDep ?? 0,
+                                CantidadEnVendedores = g.Sum(x => x.s.Cantidad),
+                                VendedoresConStock = g.Select(x => x.s.IdUsuario).Distinct().Count()
+                            }).ToList();
+
+                if (soloEnVendedores)
+                    list = list.Where(x => x.StockDeposito <= 0).ToList();
+
+                return list.OrderBy(x => x.Nombre).ToList();
+            }
+        }
+
+        public static List<VMProductoStockFiltro> CatalogoProductosEnDeposito()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var idsConVendedor = db.StockUsuarios
+                    .Where(s => s.Cantidad > 0)
+                    .Select(s => s.IdProducto)
+                    .Distinct()
+                    .ToList();
+
+                return db.Productos
+                    .Where(p => p.Stock != null && p.Stock > 0 && !idsConVendedor.Contains(p.Id))
+                    .OrderBy(p => p.Nombre)
+                    .Select(p => new VMProductoStockFiltro
+                    {
+                        Id = p.Id,
+                        Nombre = p.Nombre,
+                        StockDeposito = p.Stock ?? 0,
+                        CantidadEnVendedores = 0,
+                        VendedoresConStock = 0
+                    })
+                    .ToList();
+            }
+        }
+
+        private static List<int> ParseIdsCsv(string csv)
+        {
+            if (string.IsNullOrWhiteSpace(csv))
+                return new List<int>();
+
+            return csv.Split(',')
+                .Select(x =>
+                {
+                    int id;
+                    return int.TryParse(x.Trim(), out id) ? id : 0;
+                })
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+        }
+
+        public static List<VMStockUsuario> ListarStockGeneral(
+            string idsVendedores,
+            string idsDeposito,
+            int idUsuario,
+            int idTipoNegocio,
+            bool soloEnVendedores)
+        {
+            var idsProdVendedores = ParseIdsCsv(idsVendedores);
+            var idsProdDeposito = ParseIdsCsv(idsDeposito);
+            var filtraVendedores = idsProdVendedores.Any();
+            var filtraDeposito = idsProdDeposito.Any();
+
+            using (var db = new Sistema_DavidEntities())
+            {
+                var result = new List<VMStockUsuario>();
+                var incluirVendedores = !filtraDeposito || filtraVendedores;
+                var incluirDeposito = filtraDeposito;
+
+                if (!filtraVendedores && !filtraDeposito)
+                    incluirVendedores = true;
+
+                if (incluirVendedores)
+                {
+                    var query = from s in db.StockUsuarios
+                                join u in db.Usuarios on s.IdUsuario equals u.Id
+                                join p in db.Productos on s.IdProducto equals p.Id
+                                join tn in db.TipoNegocio on u.IdTipoNegocio equals tn.Id into tnJoin
+                                from tn in tnJoin.DefaultIfEmpty()
+                                where u.IdEstado == 1 && s.Cantidad > 0
+                                select new { s, u, p, tn };
+
+                    if (filtraVendedores)
+                        query = query.Where(x => idsProdVendedores.Contains(x.s.IdProducto));
+
+                    if (soloEnVendedores)
+                        query = query.Where(x => x.p.Stock == null || x.p.Stock <= 0);
+
+                    if (idUsuario > 0)
+                        query = query.Where(x => x.s.IdUsuario == idUsuario);
+
+                    if (idTipoNegocio > 0)
+                        query = query.Where(x => x.u.IdTipoNegocio == idTipoNegocio);
+
+                    result.AddRange(query
+                        .OrderBy(x => x.p.Nombre)
+                        .ThenBy(x => x.u.Nombre)
+                        .Select(x => new VMStockUsuario
+                        {
+                            Id = x.s.Id,
+                            IdProducto = x.s.IdProducto,
+                            Cantidad = x.s.Cantidad,
+                            IdUsuario = x.s.IdUsuario,
+                            Usuario = x.u.Nombre,
+                            Producto = x.p.Nombre,
+                            PrecioVenta = x.p.PrecioVenta != null ? (decimal)x.p.PrecioVenta : 0,
+                            Total = (x.p.PrecioVenta != null ? (decimal)x.p.PrecioVenta : 0) * x.s.Cantidad,
+                            TipoNegocio = x.tn != null ? x.tn.Nombre : "",
+                            StockDeposito = x.p.Stock,
+                            VistaStock = x.u.VistaStock,
+                            Estado = "Vendedor"
+                        })
+                        .ToList());
+                }
+
+                if (incluirDeposito)
+                {
+                    var idsConVendedor = db.StockUsuarios
+                        .Where(s => s.Cantidad > 0)
+                        .Select(s => s.IdProducto)
+                        .Distinct()
+                        .ToList();
+
+                    var productosDep = db.Productos
+                        .Where(p => p.Stock != null && p.Stock > 0);
+
+                    if (filtraDeposito)
+                        productosDep = productosDep.Where(p => idsProdDeposito.Contains(p.Id));
+
+                    productosDep = productosDep.Where(p => !idsConVendedor.Contains(p.Id));
+
+                    var depositoRows = productosDep
+                        .OrderBy(p => p.Nombre)
+                        .ToList()
+                        .Select(p => new VMStockUsuario
+                        {
+                            Id = 0,
+                            IdProducto = p.Id,
+                            IdUsuario = 0,
+                            Usuario = "Depósito general",
+                            Producto = p.Nombre,
+                            Cantidad = p.Stock ?? 0,
+                            StockDeposito = p.Stock ?? 0,
+                            PrecioVenta = p.PrecioVenta != null ? (decimal)p.PrecioVenta : 0,
+                            Total = (p.PrecioVenta != null ? (decimal)p.PrecioVenta : 0) * (p.Stock ?? 0),
+                            TipoNegocio = "—",
+                            Estado = "Deposito"
+                        })
+                        .ToList();
+
+                    if (filtraDeposito && !filtraVendedores)
+                    {
+                        result = depositoRows;
+                    }
+                    else
+                    {
+                        var idsYaEnTabla = new HashSet<int>(result.Select(r => r.IdProducto));
+                        foreach (var row in depositoRows)
+                        {
+                            if (!idsYaEnTabla.Contains(row.IdProducto))
+                                result.Add(row);
+                        }
+                    }
+                }
+
+                return result
+                    .OrderBy(x => x.Producto)
+                    .ThenBy(x => x.Estado == "Deposito" ? 1 : 0)
+                    .ThenBy(x => x.Usuario)
+                    .ToList();
+            }
+        }
+
+        [Obsolete("Usar ListarStockGeneral con idsVendedores/idsDeposito")]
+        public static List<VMStockUsuario> ListarStockGeneral(int idProducto, int idUsuario, int idTipoNegocio)
+        {
+            var idsV = idProducto > 0 ? idProducto.ToString() : null;
+            return ListarStockGeneral(idsV, null, idUsuario, idTipoNegocio, false);
+        }
+
+
         public static List<VMStockUsuario> BuscarStockProducto(string producto)
         {
             if (string.IsNullOrEmpty(producto) || producto.Length < 3)

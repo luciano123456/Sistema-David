@@ -317,11 +317,12 @@ namespace Sistema_David.Models
                         (
                             (@idUser = -1 OR sp.IdUsuario = @idUser)
                             AND (@estado = 'Todos' OR sp.Estado = @estado)
-                            AND (@asignacion = 'Todos' OR UPPER(ISNULL(sp.Asignacion, '')) = UPPER(@asignacion))
+                            AND (@asignacion = 'Todos' OR UPPER(ISNULL(sp.Asignacion, 'ADMINISTRADOR')) = UPPER(@asignacion))
                             AND (
                                 @fecha IS NULL
+                                OR (@estado = 'Todos' AND CAST(sp.Fecha AS DATE) = CAST(@fecha AS DATE))
                                 OR (@estado = 'Pendiente' AND CAST(sp.Fecha AS DATE) <= CAST(@fecha AS DATE))
-                                OR (@estado <> 'Pendiente' AND @estado <> 'Todos' AND CAST(sp.Fecha AS DATE) = CAST(@fecha AS DATE))
+                                OR (@estado NOT IN ('Pendiente', 'Todos') AND CAST(sp.Fecha AS DATE) = CAST(@fecha AS DATE))
                             )
                         )
                         OR (

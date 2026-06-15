@@ -66,6 +66,31 @@ namespace Sistema_David.Controllers
             }, JsonRequestBehavior.AllowGet);
         }
 
+        public ActionResult CatalogoFiltrosStockGeneral(bool soloEnVendedores = false)
+        {
+            return Json(new
+            {
+                productosVendedores = StockModel.CatalogoProductosEnVendedores(soloEnVendedores),
+                productosDeposito = StockModel.CatalogoProductosEnDeposito()
+            }, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult ListarStockGeneral(
+            string idsVendedores = null,
+            string idsDeposito = null,
+            int idUsuario = -1,
+            int idTipoNegocio = -1,
+            bool soloEnVendedores = false)
+        {
+            var result = StockModel.ListarStockGeneral(
+                idsVendedores,
+                idsDeposito,
+                idUsuario,
+                idTipoNegocio,
+                soloEnVendedores);
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
         public ActionResult BuscarStockProducto(string producto)
         {
             var result = StockModel.BuscarStockProducto(producto);

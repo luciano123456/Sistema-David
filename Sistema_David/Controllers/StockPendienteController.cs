@@ -40,8 +40,7 @@ namespace Sistema_David.Controllers
         {
             List<VMStockPendiente> stockPendiente;
 
-            // Si el estado es 'pendiente', no se filtra por fecha (se pasa null)
-            DateTime? fechaFiltro = Estado == "Pendiente" ? (DateTime?)null : Fecha;
+            DateTime? fechaFiltro = Fecha == default(DateTime) ? (DateTime?)null : Fecha.Date;
 
             if (SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 1) // ROL ADMIN
             {

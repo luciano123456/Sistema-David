@@ -24,6 +24,7 @@ namespace Sistema_David.Models.Modelo
         public int? DiasVencimiento { get; set; }
 
         public string Producto { get; set; }
+        public int? StockDeposito { get; set; }
         public virtual Productos Productos { get; set; }
         public virtual Productos Productos1 { get; set; }
         public virtual Usuarios Usuarios { get; set; }

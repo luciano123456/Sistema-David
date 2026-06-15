@@ -1,98 +1,184 @@
-﻿
-@{
-    ViewBag.Title = "Index";
+﻿@{
+    ViewBag.Title = "Stock general";
 }
 
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
-<link href="~/Estilos/StockGeneral.css" rel="stylesheet" />
-<link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
-<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
+<link href="~/Estilos/Clientes.css?v=1.6" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.8" rel="stylesheet" />
+<link href="~/Estilos/StockGeneral.css?v=2.5" rel="stylesheet" />
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
-<body>
+<div class="ve-dark sg-root">
 
-    <script src="~/Scripts/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <div class="container-fluid page-99 py-3">
 
-
-
-    <div id="Filtros" class="divFiltros">
-
-      
-
-        <label class="m-lg-2 lblcliente">Producto:</label>
-        <input type="text" placeholder="" value="" id="ProductoFiltro" class="input-nuevo" />
-
-        <div class="vw-75 d-flex float-lg-end mt-2">
-            <a class="btn btn-success" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
-        </div>
-
-
-
-    </div>
-
-    <div class="col-lg-12">
-        <div class="card cardTablePersonalizado">
-            <div class="card-header">
-                Stock
+        <section class="cc-header mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="cc-badge sg-badge">
+                        <i class="fa fa-database"></i>
+                    </div>
+                    <div>
+                        <h2 class="m-0 fw-800">Stock general</h2>
+                        <div class="text-muted-cc">
+                            Stock asignado a vendedores y dep&oacute;sito por producto
+                        </div>
+                    </div>
+                </div>
+                <div class="sg-header-actions d-flex flex-wrap gap-2 ms-auto">
+                    <button type="button" class="btn btn-outline-light sg-header-btn" onclick="volverUsuarios()">
+                        <i class="fa fa-arrow-left me-1"></i> Volver
+                    </button>
+                </div>
             </div>
-            <div class="card-body">
-                <table class="display nowrap" id="grdStock" style="width:100%">
+        </section>
+
+        <section id="Filtros" class="card-glass p-3 mb-4 sg-filters-card">
+            <div class="row g-3 align-items-end sg-filters-row">
+                <div class="col-12 col-lg-5 sg-filter-col">
+                    <div class="sg-filter-head">
+                        <label class="sg-filter-label mb-0" for="ProductosEnVendedoresFiltro">
+                            <i class="fa fa-users me-1"></i> Productos en vendedores
+                        </label>
+                        <label class="sg-solo-check sg-solo-check--inline" for="SoloEnVendedoresCheck" title="Sin stock en dep&oacute;sito">
+                            <input class="form-check-input" type="checkbox" id="SoloEnVendedoresCheck" />
+                            <span>Sin dep&oacute;sito</span>
+                        </label>
+                    </div>
+                    <div class="sg-select2-wrap">
+                        <select id="ProductosEnVendedoresFiltro" class="form-select ve-input sg-filter-select sg-filter-multiselect" multiple="multiple"></select>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-5 sg-filter-col">
+                    <div class="sg-filter-head">
+                        <label class="sg-filter-label mb-0" for="ProductosEnDepositoFiltro">
+                            <i class="fa fa-archive me-1"></i> Productos en dep&oacute;sito
+                        </label>
+                    </div>
+                    <div class="sg-select2-wrap">
+                        <select id="ProductosEnDepositoFiltro" class="form-select ve-input sg-filter-select sg-filter-multiselect" multiple="multiple"></select>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-2 sg-filter-actions d-flex gap-2">
+                    <button type="button" class="btn btn-primary flex-fill sg-filter-btn" id="aplicarFiltros" onclick="aplicarFiltros()">
+                        <i class="fa fa-search me-1"></i> Aplicar
+                    </button>
+                    <button type="button" class="btn btn-outline-light flex-fill sg-filter-btn" onclick="limpiarFiltrosGenerales()">
+                        <i class="fa fa-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+            <div class="row g-3 align-items-end mt-2 sg-filters-row" id="sgFiltrosVendedor">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <label class="sg-filter-label" for="VendedorFiltro">Vendedor</label>
+                    <select id="VendedorFiltro" class="form-select ve-input sg-filter-select">
+                        <option value="-1">Todos</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <label class="sg-filter-label" for="TipoNegocioFiltro">Tipo de negocio</label>
+                    <select id="TipoNegocioFiltro" class="form-select ve-input sg-filter-select">
+                        <option value="-1">Todos</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="cc-stat h-100">
+                        <div class="label">Registros</div>
+                        <div class="value text-info" id="sgStatRegistros">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="cc-stat h-100">
+                        <div class="label">Unidades en vendedores</div>
+                        <div class="value text-warning" id="sgStatUnidades">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="cc-stat h-100">
+                        <div class="label">Unidades en dep&oacute;sito</div>
+                        <div class="value text-primary" id="sgStatUnidadesDeposito">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="cc-stat h-100">
+                        <div class="label">Valor total (visible)</div>
+                        <div class="value text-success" id="sgStatValor">$0</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="card-glass p-3 mb-4 sg-table-card">
+            <div class="sg-table-toolbar d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="fw-bold text-white" id="sgTableTitle">
+                    <i class="fa fa-table me-2"></i> Detalle por vendedor
+                </div>
+                <div class="d-flex flex-wrap gap-2 ms-auto sg-toolbar-actions">
+                    <button type="button" class="btn btn-outline-light" onclick="limpiarFiltrosColumnasStockGeneral()" title="Limpiar filtros de columnas">
+                        <i class="fa fa-eraser me-1"></i> Limpiar filtros
+                    </button>
+                </div>
+            </div>
+
+            <p class="sg-dt-hint d-lg-none text-muted small mb-2">
+                <i class="fa fa-arrows-h me-1"></i> Desliz&aacute; horizontalmente para ver todas las columnas y filtros.
+            </p>
+
+            <div class="table-responsive dt-dark-wrap sg-dt-wrap vc-cobros-dt">
+                <table class="display nowrap dt-dark ve-table-cobros w-100" id="grdStock">
                     <thead>
                         <tr>
                             <th class="text-center">Imagen</th>
                             <th class="text-center">Vendedor</th>
-                            <th class="text-center">Tipo de Negocio</th>
+                            <th class="text-center">Tipo negocio</th>
                             <th class="text-center">Producto</th>
                             <th class="text-center">Cantidad</th>
-                            <th class="text-center">Precio Unitario</th>
+                            <th class="text-center">Dep&oacute;sito</th>
+                            <th class="text-center">Precio unit.</th>
                             <th class="text-center">Total</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- Aquí va el contenido de tu datatable -->
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
-
-            <div class="vw-75 d-flex justify-content-end mt-2 mb-4">
-               
-
-            </div>
         </div>
     </div>
 
-
-
-
-    <!-- Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imageModalLabel">Imagen Ampliada</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+    <div class="modal fade cc-modal-shell" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog cc-modal-dialog cc-modal-dialog--image modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content cc-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="cc-modal-head">
+                        <div class="cc-modal-icon cc-modal-icon--info">
+                            <i class="fa fa-picture-o"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="imageModalLabel">Imagen del producto</h5>
+                        </div>
+                    </div>
+                    <button type="button" class="hd-modal-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                        <i class="fa fa-times"></i>
                     </button>
                 </div>
-                <div class="modal-body text-center">
-                    <img id="modalImage" src="" class="img-fluid" alt="Imagen Ampliada" />
+                <div class="modal-body text-center pt-3">
+                    <img id="modalImage" src="" class="sg-modal-img img-fluid" alt="Imagen ampliada" />
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    
-
-   
-</body>
-
-
-
-<script src="~/Scripts/bootstrap.min.js"></script>
-<script src="~/JavaScript/Utils/Utils.js"></script>
-<link href="~/Content/font-awesome.css" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
-
-@section scripts{
-    <script src="~/JavaScript/StockGeneral.js?v=1.0"></script>
+@section scripts {
+    <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=2.6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="~/JavaScript/StockGeneral.js?v=2.4"></script>
 }

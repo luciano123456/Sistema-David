@@ -519,6 +519,7 @@
     <Compile Include="Models\Modelo\VMPagoSueldos.cs" />
     <Compile Include="Models\Modelo\VMStockPendiente.cs" />
     <Compile Include="Models\Modelo\VMCuentaBancaria.cs" />
+    <Compile Include="Models\Modelo\VMProductoStockFiltro.cs" />
     <Compile Include="Models\Modelo\VMStockUsuario.cs" />
     <Compile Include="Models\Modelo\FileInput.cs" />
     <Compile Include="Models\Modelo\VMCategoria.cs" />
