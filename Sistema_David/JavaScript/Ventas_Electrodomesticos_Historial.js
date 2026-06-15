@@ -1511,40 +1511,14 @@ function habilitarSeleccionFilasCuotas() {
 window.VC = window.VC || {};
 
 VC.renderDireccion = function (_, __, row) {
-    const dir = row.ClienteDireccion || "—";
-    const lat = row.ClienteLatitud;
-    const lng = row.ClienteLongitud;
-
-    // recorte a 15 caracteres
-    const dirCorta = dir.length > 20
-        ? dir.substring(0, 20) + "…"
-        : dir;
-
-    // sin coordenadas → solo texto con tooltip
-    if (!lat || !lng) {
-        return `
-            <span title="${dir}"
-                  style="cursor:pointer;">
-                ${dirCorta}
-            </span>`;
-    }
-
-    const url = `https://www.google.com/maps?q=${lat},${lng}`;
-
-    // texto + ícono juntos, mismo link
-    return `
-        <a href="${url}"
-           target="_blank"
-           title="${dir}"
-           style="cursor:pointer; color:inherit; text-decoration:none;"
-           class="d-inline-flex align-items-center gap-1">
-
-            <span>${dirCorta}</span>
-            <i class="fa fa-map-marker"
-               style="color:#ffc107; font-size:1.2rem;"></i>
-
-        </a>
-    `;
+    return buildCeldaDireccionHtml({
+        direccion: row.ClienteDireccion,
+        lat: row.ClienteLatitud,
+        lng: row.ClienteLongitud,
+        telefono: row.ClienteTelefono,
+        cliente: row.ClienteNombre,
+        cortaLen: 20
+    });
 };
 
 

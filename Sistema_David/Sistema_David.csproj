@@ -586,6 +586,7 @@
     <Content Include="Estilos\StockGeneral.css" />
     <Content Include="Estilos\StockPendiente.css" />
     <Content Include="Estilos\Stock.css" />
+    <Content Include="Estilos\DireccionModal.css" />
     <Content Include="Estilos\Clientes.css" />
     <Content Include="Estilos\Rendimiento.css" />
     <Content Include="Estilos\Pedidos.css" />

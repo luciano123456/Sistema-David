@@ -578,3 +578,338 @@ function limpiarFiltrosColumnas(api, configColumns, storageKey) {
     api.draw(false);
     syncColumnFilterMarkers(api, configColumns);
 }
+
+/* =========================================================
+   Dirección — celda tabla + modal (Cobranzas / Electro)
+   ========================================================= */
+
+function escapeHtml(text) {
+    if (text == null) return "";
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function encodeDirAttr(value) {
+    return encodeURIComponent(value == null ? "" : String(value));
+}
+
+function decodeDirAttr(value) {
+    if (value == null || value === "") return "";
+    try {
+        return decodeURIComponent(value);
+    } catch (_) {
+        return String(value);
+    }
+}
+
+function formatearTelefonoVista(telefono) {
+    if (!telefono) return "";
+    const digits = String(telefono).replace(/\D/g, "");
+    if (digits.length >= 10) {
+        const local = digits.slice(-10);
+        return "+54 9 " + local.slice(0, 2) + " " + local.slice(2, 6) + "-" + local.slice(6);
+    }
+    return String(telefono).trim();
+}
+
+function buildTelHref(telefono) {
+    if (!telefono) return "";
+    let digits = String(telefono).replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("54")) return "tel:+" + digits;
+    if (digits.startsWith("9") && digits.length >= 10) return "tel:+54" + digits;
+    if (digits.length >= 10) return "tel:+549" + digits.slice(-10);
+    return "tel:" + digits;
+}
+
+function buildCeldaDireccionHtml(opts) {
+    opts = opts || {};
+    const dir = (opts.direccion || "").trim();
+    if (!dir) return '<span class="text-muted">—</span>';
+
+    const cortaLen = opts.cortaLen || 20;
+    const dirCorta = dir.length > cortaLen ? dir.substring(0, cortaLen) + "…" : dir;
+    const lat = parseFloat(opts.lat) || 0;
+    const lng = parseFloat(opts.lng) || 0;
+    const hasCoords = !!(lat && lng);
+
+    const dataAttrs =
+        ' data-dir="' + encodeDirAttr(dir) + '"' +
+        ' data-tel="' + encodeDirAttr(opts.telefono || "") + '"' +
+        ' data-cliente="' + encodeDirAttr(opts.cliente || "") + '"' +
+        ' data-lat="' + (hasCoords ? lat : "") + '"' +
+        ' data-lng="' + (hasCoords ? lng : "") + '"';
+
+    let html = '<div class="location-cell d-inline-flex align-items-center gap-2">';
+
+    if (hasCoords) {
+        html +=
+            '<button type="button" class="btn btn-link p-0 border-0 js-dir-maps location-icon-maps"' +
+            ' title="Ir a Google Maps"' + dataAttrs + '>' +
+            '<i class="fa fa-map-marker fa-lg text-warning" aria-hidden="true"></i>' +
+            '</button>';
+    }
+
+    html +=
+        '<a href="javascript:void(0);" class="direccion-link js-dir-text"' + dataAttrs + '>' +
+        escapeHtml(dirCorta) +
+        '</a></div>';
+
+    return html;
+}
+
+function readDirDataFromEl(el) {
+    if (el && el.jquery) el = el[0];
+    if (!el || !el.getAttribute) {
+        return { direccion: "", telefono: "", cliente: "", lat: 0, lng: 0 };
+    }
+    return {
+        direccion: decodeDirAttr(el.getAttribute("data-dir")),
+        telefono: decodeDirAttr(el.getAttribute("data-tel")),
+        cliente: decodeDirAttr(el.getAttribute("data-cliente")),
+        lat: parseFloat(el.getAttribute("data-lat")) || 0,
+        lng: parseFloat(el.getAttribute("data-lng")) || 0
+    };
+}
+
+function ensureDireccionModalStyles() {
+    if (document.getElementById("direccion-modal-css")) return;
+    const link = document.createElement("link");
+    link.id = "direccion-modal-css";
+    link.rel = "stylesheet";
+    link.href = "/Estilos/DireccionModal.css?v=1.1";
+    document.head.appendChild(link);
+}
+
+function buildWhatsAppHref(telefono, cliente) {
+    const digits = String(telefono || "").replace(/\D/g, "");
+    if (!digits) return "";
+    let phone = digits;
+    if (!phone.startsWith("54")) {
+        phone = "549" + phone.slice(-10);
+    } else if (phone.startsWith("54") && !phone.startsWith("549")) {
+        phone = "549" + phone.slice(2);
+    }
+    const msg = cliente
+        ? "Hola " + cliente + ", "
+        : "Hola, ";
+    return "https://wa.me/" + phone + "?text=" + encodeURIComponent(msg);
+}
+
+function ensureModalDireccionCliente() {
+    ensureDireccionModalStyles();
+    var existing = document.getElementById("modalDireccionCliente");
+    if (existing && !document.getElementById("mdDirTelActions")) {
+        existing.remove();
+    }
+    if (document.getElementById("modalDireccionCliente")) return;
+
+    document.body.insertAdjacentHTML("beforeend",
+        '<div class="modal fade md-dir-modal" id="modalDireccionCliente" tabindex="-1" aria-hidden="true">' +
+        '  <div class="modal-dialog modal-dialog-centered md-dir-dialog">' +
+        '    <div class="modal-content md-dir-content">' +
+        '      <div class="md-dir-handle" aria-hidden="true"></div>' +
+        '      <div class="modal-header md-dir-header border-0">' +
+        '        <div class="md-dir-head">' +
+        '          <div class="md-dir-icon"><i class="fa fa-map-marker" aria-hidden="true"></i></div>' +
+        '          <div class="md-dir-title-wrap">' +
+        '            <h5 class="modal-title mb-0">Datos de contacto</h5>' +
+        '            <div class="md-dir-cliente" id="mdDirClienteNombre"></div>' +
+        '          </div>' +
+        '        </div>' +
+        '        <button type="button" class="md-dir-close" data-bs-dismiss="modal" aria-label="Cerrar">' +
+        '          <i class="fa fa-times"></i>' +
+        '        </button>' +
+        '      </div>' +
+        '      <div class="modal-body md-dir-body">' +
+        '        <div class="md-dir-card md-dir-card--addr">' +
+        '          <div class="md-dir-label"><i class="fa fa-home"></i> Dirección completa</div>' +
+        '          <div class="md-dir-value md-dir-addr-display" id="mdDirTexto"></div>' +
+        '          <button type="button" class="md-dir-btn md-dir-btn--ghost md-dir-btn--block" id="mdDirCopyDir">' +
+        '            <i class="fa fa-copy"></i> Copiar dirección' +
+        '          </button>' +
+        '        </div>' +
+        '        <div class="md-dir-card md-dir-card--tel d-none" id="mdDirTelWrap">' +
+        '          <div class="md-dir-label"><i class="fa fa-phone"></i> Teléfono</div>' +
+        '          <div class="md-dir-tel-display" id="mdDirTelDisplay"></div>' +
+        '          <div class="md-dir-actions-row" id="mdDirTelActions">' +
+        '            <a class="md-dir-btn md-dir-btn--call" id="mdDirBtnCall" href="#">' +
+        '              <i class="fa fa-phone"></i> Llamar' +
+        '            </a>' +
+        '            <a class="md-dir-btn md-dir-btn--wa" id="mdDirBtnWa" href="#" target="_blank" rel="noopener">' +
+        '              <i class="fa fa-whatsapp"></i> WhatsApp' +
+        '            </a>' +
+        '            <button type="button" class="md-dir-btn md-dir-btn--ghost md-dir-btn--copy-tel" id="mdDirCopyTel">' +
+        '              <i class="fa fa-copy"></i> Copiar número' +
+        '            </button>' +
+        '          </div>' +
+        '        </div>' +
+        '      </div>' +
+        '      <div class="modal-footer md-dir-footer border-0">' +
+        '        <button type="button" class="md-dir-btn md-dir-btn--ghost" data-bs-dismiss="modal">Cerrar</button>' +
+        '        <button type="button" class="md-dir-btn md-dir-btn--maps d-none" id="mdDirBtnMaps">' +
+        '          <i class="fa fa-map-marker"></i> Abrir en Maps' +
+        '        </button>' +
+        '      </div>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>');
+}
+
+function copiarTextoPortapapeles(texto, okMsg) {
+    if (!texto) return;
+    const done = function () {
+        if (window.VC && typeof VC.toast === "function") {
+            VC.toast(okMsg || "Copiado", "success");
+        }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(done).catch(function () {
+            window.prompt("Copiá el texto:", texto);
+        });
+        return;
+    }
+    window.prompt("Copiá el texto:", texto);
+}
+
+var _mdDirMapsCtx = { lat: 0, lng: 0, direccion: "" };
+
+function mostrarDireccionModal(opts) {
+    opts = opts || {};
+    ensureModalDireccionCliente();
+
+    const dir = (opts.direccion || "").trim() || "—";
+    const tel = opts.telefono || "";
+    const cliente = (opts.cliente || "").trim();
+    const lat = parseFloat(opts.lat) || 0;
+    const lng = parseFloat(opts.lng) || 0;
+    const hasCoords = !!(lat && lng);
+    const telFmt = formatearTelefonoVista(tel);
+    const telHref = buildTelHref(tel);
+    const waHref = buildWhatsAppHref(tel, cliente);
+
+    const elCliente = document.getElementById("mdDirClienteNombre");
+    const elDir = document.getElementById("mdDirTexto");
+    const telWrap = document.getElementById("mdDirTelWrap");
+    const telActions = document.getElementById("mdDirTelActions");
+    const elTelDisplay = document.getElementById("mdDirTelDisplay");
+    const btnCall = document.getElementById("mdDirBtnCall");
+    const btnWa = document.getElementById("mdDirBtnWa");
+    const btnMaps = document.getElementById("mdDirBtnMaps");
+    const btnCopyDir = document.getElementById("mdDirCopyDir");
+    const btnCopyTel = document.getElementById("mdDirCopyTel");
+
+    if (elCliente) elCliente.textContent = cliente || "Cliente";
+    if (elDir) elDir.textContent = dir;
+
+    if (telWrap && telFmt && telHref) {
+        telWrap.classList.remove("d-none");
+        if (elTelDisplay) elTelDisplay.textContent = telFmt;
+        if (btnCall) btnCall.setAttribute("href", telHref);
+        if (btnWa && waHref) {
+            btnWa.setAttribute("href", waHref);
+            btnWa.classList.remove("d-none");
+            if (telActions) telActions.classList.remove("md-dir-actions-row--solo-call");
+        } else {
+            if (btnWa) btnWa.classList.add("d-none");
+            if (telActions) telActions.classList.add("md-dir-actions-row--solo-call");
+        }
+    } else if (telWrap) {
+        telWrap.classList.add("d-none");
+    }
+
+    if (btnMaps) {
+        if (hasCoords) {
+            btnMaps.classList.remove("d-none");
+            _mdDirMapsCtx = { lat: lat, lng: lng, direccion: dir };
+        } else {
+            btnMaps.classList.add("d-none");
+            _mdDirMapsCtx = { lat: 0, lng: 0, direccion: dir };
+        }
+    }
+
+    if (btnCopyDir) {
+        btnCopyDir.onclick = function () {
+            copiarTextoPortapapeles(dir, "Dirección copiada");
+        };
+    }
+    if (btnCopyTel) {
+        btnCopyTel.onclick = function () {
+            copiarTextoPortapapeles(telFmt || tel, "Teléfono copiado");
+        };
+    }
+    if (btnMaps) {
+        btnMaps.onclick = function () {
+            abrirDireccionEnMaps(_mdDirMapsCtx.lat, _mdDirMapsCtx.lng, _mdDirMapsCtx.direccion);
+        };
+    }
+
+    const el = document.getElementById("modalDireccionCliente");
+    if (el && window.bootstrap && bootstrap.Modal) {
+        const modal = bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true });
+        modal.show();
+    }
+}
+
+function abrirDireccionEnMaps(latDestino, lonDestino, direccion) {
+    latDestino = parseFloat(latDestino) || 0;
+    lonDestino = parseFloat(lonDestino) || 0;
+    if (!latDestino || !lonDestino) {
+        if (direccion) {
+            window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
+        }
+        return;
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (posicion) {
+            const latOrigen = posicion.coords.latitude;
+            const lonOrigen = posicion.coords.longitude;
+            const mapaUrl = "https://www.google.com/maps/dir/?api=1&origin=" + latOrigen + "," + lonOrigen +
+                "&destination=" + latDestino + "," + lonDestino + "&travelmode=driving";
+            window.open(mapaUrl, "_blank");
+        }, function () {
+            window.open("https://www.google.com/maps/search/?api=1&query=" + latDestino + "," + lonDestino + "&zoom=20", "_blank");
+        });
+    } else {
+        window.open("https://www.google.com/maps/search/?api=1&query=" + latDestino + "," + lonDestino + "&zoom=20", "_blank");
+    }
+}
+
+function initDireccionUiHandlers() {
+    if (window._direccionUiInit) return;
+    window._direccionUiInit = true;
+
+    document.addEventListener("click", function (e) {
+        const textEl = e.target.closest(".js-dir-text");
+        if (textEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            mostrarDireccionModal(readDirDataFromEl(textEl));
+            return;
+        }
+
+        const mapsEl = e.target.closest(".js-dir-maps");
+        if (mapsEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            const data = readDirDataFromEl(mapsEl);
+            abrirDireccionEnMaps(data.lat, data.lng, data.direccion);
+        }
+    }, true);
+}
+
+function bootDireccionUi() {
+    initDireccionUiHandlers();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootDireccionUi);
+} else {
+    bootDireccionUi();
+}

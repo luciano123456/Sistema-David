@@ -2892,3 +2892,23 @@ input {
 #vc_tabla_pendientes tbody tr {
     cursor: pointer;
 }
+
+.direccion-link {
+    text-decoration: none;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.direccion-link:hover {
+    color: var(--warn);
+    text-decoration: underline;
+}
+
+.location-icon-maps {
+    line-height: 1;
+    cursor: pointer;
+}
+
+.location-cell .location-icon-maps i {
+    color: var(--warn) !important;
+}

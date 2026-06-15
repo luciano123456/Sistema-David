@@ -278,23 +278,14 @@ VC.turnoMT = function (t) {
 };
 
 VC.renderDireccion = function (_, __, row) {
-    const dir = row.ClienteDireccion || "—";
-    const lat = row.ClienteLatitud;
-    const lng = row.ClienteLongitud;
-
-    if (!lat || !lng) return `<span>${dir}</span>`;
-
-    const url = `https://www.google.com/maps?q=${lat},${lng}`;
-
-    return `
-        <div class="d-flex align-items-center justify-content-between gap-2">
-            <span class="text-truncate" style="max-width:220px">${dir}</span>
-            <a class="btn btn-sm btn-outline-light"
-               href="${url}" target="_blank" title="Ver en mapa">
-                <i class="fa fa-map-marker"></i>
-            </a>
-        </div>
-    `;
+    return buildCeldaDireccionHtml({
+        direccion: row.ClienteDireccion,
+        lat: row.ClienteLatitud,
+        lng: row.ClienteLongitud,
+        telefono: row.ClienteTelefono,
+        cliente: row.ClienteNombre,
+        cortaLen: 20
+    });
 };
 
 VC.abrirWhatsApp = function (telefono, cliente) {

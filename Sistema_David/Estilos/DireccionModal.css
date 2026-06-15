@@ -1,0 +1,344 @@
+/* =========================================================
+   Modal dirección / contacto — mobile-first (Utils.js)
+   ========================================================= */
+
+.md-dir-modal {
+    --md-bg: #0f1628;
+    --md-bg2: #172036;
+    --md-ink: #f0f5ff;
+    --md-muted: rgba(180, 198, 230, 0.82);
+    --md-line: rgba(88, 166, 255, 0.28);
+    --md-accent: #52a5ff;
+    --md-ok: #20d6a1;
+    --md-wa: #25d366;
+    --md-warn: #ffc107;
+    --md-radius: 18px;
+    --md-safe-b: env(safe-area-inset-bottom, 0px);
+    --md-safe-t: env(safe-area-inset-top, 0px);
+}
+
+.md-dir-modal .modal-dialog.md-dir-dialog {
+    max-width: 440px;
+    width: calc(100% - 1.25rem);
+    margin: auto;
+}
+
+.md-dir-modal .md-dir-content {
+    background: linear-gradient(165deg, var(--md-bg2) 0%, var(--md-bg) 58%, #0c1220 100%);
+    color: var(--md-ink);
+    border: 1px solid var(--md-line);
+    border-radius: var(--md-radius);
+    box-shadow: 0 28px 56px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    overflow: hidden;
+}
+
+.md-dir-handle {
+    display: none;
+}
+
+.md-dir-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.15rem 0.75rem !important;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.14) !important;
+}
+
+.md-dir-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.md-dir-icon {
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #fff;
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    box-shadow: 0 8px 20px rgba(14, 165, 233, 0.35);
+}
+
+.md-dir-title-wrap {
+    min-width: 0;
+}
+
+.md-dir-modal .modal-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--md-ink);
+    line-height: 1.25;
+}
+
+.md-dir-cliente {
+    font-size: 0.88rem;
+    color: var(--md-muted);
+    margin-top: 2px;
+    word-break: break-word;
+}
+
+.md-dir-close {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(88, 166, 255, 0.28);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(220, 232, 255, 0.9);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.md-dir-close:hover {
+    background: rgba(220, 53, 69, 0.18);
+    border-color: rgba(220, 53, 69, 0.45);
+    color: #ff8f9a;
+}
+
+.md-dir-body {
+    padding: 1rem 1.15rem 0.5rem !important;
+}
+
+.md-dir-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    margin-bottom: 12px;
+}
+
+.md-dir-card--addr {
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.11) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+.md-dir-card--addr .md-dir-label {
+    color: rgba(251, 191, 36, 0.95);
+}
+
+.md-dir-addr-display {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.md-dir-card--tel {
+    background: linear-gradient(145deg, rgba(32, 214, 161, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border-color: rgba(32, 214, 161, 0.28);
+}
+
+.md-dir-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--md-muted);
+    margin-bottom: 10px;
+}
+
+.md-dir-card--tel .md-dir-label {
+    color: rgba(110, 231, 183, 0.95);
+}
+
+.md-dir-value {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--md-ink);
+    word-break: break-word;
+}
+
+.md-dir-tel-display {
+    font-size: clamp(1.45rem, 5.5vw, 1.85rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    color: #ecfdf5;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+    word-break: break-word;
+    margin-bottom: 12px;
+}
+
+.md-dir-actions-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.md-dir-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 48px;
+    padding: 0.65rem 0.85rem;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 0.92rem;
+    font-weight: 800;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.md-dir-btn:active {
+    transform: scale(0.98);
+}
+
+.md-dir-btn--call {
+    min-height: 50px;
+    font-size: 0.9rem;
+    color: #fff !important;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    box-shadow: 0 10px 24px rgba(34, 197, 94, 0.35);
+}
+
+.md-dir-btn--call:hover {
+    color: #fff !important;
+    box-shadow: 0 12px 28px rgba(34, 197, 94, 0.45);
+}
+
+.md-dir-btn--wa {
+    min-height: 50px;
+    font-size: 0.9rem;
+    color: #fff !important;
+    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    box-shadow: 0 8px 18px rgba(37, 211, 102, 0.28);
+}
+
+.md-dir-actions-row .md-dir-btn--copy-tel {
+    grid-column: 1 / -1;
+}
+
+.md-dir-actions-row--solo-call .md-dir-btn--call {
+    grid-column: 1 / -1;
+}
+
+.md-dir-btn--wa:hover {
+    color: #fff !important;
+}
+
+.md-dir-btn--ghost {
+    color: var(--md-muted) !important;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.md-dir-btn--ghost:hover {
+    color: var(--md-ink) !important;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.md-dir-btn--maps {
+    flex: 1 1 auto;
+    min-height: 50px;
+    color: #fff !important;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.32);
+}
+
+.md-dir-btn--maps:hover {
+    color: #fff !important;
+}
+
+.md-dir-btn--block {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.md-dir-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0.65rem 1.15rem calc(0.85rem + var(--md-safe-b)) !important;
+    border-top: 1px solid rgba(88, 166, 255, 0.12) !important;
+}
+
+.md-dir-footer .md-dir-btn--ghost {
+    min-width: 96px;
+}
+
+/* ——— Móvil: bottom sheet ——— */
+@media (max-width: 575.98px) {
+    .md-dir-modal .modal-dialog.md-dir-dialog {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        min-height: 100%;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .md-dir-modal.show .modal-dialog.md-dir-dialog {
+        transform: none;
+    }
+
+    .md-dir-modal .md-dir-content {
+        width: 100%;
+        border-radius: 22px 22px 0 0;
+        border-bottom: none;
+        max-height: calc(100dvh - var(--md-safe-t) - 8px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .md-dir-handle {
+        display: block;
+        width: 42px;
+        height: 5px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.22);
+        margin: 10px auto 0;
+    }
+
+    .md-dir-header {
+        padding-top: 0.65rem !important;
+    }
+
+    .md-dir-body {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    .md-dir-footer {
+        flex-direction: column-reverse;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    .md-dir-footer .md-dir-btn {
+        width: 100%;
+    }
+
+    .md-dir-tel-display {
+        font-size: clamp(1.55rem, 7vw, 2rem);
+    }
+}
+
+@media (min-width: 576px) {
+    .md-dir-modal .modal-dialog.md-dir-dialog {
+        margin: 1.75rem auto;
+    }
+}
+
+/* Backdrop un poco más oscuro en móvil */
+@media (max-width: 575.98px) {
+    .md-dir-modal.show ~ .modal-backdrop {
+        opacity: 0.72;
+    }
+}

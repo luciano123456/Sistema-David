@@ -1108,22 +1108,14 @@ const configurarDataTableCobrosPendientes = async () => {
 
             {
                 data: function (row) {
-
-                    var direccionCorta = row.Direccion != null && row.Direccion.length > 20 ? row.Direccion.substring(0, 20) + '...' : row.Direccion;
-                    if (row.Direccion && row.Direccion.trim() !== "" && row.Latitud && row.Longitud) {
-                        var direccionCompleta = row.Direccion;
-                        var latDestino = row.Latitud;
-                        var lonDestino = row.Longitud;
-                        var mapaUrl = 'https://www.google.com/maps/search/?api=1&query=' + latDestino + ',' + lonDestino + '&zoom=20&basemap=satellite';
-
-                        return '<div class="location-cell">' +
-                            '<i title="Ir a Google Maps" class="fa fa-map-marker fa-2x text-warning location-icon" onclick="obtenerUbicacionYMostrarRecorrido(\'' + direccionCompleta + '\', ' + latDestino + ', ' + lonDestino + ')"></i> ' +
-                            '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + direccionCompleta + '\', ' + latDestino + ', ' + lonDestino + ')" class="direccion-link">' + direccionCorta + '</a>' +
-                            '</div>';
-                    }
-
-                    // Si no hay coordenadas, solo muestra la dirección
-                    return '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + row.Direccion + '\', 0, 0)" class="direccion-link">' + direccionCorta + '</a>';
+                    return buildCeldaDireccionHtml({
+                        direccion: row.Direccion,
+                        lat: row.Latitud,
+                        lng: row.Longitud,
+                        telefono: row.TelefonoCliente,
+                        cliente: row.Cliente,
+                        cortaLen: 20
+                    });
                 }
             },
 
@@ -1494,22 +1486,14 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
 
             {
                 data: function (row) {
-
-                    var direccionCorta = row.Direccion != null && row.Direccion.length > 20 ? row.Direccion.substring(0, 20) + '...' : row.Direccion;
-                    if (row.Direccion && row.Direccion.trim() !== "" && row.Latitud && row.Longitud) {
-                        var direccionCompleta = row.Direccion;
-                        var latDestino = row.Latitud;
-                        var lonDestino = row.Longitud;
-                        var mapaUrl = 'https://www.google.com/maps/search/?api=1&query=' + latDestino + ',' + lonDestino + '&zoom=20&basemap=satellite';
-
-                        return '<div class="location-cell">' +
-                            '<i title="Ir a Google Maps" class="fa fa-map-marker fa-2x text-warning location-icon" onclick="obtenerUbicacionYMostrarRecorrido(\'' + direccionCompleta + '\', ' + latDestino + ', ' + lonDestino + ')"></i> ' +
-                            '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + direccionCompleta + '\', ' + latDestino + ', ' + lonDestino + ')" class="direccion-link">' + direccionCorta + '</a>' +
-                            '</div>';
-                    }
-
-                    // Si no hay coordenadas, solo muestra la dirección
-                    return '<a href="javascript:void(0);" onclick="mostrarDireccionCompleta(\'' + row.Direccion + '\', 0, 0)" class="direccion-link">' + direccionCorta + '</a>';
+                    return buildCeldaDireccionHtml({
+                        direccion: row.Direccion,
+                        lat: row.Latitud,
+                        lng: row.Longitud,
+                        telefono: row.TelefonoCliente,
+                        cliente: row.Cliente,
+                        cortaLen: 20
+                    });
                 }
             },
 
@@ -2137,8 +2121,14 @@ function descargarFacturaPDF(facturaPDF) {
     facturaPDF.save(`factura_${facturaCliente}.pdf`);
 }
 
-function mostrarDireccionCompleta(direccion) {
-    alert("Dirección completa: " + direccion);
+function mostrarDireccionCompleta(direccion, lat, lng, telefono, cliente) {
+    mostrarDireccionModal({
+        direccion: direccion,
+        lat: lat,
+        lng: lng,
+        telefono: telefono,
+        cliente: cliente
+    });
 }
 
 
@@ -2159,11 +2149,6 @@ function verificarCobranzas() {
         }
 
     });
-}
-
-
-function mostrarDireccionCompleta(direccion) {
-    alert("Dirección completa: " + direccion);
 }
 
 
@@ -2814,25 +2799,7 @@ async function buscarRecorridos() {
 }
 
 function obtenerUbicacionYMostrarRecorrido(direccion, latDestino, lonDestino) {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (posicion) {
-            // Si se obtiene la ubicación actual, mostrar el recorrido
-            var latOrigen = posicion.coords.latitude;
-            var lonOrigen = posicion.coords.longitude;
-            var mapaUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + latOrigen + ',' + lonOrigen + '&destination=' + latDestino + ',' + lonDestino + '&travelmode=driving&basemap=satellite';
-            window.open(mapaUrl, '_blank');
-        }, function (error) {
-            // Redirigir directamente al destino si la ubicación no está disponible
-            var mapaUrl = 'https://www.google.com/maps/search/?api=1&query=' + latDestino + ',' + lonDestino + '&zoom=20&basemap=satellite';
-            window.open(mapaUrl, '_blank');
-        });
-    } else {
-        alert('La geolocalización no es compatible con este navegador.');
-
-        // Redirigir directamente al destino si la geolocalización no está disponible
-        var mapaUrl = 'https://www.google.com/maps/search/?api=1&query=' + latDestino + ',' + lonDestino + '&zoom=20&basemap=satellite';
-        window.open(mapaUrl, '_blank');
-    }
+    abrirDireccionEnMaps(latDestino, lonDestino, direccion);
 }
 
 const editarCliente = async id => {

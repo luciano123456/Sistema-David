@@ -263,8 +263,22 @@ input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webk
 .direccion-link {
     text-decoration: none; /* Elimina el subrayado */
     color: white; /* Cambia el color del texto a tu preferencia */
+    cursor: pointer;
 }
 
+.direccion-link:hover {
+    color: #ffc107;
+    text-decoration: underline;
+}
+
+.location-icon-maps {
+    line-height: 1;
+    cursor: pointer;
+}
+
+.location-icon-maps:hover {
+    opacity: 0.85;
+}
 
 
 @media (max-width: 1000px) {
