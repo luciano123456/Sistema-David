@@ -1,12 +1,406 @@
 ﻿const importacionMasiva = "";
 const fileInput = document.getElementById("fileImportacionMasiva");
-var filaSeleccionada = null;
 let gridClientes;
 let userSession;
 var selectedCheckboxes = [];
 let lastCobranzaTime = 0;
 let activoCuentasBancarias = 1
 let gridCobranzas, gridCobranzasPendientes;
+
+const CB_COL_FILTER_MAIN = "cb_col_filtros_main_v3";
+const CB_COL_FILTER_PEND = "cb_col_filtros_pend_v3";
+const CB_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
+
+/** Índices configurables en el menú (0–12; sin Acciones ni EnRecorrido). */
+const CB_COLUMN_CONFIGURABLE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const CB_COL_IDX_ACCIONES = 13;
+const CB_COL_IDX_ENRECORRIDO = 14;
+
+function cbAplicarVisibilidadFijaColumnas(api) {
+    if (!api) return;
+
+    api.column(CB_COL_IDX_ENRECORRIDO).visible(false, false);
+
+    if (![1, 3, 4].includes(userSession.IdRol)) {
+        api.columns([0, CB_COL_IDX_ACCIONES]).visible(false, false);
+    } else {
+        api.columns([0, CB_COL_IDX_ACCIONES]).visible(true, false);
+    }
+}
+
+function cbInitCompleteTablaCobranzas(api, configColumns, storageKey, esPrincipal) {
+    cbAplicarVisibilidadFijaColumnas(api);
+
+    if (esPrincipal) {
+        configurarOpcionesColumnas(api);
+    }
+
+    try {
+        api.columns.adjust();
+    } catch (e) { /* ignore */ }
+
+    cbInitColumnFilters(api, configColumns, storageKey);
+
+    if (esPrincipal && typeof cbUpdateRowCount === "function") {
+        cbUpdateRowCount();
+    }
+}
+const CB_COL_SELECT_INDICES = [8, 9, 10, 11, 12];
+const CB_COL_FILTER_INDICES = CB_COLUMN_CONFIGURABLE;
+
+function cbBuildColumnConfig() {
+    return CB_COL_FILTER_INDICES.map(function (i) {
+        return {
+            index: i,
+            filterType: CB_COL_SELECT_INDICES.indexOf(i) >= 0 ? "select" : "text"
+        };
+    });
+}
+
+const columnConfigCobranzas = cbBuildColumnConfig();
+const columnConfigCobranzasPendientes = columnConfigCobranzas;
+
+const CB_COLUMN_LABELS = {
+    Orden: "Orden",
+    Cliente: "Cliente",
+    ValorCuota: "Cuota",
+    Entrega: "Entrega",
+    Restante: "Restante",
+    FechaCobro: "Cobro",
+    FechaLimite: "Vencimiento",
+    Vendedor: "V",
+    Cobrador: "C",
+    Turno: "T",
+    FranjaHoraria: "F.H",
+    Zona: "Zona"
+};
+
+function cbGetSelectText(selector, fallback) {
+    const $el = $(selector);
+    if (!$el.length) return fallback || "Todos";
+
+    const val = $el.val();
+    if (val === null || val === undefined || val === "") {
+        return fallback || "Todos";
+    }
+
+    const text = $el.find("option:selected").text();
+    return (text && String(text).trim()) ? String(text).trim() : (fallback || "Todos");
+}
+
+function cbSetSelectVal(selector, value) {
+    const $el = $(selector);
+    if (!$el.length) return;
+
+    if (value === null || value === undefined || value === "") {
+        $el.val(null);
+    } else {
+        $el.val(String(value));
+    }
+
+    if ($el.hasClass("select2-hidden-accessible")) {
+        $el.trigger("change.select2");
+    } else {
+        $el.trigger("change");
+    }
+}
+
+function cbInitSelect2Modal(selector, modalSelector, placeholder) {
+    if (!window.jQuery || !jQuery.fn.select2) return;
+
+    const $el = $(selector);
+    const $modal = $(modalSelector);
+    if (!$el.length || !$modal.length) return;
+
+    if ($el.hasClass("select2-hidden-accessible")) {
+        $el.select2("destroy");
+    }
+
+    $el.select2({
+        width: "100%",
+        allowClear: false,
+        placeholder: placeholder || "Seleccionar",
+        minimumResultsForSearch: 8,
+        dropdownParent: $modal
+    });
+}
+
+function cbHasSelect2() {
+    return !!(window.jQuery && jQuery.fn && jQuery.fn.select2);
+}
+
+function cbInitSelect2Filtro(selector, placeholder) {
+    if (!cbHasSelect2()) return;
+
+    const $el = $(selector);
+    if (!$el.length) return;
+
+    const $parent = $("#Filtros");
+    const dropdownParent = $parent.length ? $parent : $(document.body);
+
+    if ($el.hasClass("select2-hidden-accessible")) {
+        $el.select2("destroy");
+    }
+
+    $el.select2({
+        width: "100%",
+        allowClear: true,
+        placeholder: placeholder,
+        minimumResultsForSearch: 5,
+        dropdownParent: dropdownParent
+    });
+}
+
+function cbInitSelect2FiltrosGenerales() {
+    cbInitSelect2Filtro("#Vendedores", "Todos");
+    cbInitSelect2Filtro("#CobradorFiltro", "Todos");
+    cbInitSelect2Filtro("#Zonas", "Todas");
+    cbInitSelect2Filtro("#TurnoFiltro", "Todos");
+    cbInitSelect2Filtro("#TipoNegocio", "Todos");
+}
+
+function cbValoresDefectoFiltros() {
+    const defs = {
+        TurnoFiltro: "0"
+    };
+
+    if (userSession && (userSession.IdRol === 1 || userSession.IdRol === 4)) {
+        defs.Vendedores = "-1";
+        defs.CobradorFiltro = "-1";
+        defs.TipoNegocio = "-1";
+    }
+
+    if (userSession && (userSession.IdRol === 1 || userSession.IdRol === 3 || userSession.IdRol === 4)) {
+        defs.Zonas = "-1";
+    }
+
+    return defs;
+}
+
+function cbRestablecerFiltrosGenerales(resetFechas) {
+    const defs = cbValoresDefectoFiltros();
+
+    Object.keys(defs).forEach(function (id) {
+        cbSetSelectVal("#" + id, defs[id]);
+    });
+
+    if (resetFechas) {
+        const dni = document.getElementById("Dni");
+        if (dni) dni.value = "";
+
+        if (userSession && (userSession.IdRol === 1 || userSession.IdRol === 4)) {
+            const fd = document.getElementById("FechaCobroDesde");
+            const fh = document.getElementById("FechaCobroHasta");
+            if (fd) fd.value = moment().add(-210, "days").format("YYYY-MM-DD");
+            if (fh) fh.value = moment().format("YYYY-MM-DD");
+        }
+    }
+}
+
+function cbNombreColumnaCobranzas(col, index) {
+    if (index === 2) return "Direccion";
+
+    let dataKey = col && col.data;
+    if (typeof dataKey === "function") dataKey = null;
+    if (typeof dataKey === "string" && CB_COLUMN_LABELS[dataKey]) {
+        return CB_COLUMN_LABELS[dataKey];
+    }
+    if (typeof dataKey === "string") return dataKey;
+    return "Columna " + (index + 1);
+}
+
+function initCbDropdownColumnas() {
+    const btn = document.getElementById("dropdownColumnas");
+    const menu = document.getElementById("configColumnasMenu");
+    if (!btn || !menu || btn.dataset.cbDropdownInit) return;
+    btn.dataset.cbDropdownInit = "1";
+
+    btn.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isOpen = menu.classList.contains("show");
+        document.querySelectorAll(".dropdown-menu.show").forEach(function (el) {
+            el.classList.remove("show");
+        });
+        document.querySelectorAll(".cb-columns-toggle[aria-expanded='true']").forEach(function (el) {
+            el.setAttribute("aria-expanded", "false");
+        });
+
+        if (!isOpen) {
+            menu.classList.add("show");
+            btn.setAttribute("aria-expanded", "true");
+        }
+    });
+
+    menu.addEventListener("click", function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener("click", function (event) {
+        if (btn.contains(event.target) || menu.contains(event.target)) return;
+        menu.classList.remove("show");
+        btn.setAttribute("aria-expanded", "false");
+    });
+}
+
+function cbPrepareColumnFilterHeader(tableSelector) {
+    $(tableSelector + " thead tr.filters").remove();
+    inicializarEncabezadoColumnas(tableSelector);
+}
+
+function cbInitSelect2ColumnFilters(api, configColumns) {
+    if (!cbHasSelect2()) return;
+
+    const $container = getDataTableWrapper(api);
+
+    $container.find("thead tr.filters .rp-filter-select").each(function () {
+        const $sel = $(this);
+
+        if ($sel.hasClass("select2-hidden-accessible")) {
+            $sel.select2("destroy");
+        }
+
+        $sel.select2({
+            width: "100%",
+            allowClear: true,
+            placeholder: "Todos",
+            minimumResultsForSearch: 5,
+            dropdownAutoWidth: true,
+            dropdownParent: $(document.body),
+            dropdownCssClass: "cb-col-filter-s2-dropdown"
+        });
+
+        $sel.off("select2:open.cbColFilter").on("select2:open.cbColFilter", function () {
+            window.requestAnimationFrame(function () {
+                $(".select2-container--open .select2-dropdown").addClass("cb-col-filter-s2-dropdown");
+            });
+        });
+    });
+}
+
+function cbSyncSelect2AfterLimpiar(api, configColumns) {
+    if (!api) return;
+
+    const $container = getDataTableWrapper(api);
+    configColumns.forEach(function (config) {
+        if (config.filterType !== "select" && config.filterType !== "select_local") return;
+
+        const $sel = $container.find("thead tr.filters th").eq(config.index).find(".rp-filter-select");
+        if (!$sel.length) return;
+
+        $sel.val(null);
+        if ($sel.hasClass("select2-hidden-accessible")) {
+            $sel.trigger("change.select2");
+        } else {
+            $sel.val("");
+            $sel.trigger("change");
+        }
+    });
+}
+
+function cbInitColumnFilters(api, configColumns, storageKey) {
+    inicializarFiltrosColumnas(api, configColumns, storageKey, true, CB_COL_FILTER_UI);
+    cbInitSelect2ColumnFilters(api, configColumns);
+
+    const $container = getDataTableWrapper(api);
+    $container.find("thead tr.filters th").eq(CB_COL_IDX_ACCIONES).html("");
+    $container.find("thead tr.filters th").eq(CB_COL_IDX_ENRECORRIDO).html("");
+
+    if (typeof syncColumnFilterMarkers === "function") {
+        syncColumnFilterMarkers(api, configColumns);
+    }
+    try {
+        api.columns.adjust();
+    } catch (e) { /* ignore */ }
+}
+
+function cbQuitarSeleccionFila(tableSelector) {
+    $(tableSelector + " tbody tr.seleccionada").removeClass("seleccionada");
+    $(tableSelector + " tbody td.cb-col-seleccionada").removeClass("cb-col-seleccionada");
+}
+
+function cbOcultarKpiCliente() {
+    const divSaldo = document.getElementById("divSaldo");
+    const divLimite = document.getElementById("divLimite");
+    if (divSaldo) divSaldo.setAttribute("hidden", "");
+    if (divLimite) divLimite.setAttribute("hidden", "");
+}
+
+function cbMostrarKpiCliente(rowData) {
+    if (!rowData) return;
+
+    const saldoLabel = document.getElementById("totsaldo");
+    const limiteLabel = document.getElementById("totLimite");
+    const divSaldo = document.getElementById("divSaldo");
+    const divLimite = document.getElementById("divLimite");
+
+    if (saldoLabel) {
+        saldoLabel.textContent = "Saldo de " + rowData.Cliente + " : " + formatNumber(rowData.SaldoCliente);
+    }
+    if (limiteLabel) {
+        limiteLabel.textContent = "Limite de ventas : " + formatNumber(rowData.LimiteVentas);
+    }
+    if (divSaldo) divSaldo.removeAttribute("hidden");
+    if (divLimite) divLimite.removeAttribute("hidden");
+}
+
+function cbEsClickInteractivoFila($target) {
+    return $target.closest(
+        "button, a, .custom-checkbox, input, select, textarea, label, .btnacciones, .select2-container"
+    ).length > 0 || $target.closest(
+        "i.fa-arrow-up, i.fa-arrow-down, i.fa-trash, i.fa-pencil, i.fa-check-square-o, i.fa-square-o"
+    ).length > 0;
+}
+
+function cbToggleSeleccionFila(e, tableSelector, getGridFn) {
+    if (cbEsClickInteractivoFila($(e.target))) return;
+
+    const $row = $(this);
+
+    if ($row.hasClass("seleccionada")) {
+        cbQuitarSeleccionFila(tableSelector);
+        cbOcultarKpiCliente();
+        return;
+    }
+
+    cbQuitarSeleccionFila("#grdCobranzas");
+    cbQuitarSeleccionFila("#grdCobranzasPendientes");
+
+    $row.addClass("seleccionada");
+    $row.find("td:visible").first().addClass("cb-col-seleccionada");
+
+    const grid = typeof getGridFn === "function" ? getGridFn() : null;
+    if (grid) {
+        cbMostrarKpiCliente(grid.row($row).data());
+    }
+}
+
+function cbBindSeleccionFilas() {
+    $("#grdCobranzas")
+        .off("click.cbRowSel", "tbody tr")
+        .on("click.cbRowSel", "tbody tr", function (e) {
+            cbToggleSeleccionFila.call(this, e, "#grdCobranzas", function () { return gridCobranzas; });
+        });
+
+    $("#grdCobranzasPendientes")
+        .off("click.cbRowSel", "tbody tr")
+        .on("click.cbRowSel", "tbody tr", function (e) {
+            cbToggleSeleccionFila.call(this, e, "#grdCobranzasPendientes", function () { return gridCobranzasPendientes; });
+        });
+}
+
+function limpiarFiltrosColumnasCobranzas() {
+    if (gridCobranzas) {
+        limpiarFiltrosColumnas(gridCobranzas, columnConfigCobranzas, CB_COL_FILTER_MAIN);
+        cbSyncSelect2AfterLimpiar(gridCobranzas, columnConfigCobranzas);
+    }
+    if (gridCobranzasPendientes) {
+        limpiarFiltrosColumnas(gridCobranzasPendientes, columnConfigCobranzasPendientes, CB_COL_FILTER_PEND);
+        cbSyncSelect2AfterLimpiar(gridCobranzasPendientes, columnConfigCobranzasPendientes);
+    }
+    cbUpdateRowCount();
+}
 
 $(document).ready(async function () {
 
@@ -16,6 +410,11 @@ $(document).ready(async function () {
 
     userSession = JSON.parse(localStorage.getItem('usuario'));
 
+    try {
+        localStorage.removeItem("Cobranzas_Columnas");
+        localStorage.removeItem("Cobranzas_Columnas_v2");
+    } catch (e) { /* ignore */ }
+
 
     document.getElementById("btnAsignarCobrador").style.display = "none";
     document.getElementById("btnAsignarTurno").style.display = "none";
@@ -23,11 +422,17 @@ $(document).ready(async function () {
     $(".bloqueado").hide();
 
 
-    cargarUsuarios();
-    cargarZonas();
-    cargarTurnosFiltro();
-    cargarCobradoresFiltro();
-    cargarTiposDeNegocio();
+    await Promise.all([
+        cargarUsuarios(),
+        cargarZonas(),
+        cargarTurnosFiltro(),
+        cargarCobradoresFiltro(),
+        cargarTiposDeNegocio()
+    ]);
+
+    cbInitSelect2FiltrosGenerales();
+    cbRestablecerFiltrosGenerales(false);
+    initCbDropdownColumnas();
 
     var fechaCobroDesde;
     var fechaCobroHasta;
@@ -92,8 +497,15 @@ $(document).ready(async function () {
 
     await buscarRecorridos()
 
+    cbPrepareColumnFilterHeader("#grdCobranzas");
+    cbPrepareColumnFilterHeader("#grdCobranzasPendientes");
+
     await configurarDataTable(-1, -1, fechaCobroDesde, fechaCobroHasta, document.getElementById("Dni").value, -1, "Todos", -1, 0);
     await configurarDataTableCobrosPendientes();
+
+    $("#btnLimpiarFiltrosColumnasCobranzas").off("click.cbColFiltros").on("click.cbColFiltros", limpiarFiltrosColumnasCobranzas);
+
+    cbBindSeleccionFilas();
 
 
 }).on('init.dt', function () {
@@ -271,11 +683,11 @@ async function cargarUsuarios() {
 
 
 function aplicarFiltros() {
-    var idVendedor = document.getElementById("Vendedores").value;
-    var idCobrador = document.getElementById("CobradorFiltro").value;
-    var idZona = document.getElementById("Zonas").value;
-    var tipoNegocio = document.getElementById("TipoNegocio").value;
-    var Turno = document.querySelector('#TurnoFiltro option:checked').textContent;
+    var idVendedor = document.getElementById("Vendedores").value || -1;
+    var idCobrador = document.getElementById("CobradorFiltro").value || -1;
+    var idZona = document.getElementById("Zonas").value || -1;
+    var tipoNegocio = document.getElementById("TipoNegocio").value || -1;
+    var Turno = cbGetSelectText("#TurnoFiltro", "Todos");
 
     desmarcarCheckboxes();
 
@@ -283,6 +695,8 @@ function aplicarFiltros() {
     if (gridCobranzas) {
         gridCobranzas.destroy();
     }
+
+    cbPrepareColumnFilterHeader("#grdCobranzas");
 
 
 
@@ -1023,6 +1437,9 @@ const configurarDataTableCobrosPendientes = async () => {
         },
 
         scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        orderCellsTop: true,
 
         rowReorder: true,
         "colReorder": true, // Habilita la extensión ColReorder
@@ -1153,16 +1570,13 @@ const configurarDataTableCobrosPendientes = async () => {
             },
 
             {
-                "data": "EnRecorrido",
-                "visible": false // Esta columna será oculta
-            },
-
-            {
                 "data": "Turno",
 
                 "render": function (data, type, row) {
-                    var primeraLetra = data.charAt(0)
-                    return primeraLetra;
+                    if (type === "display") {
+                        return data ? data.charAt(0) : "";
+                    }
+                    return data;
                 },
             },
 
@@ -1220,6 +1634,11 @@ const configurarDataTableCobrosPendientes = async () => {
                 "orderable": true,
                 "searchable": true,
             },
+
+            {
+                "data": "EnRecorrido",
+                "visible": false
+            },
         ],
 
         "rowReorder": {
@@ -1232,8 +1651,8 @@ const configurarDataTableCobrosPendientes = async () => {
         "order": [
 
 
-            [11, 'asc'],
-            [12, 'desc'],
+            [10, 'asc'],
+            [11, 'desc'],
             [0, 'asc']
         ],
 
@@ -1294,7 +1713,7 @@ const configurarDataTableCobrosPendientes = async () => {
             },
             {
                 // Asumiendo que las franjas horarias están en estas columnas
-                "targets": [12],
+                "targets": [11],
                 "render": function (data) {
                     let startHour = data.split('-')[0];
                     let hour = parseInt(startHour.split(':')[0], 10);
@@ -1304,16 +1723,7 @@ const configurarDataTableCobrosPendientes = async () => {
         ],
 
         "initComplete": function (settings, json) {
-
-            configurarOpcionesColumnas();
-
-            if (![1, 3, 4].includes(userSession.IdRol)) {
-                gridCobranzasPendientes.columns([0, 14]).visible(false);
-            } else {
-                gridCobranzasPendientes.columns([0, 14]).visible(true);
-            }
-
-            gridCobranzasPendientes.columns(10).visible(false);
+            cbInitCompleteTablaCobranzas(this.api(), columnConfigCobranzasPendientes, CB_COL_FILTER_PEND, false);
         }
     });
 
@@ -1323,48 +1733,6 @@ const configurarDataTableCobrosPendientes = async () => {
         $(document).off('click', '.custom-checkbox'); // Desvincular el evento para evitar duplicaciones
         $(document).on('click', '.custom-checkbox', handleCheckboxClick);
     });
-
-
-
-
-
-    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
-
-    $('#grdCobranzasPendientes tbody').on('click', 'tr', function () {
-        // Remover la clase de la fila anteriormente seleccionada
-        if (filaSeleccionada) {
-            $(filaSeleccionada).removeClass('seleccionada');
-            $('td', filaSeleccionada).removeClass('seleccionada');
-
-        }
-
-        // Obtener la fila actual
-        filaSeleccionada = $(this);
-
-        // Agregar la clase a la fila actual
-        $(filaSeleccionada).addClass('seleccionada');
-        $('td', filaSeleccionada).addClass('seleccionada');
-
-        var rowData = gridCobranzasPendientes.row(filaSeleccionada).data();
-        var saldoCliente = rowData.SaldoCliente;
-        var limiteCliente = rowData.LimiteVentas;
-        var nombreClienteElement = $(this).find('a.cliente-link-no-style'); // Elemento del nombre del cliente
-
-        var nombreCliente = rowData.Cliente;
-        var saldoLabel = document.getElementById("totsaldo");
-
-        saldoLabel.textContent = `Saldo de ${nombreCliente} : ${formatNumber(saldoCliente)}`;
-        var divSaldo = document.getElementById("divSaldo");
-        divSaldo.removeAttribute("hidden");
-
-        var saldoLabel = document.getElementById("totLimite");
-
-        saldoLabel.textContent = `Limite de ventas : ${formatNumber(limiteCliente)}`;
-        var divLimite = document.getElementById("divLimite");
-        divLimite.removeAttribute("hidden");
-
-    });
-
 
     $(document).on('click', '.custom-checkbox', function (event) {
         handleCheckboxClick();
@@ -1401,6 +1769,9 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
         },
 
         scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        orderCellsTop: true,
 
         rowReorder: true,
         "colReorder": true, // Habilita la extensión ColReorder
@@ -1531,16 +1902,13 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
             },
 
             {
-                "data": "EnRecorrido",
-                "visible": false // Esta columna será oculta
-            },
-
-            {
                 "data": "Turno",
 
                 "render": function (data, type, row) {
-                    var primeraLetra = data.charAt(0)
-                    return primeraLetra;
+                    if (type === "display") {
+                        return data ? data.charAt(0) : "";
+                    }
+                    return data;
                 },
             },
 
@@ -1598,6 +1966,11 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
                 "orderable": true,
                 "searchable": true,
             },
+
+            {
+                "data": "EnRecorrido",
+                "visible": false
+            },
         ],
 
         "rowReorder": {
@@ -1610,8 +1983,8 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
         "order": [
             
            
-            [11, 'asc'],
-            [12, 'desc'],
+            [10, 'asc'],
+            [11, 'desc'],
             [0, 'asc']
         ],
 
@@ -1672,7 +2045,7 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
             },
             {
                 // Asumiendo que las franjas horarias están en estas columnas
-                "targets": [12],
+                "targets": [11],
                 "render": function (data) {
                     let startHour = data.split('-')[0];
                     let hour = parseInt(startHour.split(':')[0], 10);
@@ -1682,66 +2055,20 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
         ],
 
         "initComplete": function (settings, json) {
-
-            configurarOpcionesColumnas();
-
-            if (![1, 3, 4].includes(userSession.IdRol)) {
-                gridCobranzas.columns([0, 14]).visible(false);
-            } else {
-                gridCobranzas.columns([0, 14]).visible(true);
-            }
-
-            gridCobranzas.columns(10).visible(false);
+            cbInitCompleteTablaCobranzas(this.api(), columnConfigCobranzas, CB_COL_FILTER_MAIN, true);
         }
     });
 
 
 
     $('#grdCobranzas').on('draw.dt', function () {
-        $(document).off('click', '.custom-checkbox'); // Desvincular el evento para evitar duplicaciones
+        $(document).off('click', '.custom-checkbox');
         $(document).on('click', '.custom-checkbox', handleCheckboxClick);
+        cbUpdateRowCount();
     });
    
 
 
-
-
-    let filaSeleccionada = null; // Variable para almacenar la fila seleccionada
-
-    $('#grdCobranzas tbody').on('click', 'tr', function () {
-        // Remover la clase de la fila anteriormente seleccionada
-        if (filaSeleccionada) {
-            $(filaSeleccionada).removeClass('seleccionada');
-            $('td', filaSeleccionada).removeClass('seleccionada');
-
-        }
-
-        // Obtener la fila actual
-        filaSeleccionada = $(this);
-
-        // Agregar la clase a la fila actual
-        $(filaSeleccionada).addClass('seleccionada');
-        $('td', filaSeleccionada).addClass('seleccionada');
-
-        var rowData = gridCobranzas.row(filaSeleccionada).data();
-        var saldoCliente = rowData.SaldoCliente;
-        var nombreClienteElement = $(this).find('a.cliente-link-no-style'); // Elemento del nombre del cliente
-
-        var nombreCliente = rowData.Cliente;
-        var limiteCliente = rowData.LimiteVentas;
-        var saldoLabel = document.getElementById("totsaldo");
-
-        saldoLabel.textContent = `Saldo de ${nombreCliente} : ${formatNumber(saldoCliente)}`;
-        var divSaldo = document.getElementById("divSaldo");
-        divSaldo.removeAttribute("hidden");
-
-        var saldoLabel = document.getElementById("totLimite");
-
-        saldoLabel.textContent = `Limite de ventas : ${formatNumber(limiteCliente)}`;
-        var divLimite = document.getElementById("divLimite");
-        divLimite.removeAttribute("hidden");
-
-    });
 
 
     $(document).on('click', '.custom-checkbox', function (event) {
@@ -2409,13 +2736,15 @@ const modalWhatssap = async id => {
     $("#idClienteWhatssap").val(id);
 }
 
-function abrirmodalCobrador() {
-    cargarCobradores();
+async function abrirmodalCobrador() {
+    await cargarCobradores();
+    cbInitSelect2Modal("#Cobrador", "#modalCobradores", "Seleccione cobrador");
     $("#modalCobradores").modal("show");
 }
 
-function abrirmodalTurno() {
-    cargarTurnos();
+async function abrirmodalTurno() {
+    await cargarTurnos();
+    cbInitSelect2Modal("#Turno", "#modalTurnos", "Seleccione turno");
     $("#modalTurnos").modal("show");
 }
 
@@ -2727,8 +3056,8 @@ function armarRecorrido() {
     var idVendedor = document.getElementById("Vendedores").value;
     var idCobrador = document.getElementById("CobradorFiltro").value;
     var idZona = document.getElementById("Zonas").value;
-    var Turno = document.querySelector('#TurnoFiltro option:checked').textContent;
-    var TipoNegocio = document.getElementById("TipoNegocio").value;
+    var Turno = cbGetSelectText("#TurnoFiltro", "Todos");
+    var TipoNegocio = document.getElementById("TipoNegocio").value || -1;
 
     localStorage.setItem("R_IdVendedor", idVendedor);
     localStorage.setItem("R_IdCobrador", idCobrador);
@@ -3124,46 +3453,62 @@ async function cargarTiposDeNegocio() {
 }
 
 
-function configurarOpcionesColumnas() {
-    const grid = $('#grdCobranzas').DataTable(); // Accede al objeto DataTable utilizando el id de la tabla
-    const columnas = grid.settings().init().columns; // Obtiene la configuración de columnas
-    const container = $('#configColumnasMenu'); // El contenedor del dropdown específico para configurar columnas
+function configurarOpcionesColumnas(api) {
+    api = api || gridCobranzas;
+    if (!api) return;
 
-    const storageKey = `Cobranzas_Columnas`; // Clave única para esta pantalla
+    const columnas = api.settings()[0].aoColumns;
+    const container = $('#configColumnasMenu');
+    const storageKey = "Cobranzas_Columnas_v3";
 
-    const savedConfig = JSON.parse(localStorage.getItem(storageKey)) || {}; // Recupera configuración guardada o inicializa vacía
+    let savedConfig = {};
+    try {
+        savedConfig = JSON.parse(localStorage.getItem(storageKey)) || {};
+    } catch (e) {
+        savedConfig = {};
+    }
 
-    container.empty(); // Limpia el contenedor
-
-    columnas.forEach((col, index) => {
-        if (col.data && col.data !== "Id") { // Solo agregar columnas que no sean "Id"
-            // Recupera el valor guardado en localStorage, si existe. Si no, inicializa en 'false' para no estar marcado.
-            const isChecked = savedConfig && savedConfig[`col_${index}`] !== undefined ? savedConfig[`col_${index}`] : true;
-
-            // Asegúrate de que la columna esté visible si el valor es 'true'
-            grid.column(index).visible(isChecked);
-
-            const columnName = index != 2 ? col.data : "Direccion";
-
-            // Ahora agregamos el checkbox, asegurándonos de que se marque solo si 'isChecked' es 'true'
-            container.append(`
-                <li>
-                    <label class="dropdown-item">
-                        <input type="checkbox" class="toggle-column" data-column="${index}" ${isChecked ? 'checked' : ''}>
-                        ${columnName}
-                    </label>
-                </li>
-            `);
+    const cleanConfig = {};
+    CB_COLUMN_CONFIGURABLE.forEach(function (index) {
+        if (savedConfig["col_" + index] !== undefined) {
+            cleanConfig["col_" + index] = savedConfig["col_" + index];
         }
     });
+    savedConfig = cleanConfig;
 
-    // Asocia el evento para ocultar/mostrar columnas
-    $('.toggle-column').on('change', function () {
-        const columnIdx = parseInt($(this).data('column'), 10);
-        const isChecked = $(this).is(':checked');
-        savedConfig[`col_${columnIdx}`] = isChecked;
+    container.empty();
+
+    CB_COLUMN_CONFIGURABLE.forEach(function (index) {
+        const col = columnas[index];
+        if (!col) return;
+
+        const isChecked = savedConfig["col_" + index] !== undefined ? savedConfig["col_" + index] : true;
+        api.column(index).visible(isChecked, false);
+
+        const columnName = cbNombreColumnaCobranzas({ data: col.mData }, index);
+
+        container.append(`
+            <li>
+                <label class="dropdown-item">
+                    <input type="checkbox" class="toggle-column" data-column="${index}" ${isChecked ? "checked" : ""}>
+                    ${columnName}
+                </label>
+            </li>
+        `);
+    });
+
+    cbAplicarVisibilidadFijaColumnas(api);
+
+    container.off("change.cbColToggle", ".toggle-column").on("change.cbColToggle", ".toggle-column", function () {
+        const columnIdx = parseInt($(this).data("column"), 10);
+        if (CB_COLUMN_CONFIGURABLE.indexOf(columnIdx) < 0) return;
+
+        const isChecked = $(this).is(":checked");
+        savedConfig["col_" + columnIdx] = isChecked;
         localStorage.setItem(storageKey, JSON.stringify(savedConfig));
-        grid.column(columnIdx).visible(isChecked);
+        api.column(columnIdx).visible(isChecked);
+        cbAplicarVisibilidadFijaColumnas(api);
+        api.columns.adjust();
     });
 }
 
@@ -4298,4 +4643,31 @@ function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
+}
+
+function cbUpdateRowCount() {
+    const badge = document.getElementById("cbCountBadge");
+    if (!badge || !gridCobranzas) return;
+    try {
+        badge.textContent = String(gridCobranzas.rows({ filter: "applied" }).count());
+    } catch (e) {
+        badge.textContent = "0";
+    }
+}
+
+function toggleFiltrosCobranzas() {
+    const panel = document.getElementById("Filtros");
+    if (!panel) return;
+    const hidden = panel.hasAttribute("hidden");
+    if (hidden) {
+        panel.removeAttribute("hidden");
+        cbInitSelect2FiltrosGenerales();
+    } else {
+        panel.setAttribute("hidden", "hidden");
+    }
+}
+
+function limpiarFiltrosCobranzas() {
+    cbRestablecerFiltrosGenerales(true);
+    aplicarFiltros();
 }
