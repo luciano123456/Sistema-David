@@ -1,43 +1,54 @@
-﻿
-@{
-    ViewBag.Title = "Index";
+﻿@{
+    ViewBag.Title = "Productos";
 }
 
-
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
-<link href="~/Estilos/Productos.css" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
+<link href="~/Estilos/Productos.css?v=3.5" rel="stylesheet" />
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
 
+<div class="ve-dark prod-root">
 
-<body>
-
-    @if (@ViewData["ErrorPermisos"] == null)
+    @if (ViewData["ErrorPermisos"] == null)
     {
-
-        <div class="divStock" id="divStock" hidden>
-            <label class="" id="">Dinero en stock: </label>
-            <label class="" id="precioventa">0</label>
-        </div>
-
-        <div class="col-lg-12">
-            <div class="card cardTablePersonalizado">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Productos</span>
-                    <div class="dropdown ms-auto">
-                        <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa fa-cog me-2"></i> Config. Columnas
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu">
-                        </ul>
+        <div class="container page-99 py-3">
+            <section class="cc-header mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cc-badge"><i class="fa fa-cubes"></i></div>
+                        <div>
+                            <h2 class="m-0 fw-800">Productos</h2>
+                            <div class="text-muted-cc">Catálogo, características, financiación y envío por WhatsApp</div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 prod-toolbar-actions">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light dropdown-toggle" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-cog me-1"></i> Config. columnas
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-right cc-dropdown-menu" id="configColumnasMenu"></ul>
+                        </div>
+                        <a id="btnStockGeneral" class="btn btn-outline-info" onclick="abrirstockGeneral()"><i class="fa fa-archive me-1"></i> Stock General</a>
+                        <a id="btnImportarDatos" class="btn btn-outline-success" onclick="abrirmodalimportacionmasiva()" hidden><i class="fa fa-upload me-1"></i> Importar</a>
+                        <a id="btnNuevo" class="btn btn-primary" onclick="abrirmodal()" hidden><i class="fa fa-plus me-1"></i> Nuevo</a>
                     </div>
                 </div>
-                <div class="card-body">
-                    <table class="display nowrap" id="grdProductos" style="width:100%">
+            </section>
+
+            <div class="prod-kpi mb-3" id="divStock" hidden>
+                <span>Dinero en stock: </span><span id="precioventa">0</span>
+            </div>
+
+            <section class="card-glass p-3 mb-3 prod-table-panel">
+                <div class="prod-table-wrap dt-dark-wrap">
+                    <table class="display nowrap w-100 dt-dark" id="grdProductos">
                         <thead>
                             <tr>
                                 <th class="text-center">Imagen</th>
                                 <th class="text-center">Codigo</th>
                                 <th class="text-center">Nombre</th>
+                                <th class="text-center">Marca</th>
                                 <th class="text-center">Categoria</th>
                                 <th class="text-center">Stock</th>
                                 <th class="text-center">Precio Compra</th>
@@ -49,224 +60,230 @@
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Aquí va el contenido de tu datatable -->
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
+            </section>
 
-
-                <div id="botonesAcciones" class="d-flex justify-content-end mt-2 mb-4">
-                    <a id="btnStockGeneral" class="btn btn-info btnnuevo me-2" onclick="abrirstockGeneral()">Stock General</a>
-                    <a id="btnImportarDatos" class="btn btn-success me-2" onclick="abrirmodalimportacionmasiva()" hidden>Importar Datos</a>
-                    <a id="btnNuevo" class="btn btn-primary btnnuevo" onclick="abrirmodal()" hidden>Nuevo</a>
+            <section class="card-glass p-3 mb-4 prod-fin-panel" id="panelFinanciacion" hidden>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="fa fa-calculator text-info"></i>
+                    <h5 class="m-0 text-white" id="lblFinProducto">Financiación del producto</h5>
                 </div>
-
-
-            </div>
-
+                <div id="prodCalcPanelMount"></div>
+                <div class="row g-3 mt-1" id="financiacionContenido"></div>
+            </section>
         </div>
-
-
     }
     else
     {
-        <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
+        <div class="container page-99 py-5 text-center">
+            <h2 class="text-danger">Error: No tienes permisos para acceder a esta pantalla</h2>
+        </div>
     }
+</div>
 
-</body>
-
-
-
-<!-- Button trigger modal -->
-<!-- Modal -->
-<div class="modal fade" id="productoModal" tabindex="-1" aria-labelledby="productoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-producto">
+<!-- Modal producto -->
+<div class="modal fade prod-modal-shell" id="productoModal" tabindex="-1" aria-labelledby="productoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header colorEncabezado">
-                <h5 class="modal-title fw-bold text-white" id="productoModalLabel">Registrar nuevo producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <form class="row g-3">
-                        <input type="text" id="IdProducto" hidden />
-
-                        <div class="col-6">
-                            <label for="Codigo" class="form-label text-nowrap small  text-black">Código</label>
-                            <input type="text" id="Codigo" class="form-control form-control-sm text-dark text-nowrap" />
-                        </div>
-
-                        <div class="col-6">
-                            <label for="Nombre" class="form-label text-nowrap small text-black">Nombre</label>
-                            <input type="text" id="Nombre" class="form-control form-control-sm text-dark text-nowrap" />
-                        </div>
-
-                        <div class="col-6">
-                            <label for="Categorias" class="form-label text-nowrap small  text-black">Categoría</label>
-                            <select id="Categorias" class="form-select form-select-sm text-dark text-nowrap">
-                                <option value="" selected>Seleccione Categoría</option>
-                            </select>
-                        </div>
-
-                        <div class="col-6">
-                            <label for="Stock" class="form-label text-nowrap small  text-black">Stock</label>
-                            <input type="text" id="Stock" class="form-control form-control-sm text-dark text-nowrap" />
-                        </div>
-
-                        <div class="col-6">
-                            <label for="PrecioCompra" class="form-label text-nowrap small  text-black">P. Compra</label>
-                            <input type="text" id="PrecioCompra" class="form-control form-control-sm text-dark text-nowrap miles" />
-                        </div>
-
-                        <div class="col-6">
-                            <label for="PrecioVenta" class="form-label text-nowrap small  text-black">P. Venta</label>
-                            <input type="text" id="PrecioVenta" class="form-control form-control-sm text-dark text-nowrap miles" />
-                        </div>
-
-                        <div class="col-6">
-                            <label for="PorcVenta" class="form-label text-nowrap small  text-black">Porcentaje de Venta</label>
-                            <input type="text" id="PorcVenta" class="form-control form-control-sm text-dark text-nowrap" />
-                        </div>
-
-
-                        <div class="col-6">
-                            <label for="DiasVencimiento" class="form-label text-nowrap small  text-black">Dias de vencimiento</label>
-                            <input type="text" id="DiasVencimiento" class="form-control form-control-sm text-dark text-nowrap" />
-                        </div>
-
-                        <div class="col-12">
-                            <div class="mb-1">
-                                <label for="Imagen" class="form-label fw-semibold  text-black">Imagen</label>
-                            </div>
-                            <div class="border rounded p-3 d-flex align-items-center justify-content-start gap-3 flex-wrap">
-                                <img id="imgProducto" src="" class="rounded" style="width: 50px; height: 50px; cursor: pointer;" onclick="openModal(this.src)" />
-                                <input id="Imagen" class="form-control form-control-sm" type="file" name="adjunto" accept=".pdf,.jpg,.png" multiple />
-                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="borrarImagen()">
-                                    <i class="fa fa-trash"></i>
-                                </button>
-                            </div>
-                            <p id="imgProd" hidden></p>
-                        </div>
-
-                        <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-                    </form>
+            <div class="modal-header border-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="prod-modal-icon"><i class="fa fa-cube"></i></div>
+                    <h5 class="modal-title fw-bold text-white mb-0" id="productoModalLabel">Registrar nuevo producto</h5>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <div class="modal-body">
+                <input type="hidden" id="IdProducto" />
+                <input type="hidden" id="imgProd" />
+
+                <ul class="nav nav-tabs prod-tabs mb-3" role="tablist">
+                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabProdGeneral">General</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProdCaract">Características</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProdDesc">Descripción</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProdFin">Financiación</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProdFotos">Fotos</a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tabProdGeneral">
+                        <div class="row g-3">
+                            <div class="col-md-4"><label class="prod-field-label" for="Codigo">Código</label><input type="text" id="Codigo" class="form-control form-control-sm prod-field-input" /></div>
+                            <div class="col-md-8"><label class="prod-field-label" for="Nombre">Nombre</label><input type="text" id="Nombre" class="form-control form-control-sm prod-field-input" /></div>
+                            <div class="col-md-4"><label class="prod-field-label" for="Categorias">Categoría</label><select id="Categorias" class="form-select form-select-sm prod-field-input"><option value="">Seleccione</option></select></div>
+                            <div class="col-md-4"><label class="prod-field-label" for="Stock">Stock</label><input type="text" id="Stock" class="form-control form-control-sm prod-field-input miles" /></div>
+                            <div class="col-md-4"><label class="prod-field-label" for="DiasVencimiento">Días vencimiento</label><input type="text" id="DiasVencimiento" class="form-control form-control-sm prod-field-input miles" /></div>
+                            <div class="col-md-4"><label class="prod-field-label" for="PrecioCompra">P. Compra</label><input type="text" id="PrecioCompra" class="form-control form-control-sm prod-field-input miles" /></div>
+                            <div class="col-md-4"><label class="prod-field-label" for="PrecioVenta">P. Venta</label><input type="text" id="PrecioVenta" class="form-control form-control-sm prod-field-input miles" /></div>
+                            <div class="col-md-4"><label class="prod-field-label" for="PorcVenta">% Venta</label><input type="text" id="PorcVenta" class="form-control form-control-sm prod-field-input miles" /></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabProdCaract">
+                        <p class="prod-hint mb-3">Campos opcionales. En características, una línea por ítem (se muestran con ✔ al enviar).</p>
+                        <div class="row g-3">
+                            <div class="col-md-3"><label class="prod-field-label" for="Marca">Marca</label><input type="text" id="Marca" class="form-control form-control-sm prod-field-input" /></div>
+                            <div class="col-md-3"><label class="prod-field-label" for="Modelo">Modelo</label><input type="text" id="Modelo" class="form-control form-control-sm prod-field-input" /></div>
+                            <div class="col-md-3"><label class="prod-field-label" for="Color">Color</label><input type="text" id="Color" class="form-control form-control-sm prod-field-input" /></div>
+                            <div class="col-md-3"><label class="prod-field-label" for="Accesorios">Accesorios</label><input type="text" id="Accesorios" class="form-control form-control-sm prod-field-input" /></div>
+                            <div class="col-12">
+                                <label class="prod-field-label" for="Caracteristicas">Lista de características</label>
+                                <textarea id="Caracteristicas" class="form-control prod-field-input" rows="6" placeholder=""></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabProdDesc">
+                        <label class="prod-field-label" for="Descripcion">Descripción comercial</label>
+                        <textarea id="Descripcion" class="form-control prod-field-input mb-3" rows="6" placeholder="Descubrí la experiencia visual que ofrece..."></textarea>
+                        <label class="prod-field-label">Vista previa del mensaje</label>
+                        <div class="prod-preview-box" id="previewDescripcion"></div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabProdFin">
+                        <div id="prodCalcModalMount"></div>
+                        <p class="prod-hint mb-3 mt-3">Armá el plan con la calculadora. Podés ajustar cada tipo de cuota por separado. «Aplicar todo» completa los campos de abajo.</p>
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="prod-field-label" for="FinConEntrega">Con entrega</label><textarea id="FinConEntrega" class="form-control prod-field-input" rows="3"></textarea></div>
+                            <div class="col-md-6"><label class="prod-field-label" for="FinSinEntrega">Sin entrega</label><textarea id="FinSinEntrega" class="form-control prod-field-input" rows="3"></textarea></div>
+                            <div class="col-md-4"><label class="prod-field-label" for="FinSemanal">Cuotas semanales</label><textarea id="FinSemanal" class="form-control prod-field-input" rows="3"></textarea></div>
+                            <div class="col-md-4"><label class="prod-field-label" for="FinQuincenal">Cuotas quincenales</label><textarea id="FinQuincenal" class="form-control prod-field-input" rows="3"></textarea></div>
+                            <div class="col-md-4"><label class="prod-field-label" for="FinMensual">Cuotas mensuales</label><textarea id="FinMensual" class="form-control prod-field-input" rows="3"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tabProdFotos">
+                        <div class="mb-3">
+                            <label class="prod-field-label">Imagen principal</label>
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <img id="imgProducto" src="" class="rounded" style="width: 64px; height: 64px; cursor: pointer; display: none;" onclick="openModal(this.src)" />
+                                <input id="Imagen" class="form-control form-control-sm prod-field-input" type="file" accept=".jpg,.jpeg,.png" />
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="borrarImagen()"><i class="fa fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="prod-field-label">Fotos adicionales (WhatsApp / catálogo)</label>
+                            <input id="ImagenesExtraInput" class="form-control form-control-sm prod-field-input mb-2" type="file" accept=".jpg,.jpeg,.png" multiple />
+                            <div class="prod-gallery" id="galeriaExtra"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <p id="datosProducto" class="mb-0 mt-3 text-center text-danger datos-error d-none"></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
                 <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="AccionBtn()">Registrar</button>
             </div>
         </div>
     </div>
 </div>
 
-
-<!-- Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true" style="z-index: 99999999;">
-    <div class="modal-dialog" role="document" style="z-index: 99999999;">
-        <div class="modal-content" style="z-index: 99999999;">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imageModalLabel">Imagen Ampliada</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" class="img-fluid" alt="Imagen Ampliada" />
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<div class="modal fade centered-modal-importar" id="modalImportacionMasiva" tabindex="-1" aria-labelledby="modalImportacionMasivaLabel" aria-hidden="true">
-    <div class="modal-dialog estilowpp">
-        <div class="estilowpp modal-content ">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalImportacionMasivaLabel">Importacion Masiva</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-
-                <div class="divArchivo">
-                    <h5>Archivo</h5>
-                    <input id="fileImportacionMasiva" class="input-importacionmasiva" type="file" placeholder="" name="adjunto" accept=".xlsx" />
-
-                    <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-
-                </div>
-
-            </div>
-            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="enviarImportacionMasiva()">Importar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="nuevoStockModal" tabindex="-1" aria-labelledby="nuevoStockModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- WhatsApp -->
+<div class="modal fade prod-modal-shell" id="modalWspProducto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="nuevoStockModalLabel">Añadir producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="prod-modal-icon prod-modal-icon--wsp"><i class="fa fa-whatsapp"></i></div>
+                    <h5 class="modal-title fw-bold text-white mb-0">Enviar producto por WhatsApp</h5>
+                </div>
             </div>
             <div class="modal-body">
+                <input type="hidden" id="wspIdProducto" />
+                <p class="text-white mb-3" id="wspNombreProducto"></p>
 
-                <input type="Text" id="IdProductoStock" class="input-nuevomodif" hidden />
-
-
-                <input type="text" id="ProductoStock" class="input-nuevomodif" disabled /> <!-- Desactivado -->
-                <!-- Cantidad (no editable) -->
-                <label class="lblNombreInput">Cantidad</label>
-                <input type="number" value="1" id="CantidadStock" class="input-nuevomodif" disabled /> <!-- Desactivado -->
-                <!-- Nueva sección con cantidad nueva -->
-                <label id="lblAgregarQuitar" class="lblNombreInput mt-3">Agregar / Quitar</label>
-                <div class="d-flex justify-content-center">
-                    <!-- Botón Quitar a la izquierda -->
-                    <button type="button" id="btnQuitar" class="btn btn-danger" onclick="restarStockCantidad('Quitar')">Quitar</button>
-
-                    <!-- Campo de Cantidad Nueva -->
-                    <input type="number" id="CantidadNuevaStock" value="1" class="input-nuevomodifCantidadNueva text-center" />
-
-                    <!-- Botón Agregar a la derecha -->
-                    <button type="button" id="btnAgregar" class="btn btn-success" onclick="agregarStockCantidad('Agregar')">Agregar</button>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4"><label class="prod-field-label" for="wspTelefono">Celular (sin 0 ni 15)</label><input type="text" id="wspTelefono" class="form-control prod-field-input" placeholder="Ej: 3512345678" /></div>
+                    <div class="col-md-4"><label class="prod-field-label" for="wspBuscarNombre">Buscar por nombre</label><input type="text" id="wspBuscarNombre" class="form-control prod-field-input" /></div>
+                    <div class="col-md-4"><label class="prod-field-label" for="wspBuscarDni">Buscar por DNI</label><div class="input-group"><input type="text" id="wspBuscarDni" class="form-control prod-field-input" /><button type="button" class="btn btn-outline-light" onclick="buscarClientesWsp()"><i class="fa fa-search"></i></button></div></div>
                 </div>
 
+                <div class="prod-wsp-client-list list-group mb-3" id="wspListaClientes"></div>
 
+                <label class="prod-field-label" for="wspMensaje">Mensaje (editable)</label>
+                <textarea id="wspMensaje" class="form-control prod-field-input mb-3" rows="10"></textarea>
 
+                <label class="prod-field-label">Fotos incluidas en el producto</label>
+                <div class="prod-gallery mb-2" id="wspGaleriaPreview"></div>
+                
             </div>
-            <p id="datos" class="mb-3 text-center text-danger datos-error d-none"></p>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <div class="modal-footer border-0 flex-column align-items-stretch">
+                <div id="wspEstadoEnvio" class="wsp-estado-envio d-none">
+                    <i class="fa fa-spinner fa-spin me-2"></i>
+                    <span>Enviando producto e imágenes...</span>
+                    <small>Esto puede tardar unos segundos.</small>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 w-100">
+                    <button id="btnCerrarWspProducto"
+                            type="button"
+                            class="btn btn-outline-light"
+                            data-bs-dismiss="modal">
+                        Cerrar
+                    </button>
+
+                    <button id="btnEnviarWspProducto"
+                            type="button"
+                            class="btn btn-wsp"
+                            onclick="enviarWhatsappProducto()">
+                        <i class="fa fa-whatsapp me-1"></i>
+                        <span>Enviar por WhatsApp</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<div class="modal fade prod-modal-shell" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0"><h5 class="modal-title text-white">Imagen ampliada</h5></div>
+            <div class="modal-body text-center"><img id="modalImage" src="" class="img-fluid rounded" alt="" /></div>
+            <div class="modal-footer border-0"><button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button></div>
+        </div>
+    </div>
+</div>
 
+<div class="modal fade prod-modal-shell centered-modal-importar" id="modalImportacionMasiva" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0"><h5 class="modal-title text-white">Importación masiva</h5></div>
+            <div class="modal-body"><input id="fileImportacionMasiva" type="file" accept=".xlsx" class="form-control prod-field-input" /></div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="enviarImportacionMasiva()">Importar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-@*<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
-<script src="~/JavaScript/Utils/Utils.js"></script>
-<script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
-<script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
+<div class="modal fade prod-modal-shell" id="nuevoStockModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0"><h5 class="modal-title text-white" id="nuevoStockModalLabel">Editar stock</h5></div>
+            <div class="modal-body">
+                <input type="hidden" id="IdProductoStock" />
+                <input type="text" id="ProductoStock" class="form-control prod-field-input mb-2" disabled />
+                <label class="prod-field-label">Cantidad actual</label>
+                <input type="text" id="CantidadStock" class="form-control prod-field-input mb-3 miles" disabled />
+                <label class="prod-field-label" id="lblAgregarQuitar">Agregar / Quitar</label>
+                <div class="d-flex justify-content-center align-items-center gap-2">
+                    <button type="button" id="btnQuitar" class="btn btn-danger" onclick="restarStockCantidad()">Quitar</button>
+                    <input type="text" id="CantidadNuevaStock" value="1" class="form-control prod-field-input text-center miles" style="max-width: 100px;" />
+                    <button type="button" id="btnAgregar" class="btn btn-success" onclick="agregarStockCantidad()">Agregar</button>
+                </div>
+            </div>
+            <div class="modal-footer border-0"><button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button></div>
+        </div>
+    </div>
+</div>
 
-<link href="~/Content/font-awesome.css" rel="stylesheet" />
-@section scripts{
-    <script src="~/JavaScript/Productos.js?v=1.7"></script>
-}*@
-
-
-
-<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
-<script src="~/JavaScript/Utils/Utils.js"></script>
-<script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
-
-<script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
-
-<script src="~/Scripts/xlsx.full.min.js.js"></script>
-
-@section scripts{
-    <script src="~/JavaScript/Productos.js?v=2.0"></script>
-    }
+@section scripts {
+    <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
+    <script src="~/Scripts/xlsx.full.min.js.js"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.1"></script>
+    <script src="~/JavaScript/Productos.js?v=3.8"></script>
+}

@@ -7,50 +7,124 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using Newtonsoft.Json;
 
 namespace Sistema_David.Models
 {
     public class ProductosModel
     {
+        private static void AplicarCamposExtendidos(Productos prod, VMProducto model)
+        {
+            if (prod == null || model == null) return;
+
+            prod.Marca = model.Marca;
+            prod.Modelo = model.Modelo;
+            prod.Color = model.Color;
+            prod.Accesorios = model.Accesorios;
+            prod.Caracteristicas = model.Caracteristicas;
+            prod.Descripcion = model.Descripcion;
+            prod.FinConEntrega = model.FinConEntrega;
+            prod.FinSinEntrega = model.FinSinEntrega;
+            prod.FinSemanal = model.FinSemanal;
+            prod.FinQuincenal = model.FinQuincenal;
+            prod.FinMensual = model.FinMensual;
+            prod.ImagenesAdicionales = SerializarImagenesExtra(model);
+        }
+
+        private static string SerializarImagenesExtra(VMProducto model)
+        {
+            if (model == null) return null;
+
+            var lista = model.ImagenesExtra;
+            if (lista == null || lista.Count == 0)
+            {
+                if (!string.IsNullOrWhiteSpace(model.ImagenesAdicionales))
+                    return model.ImagenesAdicionales;
+                return null;
+            }
+
+            return JsonConvert.SerializeObject(lista.Where(x => !string.IsNullOrWhiteSpace(x)).ToList());
+        }
+
+        private static List<string> DeserializarImagenesExtra(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return new List<string>();
+
+            try
+            {
+                var list = JsonConvert.DeserializeObject<List<string>>(json);
+                return list ?? new List<string>();
+            }
+            catch
+            {
+                return new List<string>();
+            }
+        }
+
+        private static VMProducto MapearProductoCompleto(Productos result)
+        {
+            if (result == null) return null;
+
+            return new VMProducto
+            {
+                Id = result.Id,
+                Codigo = result.Codigo,
+                Nombre = result.Nombre,
+                idCategoria = result.idCategoria,
+                Stock = result.Stock,
+                PrecioCompra = result.PrecioCompra,
+                PrecioVenta = result.PrecioVenta,
+                PorcVenta = result.PorcVenta,
+                DiasVencimiento = result.DiasVencimiento,
+                Activo = result.Activo ?? 0,
+                Imagen = result.Imagen,
+                Marca = result.Marca,
+                Modelo = result.Modelo,
+                Color = result.Color,
+                Accesorios = result.Accesorios,
+                Caracteristicas = result.Caracteristicas,
+                Descripcion = result.Descripcion,
+                FinConEntrega = result.FinConEntrega,
+                FinSinEntrega = result.FinSinEntrega,
+                FinSemanal = result.FinSemanal,
+                FinQuincenal = result.FinQuincenal,
+                FinMensual = result.FinMensual,
+                ImagenesAdicionales = result.ImagenesAdicionales,
+                ImagenesExtra = DeserializarImagenesExtra(result.ImagenesAdicionales)
+            };
+        }
         public static List<VMProducto> ListaProductos()
         {
             using (var db = new Sistema_DavidEntities())
             {
-                var result = (from p in db.Productos
-                              join c in db.Categorias on p.idCategoria equals c.Id
-                              orderby p.Activo descending
-                              select new
-                              {
-                                  p.Id,
-                                  p.Codigo,
-                                  p.Nombre,
-                                  p.idCategoria,
-                                  Categoria = c.Nombre,
-                                  p.Stock,
-                                  p.PrecioCompra,
-                                  p.PrecioVenta,
-                                  Total = p.PrecioCompra * p.Stock,
-                                  p.DiasVencimiento,
-                                  p.Activo,
-                              })
-                              .AsEnumerable() // Materializa antes de mapear a Producto
-                              .Select(x => new VMProducto
-                              {
-                                  Id = x.Id,
-                                  Codigo = x.Codigo,
-                                  Nombre = x.Nombre,
-                                  idCategoria = x.idCategoria,
-                                  Categoria = x.Categoria,
-                                  Stock = x.Stock,
-                                  PrecioCompra = x.PrecioCompra,
-                                  PrecioVenta = x.PrecioVenta,
-                                  Total = x.PrecioVenta * x.Stock,
-                                  DiasVencimiento = x.DiasVencimiento,
-                                  Activo = x.Activo ?? 0, // Maneja nulos si Activo es nullable
-                              })
-                              .ToList();
+                return (from p in db.Productos
+                        join c in db.Categorias on p.idCategoria equals c.Id
+                        orderby p.Activo descending, p.Nombre
+                        select new VMProducto
+                        {
+                            Id = p.Id,
+                            Codigo = p.Codigo,
+                            Nombre = p.Nombre,
+                            idCategoria = p.idCategoria,
+                            Categoria = c.Nombre,
+                            Stock = p.Stock,
+                            PrecioCompra = p.PrecioCompra,
+                            PrecioVenta = p.PrecioVenta,
+                            PorcVenta = p.PorcVenta,
+                            Total = p.PrecioVenta * p.Stock,
+                            DiasVencimiento = p.DiasVencimiento,
+                            Activo = p.Activo ?? 0,
+                            Marca = p.Marca,
+                            TieneImagen = p.Imagen != null && p.Imagen != ""
+                        }).ToList();
+            }
+        }
 
-                return result;
+        public static decimal TotalDineroEnStock()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                return db.Productos.Sum(p => (p.PrecioVenta ?? 0) * (p.Stock ?? 0));
             }
         }
 
@@ -280,6 +354,7 @@ namespace Sistema_David.Models
                         prod.PorcVenta = model.PorcVenta;
                         prod.DiasVencimiento = model.DiasVencimiento;
                         prod.Activo = 1;
+                        AplicarCamposExtendidos(prod, model);
                         db.Productos.Add(prod);
                         db.SaveChanges();
 
@@ -315,7 +390,7 @@ namespace Sistema_David.Models
                         producto.PrecioVenta = model.PrecioVenta;
                         producto.PorcVenta = model.PorcVenta;
                         producto.DiasVencimiento = model.DiasVencimiento;
-
+                        AplicarCamposExtendidos(producto, model);
 
                         db.Entry(producto).State = System.Data.Entity.EntityState.Modified;
                         db.SaveChanges();
@@ -366,21 +441,8 @@ namespace Sistema_David.Models
                 {
 
                     var result = db.Productos.Find(id);
-
-                    var producto = new VMProducto();
-
-                    producto.Id = result.Id;
-                    producto.Codigo = result.Codigo;
-                    producto.Nombre = result.Nombre;
-                    producto.idCategoria = result.idCategoria;
-                    producto.Stock = result.Stock;
-                    producto.PrecioCompra = result.PrecioCompra;
-                    producto.PrecioVenta = result.PrecioVenta;
-                    producto.PorcVenta = result.PorcVenta;
-                    producto.DiasVencimiento = result.DiasVencimiento;
-                    producto.Activo = (int)result.Activo; 
-                    producto.Imagen = result.Imagen;
-                    return producto;
+                    if (result == null) return null;
+                    return MapearProductoCompleto(result);
                 }
 
             }
@@ -390,6 +452,45 @@ namespace Sistema_David.Models
             }
         }
 
+
+        public static List<VMCliente> BuscarClientesParaWhatsapp(string nombre, string dni, int idVendedor)
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var query = db.Clientes.AsQueryable();
+
+                if (idVendedor > 0)
+                    query = query.Where(c => c.IdVendedor == idVendedor);
+
+                if (!string.IsNullOrWhiteSpace(nombre))
+                {
+                    var n = nombre.Trim().ToUpper();
+                    query = query.Where(c =>
+                        (c.Nombre != null && c.Nombre.ToUpper().Contains(n)) ||
+                        (c.Apellido != null && c.Apellido.ToUpper().Contains(n)));
+                }
+
+                if (!string.IsNullOrWhiteSpace(dni))
+                {
+                    var d = dni.Trim();
+                    query = query.Where(c => c.Dni != null && c.Dni.Contains(d));
+                }
+
+                return query
+                    .OrderBy(c => c.Apellido)
+                    .ThenBy(c => c.Nombre)
+                    .Take(25)
+                    .Select(c => new VMCliente
+                    {
+                        Id = c.Id,
+                        Nombre = c.Nombre,
+                        Apellido = c.Apellido,
+                        Dni = c.Dni,
+                        Telefono = c.Telefono
+                    })
+                    .ToList();
+            }
+        }
 
         public static bool Eliminar(int id)
         {

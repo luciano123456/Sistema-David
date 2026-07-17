@@ -128,6 +128,18 @@
           <Property Name="PorcVenta" Type="int" />
           <Property Name="Activo" Type="int" />
           <Property Name="DiasVencimiento" Type="int" />
+          <Property Name="Marca" Type="varchar" MaxLength="255" />
+          <Property Name="Modelo" Type="varchar" MaxLength="255" />
+          <Property Name="Color" Type="varchar" MaxLength="255" />
+          <Property Name="Accesorios" Type="varchar" MaxLength="500" />
+          <Property Name="Caracteristicas" Type="nvarchar(max)" />
+          <Property Name="Descripcion" Type="nvarchar(max)" />
+          <Property Name="FinConEntrega" Type="nvarchar(max)" />
+          <Property Name="FinSinEntrega" Type="nvarchar(max)" />
+          <Property Name="FinSemanal" Type="nvarchar(max)" />
+          <Property Name="FinQuincenal" Type="nvarchar(max)" />
+          <Property Name="FinMensual" Type="nvarchar(max)" />
+          <Property Name="ImagenesAdicionales" Type="nvarchar(max)" />
         </EntityType>
         <EntityType Name="ProductosVenta">
           <Key>
@@ -1617,6 +1629,18 @@
           <Property Name="PorcVenta" Type="Int32" />
           <Property Name="Activo" Type="Int32" />
           <Property Name="DiasVencimiento" Type="Int32" />
+          <Property Name="Marca" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="Modelo" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="Color" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="Accesorios" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Name="Caracteristicas" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Descripcion" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="FinConEntrega" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="FinSinEntrega" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="FinSemanal" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="FinQuincenal" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="FinMensual" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="ImagenesAdicionales" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Categorias" Relationship="Sistema_DavidModel.FK_Productos_Categorias" FromRole="Productos" ToRole="Categorias" />
           <NavigationProperty Name="ProductosVenta" Relationship="Sistema_DavidModel.FK_ProductosVenta_Productos" FromRole="Productos" ToRole="ProductosVenta" />
           <NavigationProperty Name="StockUsuarios" Relationship="Sistema_DavidModel.FK_Stock_Productos" FromRole="Productos" ToRole="StockUsuarios" />
@@ -2738,6 +2762,18 @@
             <EntityTypeMapping TypeName="Sistema_DavidModel.Productos">
               <MappingFragment StoreEntitySet="Productos">
                 <ScalarProperty Name="DiasVencimiento" ColumnName="DiasVencimiento" />
+                <ScalarProperty Name="Marca" ColumnName="Marca" />
+                <ScalarProperty Name="Modelo" ColumnName="Modelo" />
+                <ScalarProperty Name="Color" ColumnName="Color" />
+                <ScalarProperty Name="Accesorios" ColumnName="Accesorios" />
+                <ScalarProperty Name="Caracteristicas" ColumnName="Caracteristicas" />
+                <ScalarProperty Name="Descripcion" ColumnName="Descripcion" />
+                <ScalarProperty Name="FinConEntrega" ColumnName="FinConEntrega" />
+                <ScalarProperty Name="FinSinEntrega" ColumnName="FinSinEntrega" />
+                <ScalarProperty Name="FinSemanal" ColumnName="FinSemanal" />
+                <ScalarProperty Name="FinQuincenal" ColumnName="FinQuincenal" />
+                <ScalarProperty Name="FinMensual" ColumnName="FinMensual" />
+                <ScalarProperty Name="ImagenesAdicionales" ColumnName="ImagenesAdicionales" />
                 <ScalarProperty Name="Activo" ColumnName="Activo" />
                 <ScalarProperty Name="PorcVenta" ColumnName="PorcVenta" />
                 <ScalarProperty Name="PrecioVenta" ColumnName="PrecioVenta" />
