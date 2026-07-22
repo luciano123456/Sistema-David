@@ -3,6 +3,9 @@ let gridVentas = null;
 let gridProductos;
 let prodImagenesExtra = [];
 let prodProductoSeleccionado = null;
+let prodWspProductoCache = null;
+let prodWspClienteNombre = null;
+let prodWspClientesMap = {};
 let prodImgObserver = null;
 const PROD_IMG_DEFAULT = "/Imagenes/productodefault.png";
 const PROD_IMG_ENDPOINT = "/Productos/ObtenerImagen/";
@@ -453,15 +456,46 @@ function prodInitCalculadoraFin(prefix, producto) {
     aplicarSeparadorMilesAlEscribir("#" + prodCalcFinId(prefix, "precio") + ", #" + prodCalcFinId(prefix, "entrega"));
 }
 
-function prodArmarMensajeWhatsapp(p) {
+function prodObtenerSaludoWhatsapp() {
+    var h = new Date().getHours();
+    if (h >= 5 && h < 12) return "Buenos días";
+    if (h >= 12 && h < 20) return "Buenas tardes";
+    return "Buenas noches";
+}
+
+function prodPrimerNombre(nombre) {
+    if (!nombre) return "";
+    return String(nombre).trim().split(/\s+/)[0];
+}
+
+function prodLimpiarFinanciacionCliente(texto) {
+    if (!texto) return "";
+    return String(texto)
+        .split(/\r?\n/)
+        .filter(function (line) {
+            var t = line.trim();
+            return !t || !/^Total\s*:/i.test(t);
+        })
+        .join("\n")
+        .trim();
+}
+
+function prodArmarMensajeWhatsapp(p, nombreCliente) {
     if (!p) return "";
 
     var lineas = [];
     var detalles = [];
     var financiacion = [];
+    var nombre = prodPrimerNombre(nombreCliente);
 
-    lineas.push("¡Hola! 👋");
-    lineas.push("Te compartimos la información de:");
+    if (nombre) {
+        lineas.push(prodObtenerSaludoWhatsapp() + " " + nombre + ",");
+        lineas.push("a continuación te enviamos la información del producto solicitado.");
+    } else {
+        lineas.push("¡Hola! 👋");
+        lineas.push("A continuación te enviamos la información del producto solicitado.");
+    }
+
     lineas.push("");
     lineas.push("✨ *" + (p.Nombre || "Producto") + "* ✨");
 
@@ -494,24 +528,26 @@ function prodArmarMensajeWhatsapp(p) {
         lineas.push(p.Descripcion.trim());
     }
 
+    var tienePlanMensualEnBloques = !!(p.FinConEntrega || p.FinSinEntrega);
+
     if (p.FinConEntrega) {
-        financiacion.push("💳 *Con entrega*\n" + p.FinConEntrega.trim());
+        financiacion.push(prodLimpiarFinanciacionCliente(p.FinConEntrega.trim()));
     }
 
     if (p.FinSinEntrega) {
-        financiacion.push("💳 *Sin entrega*\n" + p.FinSinEntrega.trim());
-    }
-
-    if (p.FinMensual) {
-        financiacion.push("📅 *Cuotas mensuales*\n" + p.FinMensual.trim());
-    }
-
-    if (p.FinQuincenal) {
-        financiacion.push("🗓️ *Cuotas quincenales*\n" + p.FinQuincenal.trim());
+        financiacion.push(prodLimpiarFinanciacionCliente(p.FinSinEntrega.trim()));
     }
 
     if (p.FinSemanal) {
-        financiacion.push("🔄 *Cuotas semanales*\n" + p.FinSemanal.trim());
+        financiacion.push(prodLimpiarFinanciacionCliente(p.FinSemanal.trim()));
+    }
+
+    if (p.FinQuincenal) {
+        financiacion.push(prodLimpiarFinanciacionCliente(p.FinQuincenal.trim()));
+    }
+
+    if (p.FinMensual && !tienePlanMensualEnBloques) {
+        financiacion.push(prodLimpiarFinanciacionCliente(p.FinMensual.trim()));
     }
 
     if (financiacion.length) {
@@ -522,11 +558,107 @@ function prodArmarMensajeWhatsapp(p) {
     }
 
     lineas.push("");
-    lineas.push("📸 Te enviamos las fotos del producto a continuación.");
-    lineas.push("");
     lineas.push("📲 Consultanos por stock, colores disponibles o cualquier duda.");
 
     return lineas.join("\n");
+}
+
+function prodRegenerarMensajeWsp() {
+    if (!prodWspProductoCache) return;
+    $("#wspMensaje").val(prodArmarMensajeWhatsapp(prodWspProductoCache, prodWspClienteNombre));
+}
+
+function prodSeleccionarClienteWsp(c) {
+    if (!c) return;
+    prodWspClienteNombre = c.Nombre || "";
+    if (c.Telefono) {
+        $("#wspTelefono").val(String(c.Telefono).replace(/\D/g, "").slice(-10));
+    }
+    prodRegenerarMensajeWsp();
+}
+
+function prodFormatearEtiquetaClienteWsp(c) {
+    return (c.Apellido || "") + ", " + (c.Nombre || "") + " — DNI " + (c.Dni || "");
+}
+
+function prodInitWspClienteSelect2() {
+    if (!window.jQuery || !jQuery.fn || !jQuery.fn.select2) return;
+
+    var $el = $("#wspCliente");
+    if (!$el.length) return;
+
+    if ($el.hasClass("select2-hidden-accessible")) {
+        $el.off("change.prodWsp");
+        $el.select2("destroy");
+    }
+
+    $el.select2({
+        width: "100%",
+        placeholder: "Buscar cliente por nombre, apellido o DNI...",
+        allowClear: true,
+        dropdownParent: $("#modalWspProducto"),
+        matcher: function (params, data) {
+            var term = (params.term || "").toLowerCase();
+            if (!term) return data;
+            var text = (data.text || "").toLowerCase();
+            return text.indexOf(term) >= 0 ? data : null;
+        }
+    });
+
+    $el.on("change.prodWsp", function () {
+        var id = $(this).val();
+        if (!id) {
+            prodWspClienteNombre = null;
+            $("#wspTelefono").val("");
+            prodRegenerarMensajeWsp();
+            return;
+        }
+        var c = prodWspClientesMap[id];
+        if (c) prodSeleccionarClienteWsp(c);
+    });
+}
+
+async function prodCargarClientesWspSelect() {
+    prodWspClientesMap = {};
+
+    var url = (userSession && userSession.IdRol == 2)
+        ? "/Clientes/GetClientesVendedor?idVendedor=" + userSession.Id
+        : "/Clientes/GetClientesElectrodomesticos";
+
+    var result = await MakeAjax({
+        type: "GET",
+        url: url,
+        async: true,
+        dataType: "json"
+    });
+
+    var $ddl = $("#wspCliente");
+    if ($ddl.hasClass("select2-hidden-accessible")) {
+        $ddl.off("change.prodWsp");
+        $ddl.select2("destroy");
+    }
+
+    $ddl.empty();
+    $ddl.append('<option value=""></option>');
+
+    (result && result.data ? result.data : []).forEach(function (c) {
+        if (!c || !c.Id) return;
+        prodWspClientesMap[c.Id] = c;
+        $ddl.append(
+            $("<option></option>")
+                .val(c.Id)
+                .text(prodFormatearEtiquetaClienteWsp(c))
+        );
+    });
+
+    prodInitWspClienteSelect2();
+    $ddl.val(null).trigger("change");
+}
+
+function prodResetWspModal() {
+    prodWspClienteNombre = null;
+    $("#wspTelefono").val("");
+    $("#wspCliente").val(null).trigger("change");
 }
 function prodActualizarPreviewDescripcion() {
     var p = {
@@ -708,13 +840,16 @@ $(document).ready(function () {
     });
 
     aplicarSeparadorMilesAlEscribir(".miles");
+
+    $(document).on("click", "#btnWspClienteClear", function () {
+        prodResetWspModal();
+    });
 });
 
 function configurarFiltrosPorColumnaProductos() {
     if (!gridProductos) return;
 
     const columnConfigProductos = [
-        { index: 1, filterType: "text" },
         { index: 2, filterType: "text" },
         { index: 3, filterType: "text" },
         { index: 4, filterType: "select" },
@@ -1514,13 +1649,14 @@ async function abrirWhatsappProducto(id) {
             return;
         }
         var p = result.Producto;
+        prodWspProductoCache = p;
+        prodWspClienteNombre = null;
         $("#wspIdProducto").val(p.Id);
         $("#wspNombreProducto").text(p.Nombre || "");
-        $("#wspTelefono").val("");
-        $("#wspBuscarNombre").val("");
-        $("#wspBuscarDni").val("");
-        $("#wspListaClientes").empty();
-        $("#wspMensaje").val(prodArmarMensajeWhatsapp(p));
+        prodRegenerarMensajeWsp();
+
+        await prodCargarClientesWspSelect();
+        prodResetWspModal();
 
         var $gal = $("#wspGaleriaPreview");
         $gal.empty();
@@ -1545,56 +1681,23 @@ async function abrirWhatsappProducto(id) {
     }
 }
 
-async function buscarClientesWsp() {
-    var nombre = $("#wspBuscarNombre").val() || "";
-    var dni = $("#wspBuscarDni").val() || "";
-    if (!nombre.trim() && !dni.trim()) {
-        errorModal("Ingresá nombre o DNI para buscar.");
-        return;
-    }
-    try {
-        var result = await MakeAjax({
-            type: "GET",
-            url: "/Productos/BuscarClientesWsp?nombre=" + encodeURIComponent(nombre) + "&dni=" + encodeURIComponent(dni),
-            async: true,
-            dataType: "json"
-        });
-        var $list = $("#wspListaClientes");
-        $list.empty();
-        if (!result || !result.data || !result.data.length) {
-            $list.append('<div class="list-group-item text-muted">Sin resultados</div>');
-            return;
-        }
-        result.data.forEach(function (c) {
-            var label = (c.Apellido || "") + ", " + (c.Nombre || "") + " — DNI " + (c.Dni || "") + " — Tel " + (c.Telefono || "");
-            $list.append(
-                '<button type="button" class="list-group-item list-group-item-action" data-tel="' + (c.Telefono || "") + '">' +
-                prodEscaparHtml(label) + '</button>'
-            );
-        });
-        $list.find(".list-group-item-action").on("click", function () {
-            $list.find(".list-group-item").removeClass("active");
-            $(this).addClass("active");
-            var tel = $(this).data("tel");
-            if (tel) $("#wspTelefono").val(String(tel).replace(/\D/g, "").slice(-10));
-        });
-    } catch (e) {
-        errorModal("Error al buscar clientes.");
-    }
+function prodNormalizarTelefonoWspLink(tel) {
+    var numeros = String(tel || "").replace(/\D/g, "");
+    if (!numeros) return "";
+
+    numeros = numeros.replace(/^0+/, "");
+    if (numeros.startsWith("54")) return numeros;
+    if (numeros.length > 10) numeros = numeros.slice(-10);
+
+    return "549" + numeros;
 }
 
-async function enviarWhatsappProducto() {
+function enviarWhatsappProducto() {
     var tel = ($("#wspTelefono").val() || "").trim();
-    var idProducto = parseInt($("#wspIdProducto").val(), 10) || 0;
     var mensaje = ($("#wspMensaje").val() || "").trim();
 
     if (!tel) {
         errorModal("Ingresá un celular válido o seleccioná un cliente.");
-        return;
-    }
-
-    if (!idProducto) {
-        errorModal("No se encontró el producto a enviar.");
         return;
     }
 
@@ -1603,77 +1706,13 @@ async function enviarWhatsappProducto() {
         return;
     }
 
-    var $btnEnviar = $("#btnEnviarWspProducto");
-    var $btnCerrar = $("#btnCerrarWspProducto");
-    var $estado = $("#wspEstadoEnvio");
-
-    var htmlOriginalBoton = $btnEnviar.html();
-
-    try {
-        // Estado visual de envío
-        $btnEnviar
-            .prop("disabled", true)
-            .html('<i class="fa fa-spinner fa-spin me-1"></i><span>Enviando...</span>');
-
-        $btnCerrar.prop("disabled", true);
-
-        $("#modalWspProducto input, #modalWspProducto textarea, #modalWspProducto button")
-            .not("#btnEnviarWspProducto, #btnCerrarWspProducto")
-            .prop("disabled", true);
-
-        $estado.removeClass("d-none");
-
-        var result = await MakeAjax({
-            type: "POST",
-            url: "/Productos/EnviarWhatsappProducto",
-            async: true,
-            data: JSON.stringify({
-                IdProducto: idProducto,
-                Telefono: tel,
-                Mensaje: mensaje
-            }),
-            contentType: "application/json",
-            dataType: "json"
-        });
-
-        if (result && result.Status) {
-            $estado
-                .removeClass("d-none")
-                .html(
-                    '<i class="fa fa-check-circle me-2"></i>' +
-                    '<span>Producto enviado correctamente.</span>' +
-                    '<small>Se envió el mensaje y las imágenes del producto.</small>'
-                );
-
-            $btnEnviar
-                .html('<i class="fa fa-check me-1"></i><span>Enviado</span>');
-
-            setTimeout(function () {
-                $("#modalWspProducto").modal("hide");
-                exitoModal(result.Mensaje || "Producto enviado correctamente.");
-            }, 850);
-
-            return;
-        }
-
-        errorModal(
-            (result && result.Mensaje) ||
-            "No se pudo enviar el producto por WhatsApp."
-        );
-    } catch (e) {
-        errorModal("Error al enviar el producto por WhatsApp.");
-    } finally {
-        setTimeout(function () {
-            $btnEnviar
-                .prop("disabled", false)
-                .html(htmlOriginalBoton);
-
-            $btnCerrar.prop("disabled", false);
-
-            $("#modalWspProducto input, #modalWspProducto textarea, #modalWspProducto button")
-                .prop("disabled", false);
-
-            $estado.addClass("d-none");
-        }, 900);
+    var telefono = prodNormalizarTelefonoWspLink(tel);
+    if (!telefono) {
+        errorModal("Ingresá un celular válido.");
+        return;
     }
+
+    var urlwsp = "https://api.whatsapp.com/send?phone=+" + telefono + "&text=" + encodeURIComponent(mensaje);
+    window.open(urlwsp, "_blank");
+    $("#modalWspProducto").modal("hide");
 }

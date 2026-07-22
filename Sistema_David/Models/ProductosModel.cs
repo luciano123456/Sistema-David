@@ -465,9 +465,15 @@ namespace Sistema_David.Models
                 if (!string.IsNullOrWhiteSpace(nombre))
                 {
                     var n = nombre.Trim().ToUpper();
-                    query = query.Where(c =>
-                        (c.Nombre != null && c.Nombre.ToUpper().Contains(n)) ||
-                        (c.Apellido != null && c.Apellido.ToUpper().Contains(n)));
+                    var tokens = n.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    foreach (var token in tokens)
+                    {
+                        var t = token;
+                        query = query.Where(c =>
+                            (c.Nombre != null && c.Nombre.ToUpper().Contains(t)) ||
+                            (c.Apellido != null && c.Apellido.ToUpper().Contains(t)));
+                    }
                 }
 
                 if (!string.IsNullOrWhiteSpace(dni))

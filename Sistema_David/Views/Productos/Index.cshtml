@@ -5,8 +5,9 @@
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
-<link href="~/Estilos/Productos.css?v=3.5" rel="stylesheet" />
+<link href="~/Estilos/Productos.css?v=3.6" rel="stylesheet" />
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
 <div class="ve-dark prod-root">
 
@@ -183,52 +184,66 @@
 <div class="modal fade prod-modal-shell" id="modalWspProducto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header border-0">
+            <div class="modal-header border-0 pb-2">
                 <div class="d-flex align-items-center gap-3">
                     <div class="prod-modal-icon prod-modal-icon--wsp"><i class="fa fa-whatsapp"></i></div>
-                    <h5 class="modal-title fw-bold text-white mb-0">Enviar producto por WhatsApp</h5>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">Enviar producto por WhatsApp</h5>
+                        <div class="prod-hint mt-1">Se abre WhatsApp con el mensaje listo. Las fotos las adjuntás manualmente en el chat.</div>
+                    </div>
                 </div>
             </div>
-            <div class="modal-body">
+            <div class="modal-body prod-wsp-body">
                 <input type="hidden" id="wspIdProducto" />
-                <p class="text-white mb-3" id="wspNombreProducto"></p>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4"><label class="prod-field-label" for="wspTelefono">Celular (sin 0 ni 15)</label><input type="text" id="wspTelefono" class="form-control prod-field-input" placeholder="Ej: 3512345678" /></div>
-                    <div class="col-md-4"><label class="prod-field-label" for="wspBuscarNombre">Buscar por nombre</label><input type="text" id="wspBuscarNombre" class="form-control prod-field-input" /></div>
-                    <div class="col-md-4"><label class="prod-field-label" for="wspBuscarDni">Buscar por DNI</label><div class="input-group"><input type="text" id="wspBuscarDni" class="form-control prod-field-input" /><button type="button" class="btn btn-outline-light" onclick="buscarClientesWsp()"><i class="fa fa-search"></i></button></div></div>
+                <div class="prod-wsp-product mb-3">
+                    <div class="prod-wsp-product-label">Producto a enviar</div>
+                    <div class="prod-wsp-product-name" id="wspNombreProducto"></div>
                 </div>
 
-                <div class="prod-wsp-client-list list-group mb-3" id="wspListaClientes"></div>
+                <div class="prod-wsp-client-bar mb-3">
+                    <div class="prod-wsp-client-label">
+                        <i class="fa fa-user"></i>
+                        <span>Cliente</span>
+                    </div>
+                    <div class="prod-wsp-client-control">
+                        <select id="wspCliente" class="form-select prod-field-input"></select>
+                        <button type="button" id="btnWspClienteClear" class="prod-wsp-btn-clear" title="Limpiar cliente">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
 
-                <label class="prod-field-label" for="wspMensaje">Mensaje (editable)</label>
-                <textarea id="wspMensaje" class="form-control prod-field-input mb-3" rows="10"></textarea>
+                <div class="prod-wsp-field mb-3">
+                    <label class="prod-field-label" for="wspTelefono">Celular (sin 0 ni 15)</label>
+                    <input type="text" id="wspTelefono" class="form-control prod-field-input" placeholder="Ej: 3512345678" />
+                </div>
 
-                <label class="prod-field-label">Fotos incluidas en el producto</label>
-                <div class="prod-gallery mb-2" id="wspGaleriaPreview"></div>
-                
+                <div class="prod-wsp-field mb-3">
+                    <label class="prod-field-label" for="wspMensaje">Mensaje (editable)</label>
+                    <textarea id="wspMensaje" class="form-control prod-field-input" rows="10"></textarea>
+                </div>
+
+                <div class="prod-wsp-field">
+                    <label class="prod-field-label">Fotos de referencia (adjuntar manualmente en WhatsApp)</label>
+                    <div class="prod-gallery prod-wsp-gallery" id="wspGaleriaPreview"></div>
+                </div>
             </div>
-            <div class="modal-footer border-0 flex-column align-items-stretch">
-                <div id="wspEstadoEnvio" class="wsp-estado-envio d-none">
-                    <i class="fa fa-spinner fa-spin me-2"></i>
-                    <span>Enviando producto e imágenes...</span>
-                    <small>Esto puede tardar unos segundos.</small>
-                </div>
-
-                <div class="d-flex justify-content-end gap-2 w-100">
+            <div class="modal-footer prod-wsp-footer border-0">
+                <div class="prod-wsp-footer-actions">
                     <button id="btnCerrarWspProducto"
                             type="button"
-                            class="btn btn-outline-light"
+                            class="btn btn-outline-light prod-wsp-btn-footer"
                             data-bs-dismiss="modal">
                         Cerrar
                     </button>
 
                     <button id="btnEnviarWspProducto"
                             type="button"
-                            class="btn btn-wsp"
+                            class="btn btn-wsp prod-wsp-btn-footer"
                             onclick="enviarWhatsappProducto()">
                         <i class="fa fa-whatsapp me-1"></i>
-                        <span>Enviar por WhatsApp</span>
+                        <span>Abrir WhatsApp</span>
                     </button>
                 </div>
             </div>
@@ -285,5 +300,6 @@
     <script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
     <script src="~/Scripts/xlsx.full.min.js.js"></script>
     <script src="~/JavaScript/Utils/Utils.js?v=3.1"></script>
-    <script src="~/JavaScript/Productos.js?v=3.8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="~/JavaScript/Productos.js?v=4.1"></script>
 }

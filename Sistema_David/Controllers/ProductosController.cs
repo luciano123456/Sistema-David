@@ -321,6 +321,10 @@ namespace Sistema_David.Controllers
             }
         }
 
+        /*
+         * WhatsApp Business API (Meta) — deshabilitado temporalmente.
+         * El envío desde Productos usa api.whatsapp.com en el navegador (ver Productos.js).
+         *
         [HttpPost]
         public async Task<ActionResult> EnviarWhatsappProducto(EnviarWhatsappProductoRequest request)
         {
@@ -370,19 +374,10 @@ namespace Sistema_David.Controllers
                     if (!textoResultado.Status)
                         return Json(textoResultado);
 
+                    await Task.Delay(800);
+
                     // 2. Junta foto principal + fotos extra.
-                    var imagenes = new List<string>();
-
-                    if (!string.IsNullOrWhiteSpace(producto.Imagen))
-                        imagenes.Add(producto.Imagen);
-
-                    if (producto.ImagenesExtra != null && producto.ImagenesExtra.Any())
-                    {
-                        imagenes.AddRange(
-                            producto.ImagenesExtra
-                                .Where(x => !string.IsNullOrWhiteSpace(x))
-                        );
-                    }
+                    var imagenes = ObtenerImagenesProductoWhatsapp(producto);
 
                     if (!imagenes.Any())
                     {
@@ -396,8 +391,10 @@ namespace Sistema_David.Controllers
                     int enviadas = 0;
                     var errores = new List<string>();
 
-                    foreach (var imagenBase64 in imagenes)
+                    for (int i = 0; i < imagenes.Count; i++)
                     {
+                        var imagenBase64 = imagenes[i];
+
                         var subida = await SubirImagenWhatsapp(
                             client,
                             version,
@@ -422,6 +419,9 @@ namespace Sistema_David.Controllers
                             enviadas++;
                         else
                             errores.Add(envioImagen.Mensaje);
+
+                        if (i < imagenes.Count - 1)
+                            await Task.Delay(600);
                     }
 
                     if (enviadas == 0)
@@ -448,6 +448,48 @@ namespace Sistema_David.Controllers
                     Status = false,
                     Mensaje = "Error al enviar el producto: " + ex.Message
                 });
+            }
+        }
+
+        private static List<string> ObtenerImagenesProductoWhatsapp(VMProducto producto)
+        {
+            var imagenes = new List<string>();
+
+            if (producto == null)
+                return imagenes;
+
+            if (EsImagenBase64Valida(producto.Imagen))
+                imagenes.Add(producto.Imagen);
+
+            if (producto.ImagenesExtra != null)
+            {
+                imagenes.AddRange(
+                    producto.ImagenesExtra
+                        .Where(EsImagenBase64Valida)
+                );
+            }
+
+            return imagenes
+                .Select(LimpiarBase64Imagen)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .ToList();
+        }
+
+        private static bool EsImagenBase64Valida(string base64)
+        {
+            try
+            {
+                var limpia = LimpiarBase64Imagen(base64);
+                if (string.IsNullOrWhiteSpace(limpia))
+                    return false;
+
+                var bytes = Convert.FromBase64String(limpia);
+                return ObtenerMimeTypeImagen(bytes) != null;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -675,9 +717,11 @@ namespace Sistema_David.Controllers
             // 1144401267 -> 541144401267
             return "54" + numeros.TrimStart('0');
         }
+        */
 
     }
 
+    /*
     public class EnviarWhatsappProductoRequest
     {
         public int IdProducto { get; set; }
@@ -697,4 +741,5 @@ namespace Sistema_David.Controllers
         public string MediaId { get; set; }
         public string Mensaje { get; set; }
     }
+    */
 }
