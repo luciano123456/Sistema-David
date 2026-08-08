@@ -68,10 +68,14 @@ namespace Sistema_David.Models
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-
-                var listNegocios = db.TipoNegocio.ToList();
-
-                return listNegocios;
+                return db.TipoNegocio
+                    .AsEnumerable()
+                    .Where(t => !string.IsNullOrWhiteSpace(t.Nombre)
+                        && t.Nombre.IndexOf("electro", StringComparison.OrdinalIgnoreCase) >= 0)
+                    .GroupBy(t => t.Nombre.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.OrderBy(t => t.Id).First())
+                    .OrderBy(t => t.Nombre)
+                    .ToList();
             }
         }
 
