@@ -562,44 +562,66 @@ namespace Sistema_David.Models
         }
 
 
+        /// <summary>
+        /// Devuelve unidades al stock del vendedor sin tocar Productos.Stock (depósito/general).
+        /// Usar al anular/eliminar ventas: la venta solo descontó del vendedor.
+        /// </summary>
+        public static bool DevolverStockAVendedor(int idUsuario, int idProducto, int cantidad)
+        {
+            if (cantidad <= 0 || idUsuario <= 0 || idProducto <= 0)
+                return false;
+
+            try
+            {
+                using (var db = new Sistema_DavidEntities())
+                using (var transaction = db.Database.BeginTransaction())
+                {
+                    var stock = db.StockUsuarios.FirstOrDefault(s =>
+                        s.IdUsuario == idUsuario &&
+                        s.IdProducto == idProducto);
+
+                    if (stock != null)
+                    {
+                        stock.Cantidad += cantidad;
+                        db.Entry(stock).State = System.Data.Entity.EntityState.Modified;
+                    }
+                    else
+                    {
+                        db.StockUsuarios.Add(new StockUsuarios
+                        {
+                            IdUsuario = idUsuario,
+                            IdProducto = idProducto,
+                            Cantidad = cantidad
+                        });
+                    }
+
+                    db.SaveChanges();
+                    transaction.Commit();
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public static bool AgregarStockEliminarVenta(VMStockUsuario model)
         {
             try
             {
-                using (var db = new Sistema_DavidEntities())
-                using (var transaction = db.Database.BeginTransaction()) // Inicia transacción
-                {
-                    if (model != null)
-                    {
-                        var result = new StockUsuarios
-                        {
-                            IdProducto = (int)model.IdProducto,
-                            IdUsuario = (int)model.IdUsuario,
-                            Cantidad = (int)model.Cantidad
-                        };
-
-                        var stockGeneral = db.Productos
-                            .Where(x => x.Id == model.IdProducto)
-                            .FirstOrDefault();
-                        if (stockGeneral != null)
-                        {
-                            stockGeneral.Stock += model.Cantidad;
-                            db.Entry(stockGeneral).State = System.Data.Entity.EntityState.Modified;
-                        }
-
-                        db.StockUsuarios.Add(result);
-                        db.SaveChanges();
-
-                        transaction.Commit(); // Confirmar cambios
-                        return true;
-                    }
-
+                if (model == null)
                     return false;
-                }
+
+                // Solo vuelve al vendedor; no inflar Productos.Stock (depósito).
+                return DevolverStockAVendedor(
+                    (int)model.IdUsuario,
+                    (int)model.IdProducto,
+                    (int)model.Cantidad
+                );
             }
-            catch (Exception e)
+            catch
             {
-                // Podés registrar el error con e.Message si querés
                 return false;
             }
         }

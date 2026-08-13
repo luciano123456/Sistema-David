@@ -1,11 +1,11 @@
-﻿@{
+@{
     ViewBag.Title = "Productos";
 }
 
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
-<link href="~/Estilos/Productos.css?v=3.6" rel="stylesheet" />
+<link href="~/Estilos/Productos.css?v=3.7" rel="stylesheet" />
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
@@ -47,10 +47,7 @@
                         <thead>
                             <tr>
                                 <th class="text-center">Imagen</th>
-                                <th class="text-center">Codigo</th>
                                 <th class="text-center">Nombre</th>
-                                <th class="text-center">Marca</th>
-                                <th class="text-center">Categoria</th>
                                 <th class="text-center">Stock</th>
                                 <th class="text-center">Precio Compra</th>
                                 <th class="text-center">Total</th>
@@ -101,7 +98,6 @@
                 <ul class="nav nav-tabs prod-tabs mb-3" role="tablist">
                     <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabProdGeneral">General</a></li>
                     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProdCaract">Características</a></li>
-                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProdDesc">Descripción</a></li>
                     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProdFin">Financiación</a></li>
                     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabProdFotos">Fotos</a></li>
                 </ul>
@@ -109,9 +105,7 @@
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="tabProdGeneral">
                         <div class="row g-3">
-                            <div class="col-md-4"><label class="prod-field-label" for="Codigo">Código</label><input type="text" id="Codigo" class="form-control form-control-sm prod-field-input" /></div>
-                            <div class="col-md-8"><label class="prod-field-label" for="Nombre">Nombre</label><input type="text" id="Nombre" class="form-control form-control-sm prod-field-input" /></div>
-                            <div class="col-md-4"><label class="prod-field-label" for="Categorias">Categoría</label><select id="Categorias" class="form-select form-select-sm prod-field-input"><option value="">Seleccione</option></select></div>
+                            <div class="col-md-12"><label class="prod-field-label" for="Nombre">Nombre</label><input type="text" id="Nombre" class="form-control form-control-sm prod-field-input" /></div>
                             <div class="col-md-4"><label class="prod-field-label" for="Stock">Stock</label><input type="text" id="Stock" class="form-control form-control-sm prod-field-input miles" /></div>
                             <div class="col-md-4"><label class="prod-field-label" for="DiasVencimiento">Días vencimiento</label><input type="text" id="DiasVencimiento" class="form-control form-control-sm prod-field-input miles" /></div>
                             <div class="col-md-4"><label class="prod-field-label" for="PrecioCompra">P. Compra</label><input type="text" id="PrecioCompra" class="form-control form-control-sm prod-field-input miles" /></div>
@@ -121,24 +115,27 @@
                     </div>
 
                     <div class="tab-pane fade" id="tabProdCaract">
-                        <p class="prod-hint mb-3">Campos opcionales. En características, una línea por ítem (se muestran con ✔ al enviar).</p>
+                        <p class="prod-hint mb-3">Todo lo que sale en el WhatsApp del producto. Completá lo que necesites: detalles fijos, texto comercial y lista con ✔.</p>
                         <div class="row g-3">
                             <div class="col-md-3"><label class="prod-field-label" for="Marca">Marca</label><input type="text" id="Marca" class="form-control form-control-sm prod-field-input" /></div>
                             <div class="col-md-3"><label class="prod-field-label" for="Modelo">Modelo</label><input type="text" id="Modelo" class="form-control form-control-sm prod-field-input" /></div>
                             <div class="col-md-3"><label class="prod-field-label" for="Color">Color</label><input type="text" id="Color" class="form-control form-control-sm prod-field-input" /></div>
-                            <div class="col-md-3"><label class="prod-field-label" for="Accesorios">Accesorios</label><input type="text" id="Accesorios" class="form-control form-control-sm prod-field-input" /></div>
+                            <div class="col-md-3"><label class="prod-field-label" for="Accesorios">Accesorios / incluye</label><input type="text" id="Accesorios" class="form-control form-control-sm prod-field-input" placeholder="Control remoto, cable HDMI..." /></div>
+                            <div class="col-md-6">
+                                <label class="prod-field-label" for="Descripcion">Texto comercial</label>
+                                <textarea id="Descripcion" class="form-control prod-field-input" rows="5" placeholder="Párrafo de venta: beneficios, uso, por qué elegirlo..."></textarea>
+                                <p class="prod-hint mt-1 mb-0">Va primero en el bloque de características del mensaje.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="prod-field-label" for="Caracteristicas">Lista con ✔</label>
+                                <textarea id="Caracteristicas" class="form-control prod-field-input" rows="5" placeholder="Una característica por línea&#10;Pantalla 55 pulgadas&#10;Smart TV&#10;4K UHD"></textarea>
+                                <p class="prod-hint mt-1 mb-0">Cada línea se muestra con ✔ al enviar.</p>
+                            </div>
                             <div class="col-12">
-                                <label class="prod-field-label" for="Caracteristicas">Lista de características</label>
-                                <textarea id="Caracteristicas" class="form-control prod-field-input" rows="6" placeholder=""></textarea>
+                                <label class="prod-field-label">Vista previa del mensaje WhatsApp</label>
+                                <div class="prod-preview-box prod-preview-box--tall" id="previewDescripcion"></div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="tabProdDesc">
-                        <label class="prod-field-label" for="Descripcion">Descripción comercial</label>
-                        <textarea id="Descripcion" class="form-control prod-field-input mb-3" rows="6" placeholder="Descubrí la experiencia visual que ofrece..."></textarea>
-                        <label class="prod-field-label">Vista previa del mensaje</label>
-                        <div class="prod-preview-box" id="previewDescripcion"></div>
                     </div>
 
                     <div class="tab-pane fade" id="tabProdFin">
@@ -301,5 +298,5 @@
     <script src="~/Scripts/xlsx.full.min.js.js"></script>
     <script src="~/JavaScript/Utils/Utils.js?v=3.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-    <script src="~/JavaScript/Productos.js?v=4.1"></script>
+    <script src="~/JavaScript/Productos.js?v=4.6"></script>
 }

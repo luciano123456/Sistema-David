@@ -1,3 +1,8 @@
+/*
+  001 — Historial de cambios de dirección / ubicación del cliente.
+  Ejecutar una vez en la base del sistema. Idempotente.
+*/
+
 -- Historial de cambios de dirección / ubicación del cliente
 -- Ejecutar una vez en la base de datos del sistema.
 

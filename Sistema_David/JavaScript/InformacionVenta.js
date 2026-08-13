@@ -1,4 +1,4 @@
-﻿/* =========================================================
+/* =========================================================
    InformacionVenta.js — Info ventas completa
    - Mantiene todo lo existente
    - Mejora diseño/UX
@@ -674,9 +674,18 @@ async function cargarDetalles(ventaUniqueId) {
         const historial = det?.Historial || [];
 
         historial.sort((a, b) => {
-            const fa = a.Fecha ? new Date(a.Fecha) : new Date(0);
-            const fb = b.Fecha ? new Date(b.Fecha) : new Date(0);
-            return fb - fa;
+            const fa = a.Fecha ? new Date(a.Fecha).getTime() : 0;
+            const fb = b.Fecha ? new Date(b.Fecha).getTime() : 0;
+            if (fa !== fb) return fb - fa; // más reciente arriba; venta (más vieja) abajo
+            const esVenta = (h) => {
+                const d = String(h.Descripcion || "").toLowerCase();
+                const m = String(h.MetodoPago || "").toLowerCase();
+                return m === "venta" || d.startsWith("venta");
+            };
+            const va = esVenta(a) ? 0 : 1;
+            const vb = esVenta(b) ? 0 : 1;
+            if (va !== vb) return vb - va; // si empatan fecha, venta más abajo
+            return (b.Id || 0) - (a.Id || 0);
         });
 
         APP.detalleCache[ventaUniqueId] = {
@@ -787,6 +796,32 @@ function tipoInfo(h) {
     if (d.includes("venta")) return "venta";
     return "obs";
 }
+function formatoFechaHistorial(fecha) {
+    if (!fecha) return "-";
+    const m = moment(fecha);
+    if (!m.isValid()) return "-";
+    // Si tiene hora distinta de 00:00, la mostramos.
+    if (m.hours() !== 0 || m.minutes() !== 0 || m.seconds() !== 0) {
+        return m.format("DD/MM/YYYY HH:mm");
+    }
+    return m.format("DD/MM/YYYY");
+}
+
+function histMontoHtml(valor, tipo) {
+    const n = Number(valor || 0);
+    const zero = !Number.isFinite(n) || Math.abs(n) < 0.00001;
+    const cls = zero ? "hist-amt hist-amt-zero" : `hist-amt hist-amt-${tipo}`;
+    return `<span class="${cls}">${money(n)}</span>`;
+}
+
+function histRowTipoClass(h) {
+    const t = tipoInfo(h);
+    if (t === "interes") return "hist-row-interes";
+    if (t === "cobro") return "hist-row-cobro";
+    if (t === "venta") return "hist-row-venta";
+    return "";
+}
+
 function chipFecha(fecha, h) {
     const t = tipoInfo(h);
     const cls = t === "interes" ? "chip-interes"
@@ -814,7 +849,21 @@ function renderHistorial(ventaUniqueId, list) {
         return 0;
     };
 
-    list = list.slice().sort((a, b) => (ts(b) - ts(a)) || ((b.Id || 0) - (a.Id || 0)));
+    const esVentaMov = (h) => {
+        const d = String(h.Descripcion || h.Observacion || "").toLowerCase();
+        const m = String(h.MetodoPago || "").toLowerCase();
+        return m === "venta" || d.startsWith("venta");
+    };
+
+    // Más reciente arriba; Venta (más vieja) abajo — se lee de abajo hacia arriba.
+    list = list.slice().sort((a, b) => {
+        const diff = ts(b) - ts(a);
+        if (diff !== 0) return diff;
+        const va = esVentaMov(a) ? 0 : 1;
+        const vb = esVentaMov(b) ? 0 : 1;
+        if (va !== vb) return vb - va;
+        return (b.Id || 0) - (a.Id || 0);
+    });
 
     const isMobile = window.innerWidth <= 768;
 
@@ -824,12 +873,9 @@ function renderHistorial(ventaUniqueId, list) {
     if (isMobile) {
 
         const cards = list.map(h => {
-            const fecha = h.Fecha ? moment(h.Fecha).format("DD/MM/YYYY") : "-";
+            const fecha = formatoFechaHistorial(h.Fecha);
             const desc = h.Descripcion || h.Observacion || (h.Interes > 0 ? "Interés" : "—");
             const cobr = h.Cobrador || "N/A";
-            const ent = money(h.Entrega || 0);
-            const inte = money(h.Interes || 0);
-            const rest = money(h.Restante || 0);
             const idInf = h.Id || 0;
 
             const esVenta = (desc || "").toLowerCase().includes("venta");
@@ -842,7 +888,7 @@ function renderHistorial(ventaUniqueId, list) {
                 : "";
 
             return `
-            <div class="hist-card" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
+            <div class="hist-card ${histRowTipoClass(h)}" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
 
                 <div class="hist-card-top">
                     ${chipFecha(fecha, h)}
@@ -858,15 +904,15 @@ function renderHistorial(ventaUniqueId, list) {
                     </div>
                     <div>
                         <span>Entrega</span>
-                        <b>${ent}</b>
+                        ${histMontoHtml(h.Entrega, "entrega")}
                     </div>
                     <div>
                         <span>Interés</span>
-                        <b>${inte}</b>
+                        ${histMontoHtml(h.Interes, "interes")}
                     </div>
                     <div>
                         <span>Restante</span>
-                        <b>${rest}</b>
+                        ${histMontoHtml(h.Restante, "restante")}
                     </div>
                 </div>
 
@@ -882,12 +928,9 @@ function renderHistorial(ventaUniqueId, list) {
     ========================= */
 
     const rows = list.map(h => {
-        const fecha = h.Fecha ? moment(h.Fecha).format("DD/MM/YYYY") : "-";
+        const fecha = formatoFechaHistorial(h.Fecha);
         const desc = h.Descripcion || h.Observacion || (h.Interes > 0 ? "Interés" : "—");
         const cobr = h.Cobrador || "N/A";
-        const ent = money(h.Entrega || 0);
-        const inte = money(h.Interes || 0);
-        const rest = money(h.Restante || 0);
         const idInf = h.Id || 0;
 
         const esVenta = (desc || "").toLowerCase().includes("venta");
@@ -900,13 +943,13 @@ function renderHistorial(ventaUniqueId, list) {
             : "";
 
         return `
-        <tr data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
+        <tr class="${histRowTipoClass(h)}" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
             <td>${chipFecha(fecha, h)}</td>
             <td>${escapeHtml(desc)}</td>
             <td>${escapeHtml(cobr)}</td>
-            <td>${ent}</td>
-            <td>${inte}</td>
-            <td>${rest}</td>
+            <td class="hist-td-amt">${histMontoHtml(h.Entrega, "entrega")}</td>
+            <td class="hist-td-amt">${histMontoHtml(h.Interes, "interes")}</td>
+            <td class="hist-td-amt">${histMontoHtml(h.Restante, "restante")}</td>
             <td class="text-center">${btnDel}</td>
         </tr>`;
     }).join("");

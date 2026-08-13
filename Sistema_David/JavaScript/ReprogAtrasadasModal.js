@@ -276,6 +276,9 @@
 
     async function onConfirm() {
         if (!_ctx) return;
+        var ctx = _ctx;
+        var nuevaFecha = ctx.nuevaFecha;
+        var onRefresh = ctx.onRefresh;
         var el = getModalEl();
         var ids = [];
         el.querySelectorAll('#rpReprogList input[type="checkbox"]:checked').forEach(function (c) {
@@ -289,16 +292,16 @@
             btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Guardando…';
         }
 
-        var res = await aplicarReprogramacion(ids, _ctx.nuevaFecha, _ctx.observacion);
+        var res = await aplicarReprogramacion(ids, nuevaFecha, ctx.observacion);
 
         _confirmed = true;
         hideModal();
 
-        if (typeof _ctx.onRefresh === "function") {
-            try { await _ctx.onRefresh(); } catch (e) { /* ignore */ }
+        if (typeof onRefresh === "function") {
+            try { await onRefresh(); } catch (e) { /* ignore */ }
         }
 
-        var fechaFmt = fmtFecha(_ctx.nuevaFecha);
+        var fechaFmt = fmtFecha(nuevaFecha);
         if (res.ok === res.total) {
             toast("Se reprogramaron " + res.ok + " cuota(s) a " + fechaFmt + ".", "success");
         } else if (res.ok > 0) {

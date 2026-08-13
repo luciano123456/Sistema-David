@@ -359,6 +359,12 @@
     overflow-y: auto;
 }
 
+.prod-preview-box--tall {
+    max-height: 320px;
+    min-height: 140px;
+    line-height: 1.45;
+}
+
 .prod-check-line {
     display: block;
     margin-bottom: 0.2rem;

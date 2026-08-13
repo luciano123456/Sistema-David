@@ -1,4 +1,4 @@
-﻿:root {
+:root {
     --bg-1: #08111f;
     --bg-2: #0b1220;
     --bg-3: #0f172a;
@@ -543,7 +543,7 @@ body {
     }
 
     .table-mini .col-fecha {
-        width: 110px;
+        width: 150px;
     }
 
     .table-mini .col-desc {
@@ -597,9 +597,9 @@ body {
 }
 
 .chip-interes {
-    background: rgba(250,204,21,.14);
-    color: #fde68a;
-    border: 1px solid rgba(250,204,21,.28);
+    background: rgba(239,68,68,.16);
+    color: #fca5a5;
+    border: 1px solid rgba(239,68,68,.35);
 }
 
 .chip-venta {
@@ -612,6 +612,86 @@ body {
     background: rgba(148,163,184,.14);
     color: #cbd5e1;
     border: 1px solid rgba(148,163,184,.28);
+}
+
+/* ===== Montos historial ===== */
+.hist-amt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .28rem;
+    min-width: 4.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .01em;
+    padding: .22rem .55rem;
+    border-radius: 999px;
+    line-height: 1.2;
+}
+
+.hist-amt-entrega {
+    color: #86efac;
+    background: rgba(34,197,94,.14);
+    border: 1px solid rgba(34,197,94,.32);
+    box-shadow: 0 0 0 1px rgba(34,197,94,.06), 0 0 18px rgba(34,197,94,.08);
+}
+
+.hist-amt-interes {
+    color: #fca5a5;
+    background: rgba(239,68,68,.14);
+    border: 1px solid rgba(239,68,68,.35);
+    box-shadow: 0 0 0 1px rgba(239,68,68,.06), 0 0 18px rgba(239,68,68,.1);
+}
+
+.hist-amt-restante {
+    color: #fda4af;
+    background: rgba(244,63,94,.12);
+    border: 1px solid rgba(244,63,94,.3);
+    box-shadow: 0 0 0 1px rgba(244,63,94,.05), 0 0 16px rgba(244,63,94,.08);
+}
+
+.hist-amt-zero {
+    color: #94a3b8;
+    background: rgba(148,163,184,.08);
+    border: 1px solid rgba(148,163,184,.16);
+    box-shadow: none;
+    font-weight: 700;
+    opacity: .85;
+}
+
+.table-mini tbody tr.hist-row-cobro {
+    box-shadow: inset 3px 0 0 #22c55e;
+}
+
+.table-mini tbody tr.hist-row-interes {
+    box-shadow: inset 3px 0 0 #ef4444;
+    background: rgba(239,68,68,.04);
+}
+
+.table-mini tbody tr.hist-row-venta {
+    box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+.table-mini td.hist-td-amt {
+    text-align: right;
+}
+
+.hist-grid .hist-amt {
+    justify-content: flex-start;
+    margin-top: 2px;
+}
+
+.hist-card.hist-row-cobro {
+    border-left: 3px solid #22c55e;
+}
+
+.hist-card.hist-row-interes {
+    border-left: 3px solid #ef4444;
+    background: linear-gradient(90deg, rgba(239,68,68,.08), #0f172a 42%);
+}
+
+.hist-card.hist-row-venta {
+    border-left: 3px solid #3b82f6;
 }
 
 /* ===== Skeleton ===== */

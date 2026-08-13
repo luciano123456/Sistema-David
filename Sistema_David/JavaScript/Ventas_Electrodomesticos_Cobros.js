@@ -1,4 +1,4 @@
-﻿/* ===========================================================
+/* ===========================================================
  * Ventas_Electrodomesticos_Cobros.js — v800.1 FINAL
  * Sin cambios estructurales, solo integrando partials
  * =========================================================== */
@@ -64,21 +64,21 @@ const columnConfigCobrosPendientes = [
 ];
 
 const columnConfigTransferenciasPendientes = [
-    { index: 1, filterType: 'text' },
-    { index: 2, filterType: 'text' },
-    { index: 3, filterType: 'text' },
-    { index: 4, filterType: 'text' },
-    { index: 5, filterType: 'text' },
-    { index: 6, filterType: 'text' },
-    { index: 7, filterType: 'text' },
-    { index: 8, filterType: 'text' },
-    { index: 9, filterType: 'text' },
-    { index: 10, filterType: 'text' },
-    { index: 11, filterType: 'text' },
-    { index: 12, filterType: 'text' },
-    { index: 13, filterType: 'text' },
-    { index: 14, filterType: 'text' },
-    { index: 15, filterType: 'text' }
+    { index: 1, filterType: 'text' }, // IdVenta
+    { index: 2, filterType: 'text' }, // Cuota
+    { index: 3, filterType: 'text' }, // FechaCobro
+    { index: 4, filterType: 'text' }, // Cliente
+    { index: 5, filterType: 'text' }, // V
+    { index: 6, filterType: 'text' }, // C
+    { index: 7, filterType: 'text' }, // Zona
+    { index: 8, filterType: 'text' }, // Dirección
+    { index: 9, filterType: 'text' }, // Turno
+    { index: 10, filterType: 'text' }, // Franja
+    { index: 11, filterType: 'text' }, // Vencimiento
+    { index: 12, filterType: 'text' }, // Total
+    { index: 13, filterType: 'text' }, // Pagado
+    { index: 14, filterType: 'text' }, // Restante
+    { index: 15, filterType: 'text' } // Estado
 ];
 
 
@@ -277,6 +277,35 @@ VC.turnoMT = function (t) {
     return t;
 };
 
+VC.escAttr = function (s) {
+    return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+};
+
+VC.escHtml = function (s) {
+    return VC.escAttr(s);
+};
+
+VC.mostrarDireccionCompleta = function (direccion, lat, lng) {
+    const dir = (direccion || "").trim() || "—";
+    $("#vc_direccion_completa").text(dir);
+
+    const $maps = $("#vc_direccion_maps");
+    if (lat && lng) {
+        $maps
+            .removeClass("d-none")
+            .attr("href", `https://www.google.com/maps?q=${lat},${lng}`);
+    } else {
+        $maps.addClass("d-none").attr("href", "#");
+    }
+
+    VC.openModal("modalVcDireccion");
+};
+
 VC.renderDireccion = function (_, __, row) {
     return buildCeldaDireccionHtml({
         direccion: row.ClienteDireccion,
@@ -471,6 +500,30 @@ VC.initEventos = function () {
 
     $("#vcReprogFabBtn").off("click.vcReprogFab").on("click.vcReprogFab", () => VC.abrirModalReprogMasivo());
     $("#btnVcReprogMasivoConfirmar").off("click.vcReprogConf").on("click.vcReprogConf", () => VC.confirmarReprogMasivo());
+
+    $(document).off("click.vcDir").on("click.vcDir", ".vc-dir-link", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const $el = $(this);
+        VC.mostrarDireccionCompleta(
+            $el.attr("data-dir"),
+            $el.attr("data-lat"),
+            $el.attr("data-lng")
+        );
+    });
+
+    const modalDirEl = document.getElementById("modalVcDireccion");
+    if (modalDirEl) {
+        if (modalDirEl.parentElement !== document.body) {
+            document.body.appendChild(modalDirEl);
+        }
+        modalDirEl.addEventListener("show.bs.modal", () => {
+            document.body.classList.add("vc-dir-modal-open");
+        });
+        modalDirEl.addEventListener("hidden.bs.modal", () => {
+            document.body.classList.remove("vc-dir-modal-open");
+        });
+    }
 
     $(document).off("change.vcReprogChk").on("change.vcReprogChk", ".vc-reprog-chk", function () {
         VC.syncCuotasReprogDesdeDom();
@@ -1222,8 +1275,8 @@ VC.cargarTabla = async function () {
                     const iconCls = "fa fa-exclamation-circle";
 
                     const title = pendiente
-                        ? "Desmarcar transferencia pendiente"
-                        : "Marcar como transferencia pendiente";
+                        ? "Revertir transferencia pendiente de toda la venta"
+                        : "Pasar toda la venta a transferencia pendiente";
 
                     // 🏠 Obs cobro
                     const tieneObs = !!(d.ObservacionCobro && String(d.ObservacionCobro).trim());
@@ -2322,25 +2375,31 @@ VC.cargarCobrosPendientes = async function () {
 
             {
                 data: null,
+                orderable: false,
+                className: "text-center",
                 render: d => `
-                    <div class="btn-group">
+                    <div class="btn-group btn-group-acciones-pend">
 
-                        <button class="btn btn-accion btn-cobrar me-1"
+                        <button type="button" class="btn btn-accion btn-cobrar"
+                            title="Cobrar"
                             onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})">
                             <i class="fa fa-money"></i>
                         </button>
 
-                        <button class="btn btn-accion btn-ajuste me-1"
+                        <button type="button" class="btn btn-accion btn-ajuste"
+                            title="Ajuste / recargo"
                             onclick="VC.abrirAjuste(${d.IdVenta}, ${d.IdCuota})">
                             <i class="fa fa-bolt"></i>
                         </button>
 
-                        <button class="btn btn-accion btn-historial me-1"
+                        <button type="button" class="btn btn-accion btn-historial"
+                            title="Ver detalle"
                             onclick="VC.abrirHistorialPartial(${d.IdVenta}, ${d.IdCuota})">
                             <i class="fa fa-eye"></i>
                         </button>
 
-                        <button class="btn btn-success"
+                        <button type="button" class="btn btn-accion btn-aprobar"
+                            title="Aceptar cobro pendiente"
                             onclick="VC.resolverCobroPendiente(${d.IdCuota})">
                             <i class="fa fa-check"></i>
                         </button>
@@ -2485,6 +2544,7 @@ VC.cargarTransferenciasPendientes = async function () {
 
         columns: [
 
+            // Acordeón (igual Cobros / Cobros pendientes)
             {
                 data: null,
                 className: "details-control text-center",
@@ -2672,7 +2732,7 @@ VC.cargarTransferenciasPendientes = async function () {
             <!-- 🔄 REVERTIR TRANSFERENCIA -->
             <button class="btn btn-accion btn-warning text-dark"
                 onclick="VC.transferenciaPendiente(0, ${d.IdCuota})"
-                title="Revertir transferencia pendiente">
+                title="Revertir transferencia pendiente de toda la venta">
                 <i class="fa fa-undo"></i>
             </button>
 
@@ -2694,9 +2754,6 @@ VC.cargarTransferenciasPendientes = async function () {
 
                 // si clic en inputs/selects/labels => no seleccionar
                 if ($(e.target).closest("a, input, select, textarea, label").length) return;
-
-                // si clic en checkbox => no seleccionar (esto evita “atarelo al check”)
-                if ($(e.target).closest("input.vc-row-check, #vc_chk_all").length) return;
 
                 const tr = $(this).closest("tr");
                 if (tr.hasClass("child")) return;
@@ -2729,6 +2786,7 @@ VC.cargarTransferenciasPendientes = async function () {
         }
     });
 
+    // Acordeón detalle venta
     $("#vc_tabla_transferencias_pendientes tbody")
         .off("click.vcAcordeonTransf")
         .on("click.vcAcordeonTransf", "button.btn-row-detail-transf", async function (e) {
@@ -2771,9 +2829,9 @@ VC.cargarTransferenciasPendientes = async function () {
 
 VC.transferenciaPendiente = async function (estado, idCuota) {
 
-    const msg =  estado === 1
-        ? "¿Marcar esta cuota como transferencia pendiente?"
-        : "¿Revertir la transferencia pendiente de esta cuota?";
+    const msg = estado === 1
+        ? "¿Pasar toda la venta a transferencia pendiente? Se marcarán todas las cuotas de la cuenta."
+        : "¿Revertir la transferencia pendiente de toda la venta? Se desmarcarán todas las cuotas.";
 
     if (!confirm(msg)) return;
 
@@ -2786,8 +2844,8 @@ VC.transferenciaPendiente = async function (estado, idCuota) {
 
         VC.toast(
             estado === 1
-                ? "Marcado como transferencia pendiente"
-                : "Transferencia pendiente revertida",
+                ? "Venta completa marcada como transferencia pendiente"
+                : "Transferencia pendiente de la venta revertida",
             "success"
         );
 
@@ -2804,19 +2862,69 @@ VC.transferenciaPendiente = async function (estado, idCuota) {
 
 VC.resolverCobroPendiente = async function (idCuota) {
 
-    if (!confirm("¿Marcar este cobro pendiente como resuelto?")) return;
+    const confirmar = (typeof confirmarModal === "function")
+        ? confirmarModal
+        : async (msg) => window.confirm(String(msg).replace(/<[^>]+>/g, " "));
 
-    const resp = await $.post(
-        "/Ventas_Electrodomesticos/MarcarCobroPendienteResuelto",
-        { idCuota }
-    );
+    const ok = await confirmar(`
+        <div class="text-start px-1">
+            <div class="mb-2 fw-bold">
+                <i class="fa fa-check-circle text-success me-1"></i>
+                Aceptar cobro pendiente
+            </div>
+            <div class="small text-white-50 mb-1">
+                Se confirmará la fecha de cobro de la cuota y saldrá de <b>Cobros pendientes</b>.
+            </div>
+            <div>¿Confirmás aceptar este cobro pendiente?</div>
+        </div>
+    `);
 
-    if (resp.success) {
-        VC.toast("Cobro pendiente resuelto", "success");
+    if (!ok) return;
+
+    try {
+        const resp = await $.post(
+            "/Ventas_Electrodomesticos/MarcarCobroPendienteResuelto",
+            { idCuota }
+        );
+
+        if (!resp?.success) {
+            VC.toast(resp?.message || "Error al aceptar el cobro pendiente", "danger");
+            return;
+        }
+
+        VC.toast("Cobro pendiente aceptado", "success");
         VC.cargarTabla();
         VC.cargarCobrosPendientes();
-    } else {
-        VC.toast(resp.message || "Error", "danger");
+
+        // Mismo patrón que cobranza / reprogramación: avisar cambio de fecha por WhatsApp
+        if (userSession?.IdRol === 1 || userSession?.IdRol === 4) {
+            const enviar = await confirmar(`
+                <div class="text-start px-1">
+                    <div class="mb-2 fw-bold">
+                        <i class="fa fa-whatsapp me-1" style="color:#25D366"></i>
+                        Aviso al cliente
+                    </div>
+                    <div class="mb-2">
+                        ¿Deseás enviarle por <b>WhatsApp</b> el aviso del
+                        <b>cambio de fecha de cobro</b>?
+                    </div>
+                    <div class="small text-white-50">
+                        El mensaje informa la nueva fecha confirmada de la cuota.
+                    </div>
+                </div>
+            `);
+
+            if (enviar) {
+                if (typeof preguntarWhatsappDespuesCobro === "function") {
+                    await preguntarWhatsappDespuesCobro(idCuota, "Reprogramar");
+                } else {
+                    VC.toast("No se pudo preparar el WhatsApp (función no disponible)", "warning");
+                }
+            }
+        }
+    } catch (e) {
+        console.error(e);
+        VC.toast("Error al aceptar el cobro pendiente", "danger");
     }
 };
 

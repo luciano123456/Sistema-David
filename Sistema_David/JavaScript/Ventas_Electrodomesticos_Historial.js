@@ -1,4 +1,4 @@
-﻿/* ===========================================================
+/* ===========================================================
  * Ventas_Electrodomesticos_Historial.js — v500.0 FINAL
  * =========================================================== */
 
@@ -385,47 +385,58 @@ function renderTablaBase(selector, data, tipo) {
 
                         if (rol === 1) {
                             botones = `
-                                <button class="btn-accion btn-aprobar"
+                                <div class="btn-group-acciones-pend">
+                                <button type="button" class="btn-accion btn-aprobar"
+                                    title="Aceptar venta"
                                     onclick="VC.cambiarEstadoVenta(${id}, 'Activa')">
                                     <i class="fa fa-check"></i>
                                 </button>
 
-                                <button class="btn-accion btn-cancelar"
+                                <button type="button" class="btn-accion btn-cancelar"
+                                    title="Rechazar venta"
                                     onclick="VC.cambiarEstadoVenta(${id}, 'Cancelada')">
                                     <i class="fa fa-times"></i>
                                 </button>
 
-                                <button class="btn-accion btn-editar"
+                                <button type="button" class="btn-accion btn-editar"
+                                    title="Editar"
                                     onclick="editarVenta(${id})">
                                     <i class="fa fa-pencil"></i>
                                 </button>
 
                                 ${botonPdf}
 
-                                <button class="btn-accion btn-wa"
+                                <button type="button" class="btn-accion btn-wa"
+                                    title="WhatsApp"
                                     onclick="VC.abrirWhatsApp('${tel}', '${row.Cliente}')">
                                     <i class="fa fa-whatsapp"></i>
                                 </button>
+                                </div>
                             `;
                         }
                         else if (rol === 4) {
                             botones = `
-                                <button class="btn-accion btn-aprobar"
+                                <div class="btn-group-acciones-pend">
+                                <button type="button" class="btn-accion btn-aprobar"
+                                    title="Aceptar venta"
                                     onclick="VC.cambiarEstadoVenta(${id}, 'Activa')">
                                     <i class="fa fa-check"></i>
                                 </button>
 
-                                <button class="btn-accion btn-editar"
+                                <button type="button" class="btn-accion btn-editar"
+                                    title="Editar"
                                     onclick="editarVenta(${id})">
                                     <i class="fa fa-pencil"></i>
                                 </button>
 
                                 ${botonPdf}
 
-                                <button class="btn-accion btn-wa"
+                                <button type="button" class="btn-accion btn-wa"
+                                    title="WhatsApp"
                                     onclick="VC.abrirWhatsApp('${tel}', '${row.Cliente}')">
                                     <i class="fa fa-whatsapp"></i>
                                 </button>
+                                </div>
                             `;
                         }
 
@@ -1118,30 +1129,42 @@ function editarVenta(id) {
     window.location.href = "/Ventas_Electrodomesticos/NuevoModif/" + id;
 }
 
+async function preguntarDevolverStockVendedor() {
+    return await confirmarModal(`
+        <div class="text-start px-1">
+            <div class="mb-2 fw-bold">
+                <i class="fa fa-cubes me-1"></i>
+                Devolver stock al vendedor
+            </div>
+            <div class="mb-2">
+                ¿Deseás <b>devolver el stock</b> de los productos al vendedor?
+            </div>
+            <div class="small">
+                <div class="mb-1">
+                    <span style="color:#198754;font-weight:bold;">Sí, continuar</span>
+                    → el stock vuelve al vendedor
+                </div>
+                <div>
+                    <span style="color:#dc3545;font-weight:bold;">Cancelar</span>
+                    → el stock <b>no</b> se devuelve (queda consumido)
+                </div>
+            </div>
+        </div>
+    `);
+}
+
 async function eliminarVenta(id) {
 
     try {
 
         const confirmar = await confirmarModal(`
-            ¿Está seguro que desea 
+            ¿Está seguro que desea
             <b style="color:#dc3545">ELIMINAR</b> esta venta?
         `);
 
         if (!confirmar) return;
 
-        let devolverStock = await confirmarModal(`
-    ¿Desea devolver el stock de los productos?<br><br>
-
-    <div>
-        <span style="color:#198754; font-weight:bold;">✔ Sí</span>
-        → vuelve al inventario
-    </div>
-
-    <div>
-        <span style="color:#dc3545; font-weight:bold;">✖ No</span>
-        → queda como consumido
-    </div>
-`);
+        let devolverStock = await preguntarDevolverStockVendedor() ? 1 : 0;
 
         let resp = await $.post(
             "/Ventas_Electrodomesticos/EliminarVenta",
@@ -1159,19 +1182,7 @@ async function eliminarVenta(id) {
 
             if (!confirmarPagos) return;
 
-            devolverStock = await confirmarModal(`
-    ¿Desea devolver el stock de los productos?<br><br>
-
-    <div>
-        <span style="color:#198754; font-weight:bold;">✔ Sí</span>
-        → vuelve al inventario
-    </div>
-
-    <div>
-        <span style="color:#dc3545; font-weight:bold;">✖ No</span>
-        → queda como consumido
-    </div>
-`);
+            devolverStock = await preguntarDevolverStockVendedor() ? 1 : 0;
 
             resp = await $.post(
                 "/Ventas_Electrodomesticos/EliminarVenta",
@@ -1184,7 +1195,11 @@ async function eliminarVenta(id) {
             return;
         }
 
-        exitoModal("La venta ha sido eliminada con éxito.");
+        exitoModal(
+            devolverStock === 1
+                ? "Venta eliminada. Stock devuelto al vendedor."
+                : "Venta eliminada. Stock no devuelto al vendedor."
+        );
 
         await cargarTabla();
 
@@ -1529,21 +1544,15 @@ VC.cambiarEstadoVenta = async function (idVenta, estado) {
 
         let mensaje = estado === "Activa"
             ? `¿Está seguro que desea <b style="color:#198754">ACEPTAR</b> esta venta?`
-            : `¿Está seguro que desea <b style="color:#dc3545">CANCELAR</b> esta venta?`;
+            : `¿Está seguro que desea <b style="color:#dc3545">RECHAZAR / CANCELAR</b> esta venta?`;
 
         const confirmar = await confirmarModal(mensaje);
         if (!confirmar) return;
 
-        let devolverStock = true;
+        let devolverStock = 0;
 
         if (estado === "Cancelada") {
-            devolverStock = await confirmarModal(`
-                ¿Desea devolver el stock de los productos?<br>
-                <small class="text-muted">
-                    ✔ Sí → vuelve al inventario<br>
-                    ❌ No → queda como consumido
-                </small>
-            `);
+            devolverStock = await preguntarDevolverStockVendedor() ? 1 : 0;
         }
 
         let resp = await $.post(
@@ -1563,7 +1572,7 @@ VC.cambiarEstadoVenta = async function (idVenta, estado) {
             if (!confirmarPagos) return;
 
             if (estado === "Cancelada") {
-                devolverStock = await confirmarModal(`¿Desea devolver el stock?`);
+                devolverStock = await preguntarDevolverStockVendedor() ? 1 : 0;
             }
 
             resp = await $.post(
@@ -1575,6 +1584,16 @@ VC.cambiarEstadoVenta = async function (idVenta, estado) {
         if (!resp || !resp.success) {
             alert(resp?.message || "Error al cambiar el estado");
             return;
+        }
+
+        if (estado === "Cancelada") {
+            if (typeof exitoModal === "function") {
+                exitoModal(
+                    devolverStock === 1
+                        ? "Venta rechazada. Stock devuelto al vendedor."
+                        : "Venta rechazada. Stock no devuelto al vendedor."
+                );
+            }
         }
 
         await cargarTabla();

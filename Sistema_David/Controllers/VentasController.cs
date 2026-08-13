@@ -272,22 +272,13 @@ namespace Sistema_David.Controllers
                 {
                     foreach (VMProductoVenta producto in productosVenta)
                     {
-                        VMStockUsuario HayStock = StockModel.BuscarStockUser(venta.idVendedor, producto.IdProducto);
-
-                        if (HayStock != null)
-                        {
-                            StockModel.SumarStock(venta.idVendedor, producto.IdProducto, producto.Cantidad);
-                        }
-                        else
-                        {
-                            VMStockUsuario stock = new VMStockUsuario();
-
-                            stock.IdProducto = producto.IdProducto;
-                            stock.Cantidad = producto.Cantidad;
-                            stock.IdUsuario = venta.idVendedor;
-                            stock.IdCategoria = 0;
-                            StockModel.AgregarStockEliminarVenta(stock);
-                        }
+                        // Solo devolver al vendedor. No tocar Productos.Stock:
+                        // la venta indumentaria nunca descontó el depósito/general.
+                        StockModel.DevolverStockAVendedor(
+                            venta.idVendedor,
+                            producto.IdProducto,
+                            producto.Cantidad
+                        );
                     }
                 }
 

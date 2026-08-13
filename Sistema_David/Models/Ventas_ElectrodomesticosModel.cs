@@ -560,9 +560,8 @@ namespace Sistema_David.Models
                         else
                             db.Entry(stockUser).State = EntityState.Modified;
 
-                        var prod = db.Productos.First(p => p.Id == it.IdProducto);
-                        prod.Stock -= (int?)it.Cantidad;
-                        db.Entry(prod).State = EntityState.Modified;
+                        // La venta solo descuenta stock del vendedor.
+                        // Productos.Stock (depósito/general) ya bajó al asignar al vendedor.
 
                         db.Ventas_Electrodomesticos_Detalle.Add(
                             new Ventas_Electrodomesticos_Detalle
@@ -668,6 +667,15 @@ namespace Sistema_David.Models
                     if (idVentaDesdeRecargo.HasValue)
                         return idVentaDesdeRecargo;
 
+                    return db.Ventas_Electrodomesticos_Cuotas
+                        .Where(c => c.Id == idMovimiento)
+                        .Select(c => (int?)c.IdVenta)
+                        .FirstOrDefault();
+                }
+
+                // 🟢 REPROGRAMACIÓN / ACEPTAR COBRO PENDIENTE (id = idCuota)
+                if (desc.Contains("reprogram"))
+                {
                     return db.Ventas_Electrodomesticos_Cuotas
                         .Where(c => c.Id == idMovimiento)
                         .Select(c => (int?)c.IdVenta)
@@ -862,11 +870,11 @@ namespace Sistema_David.Models
             {
                 try
                 {
-                    // Regla de negocio: todo cobro se registra con fecha de hoy.
+                    // Regla de negocio: todo cobro se registra con fecha de hoy (con hora).
                     // La fecha solo puede cambiarse en reprogramación.
-                    var fechaPagoReal = DateTime.Today;
+                    var fechaPagoReal = DateTime.Now;
                     var fechaCobroProgramada = m.FechaCobroCuota?.Date;
-                    if (fechaCobroProgramada.HasValue && fechaCobroProgramada.Value < fechaPagoReal)
+                    if (fechaCobroProgramada.HasValue && fechaCobroProgramada.Value < fechaPagoReal.Date)
                         throw new Exception("La próxima fecha de cobro no puede ser anterior a hoy.");
 
                     var venta = db.Ventas_Electrodomesticos
@@ -1202,6 +1210,12 @@ namespace Sistema_David.Models
 
                     RecalcularEstadoVenta(db, cuota.Ventas_Electrodomesticos, m.UsuarioOperador);
 
+                    // Mantener cabecera alineada con el detalle (impacta reportes / capital).
+                    cuota.Ventas_Electrodomesticos.ImporteRecargos = db.Ventas_Electrodomesticos_Cuotas
+                        .Where(c => c.IdVenta == cuota.IdVenta)
+                        .Select(c => (decimal?)c.MontoRecargos)
+                        .Sum() ?? 0m;
+
                     db.SaveChanges();
                     tx.Commit();
 
@@ -1259,6 +1273,11 @@ namespace Sistema_David.Models
 
                     RecalcularEstadoVenta(db, venta, usuario);
 
+                    venta.ImporteRecargos = db.Ventas_Electrodomesticos_Cuotas
+                        .Where(c => c.IdVenta == venta.Id)
+                        .Select(c => (decimal?)c.MontoRecargos)
+                        .Sum() ?? 0m;
+
                     db.SaveChanges();
                     tx.Commit();
 
@@ -1306,17 +1325,21 @@ namespace Sistema_David.Models
                     {
                         foreach (var det in venta.Ventas_Electrodomesticos_Detalle)
                         {
-                            var prod = db.Productos.First(p => p.Id == det.IdProducto);
-                            prod.Stock += (int?)det.Cantidad;
-                            db.Entry(prod).State = EntityState.Modified;
+                            if (det.IdProducto == null || det.Cantidad <= 0)
+                                continue;
 
+                            var idProducto = det.IdProducto.Value;
+                            var cantidad = (int)det.Cantidad;
+
+                            // Solo vuelve al vendedor. El depósito/general no se toca
+                            // (la venta tampoco lo descontó).
                             var stockUser = db.StockUsuarios.FirstOrDefault(s =>
                                 s.IdUsuario == venta.IdVendedor &&
-                                s.IdProducto == det.IdProducto);
+                                s.IdProducto == idProducto);
 
                             if (stockUser != null)
                             {
-                                stockUser.Cantidad += (int)det.Cantidad;
+                                stockUser.Cantidad += cantidad;
                                 db.Entry(stockUser).State = EntityState.Modified;
                             }
                             else
@@ -1324,8 +1347,8 @@ namespace Sistema_David.Models
                                 db.StockUsuarios.Add(new StockUsuarios
                                 {
                                     IdUsuario = venta.IdVendedor,
-                                    IdProducto = (int)det.IdProducto,
-                                    Cantidad = (int)det.Cantidad
+                                    IdProducto = idProducto,
+                                    Cantidad = cantidad
                                 });
                             }
                         }
@@ -1390,9 +1413,12 @@ namespace Sistema_David.Models
                         "EliminarVenta",
                         venta.Estado,
                         "Eliminada",
-                        forzar
+                        (forzar
                             ? "Eliminación forzada con pagos"
-                            : "Eliminación normal"
+                            : "Eliminación normal")
+                        + (devolverStock
+                            ? " | Stock devuelto al vendedor"
+                            : " | Stock NO devuelto al vendedor")
                     );
 
                     /* ===============================
@@ -1757,6 +1783,12 @@ namespace Sistema_David.Models
 
                         ventaElectro.Whatssap = 1;
                     }
+                    else if (desc.Contains("reprogram") || desc.Contains("cobropendiente") || desc.Contains("aceptarcobro"))
+                    {
+                        // Aceptar pendiente / reprogramación: el id es IdCuota (no hay Whatssap en cuota).
+                        tx.Commit();
+                        return "OK";
+                    }
                     else if (!desc.Contains("venta"))
                     {
                         var venta = db.Ventas_Electrodomesticos_Pagos
@@ -1865,25 +1897,48 @@ namespace Sistema_David.Models
             {
                 try
                 {
-                    var cuota = db.Ventas_Electrodomesticos_Cuotas
+                    var cuotaOrigen = db.Ventas_Electrodomesticos_Cuotas
                         .FirstOrDefault(c => c.Id == idCuota);
 
-                    if (cuota == null)
+                    if (cuotaOrigen == null)
                         return "Cuota no encontrada";
 
-                    cuota.TransferenciaPendiente = estado;
-                    cuota.UsuarioModificacion = usuario;
-                    cuota.FechaModificacion = DateTime.Now;
+                    var idVenta = cuotaOrigen.IdVenta;
+                    var ahora = DateTime.Now;
+
+                    // Toda la venta en bloque (no cuota suelta).
+                    // Al marcar: solo cuotas no pagadas. Al revertir: todas las de la venta.
+                    var cuotasQuery = db.Ventas_Electrodomesticos_Cuotas
+                        .Where(c => c.IdVenta == idVenta);
+
+                    if (estado == 1)
+                        cuotasQuery = cuotasQuery.Where(c => c.Estado != "Pagada");
+
+                    var cuotas = cuotasQuery.ToList();
+
+                    if (cuotas.Count == 0)
+                        return estado == 1
+                            ? "La venta no tiene cuotas pendientes"
+                            : "No hay cuotas para revertir";
+
+                    foreach (var cuota in cuotas)
+                    {
+                        cuota.TransferenciaPendiente = estado;
+                        cuota.UsuarioModificacion = usuario;
+                        cuota.FechaModificacion = ahora;
+                    }
 
                     Audit(
                         db,
-                        cuota.IdVenta,
-                        cuota.Id,
+                        idVenta,
+                        cuotaOrigen.Id,
                         usuario,
                         "Transferencia Pendiente",
-                        "1",
-                        "0",
-                        "Transferencia Pendiente"
+                        estado == 1 ? "0" : "1",
+                        estado == 1 ? "1" : "0",
+                        estado == 1
+                            ? $"Venta completa → Transferencia Pendiente ({cuotas.Count} cuotas)"
+                            : $"Venta completa ← Transferencia Pendiente revertida ({cuotas.Count} cuotas)"
                     );
 
                     db.SaveChanges();
@@ -2408,6 +2463,14 @@ namespace Sistema_David.Models
 
                 decimal total = venta.ImporteTotal;
 
+                var nombresUsuarios = db.Usuarios
+                    .Select(u => new { u.Id, u.Nombre })
+                    .ToList()
+                    .ToDictionary(u => u.Id, u => string.IsNullOrWhiteSpace(u.Nombre) ? "Sistema" : u.Nombre);
+
+                string NombreUsuario(int id) =>
+                    id > 0 && nombresUsuarios.TryGetValue(id, out var n) ? n : "N/A";
+
                 /* =========================
                    1️⃣ VENTA BASE
                 ========================= */
@@ -2417,7 +2480,7 @@ namespace Sistema_David.Models
                     IdVenta = venta.Id,
                     Fecha = venta.FechaVenta,
                     Entrega = 0,
-                    Restante = 0, // 🔥 se recalcula después
+                    Restante = 0,
                     Interes = 0,
                     Descripcion = $"Venta por {total:N0} pesos",
                     MetodoPago = "Venta",
@@ -2427,68 +2490,174 @@ namespace Sistema_David.Models
                 });
 
                 /* =========================
-                   2️⃣ PAGOS
+                   2️⃣ PAGOS → 1 línea por cuota aplicada
                 ========================= */
                 var pagos = db.Ventas_Electrodomesticos_Pagos
                     .Where(p => p.IdVenta == idVenta)
                     .ToList();
 
+                var idsPagos = pagos.Select(p => p.Id).ToList();
+                var detalles = idsPagos.Count == 0
+                    ? new List<(int IdDetalle, int IdPago, int NumeroCuota, decimal Importe)>()
+                    : (
+                        from d in db.Ventas_Electrodomesticos_Pagos_Detalle
+                        join c in db.Ventas_Electrodomesticos_Cuotas on d.IdCuota equals c.Id
+                        where idsPagos.Contains(d.IdPago)
+                        select new
+                        {
+                            IdDetalle = d.Id,
+                            d.IdPago,
+                            c.NumeroCuota,
+                            Importe = d.ImporteAplicado
+                        }
+                      )
+                      .AsEnumerable()
+                      .Select(x => (x.IdDetalle, x.IdPago, x.NumeroCuota, x.Importe))
+                      .ToList();
+
+                var detallesPorPago = detalles.GroupBy(x => x.IdPago).ToDictionary(g => g.Key, g => g.ToList());
+
                 foreach (var p in pagos)
                 {
+                    var fechaMov = CombinarFechaConHora(p.FechaPago, p.FechaCreacion);
+                    var cobrador = NombreUsuario(p.UsuarioCreacion);
+
+                    if (detallesPorPago.TryGetValue(p.Id, out var dets) && dets.Count > 0)
+                    {
+                        foreach (var d in dets.OrderBy(x => x.NumeroCuota).ThenBy(x => x.IdDetalle))
+                        {
+                            lista.Add(new VMInformacionVenta
+                            {
+                                Id = d.IdDetalle,
+                                IdVenta = p.IdVenta,
+                                Fecha = fechaMov,
+                                Entrega = d.Importe,
+                                Restante = 0,
+                                Interes = 0,
+                                Descripcion = $"Cobranza por {d.Importe:N0} pesos (Cuota #{d.NumeroCuota})",
+                                MetodoPago = p.MedioPago,
+                                Observacion = p.Observacion,
+                                idCobrador = p.UsuarioCreacion,
+                                Cobrador = cobrador
+                            });
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: pago sin detalle de cuotas
+                        lista.Add(new VMInformacionVenta
+                        {
+                            Id = p.Id,
+                            IdVenta = p.IdVenta,
+                            Fecha = fechaMov,
+                            Entrega = p.ImporteTotal,
+                            Restante = 0,
+                            Interes = 0,
+                            Descripcion = $"Cobranza por {p.ImporteTotal:N0} pesos",
+                            MetodoPago = p.MedioPago,
+                            Observacion = p.Observacion,
+                            idCobrador = p.UsuarioCreacion,
+                            Cobrador = cobrador
+                        });
+                    }
+                }
+
+                /* =========================
+                   3️⃣ INTERESES / RECARGOS
+                ========================= */
+                var recargos = (
+                    from r in db.Ventas_Electrodomesticos_Cuotas_Recargos
+                    join c in db.Ventas_Electrodomesticos_Cuotas on r.IdCuota equals c.Id
+                    where c.IdVenta == idVenta
+                    select new
+                    {
+                        r.Id,
+                        r.Fecha,
+                        r.FechaCreacion,
+                        r.ImporteCalculado,
+                        r.UsuarioCreacion,
+                        r.Observacion,
+                        c.NumeroCuota
+                    }
+                ).ToList();
+
+                foreach (var r in recargos)
+                {
+                    var fechaMov = CombinarFechaConHora(r.Fecha, r.FechaCreacion);
                     lista.Add(new VMInformacionVenta
                     {
-                        Id = p.Id,
-                        IdVenta = p.IdVenta,
-                        Fecha = p.FechaPago,
-                        Entrega = p.ImporteTotal,
-                        Restante = 0, // 🔥 recalculamos después
-                        Interes = 0,
-                        Descripcion = $"Cobranza por {p.ImporteTotal:N0} pesos",
-                        MetodoPago = p.MedioPago,
-                        Observacion = p.Observacion,
-                        idCobrador = p.UsuarioCreacion,
-                        Cobrador = db.Usuarios
-                            .Where(u => u.Id == p.UsuarioCreacion)
-                            .Select(u => u.Nombre)
-                            .FirstOrDefault() ?? "Sistema"
+                        Id = r.Id,
+                        IdVenta = idVenta,
+                        Fecha = fechaMov,
+                        Entrega = 0,
+                        Restante = 0,
+                        Interes = r.ImporteCalculado,
+                        Descripcion = $"Interés por {r.ImporteCalculado:N0} pesos (Cuota #{r.NumeroCuota})",
+                        MetodoPago = "INTERÉS",
+                        Observacion = r.Observacion,
+                        idCobrador = r.UsuarioCreacion,
+                        Cobrador = NombreUsuario(r.UsuarioCreacion)
                     });
                 }
 
                 /* =========================
-                   3️⃣ ORDEN FINAL
-                   - cobranzas arriba (más nuevas primero)
-                   - venta abajo
+                   4️⃣ Restante en orden cronológico ASC
+                   5️⃣ Display: más reciente arriba, Venta abajo (leer de abajo hacia arriba)
                 ========================= */
-                var ordenado = lista
-                    .OrderBy(x => x.MetodoPago == "Venta" ? 1 : 0)   // venta siempre última
-                    .ThenByDescending(x => x.Fecha)                 // cobranzas nuevas arriba
-                    .ThenByDescending(x => x.Id)
+                var cronologico = lista
+                    .OrderBy(x => x.Fecha ?? DateTime.MinValue)
+                    .ThenBy(x => EsMovimientoVenta(x) ? 0 : 1)
+                    .ThenBy(x => x.Id)
                     .ToList();
 
-                /* =========================
-                   4️⃣ RECALCULAR RESTANTES
-                   (CLAVE DEL PROBLEMA)
-                ========================= */
                 decimal restante = total;
-
-                foreach (var item in ordenado)
+                foreach (var item in cronologico)
                 {
-                    if (item.MetodoPago != "Venta")
+                    if (EsMovimientoVenta(item))
                     {
-                        restante -= item.Entrega;
-                        if (restante < 0) restante = 0;
-
                         item.Restante = restante;
+                        continue;
                     }
-                    else
-                    {
-                        // 🔥 LA CLAVE
-                        item.Restante = total;
-                    }
+
+                    if (item.Interes > 0)
+                        restante += item.Interes;
+
+                    if (item.Entrega > 0)
+                        restante -= item.Entrega;
+
+                    if (restante < 0) restante = 0;
+                    item.Restante = restante;
                 }
-                return ordenado;
+
+                // De abajo hacia arriba: Venta es la primera (más vieja).
+                // En pantalla: más reciente arriba → Venta al final.
+                return cronologico
+                    .OrderByDescending(x => x.Fecha ?? DateTime.MinValue)
+                    .ThenByDescending(x => EsMovimientoVenta(x) ? 0 : 1) // venta debajo si empata fecha
+                    .ThenByDescending(x => x.Id)
+                    .ToList();
             }
         }
+
+        private static bool EsMovimientoVenta(VMInformacionVenta x)
+        {
+            if (x == null) return false;
+            if (string.Equals((x.MetodoPago ?? "").Trim(), "Venta", StringComparison.OrdinalIgnoreCase))
+                return true;
+            var d = (x.Descripcion ?? "").ToLowerInvariant();
+            return d.StartsWith("venta");
+        }
+
+        /// <summary>
+        /// Si la fecha de negocio vino a medianoche, usa la hora de la fecha de creación.
+        /// </summary>
+        private static DateTime CombinarFechaConHora(DateTime fechaNegocio, DateTime fechaCreacion)
+        {
+            if (fechaNegocio.TimeOfDay == TimeSpan.Zero && fechaCreacion != default(DateTime) && fechaCreacion.TimeOfDay != TimeSpan.Zero)
+                return fechaNegocio.Date.Add(fechaCreacion.TimeOfDay);
+            return fechaNegocio;
+        }
+
         public static string CambiarEstadoVenta(int idVenta, string nuevoEstado, int usuario, bool forzar = false, bool devolverStock = true)
         {
             using (var db = new Sistema_DavidEntities())

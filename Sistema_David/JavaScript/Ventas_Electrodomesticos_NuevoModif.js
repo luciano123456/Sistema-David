@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
  * Ventas_Electrodomesticos_NuevoModif.js — FULL v11.0
  * ============================================================
  * - Usa #idVenta oculto (NO el pathname)
@@ -2356,7 +2356,7 @@ function generarPdfVenta(venta) {
     y += 8;
 
     doc.setFontSize(10);
-    doc.text(`Venta Nº: ${venta.IdVenta}`, 10, y);
+    doc.text(`Nro Venta: ${venta.IdVenta}`, 10, y);
     doc.text(`Fecha: ${venta.FechaVenta ? moment(venta.FechaVenta).format("DD/MM/YYYY") : ""}`, 150, y);
     y += 6;
 
