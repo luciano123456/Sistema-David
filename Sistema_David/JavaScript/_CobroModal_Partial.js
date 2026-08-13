@@ -1003,6 +1003,21 @@ async function confirmarCobro() {
                 if (result.confirmed && result.applied > 0) {
                     getModal("mdCobro").hide();
                     await actualizarGrillaCobros();
+
+                    if (userSession?.IdRol === 1 || userSession?.IdRol === 4) {
+                        const enviar = await confirmarModal(`
+                            <div class="text-start px-1">
+                                <div class="mb-2 fw-bold">
+                                    <i class="fa fa-whatsapp me-1" style="color:#25D366"></i>
+                                    Aviso al cliente
+                                </div>
+                                <div>¿Deseás enviarle por <b>WhatsApp</b> el aviso del <b>cambio de fecha de cobro</b>?</div>
+                            </div>
+                        `);
+                        if (enviar) {
+                            await preguntarWhatsappDespuesCobro(cuotaActual.Id, "Reprogramar");
+                        }
+                    }
                 }
                 return;
             } catch {
@@ -1038,6 +1053,21 @@ async function confirmarCobro() {
             await actualizarGrillaCobros();
             const fechaFmt = moment(fecha).format("DD/MM/YYYY");
             notificarExitoCobrosUi(`Fecha de cobro actualizada a ${fechaFmt}.`);
+
+            if (userSession?.IdRol === 1 || userSession?.IdRol === 4) {
+                const enviar = await confirmarModal(`
+                    <div class="text-start px-1">
+                        <div class="mb-2 fw-bold">
+                            <i class="fa fa-whatsapp me-1" style="color:#25D366"></i>
+                            Aviso al cliente
+                        </div>
+                        <div>¿Deseás enviarle por <b>WhatsApp</b> el aviso del <b>cambio de fecha de cobro</b>?</div>
+                    </div>
+                `);
+                if (enviar) {
+                    await preguntarWhatsappDespuesCobro(cuotaActual.Id, "Reprogramar");
+                }
+            }
             return;
 
         } catch {
@@ -1542,7 +1572,7 @@ function generarPdfVenta(venta) {
     doc.text("Documento no válido como factura", 173, 28, { align: "center" });
 
     doc.setFontSize(9);
-    doc.text(`N° ${venta.IdVenta}`, 200, 10, { align: "right" });
+    doc.text(`Nro ${venta.IdVenta}`, 200, 10, { align: "right" });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
@@ -1807,7 +1837,13 @@ async function preguntarWhatsappDespuesCobro(idMovimiento, descripcion) {
         if (!base || !base.Venta || !base.Cliente?.ClienteTelefono) return;
 
         const mensaje = armarMensajeWhatsappElectro(base, descripcion, idMovimiento);
-        if (!mensaje) return;
+        if (!mensaje) {
+            console.warn("WhatsApp electro: mensaje vacío", { idMovimiento, descripcion, base });
+            if (typeof VC?.toast === "function") {
+                VC.toast("No se pudo armar el mensaje de WhatsApp", "warning");
+            }
+            return;
+        }
 
         abrirWhatsapp(base.Cliente.ClienteTelefono, mensaje);
 
@@ -1884,6 +1920,7 @@ function obtenerTipoMensajeElectro(descripcion = "") {
     if (d === "cobro") return "cobro";
     if (d === "recargo") return "recargo";
     if (d === "venta") return "venta";
+    if (d.includes("reprogram")) return "reprogramar";
 
     if (d.includes("cobranza")) return "cobro";
     if (d.includes("recargo")) return "recargo";
@@ -2028,37 +2065,74 @@ Ante cualquier consulta, quedamos a disposición.`;
        ===================================================== */
     if (tipo === "cobro") {
 
-        if (!Array.isArray(v.Pagos) || !v.Pagos.length)
-            return "";
+        const pagos = Array.isArray(v.Pagos) ? v.Pagos : [];
+        let pago = pagos.find(p => Number(p.Id) === Number(idPago))
+            || pagos.find(p => Number(p.Id) === Number(base.IdPagoActual))
+            || null;
 
-        // 🔥 PAGO REAL (EL QUE ACABÁS DE HACER)
-        const pago = v.Pagos.find(p => Number(p.Id) === Number(idPago));
-        if (!pago || !Array.isArray(pago.Detalles) || !pago.Detalles.length)
-            return "";
+        if (!pago && pagos.length) {
+            pago = [...pagos].sort(
+                (a, b) => new Date(b.FechaPago || 0) - new Date(a.FechaPago || 0)
+            )[0];
+        }
 
-        // 🔥 DETALLE REAL
-        const det = pago.Detalles[0];
+        if (!pago) return "";
 
-        // 🔥 CUOTA REAL PAGADA
-        const cuota = Array.isArray(v.Cuotas)
-            ? v.Cuotas.find(c => Number(c.Id) === Number(det.IdCuota))
-            : null;
+        const detalles = Array.isArray(pago.Detalles) ? pago.Detalles : [];
+        const cuotas = Array.isArray(v.Cuotas) ? v.Cuotas : [];
 
-        const nroCuota = cuota?.NumeroCuota ?? "?";
-        const importePagado = formatNumber(det.ImporteAplicado || 0);
+        let importePagado = 0;
+        const cuotasDelPago = [];
 
-        // 🔥 CUOTAS RESTANTES REALES
-        const cuotasRestantes = Array.isArray(v.Cuotas)
-            ? v.Cuotas.filter(c => (c.MontoRestante || 0) > 0).length
-            : 0;
+        if (detalles.length) {
+            detalles.forEach(det => {
+                const aplicado = Number(det.ImporteAplicado || 0);
+                importePagado += aplicado;
+                const cuota = cuotas.find(c => Number(c.Id) === Number(det.IdCuota));
+                if (cuota) {
+                    cuotasDelPago.push({
+                        NumeroCuota: cuota.NumeroCuota,
+                        MontoRestante: Number(cuota.MontoRestante || 0),
+                        ImporteAplicado: aplicado
+                    });
+                }
+            });
+        } else {
+            importePagado = Number(pago.ImporteTotal || 0);
+        }
+
+        let textoCuotaPagada = "Cuota";
+        if (cuotasDelPago.length > 1) {
+            textoCuotaPagada = `Cuotas ${cuotasDelPago.map(x => x.NumeroCuota).join(", ")}`;
+        } else if (cuotasDelPago.length === 1) {
+            textoCuotaPagada = `Cuota ${cuotasDelPago[0].NumeroCuota}`;
+        }
+
+        let lineasRestanteCuota = "";
+        if (cuotasDelPago.length === 1) {
+            const c0 = cuotasDelPago[0];
+            lineasRestanteCuota = c0.MontoRestante > 0.009
+                ? `💲 *Restante de la cuota:* ${formatNumber(c0.MontoRestante)}\n`
+                : `✅ *Cuota ${c0.NumeroCuota} cancelada*\n`;
+        } else if (cuotasDelPago.length > 1) {
+            lineasRestanteCuota = cuotasDelPago.map(c =>
+                c.MontoRestante > 0.009
+                    ? `💲 *Restante cuota ${c.NumeroCuota}:* ${formatNumber(c.MontoRestante)}`
+                    : `✅ *Cuota ${c.NumeroCuota} cancelada*`
+            ).join("\n") + "\n";
+        }
+
+        const saldoVenta = formatNumber(v.Restante || 0);
+        const cuotasRestantes = cuotas.filter(c => Number(c.MontoRestante || 0) > 0).length;
 
         return `${saludo} ${nombreCliente} 👋
 
 💳 *COBRO REGISTRADO – ELECTRODOMÉSTICOS*
 
-Se ha registrado correctamente el pago de la *Cuota ${nroCuota}*.
+Se ha registrado correctamente el pago de la *${textoCuotaPagada}*.
 
-💰 *Importe abonado:* ${importePagado}
+💰 *Importe abonado:* ${formatNumber(importePagado)}
+${lineasRestanteCuota}📉 *Saldo pendiente de la venta:* ${saldoVenta}
 📊 *Cuotas restantes:* ${cuotasRestantes}
 
 📆 *Próxima cuota a vencer:*
@@ -2103,6 +2177,48 @@ ${cuotaAfectada}
 ${textoCuota}
 
 Ante cualquier duda o consulta, quedamos a disposición.`;
+    }
+
+    /* =====================================================
+       ============== REPROGRAMACIÓN / FECHA ===============
+       ===================================================== */
+    if (tipo === "reprogramar") {
+
+        const idCuota = Number(idPago);
+        const cuota = Array.isArray(v.Cuotas)
+            ? v.Cuotas.find(c => Number(c.Id) === idCuota)
+            : null;
+
+        if (!cuota) return "";
+
+        const nroCuota = cuota.NumeroCuota ?? "?";
+        const fechaCobro = cuota.FechaCobro
+            ? moment(cuota.FechaCobro).format("DD/MM/YYYY")
+            : "—";
+        const fechaVto = cuota.FechaVencimiento
+            ? moment(cuota.FechaVencimiento).format("DD/MM/YYYY")
+            : "—";
+        const restanteCuota = formatNumber(
+            Number(cuota.MontoRestante != null
+                ? cuota.MontoRestante
+                : (Number(cuota.MontoOriginal || 0) + Number(cuota.MontoRecargos || 0) - Number(cuota.MontoDescuentos || 0) - Number(cuota.MontoPagado || 0)))
+        );
+
+        return `${saludo} ${nombreCliente} 👋
+
+📅 *CAMBIO DE FECHA DE COBRO – ELECTRODOMÉSTICOS*
+
+Le informamos que se confirmó la nueva fecha de cobro de su *Cuota ${nroCuota}*.
+
+📆 *Nueva fecha de cobro:* ${fechaCobro}
+📌 *Vencimiento de la cuota:* ${fechaVto}
+💲 *Saldo de la cuota:* ${restanteCuota}
+📉 *Saldo pendiente de la venta:* ${saldo}
+
+📆 *Próxima cuota a vencer:*
+${textoCuota}
+
+Ante cualquier consulta, quedamos a disposición.`;
     }
 
 

@@ -1,7 +1,7 @@
 /*
-    Productos — actualización módulo catálogo / WhatsApp / financiación
-    Ejecutar en la base de datos del sistema (SQL Server).
-    Luego: actualizar modelo desde BD en Visual Studio (EDMX) o usar los cambios ya incluidos en el repo.
+  002 — Productos: actualización módulo catálogo / WhatsApp / financiación.
+  Ejecutar en la base del sistema (SQL Server). Idempotente.
+  Luego: actualizar modelo desde BD en Visual Studio (EDMX) si hace falta.
 */
 
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Productos') AND name = 'Marca')

@@ -1,4 +1,4 @@
-﻿using Sistema_David.Models.DB;
+using Sistema_David.Models.DB;
 using Sistema_David.Models.Modelo;
 using SpreadsheetLight;
 using System;
@@ -93,30 +93,55 @@ namespace Sistema_David.Models
                 ImagenesExtra = DeserializarImagenesExtra(result.ImagenesAdicionales)
             };
         }
+        private static string NombreCategoriaODefault(string nombre)
+        {
+            return string.IsNullOrWhiteSpace(nombre) ? "Sin categoría" : nombre;
+        }
+
         public static List<VMProducto> ListaProductos()
         {
             using (var db = new Sistema_DavidEntities())
             {
                 return (from p in db.Productos
-                        join c in db.Categorias on p.idCategoria equals c.Id
+                        join c in db.Categorias on p.idCategoria equals c.Id into cats
+                        from c in cats.DefaultIfEmpty()
                         orderby p.Activo descending, p.Nombre
-                        select new VMProducto
+                        select new
                         {
-                            Id = p.Id,
-                            Codigo = p.Codigo,
-                            Nombre = p.Nombre,
-                            idCategoria = p.idCategoria,
-                            Categoria = c.Nombre,
-                            Stock = p.Stock,
-                            PrecioCompra = p.PrecioCompra,
-                            PrecioVenta = p.PrecioVenta,
-                            PorcVenta = p.PorcVenta,
+                            p.Id,
+                            p.Codigo,
+                            p.Nombre,
+                            p.idCategoria,
+                            Categoria = c != null ? c.Nombre : null,
+                            p.Stock,
+                            p.PrecioCompra,
+                            p.PrecioVenta,
+                            p.PorcVenta,
                             Total = p.PrecioVenta * p.Stock,
-                            DiasVencimiento = p.DiasVencimiento,
+                            p.DiasVencimiento,
                             Activo = p.Activo ?? 0,
-                            Marca = p.Marca,
+                            p.Marca,
                             TieneImagen = p.Imagen != null && p.Imagen != ""
-                        }).ToList();
+                        })
+                        .AsEnumerable()
+                        .Select(x => new VMProducto
+                        {
+                            Id = x.Id,
+                            Codigo = x.Codigo,
+                            Nombre = x.Nombre,
+                            idCategoria = x.idCategoria,
+                            Categoria = NombreCategoriaODefault(x.Categoria),
+                            Stock = x.Stock,
+                            PrecioCompra = x.PrecioCompra,
+                            PrecioVenta = x.PrecioVenta,
+                            PorcVenta = x.PorcVenta,
+                            Total = x.Total,
+                            DiasVencimiento = x.DiasVencimiento,
+                            Activo = x.Activo,
+                            Marca = x.Marca,
+                            TieneImagen = x.TieneImagen
+                        })
+                        .ToList();
             }
         }
 
@@ -155,7 +180,8 @@ namespace Sistema_David.Models
             using (var db = new Sistema_DavidEntities())
             {
                 var result = (from p in db.Productos
-                              join c in db.Categorias on p.idCategoria equals c.Id
+                              join c in db.Categorias on p.idCategoria equals c.Id into cats
+                              from c in cats.DefaultIfEmpty()
                               where p.Activo == 1
                               orderby p.Nombre
                               select new
@@ -164,52 +190,7 @@ namespace Sistema_David.Models
                                   p.Codigo,
                                   p.Nombre,
                                   p.idCategoria,
-                                  Categoria = c.Nombre,
-                                  p.Stock,
-                                  p.PrecioCompra,
-                                  p.PrecioVenta,
-                                  p.PorcVenta,
-                                  Total = p.PrecioCompra * p.Stock,
-                                  p.DiasVencimiento,
-                                  p.Activo
-                              })
-                              .AsEnumerable() // Materializa antes de mapear a Producto
-                              .Select(x => new VMProducto
-                              {
-                                  Id = x.Id,
-                                  Codigo = x.Codigo,
-                                  Nombre = x.Nombre,
-                                  idCategoria = x.idCategoria,
-                                  Categoria = x.Categoria,
-                                  Stock = x.Stock,
-                                  PrecioCompra = x.PrecioCompra,
-                                  PrecioVenta = x.PrecioVenta,
-                                  Total = x.Total,
-                                  PorcVenta = x.PorcVenta,
-                                  DiasVencimiento = x.DiasVencimiento,
-                                  Activo = x.Activo ?? 0 // Maneja valores nulos en Activo
-                              })
-                              .ToList();
-
-                return result;
-            }
-        }
-
-        public static List<VMProducto> ListaProductosActivosConStock()
-        {
-            using (var db = new Sistema_DavidEntities())
-            {
-                var result = (from p in db.Productos
-                              join c in db.Categorias on p.idCategoria equals c.Id
-                              where p.Activo == 1 && p.Stock != null && p.Stock > 0
-                              orderby p.Nombre
-                              select new
-                              {
-                                  p.Id,
-                                  p.Codigo,
-                                  p.Nombre,
-                                  p.idCategoria,
-                                  Categoria = c.Nombre,
+                                  Categoria = c != null ? c.Nombre : null,
                                   p.Stock,
                                   p.PrecioCompra,
                                   p.PrecioVenta,
@@ -225,7 +206,53 @@ namespace Sistema_David.Models
                                   Codigo = x.Codigo,
                                   Nombre = x.Nombre,
                                   idCategoria = x.idCategoria,
-                                  Categoria = x.Categoria,
+                                  Categoria = NombreCategoriaODefault(x.Categoria),
+                                  Stock = x.Stock,
+                                  PrecioCompra = x.PrecioCompra,
+                                  PrecioVenta = x.PrecioVenta,
+                                  Total = x.Total,
+                                  PorcVenta = x.PorcVenta,
+                                  DiasVencimiento = x.DiasVencimiento,
+                                  Activo = x.Activo ?? 0
+                              })
+                              .ToList();
+
+                return result;
+            }
+        }
+
+        public static List<VMProducto> ListaProductosActivosConStock()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var result = (from p in db.Productos
+                              join c in db.Categorias on p.idCategoria equals c.Id into cats
+                              from c in cats.DefaultIfEmpty()
+                              where p.Activo == 1 && p.Stock != null && p.Stock > 0
+                              orderby p.Nombre
+                              select new
+                              {
+                                  p.Id,
+                                  p.Codigo,
+                                  p.Nombre,
+                                  p.idCategoria,
+                                  Categoria = c != null ? c.Nombre : null,
+                                  p.Stock,
+                                  p.PrecioCompra,
+                                  p.PrecioVenta,
+                                  p.PorcVenta,
+                                  Total = p.PrecioCompra * p.Stock,
+                                  p.DiasVencimiento,
+                                  p.Activo
+                              })
+                              .AsEnumerable()
+                              .Select(x => new VMProducto
+                              {
+                                  Id = x.Id,
+                                  Codigo = x.Codigo,
+                                  Nombre = x.Nombre,
+                                  idCategoria = x.idCategoria,
+                                  Categoria = NombreCategoriaODefault(x.Categoria),
                                   Stock = x.Stock,
                                   PrecioCompra = x.PrecioCompra,
                                   PrecioVenta = x.PrecioVenta,

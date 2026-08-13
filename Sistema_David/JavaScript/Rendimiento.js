@@ -1,4 +1,4 @@
-﻿let userSession;
+let userSession;
 let gridRendimiento = null;
 let usuarioSeleccionadoId = null;
 let isRenderingDashboard = false;
@@ -755,6 +755,19 @@ const safeString = (v) => {
 
 const safeUpper = (v) => safeString(v).toUpperCase();
 
+const normalizarTextoRendimiento = (v) => safeUpper(v)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+const esFilaInteresRendimiento = (descripcion, metodoPago) => {
+    const desc = normalizarTextoRendimiento(descripcion);
+    const metodo = normalizarTextoRendimiento(metodoPago);
+    return desc.includes("INTERES")
+        || desc.includes("RECARGO")
+        || metodo.includes("INTERES")
+        || metodo === "RECARGO";
+};
+
 /** Cobranza de electro: `Id` es `Ventas_Electrodomesticos_Pagos.Id` (ver `Rendimiento/ObtenerImagen`). */
 const esElectrodomesticosRendimiento = (row) => {
     if (!row) return false;
@@ -808,7 +821,10 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
             }
 
             if (descripcion.includes("Venta")) totVenta += venta;
-            if (descripcion.includes("Interes")) totInteres += interes;
+            // Clásico: "Interes...". Electro: "Interes/Recargo Electrodomesticos..." o método INTERÉS.
+            if (esFilaInteresRendimiento(descripcion, metodo)) {
+                totInteres += interes;
+            }
         });
 
         document.getElementById("totventa").textContent = formatNumber(totVenta);
@@ -1572,6 +1588,31 @@ Ante cualquier consulta, quedamos a disposición.`;
             ? obtenerSaldoHastaCuota(base, cuotaObjetivo.NumeroCuota)
             : obtenerSaldoPostPago(base, Number(base.IdPagoActual || 0));
 
+        const saldoVentaActual = Number(v.Restante != null ? v.Restante : saldoNumerico || 0);
+
+        let lineasRestanteCuota = "";
+        if (cuotasDelPago.length === 1) {
+            const c0 = cuotasDelPago[0];
+            const restCuota = Number(c0.MontoRestante || 0);
+            lineasRestanteCuota = restCuota > 0.009
+                ? `💲 *Restante de la cuota:* ${formatNumber(restCuota)}\n`
+                : `✅ *Cuota ${c0.NumeroCuota} cancelada*\n`;
+        } else if (cuotasDelPago.length > 1) {
+            lineasRestanteCuota = cuotasDelPago.map(c => {
+                const restCuota = Number(c.MontoRestante || 0);
+                return restCuota > 0.009
+                    ? `💲 *Restante cuota ${c.NumeroCuota}:* ${formatNumber(restCuota)}`
+                    : `✅ *Cuota ${c.NumeroCuota} cancelada*`;
+            }).join("\n") + "\n";
+        } else if (cuotaObjetivo) {
+            const restCuota = Number(cuotaObjetivo.MontoRestante || 0);
+            lineasRestanteCuota = restCuota > 0.009
+                ? `💲 *Restante de la cuota:* ${formatNumber(restCuota)}\n`
+                : (cuotaObjetivo.NumeroCuota
+                    ? `✅ *Cuota ${cuotaObjetivo.NumeroCuota} cancelada*\n`
+                    : "");
+        }
+
         const cuotasRestantes = Array.isArray(v.Cuotas)
             ? v.Cuotas.filter(c => Number(c.MontoRestante || 0) > 0).length
             : 0;
@@ -1583,7 +1624,7 @@ Ante cualquier consulta, quedamos a disposición.`;
 Se ha registrado correctamente el pago de la *${textoCuotaPagada}*.
 
 💰 *Importe abonado:* ${formatNumber(importePagado)}
-
+${lineasRestanteCuota}📉 *Saldo pendiente de la venta:* ${formatNumber(saldoVentaActual)}
 📊 *Cuotas restantes:* ${cuotasRestantes}
 
 📆 *Próxima cuota a vencer:*
@@ -1713,7 +1754,7 @@ function armarMensajeWhatsappElectroGrupal(base, pagosPendientes = []) {
 Se han registrado correctamente los siguientes pagos:
 
 ${detallePagos}💰 *Total abonado:* ${formatNumber(totalPagado)}
-
+📉 *Saldo pendiente de la venta:* ${formatNumber(saldoFinal > 0 ? saldoFinal : (v.Restante || 0))}
 📊 *Cuotas restantes:* ${cuotasRestantes}
 
 📆 *Próxima cuota a vencer:*
@@ -2626,8 +2667,10 @@ async function buildDashboardData(rows) {
             }
         }
 
-        if (safeUpper(descripcion).includes("INTERES")) {
-            resumen.totalInteres += interes;
+        {
+            if (esFilaInteresRendimiento(descripcion, metodo)) {
+                resumen.totalInteres += interes;
+            }
         }
     });
 

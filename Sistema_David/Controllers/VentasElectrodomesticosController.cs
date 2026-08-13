@@ -1,4 +1,4 @@
-﻿using Sistema_David.Helpers;
+using Sistema_David.Helpers;
 using Sistema_David.Models;
 using Sistema_David.Models.ViewModels;
 using System;
@@ -512,12 +512,13 @@ namespace Sistema_David.Controllers
 
         /* ================= ELIMINAR VENTA ================= */
         [HttpPost]
-        public ActionResult EliminarVenta(int id, bool forzar = false, bool devolverStock = true)
+        public ActionResult EliminarVenta(int id, bool forzar = false, string devolverStock = "1")
         {
             try
             {
                 var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
-                var msg = Ventas_ElectrodomesticosModel.EliminarVenta(id, usuario, forzar);
+                var devolver = EsDevolverStockSi(devolverStock);
+                var msg = Ventas_ElectrodomesticosModel.EliminarVenta(id, usuario, forzar, devolver);
 
                 if (msg == "TIENE_PAGOS")
                 {
@@ -604,14 +605,15 @@ namespace Sistema_David.Controllers
         }
 
         [HttpPost]
-        public ActionResult CambiarEstadoVenta(int idVenta, string estado, bool forzar = false, bool devolverStock = true)
+        public ActionResult CambiarEstadoVenta(int idVenta, string estado, bool forzar = false, string devolverStock = "1")
         {
             try
             {
                 var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var devolver = EsDevolverStockSi(devolverStock);
 
                 var msg = Ventas_ElectrodomesticosModel
-                    .CambiarEstadoVenta(idVenta, estado, usuario, forzar, devolverStock);
+                    .CambiarEstadoVenta(idVenta, estado, usuario, forzar, devolver);
 
                 if (msg == "TIENE_PAGOS")
                 {
@@ -682,6 +684,29 @@ namespace Sistema_David.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Interpreta 1/true/si = devolver; 0/false/no = no devolver.
+        /// </summary>
+        private static bool EsDevolverStockSi(string valor)
+        {
+            if (string.IsNullOrWhiteSpace(valor))
+                return true;
+
+            var v = valor.Trim().ToLowerInvariant();
+            if (v == "0" || v == "false" || v == "no" || v == "off")
+                return false;
+
+            if (v == "1" || v == "true" || v == "si" || v == "sí" || v == "on" || v == "yes")
+                return true;
+
+            // Fallback: cualquier otro valor numérico distinto de 0
+            int n;
+            if (int.TryParse(v, out n))
+                return n != 0;
+
+            return true;
         }
 
     }

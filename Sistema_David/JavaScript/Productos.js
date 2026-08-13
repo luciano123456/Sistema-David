@@ -1,4 +1,4 @@
-﻿let userSession;
+let userSession;
 let gridVentas = null;
 let gridProductos;
 let prodImagenesExtra = [];
@@ -515,17 +515,14 @@ function prodArmarMensajeWhatsapp(p, nombreCliente) {
         lineas.push(detalles.join("\n"));
     }
 
+    var textoComercial = p.Descripcion ? String(p.Descripcion).trim() : "";
     var caracteristicas = prodFormatearCaracteristicas(p.Caracteristicas);
-    if (caracteristicas) {
+    if (textoComercial || caracteristicas) {
         lineas.push("");
         lineas.push("✅ *Características*");
-        lineas.push(caracteristicas);
-    }
-
-    if (p.Descripcion) {
-        lineas.push("");
-        lineas.push("📝 *Descripción*");
-        lineas.push(p.Descripcion.trim());
+        if (textoComercial) lineas.push(textoComercial);
+        if (textoComercial && caracteristicas) lineas.push("");
+        if (caracteristicas) lineas.push(caracteristicas);
     }
 
     var tienePlanMensualEnBloques = !!(p.FinConEntrega || p.FinSinEntrega);
@@ -737,12 +734,11 @@ function prodPayloadExtended() {
 }
 
 function prodBuildProductoPayload(conId) {
-    var cat = parseInt(document.getElementById("Categorias").value, 10);
     var payload = {
-        Codigo: (document.getElementById("Codigo").value || "").trim(),
+        Codigo: "",
         Nombre: (document.getElementById("Nombre").value || "").trim(),
         Imagen: document.getElementById("imgProd").value || "",
-        idCategoria: isNaN(cat) ? null : cat,
+        idCategoria: null,
         Stock: prodLeerEntero("Stock"),
         PrecioCompra: formatearSinMiles(document.getElementById("PrecioCompra").value),
         PrecioVenta: formatearSinMiles(document.getElementById("PrecioVenta").value),
@@ -756,9 +752,7 @@ function prodBuildProductoPayload(conId) {
 }
 
 function prodValidarProductoPayload(payload) {
-    if (!payload.Codigo) return "Ingresá el código del producto.";
     if (!payload.Nombre) return "Ingresá el nombre del producto.";
-    if (!payload.idCategoria) return "Seleccioná una categoría.";
     return "";
 }
 
@@ -815,7 +809,7 @@ $(document).ready(function () {
         document.getElementById("btnNuevo").removeAttribute("hidden");
     }
 
-    $("#Caracteristicas, #Descripcion, #Nombre, #Marca, #Modelo, #PrecioVenta").on("input", function () {
+    $("#Caracteristicas, #Descripcion, #Nombre, #Marca, #Modelo, #Color, #Accesorios, #PrecioVenta").on("input", function () {
         prodActualizarPreviewDescripcion();
         if (this.id === "PrecioVenta") {
             prodCalcFinSetPrecio("modal", formatearSinMiles($("#PrecioVenta").val() || "0"));
@@ -850,18 +844,16 @@ function configurarFiltrosPorColumnaProductos() {
     if (!gridProductos) return;
 
     const columnConfigProductos = [
+        { index: 1, filterType: "text" },
         { index: 2, filterType: "text" },
         { index: 3, filterType: "text" },
-        { index: 4, filterType: "select" },
+        { index: 4, filterType: "text" },
         { index: 5, filterType: "text" },
         { index: 6, filterType: "text" },
-        { index: 7, filterType: "text" },
-        { index: 8, filterType: "text" },
-        { index: 9, filterType: "text" },
-        { index: 10, filterType: "text" }
+        { index: 7, filterType: "text" }
     ];
 
-    inicializarFiltrosColumnas(gridProductos, columnConfigProductos, "productos_col_filters_v1");
+    inicializarFiltrosColumnas(gridProductos, columnConfigProductos, "productos_col_filters_v3");
 }
 
 async function configurarDataTable() {
@@ -889,7 +881,7 @@ async function configurarDataTable() {
         "pageLength": 25,
         "deferRender": true,
         "searchDelay": 350,
-        "order": [[11, 'desc']],
+        "order": [[8, 'desc']],
         scrollX: true,
         orderCellsTop: true,
         "columns": [
@@ -904,10 +896,7 @@ async function configurarDataTable() {
                         'onclick="prodAbrirImagenProducto(' + data + ',' + hasImg + ')" />';
                 }
             },
-            { "data": "Codigo" },
             { "data": "Nombre" },
-            { "data": "Marca", "defaultContent": "" },
-            { "data": "Categoria" },
             { "data": "Stock" },
             { "data": "PrecioCompra" },
             { "data": "Total" },
@@ -947,20 +936,20 @@ async function configurarDataTable() {
         "columnDefs": [
             {
                 "render": prodFormatCeldaMiles,
-                "targets": [5, 9, 10]
+                "targets": [2, 6, 7]
             },
             {
                 "render": prodFormatCeldaMoneda,
-                "targets": [6, 7, 8]
+                "targets": [3, 4, 5]
             }
         ],
 
         "initComplete": async function (settings, json) {
 
             if (userSession.IdRol == 4) {
+                gridProductos.column(3).visible(false);
+                gridProductos.column(4).visible(false);
                 gridProductos.column(6).visible(false);
-                gridProductos.column(7).visible(false);
-                gridProductos.column(9).visible(false);
             }
 
             await configurarOpcionesColumnas();
@@ -1092,10 +1081,8 @@ const editarProducto = async id => {
             $('.datos-error').text('')
 
             document.getElementById("IdProducto").value = result.Producto.Id;
-            document.getElementById("Codigo").value = result.Producto.Codigo;
             document.getElementById("Nombre").value = result.Producto.Nombre;
             document.getElementById("imgProd").value = result.Producto.Imagen;
-            document.getElementById("Categorias").value = result.Producto.idCategoria;
             document.getElementById("Stock").value = formatearMiles(result.Producto.Stock);
             document.getElementById("PrecioCompra").value = formatearMiles(result.Producto.PrecioCompra);
             document.getElementById("PrecioVenta").value = formatearMiles(result.Producto.PrecioVenta);
@@ -1104,16 +1091,6 @@ const editarProducto = async id => {
             prodCargarCamposExtendidos(result.Producto);
             document.getElementById("btnRegistrarModificar").textContent = "Modificar";
             document.getElementById("productoModalLabel").textContent = "Modificar " + document.getElementById("Nombre").value;
-
-            selectCategorias = document.getElementById("Categorias");
-
-            $('#Categorias option').remove();
-            for (i = 0; i < result.Categorias.length; i++) {
-                option = document.createElement("option");
-                option.value = result.Categorias[i].Id;
-                option.text = result.Categorias[i].Nombre;
-                selectCategorias.appendChild(option);
-            }
 
             if (result.Producto.Imagen != null && result.Producto.Imagen !== "") {
                 $("#imgProducto").attr("src", "data:image/png;base64," + result.Producto.Imagen).css("display", "block");
@@ -1211,17 +1188,14 @@ function abrirmodal() {
     $("#productoModal").modal('show');
     prodResetTabs();
     document.getElementById("IdProducto").value = ""
-    document.getElementById("Codigo").value = ""
     document.getElementById("Nombre").value = ""
     document.getElementById("imgProd").value = ""
-    document.getElementById("Categorias").value = ""
     document.getElementById("Stock").value = ""
     document.getElementById("PrecioCompra").value = ""
     document.getElementById("PrecioVenta").value = ""
     document.getElementById("PorcVenta").value = ""
     document.getElementById("DiasVencimiento").value = "";
     prodLimpiarCamposExtendidos();
-    cargarCategorias();
     prodCalcFinSetPrecio("modal", 0);
     document.getElementById("FinConEntrega").value = "";
     document.getElementById("FinSinEntrega").value = "";
@@ -1271,41 +1245,6 @@ fileInput.addEventListener("change", (e) => {
 
 }
 );
-
-async function cargarCategorias() {
-    try {
-        var url = "/Productos/ListarCategorias";
-
-        let value = JSON.stringify({
-        });
-
-        let options = {
-            type: "POST",
-            url: url,
-            async: true,
-            data: value,
-            contentType: "application/json",
-            dataType: "json"
-        };
-
-        let result = await MakeAjax(options);
-
-        if (result != null) {
-            selectCategorias = document.getElementById("Categorias");
-
-            $('#Categorias option').remove();
-            for (i = 0; i < result.data.length; i++) {
-                option = document.createElement("option");
-                option.value = result.data[i].Id;
-                option.text = result.data[i].Nombre;
-                selectCategorias.appendChild(option);
-            }
-        }
-    } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
-    }
-}
 
 function abrirmodalimportacionmasiva() {
     if (userSession.IdRol != 1) { //ROL VENDEDOR
@@ -1357,22 +1296,8 @@ async function enviarImportacionMasiva() {
 }
 
 //ACCIONES AL APRETAR ENTER
-document.getElementById('Codigo').addEventListener('keydown', inputCodigo);
-function inputCodigo(event) {
-    if (event.keyCode == 13) {
-        document.getElementById('Nombre').focus();
-    }
-}
-
 document.getElementById('Nombre').addEventListener('keydown', inputNombre);
 function inputNombre(event) {
-    if (event.keyCode == 13) {
-        document.getElementById('Categorias').focus();
-    }
-}
-
-document.getElementById('Categorias').addEventListener('keydown', inputCategoria);
-function inputCategoria(event) {
     if (event.keyCode == 13) {
         document.getElementById('Stock').focus();
     }

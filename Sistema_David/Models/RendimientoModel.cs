@@ -1,4 +1,4 @@
-﻿using Sistema_David.Models.DB;
+using Sistema_David.Models.DB;
 using Sistema_David.Models.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -198,10 +198,15 @@ namespace Sistema_David.Models
                         idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam, metodoPagoParam, cuentabancariaParam, comprobantesEnviadosParam
                     ).ToList();
 
+                    // El SP histórico solo trae intereses electro filtrando por IdVendedor de la venta
+                    // y con MetodoPago=RECARGO / IdCobrador=0. Completamos y normalizamos acá.
+                    AsegurarInteresesElectroEnRendimiento(
+                        db, resultList, idVendedor, cobranzas, tiponegocio, fechadesde, fechahasta);
+
                     EnriquecerRendimientoDespuesDeSp(db, resultList);
 
                     // El SP puede mezclar criterios; al elegir un usuario en la lista izquierda debe verse
-                    // su actividad como vendedor de la venta o como cobrador (cobranzas de cartera ajena).
+                    // su actividad como vendedor de la venta, cobrador asignado o quien registró el interés.
                     if (idVendedor > 0)
                     {
                         resultList = resultList
@@ -298,6 +303,181 @@ namespace Sistema_David.Models
             return string.IsNullOrWhiteSpace(u.Usuario) ? null : u.Usuario.Trim();
         }
 
+        private static bool EsFilaInteresElectro(VMRendimiento r)
+        {
+            if (r == null) return false;
+            var metodo = (r.MetodoPago ?? string.Empty).Trim();
+            if (string.Equals(metodo, "RECARGO", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(metodo, "INTERÉS", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(metodo, "INTERES", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            var d = (r.Descripcion ?? string.Empty).ToLowerInvariant();
+            return d.Contains("electro") && (d.Contains("recargo") || d.Contains("interes") || d.Contains("interés"));
+        }
+
+        /// <summary>
+        /// Completa intereses/recargos electro que el SP puede omitir (filtra solo por IdVendedor)
+        /// y normaliza MetodoPago/Descripcion/IdCobrador para que impacten en Rendimiento.
+        /// </summary>
+        private static void AsegurarInteresesElectroEnRendimiento(
+            Sistema_DavidEntities db,
+            List<VMRendimiento> rows,
+            int idVendedor,
+            int cobranzas,
+            int tiponegocio,
+            DateTime fechadesde,
+            DateTime fechahasta)
+        {
+            if (rows == null) return;
+            if (cobranzas != 1) return;
+            if (tiponegocio != -1 && tiponegocio != 3) return;
+
+            db.Configuration.ProxyCreationEnabled = false;
+            db.Configuration.LazyLoadingEnabled = false;
+
+            var desde = fechadesde.Date;
+            var hastaExclusivo = fechahasta.Date.AddDays(1);
+
+            var q =
+                from r in db.Ventas_Electrodomesticos_Cuotas_Recargos.AsNoTracking()
+                join c in db.Ventas_Electrodomesticos_Cuotas.AsNoTracking() on r.IdCuota equals c.Id
+                join v in db.Ventas_Electrodomesticos.AsNoTracking() on c.IdVenta equals v.Id
+                join cli in db.Clientes.AsNoTracking() on v.IdCliente equals cli.Id
+                where r.Fecha >= desde && r.Fecha < hastaExclusivo
+                select new
+                {
+                    r.Id,
+                    r.Fecha,
+                    r.ImporteCalculado,
+                    r.UsuarioCreacion,
+                    IdVenta = v.Id,
+                    v.IdVendedor,
+                    IdCobradorVenta = v.IdCobrador,
+                    v.Restante,
+                    v.FechaVencimiento,
+                    NumeroCuota = c.NumeroCuota,
+                    FechaVencimientoCuota = c.FechaVencimiento,
+                    Cliente = ((cli.Nombre ?? "") + " " + (cli.Apellido ?? "")).Trim()
+                };
+
+            if (idVendedor > 0)
+            {
+                q = q.Where(x =>
+                    x.IdVendedor == idVendedor
+                    || x.UsuarioCreacion == idVendedor
+                    || (x.IdCobradorVenta.HasValue && x.IdCobradorVenta.Value == idVendedor));
+            }
+
+            var recargos = q.ToList();
+            if (recargos.Count == 0) return;
+
+            string nombreTipoElectro = null;
+            try
+            {
+                nombreTipoElectro = db.TipoNegocio.AsNoTracking()
+                    .Where(t => t.Id == 3)
+                    .Select(t => t.Nombre)
+                    .FirstOrDefault();
+            }
+            catch { /* ignore */ }
+            if (string.IsNullOrWhiteSpace(nombreTipoElectro))
+                nombreTipoElectro = "Electrodomésticos";
+
+            var idsUsuario = recargos
+                .SelectMany(x => new[] { x.IdVendedor, x.UsuarioCreacion, x.IdCobradorVenta ?? 0 })
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            var nombres = idsUsuario.Count == 0
+                ? new Dictionary<int, string>()
+                : db.Usuarios.AsNoTracking()
+                    .Where(u => idsUsuario.Contains(u.Id))
+                    .ToList()
+                    .ToDictionary(u => u.Id, FormatearNombreUsuario);
+
+            var existentes = new HashSet<int>();
+            foreach (var row in rows)
+            {
+                if (!EsFilaInteresElectro(row)) continue;
+                var idRec = row.IdOriginal.HasValue && row.IdOriginal.Value > 0 ? row.IdOriginal.Value : row.Id;
+                if (idRec > 0) existentes.Add(idRec);
+            }
+
+            foreach (var rec in recargos)
+            {
+                if (existentes.Contains(rec.Id))
+                {
+                    // Normalizar filas que ya trajo el SP
+                    foreach (var row in rows.Where(r =>
+                                 EsFilaInteresElectro(r)
+                                 && ((r.IdOriginal.HasValue && r.IdOriginal.Value == rec.Id) || r.Id == rec.Id)))
+                    {
+                        NormalizarFilaInteresElectro(row, rec.Id, rec.IdVenta, rec.IdVendedor, rec.UsuarioCreacion,
+                            rec.ImporteCalculado, rec.Fecha, rec.Restante, rec.FechaVencimientoCuota, rec.FechaVencimiento,
+                            rec.Cliente, rec.NumeroCuota, nombreTipoElectro, nombres);
+                    }
+                    continue;
+                }
+
+                var nueva = new VMRendimiento();
+                NormalizarFilaInteresElectro(nueva, rec.Id, rec.IdVenta, rec.IdVendedor, rec.UsuarioCreacion,
+                    rec.ImporteCalculado, rec.Fecha, rec.Restante, rec.FechaVencimientoCuota, rec.FechaVencimiento,
+                    rec.Cliente, rec.NumeroCuota, nombreTipoElectro, nombres);
+                rows.Add(nueva);
+                existentes.Add(rec.Id);
+            }
+        }
+
+        private static void NormalizarFilaInteresElectro(
+            VMRendimiento row,
+            int idRecargo,
+            int idVenta,
+            int idVendedor,
+            int usuarioCreacion,
+            decimal importe,
+            DateTime fecha,
+            decimal? restanteVenta,
+            DateTime? proximoCobro,
+            DateTime? fechaLimite,
+            string cliente,
+            int numeroCuota,
+            string tipoNegocio,
+            Dictionary<int, string> nombres)
+        {
+            if (row == null) return;
+
+            row.Id = idRecargo;
+            row.IdOriginal = idRecargo;
+            row.IdVenta = idVenta;
+            row.IdVendedor = idVendedor;
+            row.IdCobrador = usuarioCreacion > 0 ? usuarioCreacion : 0;
+            row.CapitalInicial = 0;
+            row.Venta = 0;
+            row.Cobro = 0;
+            row.Interes = importe;
+            row.CapitalFinal = restanteVenta ?? 0m;
+            row.Fecha = fecha;
+            row.ProximoCobro = proximoCobro;
+            row.FechaLimite = fechaLimite;
+            row.Cliente = cliente ?? row.Cliente;
+            row.Descripcion = $"Interes Electrodomesticos #{idVenta} - Cuota {numeroCuota}";
+            row.MetodoPago = "INTERÉS";
+            row.IdTipoNegocio = 3;
+            row.TipoNegocio = tipoNegocio;
+            row.Origen = "ELECTRO";
+            row.CuentaBancaria = null;
+
+            if (nombres != null)
+            {
+                if (idVendedor > 0 && nombres.TryGetValue(idVendedor, out var nomV))
+                    row.Vendedor = nomV;
+                if (row.IdCobrador > 0 && nombres.TryGetValue(row.IdCobrador, out var nomC))
+                    row.UsuarioCobro = nomC;
+            }
+        }
+
         /// <summary>
         /// Corrige y completa datos que el SP puede duplicar o que EF mapea mal: cobrador (electro = mismo Id de pago en varias filas),
         /// nombre del cobrador, vendedor por IdVenta y nombre de tipo de negocio.
@@ -324,7 +504,7 @@ namespace Sistema_David.Models
 
                 if (d.Contains("electro") && d.Contains("cobranza"))
                     idsPagoElectro.Add(r.Id);
-                else if (d.Contains("electro") && (d.Contains("recargo") || d.Contains("descuento") || d.Contains("ajuste")))
+                else if (EsFilaInteresElectro(r) || (d.Contains("electro") && (d.Contains("recargo") || d.Contains("descuento") || d.Contains("ajuste") || d.Contains("interes"))))
                 {
                     if (r.Id > 0) idsRecargoElectro.Add(r.Id);
                     if (r.IdOriginal.HasValue && r.IdOriginal.Value > 0) idsRecargoElectro.Add(r.IdOriginal.Value);
@@ -354,15 +534,34 @@ namespace Sistema_David.Models
                 .ToList()
                 .ToDictionary(x => x.Id, x => x.idCobrador);
 
+            var usuarioCreacionRecargoPorId = new Dictionary<int, int>();
+            if (idsRecargoElectro.Count > 0)
+            {
+                usuarioCreacionRecargoPorId = db.Ventas_Electrodomesticos_Cuotas_Recargos
+                    .AsNoTracking()
+                    .Where(r => idsRecargoElectro.Contains(r.Id))
+                    .Select(r => new { r.Id, r.UsuarioCreacion })
+                    .ToList()
+                    .ToDictionary(x => x.Id, x => x.UsuarioCreacion);
+            }
+
             var whatssapRecargoPorId = new Dictionary<int, int?>();
             if (idsRecargoElectro.Count > 0)
             {
-                var csvIds = string.Join(",", idsRecargoElectro.Where(x => x > 0).Distinct());
-                if (!string.IsNullOrWhiteSpace(csvIds))
+                try
                 {
-                    var q = $"SELECT Id, Whatssap FROM Ventas_Electrodomesticos_Cuotas_Recargos WHERE Id IN ({csvIds})";
-                    var rowsRec = db.Database.SqlQuery<IdWhatsRow>(q).ToList();
-                    whatssapRecargoPorId = rowsRec.ToDictionary(x => x.Id, x => x.Whatssap);
+                    var csvIds = string.Join(",", idsRecargoElectro.Where(x => x > 0).Distinct());
+                    if (!string.IsNullOrWhiteSpace(csvIds))
+                    {
+                        var q = $"SELECT Id, Whatssap FROM Ventas_Electrodomesticos_Cuotas_Recargos WHERE Id IN ({csvIds})";
+                        var rowsRec = db.Database.SqlQuery<IdWhatsRow>(q).ToList();
+                        whatssapRecargoPorId = rowsRec.ToDictionary(x => x.Id, x => x.Whatssap);
+                    }
+                }
+                catch
+                {
+                    // Columna Whatssap puede no existir aún en algunos ambientes.
+                    whatssapRecargoPorId = new Dictionary<int, int?>();
                 }
             }
 
@@ -400,6 +599,8 @@ namespace Sistema_David.Models
             {
                 if (c.HasValue) idsUsuarios.Add(c.Value);
             }
+            foreach (var u in usuarioCreacionRecargoPorId.Values)
+                idsUsuarios.Add(u);
             foreach (var vid in idVentas)
             {
                 if (vendedorIdPorVentaElectro.TryGetValue(vid, out var ve)) idsUsuarios.Add(ve);
@@ -408,6 +609,7 @@ namespace Sistema_David.Models
             foreach (var r in rows)
             {
                 if (r != null && r.IdVendedor > 0) idsUsuarios.Add(r.IdVendedor);
+                if (r != null && r.IdCobrador > 0) idsUsuarios.Add(r.IdCobrador);
             }
 
             var nombresUsuario = idsUsuarios.Count == 0
@@ -425,6 +627,13 @@ namespace Sistema_David.Models
                 var desc = r.Descripcion ?? string.Empty;
                 var d = desc.ToLowerInvariant();
 
+                // Electro: el SP etiqueta intereses como RECARGO; en pantalla se muestra como INTERÉS.
+                if (!string.IsNullOrWhiteSpace(r.MetodoPago)
+                    && string.Equals(r.MetodoPago.Trim(), "RECARGO", StringComparison.OrdinalIgnoreCase))
+                {
+                    r.MetodoPago = "INTERÉS";
+                }
+
                 if (d.Contains("electro") && d.Contains("cobranza"))
                 {
                     if (usuarioPorPagoId.TryGetValue(r.Id, out var idUc))
@@ -432,11 +641,19 @@ namespace Sistema_David.Models
                     if (whatssapPagoPorId.TryGetValue(r.Id, out var wsPago))
                         r.whatssap = wsPago;
                 }
-                else if (d.Contains("electro") && (d.Contains("recargo") || d.Contains("descuento") || d.Contains("ajuste")))
+                else if (EsFilaInteresElectro(r) || (d.Contains("electro") && (d.Contains("recargo") || d.Contains("descuento") || d.Contains("ajuste") || d.Contains("interes"))))
                 {
                     var idRec = r.IdOriginal.HasValue && r.IdOriginal.Value > 0 ? r.IdOriginal.Value : r.Id;
                     if (idRec > 0 && whatssapRecargoPorId.TryGetValue(idRec, out var ws))
                         r.whatssap = ws ?? 0;
+                    if (idRec > 0 && usuarioCreacionRecargoPorId.TryGetValue(idRec, out var idOp) && idOp > 0)
+                        r.IdCobrador = idOp;
+
+                    if (!string.IsNullOrWhiteSpace(r.Descripcion)
+                        && r.Descripcion.IndexOf("Recargo", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        r.Descripcion = r.Descripcion.Replace("Recargo", "Interes").Replace("recargo", "Interes");
+                    }
                 }
                 else if (!d.Contains("electro"))
                 {
@@ -449,7 +666,8 @@ namespace Sistema_David.Models
                     int idVend = 0;
                     var origen = (r.Origen ?? string.Empty).ToUpperInvariant();
                     var esElectro = origen.Contains("ELECTRO")
-                                    || d.Contains("electro");
+                                    || d.Contains("electro")
+                                    || EsFilaInteresElectro(r);
 
                     // Importante: IdVenta puede coincidir numéricamente entre tablas clásica/electro.
                     // Elegimos fuente según origen para no mezclar vendedores.
