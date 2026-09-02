@@ -499,11 +499,6 @@ function prodArmarMensajeWhatsapp(p, nombreCliente) {
     lineas.push("");
     lineas.push("✨ *" + (p.Nombre || "Producto") + "* ✨");
 
-    if (p.PrecioVenta) {
-        lineas.push("");
-        lineas.push("💰 *Precio contado:* $" + formatearMiles(p.PrecioVenta));
-    }
-
     if (p.Marca) detalles.push("• *Marca:* " + p.Marca);
     if (p.Modelo) detalles.push("• *Modelo:* " + p.Modelo);
     if (p.Color) detalles.push("• *Color:* " + p.Color);
@@ -594,12 +589,7 @@ function prodInitWspClienteSelect2() {
         placeholder: "Buscar cliente por nombre, apellido o DNI...",
         allowClear: true,
         dropdownParent: $("#modalWspProducto"),
-        matcher: function (params, data) {
-            var term = (params.term || "").toLowerCase();
-            if (!term) return data;
-            var text = (data.text || "").toLowerCase();
-            return text.indexOf(term) >= 0 ? data : null;
-        }
+        matcher: select2MatcherBusquedaLibre
     });
 
     $el.on("change.prodWsp", function () {
@@ -618,9 +608,9 @@ function prodInitWspClienteSelect2() {
 async function prodCargarClientesWspSelect() {
     prodWspClientesMap = {};
 
-    var url = (userSession && userSession.IdRol == 2)
-        ? "/Clientes/GetClientesVendedor?idVendedor=" + userSession.Id
-        : "/Clientes/GetClientesElectrodomesticos";
+    var idVendedor = (userSession && userSession.IdRol == 2) ? userSession.Id : -1;
+    var url = "/Clientes/Listar?idVendedor=" + encodeURIComponent(idVendedor)
+        + "&Nombre=&Apellido=&Dni=&idZona=-1";
 
     var result = await MakeAjax({
         type: "GET",

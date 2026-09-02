@@ -142,41 +142,48 @@ function advertenciaModal(texto) {
     mostrarModalConContador('AdvertenciaModal', texto, 3000);
 }
 
-function confirmarModal(mensaje) {
+function confirmarModal(mensaje, options) {
+    options = options || {};
     return new Promise((resolve) => {
-        const modalEl = document.getElementById('modalConfirmar');
-        const mensajeEl = document.getElementById('modalConfirmarMensaje');
-        const btnAceptar = document.getElementById('btnModalConfirmarAceptar');
+        const modalEl = document.getElementById("modalConfirmar");
+        if (!modalEl) {
+            resolve(window.confirm(String(mensaje).replace(/<[^>]+>/g, " ")));
+            return;
+        }
 
-        mensajeEl.innerHTML = mensaje;
+        const mensajeEl = document.getElementById("modalConfirmarMensaje");
+        if (mensajeEl) mensajeEl.innerHTML = mensaje;
 
-        const modal = new bootstrap.Modal(modalEl, {
-            backdrop: 'static',
-            keyboard: false
-        });
-
-        // Flag para que no resuelva dos veces
-        let resuelto = false;
-
-        // Limpia todos los listeners anteriores
         modalEl.replaceWith(modalEl.cloneNode(true));
-        // Re-obtener referencias luego de clonar
-        const nuevoModalEl = document.getElementById('modalConfirmar');
-        const nuevoBtnAceptar = document.getElementById('btnModalConfirmarAceptar');
+        const nuevoModalEl = document.getElementById("modalConfirmar");
+        const nuevoBtnAceptar = document.getElementById("btnModalConfirmarAceptar");
+        const nuevoBtnCancelar = nuevoModalEl.querySelector(".modal-footer [data-bs-dismiss='modal']");
+        const nuevoTitulo = document.getElementById("modalConfirmarLabel");
+
+        if (nuevoTitulo) nuevoTitulo.textContent = options.titulo || "Confirmación";
+        if (nuevoBtnCancelar) nuevoBtnCancelar.textContent = options.textoCancelar || "Cancelar";
+        if (nuevoBtnAceptar) nuevoBtnAceptar.textContent = options.textoAceptar || "Sí, continuar";
 
         const nuevoModal = new bootstrap.Modal(nuevoModalEl, {
-            backdrop: 'static',
+            backdrop: "static",
             keyboard: false
         });
+
+        let resuelto = false;
 
         nuevoBtnAceptar.onclick = function () {
             if (resuelto) return;
+            let valor = true;
+            if (typeof options.onAccept === "function") {
+                valor = options.onAccept(nuevoModalEl);
+                if (valor === false) return;
+            }
             resuelto = true;
-            resolve(true);
+            resolve(valor);
             nuevoModal.hide();
         };
 
-        nuevoModalEl.addEventListener('hidden.bs.modal', () => {
+        nuevoModalEl.addEventListener("hidden.bs.modal", () => {
             if (resuelto) return;
             resuelto = true;
             resolve(false);
@@ -236,6 +243,52 @@ function inicializarEncabezadoColumnas(grd) {
 /** Escapa texto para usarlo dentro de RegExp en búsquedas de DataTables. */
 function escapeRegex(value) {
     return String(value ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Minúsculas, sin acentos y espacios colapsados. */
+function normalizarBusquedaLibre(texto) {
+    let s = String(texto == null ? "" : texto).toLowerCase().trim();
+    try {
+        s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    } catch (e) { /* ignore */ }
+    return s.replace(/\s+/g, " ");
+}
+
+/** "Ana Mendoza" y "Mendoza Ana" encuentran "Ana Maria Mendoza". */
+function coincidirBusquedaLibre(texto, termino) {
+    const haystack = normalizarBusquedaLibre(texto);
+    const tokens = normalizarBusquedaLibre(termino).split(" ").filter(Boolean);
+    if (!tokens.length) return true;
+    return tokens.every((t) => haystack.indexOf(t) !== -1);
+}
+
+/** Matcher Select2: todas las palabras, en cualquier orden. */
+function select2MatcherBusquedaLibre(params, data) {
+    if ($.trim(params.term || "") === "") return data;
+    if (typeof data.text === "undefined") return null;
+
+    if (data.children && data.children.length) {
+        const match = $.extend(true, {}, data, { children: [] });
+        for (let i = 0; i < data.children.length; i++) {
+            const child = select2MatcherBusquedaLibre(params, data.children[i]);
+            if (child) match.children.push(child);
+        }
+        return match.children.length ? match : null;
+    }
+
+    return coincidirBusquedaLibre(data.text, params.term) ? data : null;
+}
+
+/** Búsqueda DataTables por tokens (AND, cualquier orden). */
+function aplicarBusquedaTokensColumna(api, colIndex, term) {
+    const q = String(term || "").trim();
+    if (!q) {
+        api.column(colIndex).search("");
+        return;
+    }
+    const tokens = q.split(/\s+/).filter(Boolean);
+    const regex = tokens.map((t) => "(?=.*" + escapeRegex(t) + ")").join("");
+    api.column(colIndex).search(regex, true, false);
 }
 
 function columnFilterValueFromCell($cell) {
@@ -516,13 +569,13 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFi
 
             if (savedVal) {
                 $inp.val(savedVal);
-                api.column(config.index).search(savedVal);
+                aplicarBusquedaTokensColumna(api, config.index, savedVal);
                 appliedAnySaved = true;
             }
 
             $inp.on("input keyup change", function () {
                 const q = String(this.value || "");
-                api.column(config.index).search(q.trim() ? q : "");
+                aplicarBusquedaTokensColumna(api, config.index, q);
                 api.draw(false);
                 persistColumnFilters();
                 refreshFilterMarkers();
