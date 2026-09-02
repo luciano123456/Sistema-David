@@ -280,6 +280,8 @@ namespace Sistema_David.Models.ViewModels
 
         public int IdCliente { get; set; }
         public string ClienteNombre { get; set; }  // ★ NUEVO
+        public int? CobroPendiente { get; set; }
+        public int? TransferenciaPendiente { get; set; }
 
         public int IdVendedor { get; set; }
         public string VendedorNombre { get; set; } // ★ OPCIONAL (útil para filtros)

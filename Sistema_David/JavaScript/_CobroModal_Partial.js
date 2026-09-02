@@ -2213,10 +2213,6 @@ Le informamos que se confirmó la nueva fecha de cobro de su *Cuota ${nroCuota}*
 📆 *Nueva fecha de cobro:* ${fechaCobro}
 📌 *Vencimiento de la cuota:* ${fechaVto}
 💲 *Saldo de la cuota:* ${restanteCuota}
-📉 *Saldo pendiente de la venta:* ${saldo}
-
-📆 *Próxima cuota a vencer:*
-${textoCuota}
 
 Ante cualquier consulta, quedamos a disposición.`;
     }

@@ -905,16 +905,7 @@ VC.cargarCombos = async function () {
         placeholder: "🔎 Buscar cliente...",
         allowClear: true,
 
-        matcher: function (params, data) {
-
-            const term = (params.term || "").toLowerCase();
-
-            if (!term) return data;
-
-            const text = (data.text || "").toLowerCase();
-
-            return text.includes(term) ? data : null;
-        }
+        matcher: select2MatcherBusquedaLibre
     });
     $("#f_vendedor").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
     $("#f_cobrador").select2({ width: "100%", allowClear: true, placeholder: "Todos" });
@@ -1032,11 +1023,12 @@ VC.cargarTabla = async function () {
             params
         );
 
-        // mismas cuotas que antes (sin cobro/transferencia pendiente de validación)
+        // Cobro pendiente sigue en su sección. Transferencia pendiente: si hay cliente
+        // (nombre/apellido/DNI), incluirla acá para que la cuenta no desaparezca.
         const cuotas = (resp?.data || []).filter(x =>
             x && x.Estado !== "Pagada"
             && Number(x.CobroPendiente) !== 1
-            && Number(x.TransferenciaPendiente) !== 1
+            && (hasClienteFiltro || Number(x.TransferenciaPendiente) !== 1)
         );
 
         // agrupar por venta manteniendo columnas
@@ -1179,16 +1171,18 @@ VC.cargarTabla = async function () {
             },
 
             {
-                data: null,
+                data: "ClienteNombre",
                 title: "Cliente",
-                render: function (_, __, row) {
+                render: function (data, type, row) {
+                    if (type !== "display") return data || "";
 
                     const idCliente = row.IdCliente || row.idCliente || 0;
                     const puedeEditar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+                    const nombre = data || "";
 
                     return `
             <div class="d-flex align-items-center justify-content-between gap-2">
-                <span class="text-truncate">${row.ClienteNombre}</span>
+                <span class="text-truncate">${nombre}</span>
 
                 ${puedeEditar ? `
                     <button class="btn btn-accion btn-editar"
@@ -1558,7 +1552,16 @@ VC.confirmarAsignarCobrador = async function () {
 
     const idsVentas = Array.from(ventasSeleccionadas);
     const accionTxt = idCobrador === 0 ? "desasignar cobrador de" : "asignar cobrador a";
-    if (!confirm(`¿Confirmás ${accionTxt} ${idsVentas.length} venta(s)?`)) return;
+    const okAsignar = await confirmarModal(`
+        <div class="text-start px-1" style="font-size:1.05rem;font-weight:500">
+            <div class="mb-2 fw-bold">
+                <i class="fa fa-user-plus text-info me-1"></i>
+                Asignar cobrador
+            </div>
+            <div>¿Confirmás ${accionTxt} <b>${idsVentas.length}</b> venta(s)?</div>
+        </div>
+    `);
+    if (!okAsignar) return;
 
     const resp = await $.ajax({
         url: "/Ventas_Electrodomesticos/AsignarCobradorVentas",
@@ -1684,7 +1687,7 @@ VC.formarAcordeonVenta = function (rowData) {
    DETALLE VENTA
 =========================================================== */
 
-VC.cargarDetalleVenta = async function (idVenta) {
+VC.cargarDetalleVenta = async function (idVenta, opts) {
 
     try {
         const resp = await $.ajax({
@@ -1702,7 +1705,7 @@ VC.cargarDetalleVenta = async function (idVenta) {
         ventaSeleccionada = resp.data;
 
         VC.renderProductos(ventaSeleccionada);
-        VC.renderCuotas(ventaSeleccionada);
+        VC.renderCuotas(ventaSeleccionada, opts);
 
     } catch (e) {
         console.error("Error detalle venta", e);
@@ -1747,7 +1750,7 @@ VC.renderProductos = function (v) {
    RENDER CUOTAS (PENDIENTES + FINALIZADAS)
 =========================================================== */
 
-VC.renderCuotas = function (v) {
+VC.renderCuotas = function (v, opts) {
 
     const tbPend = $(`#tbCuotasPend_${v.IdVenta}`).empty();
     const tbPag = $(`#tbCuotasPag_${v.IdVenta}`).empty();
@@ -1781,8 +1784,10 @@ VC.renderCuotas = function (v) {
         const estaVencida = diasAtraso > 0 && c.Estado !== "Pagada";
         const venceHoy = diasAtraso === 0 && c.Estado !== "Pagada" && Number(c.MontoRestante || 0) > 0.0001;
 
-        // Cobro/transferencia pendiente de validación → sección propia (no acordeón de cobros normales).
-        if (Number(c.CobroPendiente) === 1 || Number(c.TransferenciaPendiente) === 1) {
+        // En cobros normales esas cuotas viven en su sección. Desde Transferencias /
+        // Cobros pendientes hay que mostrarlas al desplegar la cuenta.
+        if (!opts?.incluirValidacion &&
+            (Number(c.CobroPendiente) === 1 || Number(c.TransferenciaPendiente) === 1)) {
             return;
         }
 
@@ -2129,7 +2134,7 @@ VC.buscarCliente = function () {
     }
 
     const encontrado = clientesCache.find(c =>
-        c.text.toLowerCase().includes(term)
+        coincidirBusquedaLibre(c.text, term)
     );
 
     if (!encontrado) {
@@ -2453,7 +2458,7 @@ VC.cargarCobrosPendientes = async function () {
 
             icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
 
-            await VC.cargarDetalleVenta(data.IdVenta);
+            await VC.cargarDetalleVenta(data.IdVenta, { incluirValidacion: true });
         });
 
     // ✅ SELECCIÓN DE FILA (igual ventas común)
@@ -2507,7 +2512,7 @@ VC.cargarTransferenciasPendientes = async function () {
         }
     );
 
-    const data = resp.data || [];
+    const data = agruparCobrosPorVentaManteniendoColumnas(resp.data || []);
 
     // ✅ MOSTRAR / OCULTAR BLOQUE
     if (data.length > 0) {
@@ -2523,7 +2528,7 @@ VC.cargarTransferenciasPendientes = async function () {
 
     tablaTransferenciasPendientes = $("#vc_tabla_transferencias_pendientes").DataTable({
         destroy: true,
-        data: resp.data || [],
+        data: data,
         paging: false,
         searching: true,
         info: false,
@@ -2582,16 +2587,18 @@ VC.cargarTransferenciasPendientes = async function () {
             },
 
             {
-                data: null,
+                data: "ClienteNombre",
                 title: "Cliente",
-                render: function (_, __, row) {
+                render: function (data, type, row) {
+                    if (type !== "display") return data || "";
 
                     const idCliente = row.IdCliente || row.idCliente || 0;
                     const puedeEditar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+                    const nombre = data || "";
 
                     return `
             <div class="d-flex align-items-center justify-content-between gap-2">
-                <span class="text-truncate">${row.ClienteNombre}</span>
+                <span class="text-truncate">${nombre}</span>
 
                 ${puedeEditar ? `
                     <button class="btn btn-accion btn-editar"
@@ -2820,43 +2827,191 @@ VC.cargarTransferenciasPendientes = async function () {
             tr.addClass("shown");
             icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
 
-            await VC.cargarDetalleVenta(data.IdVenta);
+            await VC.cargarDetalleVenta(data.IdVenta, { incluirValidacion: true });
         });
 };
 
 
 
 
-VC.transferenciaPendiente = async function (estado, idCuota) {
+VC.infoVentasParaTransferencia = function (idsVenta) {
+    const set = new Set((idsVenta || []).map(Number).filter(Boolean));
+    const out = [];
+    (cuotasCache || []).forEach((r) => {
+        const id = Number(r.IdVenta || 0);
+        if (!set.has(id)) return;
+        out.push({
+            IdVenta: id,
+            IdCuota: r.IdCuota,
+            ClienteNombre: r.ClienteNombre || ""
+        });
+        set.delete(id);
+    });
+    return out;
+};
 
-    const msg = estado === 1
-        ? "¿Pasar toda la venta a transferencia pendiente? Se marcarán todas las cuotas de la cuenta."
-        : "¿Revertir la transferencia pendiente de toda la venta? Se desmarcarán todas las cuotas.";
+VC.marcarTransferencias = async function (idCuotas, estado) {
+    const ids = (idCuotas || []).map(Number).filter(Boolean);
+    if (!ids.length) {
+        VC.toast("No hay ventas para actualizar", "warn");
+        return;
+    }
 
-    if (!confirm(msg)) return;
+    VC.showGlobalLoading(estado === 1
+        ? "Pasando a transferencia pendiente..."
+        : "Revirtiendo transferencia pendiente...");
 
-    const resp = await $.post(
-        "/Ventas_Electrodomesticos/MarcarTransferenciaPendiente",
-        { estado, idCuota }
-    );
+    let ok = 0;
+    const errores = [];
 
-    if (resp.success) {
+    for (const idCuota of ids) {
+        try {
+            const resp = await $.post(
+                "/Ventas_Electrodomesticos/MarcarTransferenciaPendiente",
+                { estado, idCuota }
+            );
+            if (resp && resp.success) ok++;
+            else errores.push(resp?.message || "Error");
+        } catch (e) {
+            errores.push("Error de conexión");
+        }
+    }
 
+    ventasSeleccionadas.clear();
+    await VC.cargarTabla();
+    if (VC.esAdminOComprobantes()) {
+        await VC.cargarTransferenciasPendientes();
+    }
+    VC.hideGlobalLoading();
+
+    if (ok && !errores.length) {
         VC.toast(
             estado === 1
-                ? "Venta completa marcada como transferencia pendiente"
-                : "Transferencia pendiente de la venta revertida",
+                ? (ok > 1
+                    ? `${ok} ventas pasadas a transferencia pendiente`
+                    : "Venta marcada como transferencia pendiente")
+                : "Transferencia pendiente revertida",
             "success"
         );
-
-        VC.cargarTabla();
-        if (VC.esAdminOComprobantes()) {
-            VC.cargarTransferenciasPendientes();
-        }
-
-    } else {
-        VC.toast(resp.message || "Error", "danger");
+        return;
     }
+
+    if (ok) {
+        VC.toast(`${ok} ok. ${errores.slice(0, 2).join(" | ")}`, "warn");
+        return;
+    }
+
+    VC.toast(errores[0] || "Error", "danger");
+};
+
+VC.transferenciaPendiente = async function (estado, idCuota) {
+
+    if (estado !== 1) {
+        const okRevertir = await confirmarModal(`
+            <div class="text-start px-1" style="font-size:1.05rem;font-weight:500">
+                <div class="mb-2 fw-bold">
+                    <i class="fa fa-undo text-warning me-1"></i>
+                    Revertir transferencia pendiente
+                </div>
+                <div class="mb-2">¿Revertir la transferencia pendiente de toda la venta?</div>
+                <div class="small text-white-50">Se desmarcarán todas las cuotas de la cuenta.</div>
+            </div>
+        `);
+        if (!okRevertir) return;
+        await VC.marcarTransferencias([idCuota], 0);
+        return;
+    }
+
+    const clicked = (cuotasCache || []).find((r) => Number(r.IdCuota) === Number(idCuota))
+        || (cuotasCache || []).find((r) => Number(r.IdVenta) && (r.__TodasLasCuotas || []).some((c) => Number(c.Id) === Number(idCuota)));
+
+    const clickedVenta = Number(clicked?.IdVenta || 0);
+    let idsVenta = Array.from(ventasSeleccionadas || []).map(Number).filter(Boolean);
+    if (clickedVenta && !idsVenta.includes(clickedVenta)) idsVenta.push(clickedVenta);
+
+    let ventas = VC.infoVentasParaTransferencia(idsVenta);
+    if (!ventas.length) {
+        ventas = [{
+            IdVenta: clickedVenta,
+            IdCuota: idCuota,
+            ClienteNombre: clicked?.ClienteNombre || ("Venta " + (clickedVenta || idCuota))
+        }];
+    }
+
+    let destinos = ventas;
+
+    if (ventas.length > 1) {
+        const todas = await confirmarModal(`
+            <div class="text-start px-1" style="font-size:1.05rem;font-weight:500">
+                <div class="mb-2 fw-bold">
+                    <i class="fa fa-exclamation-circle text-warning me-1"></i>
+                    Transferencia pendiente
+                </div>
+                <div class="mb-2">Tenés <b>${ventas.length} ventas</b> seleccionadas.</div>
+                <div>¿Deseás pasar <b>todas</b> a transferencia pendiente?</div>
+                <div class="small text-white-50 mt-2">Se marcarán todas las cuotas de cada cuenta.</div>
+            </div>
+        `, { textoAceptar: "Sí, todas", textoCancelar: "No, elegir" });
+
+        if (!todas) {
+            const htmlLista = ventas.map((v) => `
+                <label class="d-flex align-items-start gap-2 text-start mb-2 p-2 rounded"
+                       style="background:rgba(255,255,255,.06);cursor:pointer">
+                    <input type="checkbox" class="form-check-input mt-1 vc-transf-pick"
+                           value="${v.IdVenta}" data-idcuota="${v.IdCuota}" checked>
+                    <span>
+                        <span class="d-block">Venta <b>#${v.IdVenta}</b></span>
+                        <span class="small opacity-75">${escapeHtml(v.ClienteNombre || "")}</span>
+                    </span>
+                </label>
+            `).join("");
+
+            const picked = await confirmarModal(`
+                <div class="text-start px-1" style="font-size:1.05rem;font-weight:500">
+                    <div class="mb-2 fw-bold">Elegí las ventas</div>
+                    <div class="small text-white-50 mb-2">Marcá cuáles pasar a transferencia pendiente.</div>
+                    <label class="d-flex align-items-center gap-2 mb-2" style="cursor:pointer">
+                        <input type="checkbox" class="form-check-input vc-transf-pick-all" checked
+                               onclick="document.querySelectorAll('#modalConfirmar .vc-transf-pick').forEach(function(c){c.checked=this.checked;}, this)">
+                        <span>Seleccionar todas</span>
+                    </label>
+                    <div class="vc-transf-pick-list" style="max-height:45vh;overflow:auto">${htmlLista}</div>
+                </div>
+            `, {
+                textoAceptar: "Pasar seleccionadas",
+                textoCancelar: "Cancelar",
+                onAccept: (el) => {
+                    const checks = [...el.querySelectorAll(".vc-transf-pick:checked")];
+                    if (!checks.length) {
+                        VC.toast("Marcá al menos una venta", "warn");
+                        return false;
+                    }
+                    return checks.map((ch) => ({
+                        IdVenta: Number(ch.value),
+                        IdCuota: Number(ch.getAttribute("data-idcuota"))
+                    }));
+                }
+            });
+
+            if (!picked) return;
+            destinos = picked;
+        }
+    } else {
+        const okUna = await confirmarModal(`
+            <div class="text-start px-1" style="font-size:1.05rem;font-weight:500">
+                <div class="mb-2 fw-bold">
+                    <i class="fa fa-exclamation-circle text-warning me-1"></i>
+                    Transferencia pendiente
+                </div>
+                <div class="mb-2">¿Pasar toda la venta a transferencia pendiente?</div>
+                <div class="small text-white-50">Se marcarán todas las cuotas de la cuenta.</div>
+            </div>
+        `);
+        if (!okUna) return;
+    }
+
+    const cuotas = destinos.map((v) => Number(v.IdCuota)).filter(Boolean);
+    await VC.marcarTransferencias(cuotas, 1);
 };
 
 

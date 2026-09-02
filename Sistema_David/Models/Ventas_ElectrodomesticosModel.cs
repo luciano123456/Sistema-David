@@ -1568,7 +1568,7 @@ namespace Sistema_David.Models
 
                         // ===== CLIENTE =====
                         IdCliente = x.Venta.IdCliente,
-                        ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido).Trim(),
+                        ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido + " - " + x.Cliente.Dni).Trim(),
                         ClienteDireccion = x.Cliente.Direccion,
                         ClienteLatitud = x.Cliente.Latitud,
                         ClienteLongitud = x.Cliente.Longitud,
@@ -1613,6 +1613,9 @@ namespace Sistema_David.Models
                     join u in db.Usuarios
                         on v.IdVendedor equals u.Id into vendedoresJoin
                     from u in vendedoresJoin.DefaultIfEmpty()
+                    join cob in db.Usuarios
+                        on v.IdCobrador equals cob.Id into cobradoresJoin
+                    from cob in cobradoresJoin.DefaultIfEmpty()
                     where c.TransferenciaPendiente == 1
                     select new
                     {
@@ -1620,7 +1623,8 @@ namespace Sistema_David.Models
                         Venta = v,
                         Cliente = cli,
                         Zona = z,
-                        Vendedor = u
+                        Vendedor = u,
+                        Cobrador = cob
                     };
 
                 // 👉 filtros MINIMOS que ya usabas
@@ -1660,7 +1664,7 @@ namespace Sistema_David.Models
 
                         // ===== CLIENTE =====
                         IdCliente = x.Venta.IdCliente,
-                        ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido).Trim(),
+                        ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido + " - " + x.Cliente.Dni).Trim(),
                         ClienteDireccion = x.Cliente.Direccion,
                         ClienteLatitud = x.Cliente.Latitud,
                         ClienteLongitud = x.Cliente.Longitud,
@@ -1673,6 +1677,7 @@ namespace Sistema_David.Models
                         // ===== VENDEDOR =====
                         IdVendedor = x.Venta.IdVendedor,
                         VendedorNombre = x.Vendedor != null ? x.Vendedor.Nombre : null,
+                        CobradorNombre = x.Cobrador != null ? x.Cobrador.Nombre : null,
 
                         // ===== TURNO / FRANJA =====
                         Turno = x.Venta.Turno,
@@ -1977,7 +1982,6 @@ namespace Sistema_David.Models
                         on v.IdCobrador equals cob.Id into cobradoresJoin
                     from cob in cobradoresJoin.DefaultIfEmpty()
                     where (c.CobroPendiente == null || c.CobroPendiente == 0)
-                      && (c.TransferenciaPendiente == null || c.TransferenciaPendiente == 0)
                       // Si la venta tiene alguna cuota en cobro pendiente (validación), no listar ninguna cuota acá.
                       && !db.Ventas_Electrodomesticos_Cuotas.Any(cp =>
                             cp.IdVenta == v.Id
@@ -2002,6 +2006,15 @@ namespace Sistema_David.Models
 
                 var filtraPorCliente = f.IdCliente.HasValue && f.IdCliente.Value > 0;
                 var filtraPorCobrador = f.IdCobrador.HasValue && f.IdCobrador.Value > 0;
+
+                // Sin búsqueda de cliente: las transferencias pendientes viven en su sección.
+                // Con cliente (nombre/apellido/DNI): incluirlas para que la cuenta aparezca.
+                if (!filtraPorCliente)
+                {
+                    q = q.Where(x =>
+                        x.Cuota.TransferenciaPendiente == null
+                        || x.Cuota.TransferenciaPendiente == 0);
+                }
 
                 if (!filtraPorCliente && filtraPorCobrador)
                 {
@@ -2096,6 +2109,8 @@ namespace Sistema_David.Models
                         ),
 
                         Estado = x.Cuota.Estado,
+                        CobroPendiente = x.Cuota.CobroPendiente,
+                        TransferenciaPendiente = x.Cuota.TransferenciaPendiente,
 
                         IdCliente = x.Venta.IdCliente,
                         ClienteNombre = (x.Cliente.Nombre + " " + x.Cliente.Apellido + " - " + x.Cliente.Dni).Trim(),
