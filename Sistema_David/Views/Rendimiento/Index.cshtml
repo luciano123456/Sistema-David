@@ -6,7 +6,7 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
-<link href="~/Estilos/rendimiento.css?v4.1" rel="stylesheet" />
+<link href="~/Estilos/rendimiento.css?v=4.3" rel="stylesheet" />
 <link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.0" rel="stylesheet" />
 
 <body class="ve-dark">
@@ -35,6 +35,12 @@
                     </div>
 
                     <div class="d-flex flex-wrap gap-2">
+                        @if (ViewBag.EsAdmin == true)
+                        {
+                            <button type="button" class="btn btn-analisis-rend" id="btnAnalisisRendimiento" title="Abrir análisis del período filtrado">
+                                <i class="fa fa-pie-chart me-1"></i> Análisis
+                            </button>
+                        }
                         <button type="button" class="btn btn-outline-light" id="btnToggleFiltrosRendimiento">
                             <i id="iconFiltrosRendimiento" class="fa fa-chevron-down"></i> Filtros
                         </button>
@@ -222,12 +228,20 @@
                         <!-- Tabla principal -->
                         <div id="RendimientoDiario" class="card-glass p-3 mb-4">
                             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                                <div class="fw-bold text-white">
-                                    <i class="fa fa-table me-2"></i> Rendimiento Diario
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <div class="fw-bold text-white">
+                                        <i class="fa fa-table me-2"></i> Rendimiento Diario
+                                    </div>
+                                    @if (ViewBag.EsAdmin == true)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-analisis-rend" id="btnAnalisisRendimientoDiario" title="Dashboard del período filtrado">
+                                            <i class="fa fa-line-chart me-1"></i> Análisis
+                                        </button>
+                                    }
                                 </div>
 
                                 <div class="dropdown">
-                                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-outline-light rend-columns-toggle d-flex align-items-center" type="button" id="dropdownColumnas" aria-expanded="false">
                                         <i class="fa fa-cog me-2"></i> Config. Columnas
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownColumnas" id="configColumnasMenu"></ul>
@@ -412,6 +426,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="~/JavaScript/Utils/Utils.js?v=2.6"></script>
-    <script src="~/JavaScript/Rendimiento.js?v=5.4"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.14"></script>
+    <script src="~/JavaScript/Rendimiento.js?v=5.15"></script>
 }

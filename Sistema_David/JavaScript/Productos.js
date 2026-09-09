@@ -2,7 +2,6 @@ let userSession;
 let gridVentas = null;
 let gridProductos;
 let prodImagenesExtra = [];
-let prodProductoSeleccionado = null;
 let prodWspProductoCache = null;
 let prodWspClienteNombre = null;
 let prodWspClientesMap = {};
@@ -12,6 +11,42 @@ const PROD_IMG_ENDPOINT = "/Productos/ObtenerImagen/";
 
 function prodEsAdmin() {
     return userSession && userSession.IdRol == 1;
+}
+
+function prodToast(msg, type) {
+    type = type || "success";
+    var cont = document.getElementById("prodToastContainer");
+    if (!cont) {
+        cont = document.createElement("div");
+        cont.id = "prodToastContainer";
+        cont.className = "position-fixed bottom-0 end-0 p-3";
+        cont.style.zIndex = "2000";
+        document.body.appendChild(cont);
+    }
+
+    var typeClass = {
+        success: "bg-success text-white",
+        danger: "bg-danger text-white",
+        warn: "bg-warning text-dark",
+        info: "bg-info text-dark"
+    }[type] || "bg-success text-white";
+
+    var el = document.createElement("div");
+    el.className = "toast align-items-center " + typeClass + " border-0 mb-2";
+    el.innerHTML =
+        "<div class=\"d-flex\">" +
+        "<div class=\"toast-body\">" + msg + "</div>" +
+        "<button type=\"button\" class=\"btn-close btn-close-white me-2 m-auto\" data-bs-dismiss=\"toast\"></button>" +
+        "</div>";
+    cont.appendChild(el);
+
+    if (window.bootstrap && bootstrap.Toast) {
+        new bootstrap.Toast(el, { delay: 2500 }).show();
+    } else if (window.$ && $(el).toast) {
+        $(el).toast({ delay: 2500 }).toast("show");
+    }
+
+    el.addEventListener("hidden.bs.toast", function () { el.remove(); });
 }
 
 function prodFormatCeldaMiles(data, type) {
@@ -680,32 +715,6 @@ function prodQuitarImagenExtra(idx) {
     prodRenderGaleriaExtra();
 }
 
-function prodMostrarFinanciacionPanel(data) {
-    prodProductoSeleccionado = data;
-    if (!data) {
-        $("#panelFinanciacion").attr("hidden", "hidden");
-        return;
-    }
-    $("#lblFinProducto").text("Financiación — " + (data.Nombre || ""));
-
-    prodCalcFinMount("panel", "#prodCalcPanelMount", data);
-
-    var html = "";
-    var bloques = [
-        { t: "Con entrega", v: data.FinConEntrega },
-        { t: "Sin entrega", v: data.FinSinEntrega },
-        { t: "Cuotas semanales", v: data.FinSemanal },
-        { t: "Cuotas quincenales", v: data.FinQuincenal },
-        { t: "Cuotas mensuales", v: data.FinMensual }
-    ];
-    bloques.forEach(function (b) {
-        html += '<div class="col-md-6 col-lg-4"><div class="prod-fin-block"><h6>' + prodEscaparHtml(b.t) + '</h6><p class="mb-0">' +
-            (b.v ? prodEscaparHtml(b.v).replace(/\n/g, "<br>") : '<span class="text-muted">Sin datos</span>') + '</p></div></div>';
-    });
-    $("#financiacionContenido").html(html);
-    $("#panelFinanciacion").removeAttr("hidden");
-}
-
 function prodPayloadExtended() {
     return {
         Marca: $("#Marca").val(),
@@ -867,7 +876,7 @@ async function configurarDataTable() {
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         },
-        "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
+        "lengthMenu": DT_LENGTH_MENU,
         "pageLength": 25,
         "deferRender": true,
         "searchDelay": 350,
@@ -914,7 +923,7 @@ async function configurarDataTable() {
                         "<button class='btn btn-sm btn-danger btnacciones prod-action-btn' type='button' onclick='eliminarProducto(" + data + ")' title='Eliminar'><i class='fa fa-trash text-white'></i></button>" : "";
 
                     var iconEstado = prodEsAdmin() ?
-                        "<button class='btn btn-sm btn-" + color + " btnacciones prod-action-btn' type='button' onclick='cambiarEstadoProducto(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off text-white'></i></button>" : "";
+                        "<button class='btn btn-sm btn-" + color + " btnacciones prod-action-btn prod-btn-estado' type='button' onclick='cambiarEstadoProducto(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off text-white'></i></button>" : "";
 
                     return "<div class='prod-actions-cell'>" + iconWsp + iconEstado + iconStock + iconEditar + iconEliminar + "</div>";
                 },
@@ -955,15 +964,7 @@ async function configurarDataTable() {
         if ($(e.target).closest("button, a, input, select, .btnacciones, .rp-filter-input, .rp-filter-select").length) return;
 
         $('#grdProductos tbody tr').removeClass('seleccionada');
-        $('td', '#grdProductos tbody tr').removeClass('prod-col-seleccionada');
-
         $(this).addClass('seleccionada');
-        $(this).find('td:visible').first().addClass('prod-col-seleccionada');
-
-        var row = gridProductos.row(this).data();
-        if (row && row.Id) {
-            cargarFinanciacionProducto(row.Id);
-        }
     });
 }
 
@@ -990,9 +991,9 @@ const cambiarEstadoProducto = async (id, estado) => {
             let result = await MakeAjax(options);
 
             if (result.Status) {
-                $('.datos-error').removeClass('d-none');
+                prodToast(estado == 1 ? "Producto activado" : "Producto desactivado", "success");
                 const table = $('#grdProductos').DataTable();
-                table.ajax.reload();
+                table.ajax.reload(null, false);
             } else {
                 $('.datos-error').text('Ha ocurrido un error en los datos.')
                 $('.datos-error').removeClass('d-none')
@@ -1535,20 +1536,6 @@ function borrarImagen() {
     p.value = "";
     img.src = "";
     img.style.display = "none";
-}
-
-async function cargarFinanciacionProducto(id) {
-    try {
-        var result = await MakeAjax({
-            type: "GET",
-            url: "/Productos/ObtenerDetalle?id=" + id,
-            async: true,
-            dataType: "json"
-        });
-        if (result && result.Status && result.Producto) {
-            prodMostrarFinanciacionPanel(result.Producto);
-        }
-    } catch (e) { /* ignore */ }
 }
 
 async function abrirWhatsappProducto(id) {

@@ -47,6 +47,21 @@ body.ve-dark {
     min-width: 132px;
 }
 
+.btn-analisis-rend {
+    min-height: 42px;
+    border-radius: 12px !important;
+    font-weight: 800;
+    color: #fff !important;
+    border: 1px solid rgba(125, 211, 252, .45) !important;
+    background: linear-gradient(135deg, rgba(56, 189, 248, .35), rgba(99, 102, 241, .4)) !important;
+    box-shadow: 0 8px 22px rgba(56, 189, 248, .18);
+}
+
+    .btn-analisis-rend:hover {
+        filter: brightness(1.08);
+        color: #fff !important;
+    }
+
 /* =========================
    KPIS
 ========================= */
@@ -1049,6 +1064,7 @@ select option {
     background: rgba(10, 15, 40, 0.85);
     backdrop-filter: blur(6px);
     z-index: 99999;
+    overflow: visible;
     display: flex;
     align-items: center;
     justify-content: center;

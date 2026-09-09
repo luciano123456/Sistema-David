@@ -134,6 +134,9 @@ function normalizeVentaItem(v) {
         Fecha: v.Fecha ?? v.FechaVenta ?? v.FechaCobro ?? null,
         Entrega: Number(v.Entrega || 0),
         Restante: Number(v.Restante || 0),
+        Eliminada: !!(v.Eliminada || v.eliminada),
+        MotivoEliminacion: v.MotivoEliminacion ?? v.motivoEliminacion ?? null,
+        FechaEliminacion: v.FechaEliminacion ?? v.fechaEliminacion ?? null,
         Cliente:
             v.Cliente ??
             v.ClienteNombre ??
@@ -168,6 +171,9 @@ function normalizeDetalleResponse(raw, forcedTipo = null) {
         Fecha: raw.Fecha ?? raw.FechaVenta ?? raw.FechaCobro ?? null,
         Entrega: Number(raw.Entrega || 0),
         Restante: Number(raw.Restante || 0),
+        Eliminada: !!(raw.Eliminada || raw.eliminada),
+        MotivoEliminacion: raw.MotivoEliminacion ?? raw.motivoEliminacion ?? null,
+        FechaEliminacion: raw.FechaEliminacion ?? raw.fechaEliminacion ?? null,
         Cliente:
             raw.Cliente ??
             raw.ClienteNombre ??
@@ -505,6 +511,23 @@ function buildVentaItem(v) {
     const idVenta = rawId;
 
     const esElectro = isElectroVenta(vv);
+    const esEliminada = !!(vv.Eliminada && esElectro);
+    const motivoElim = esEliminada ? (vv.MotivoEliminacion || "").trim() : "";
+    const fechaElim = esEliminada && vv.FechaEliminacion
+        ? moment(vv.FechaEliminacion).format("DD/MM/YYYY HH:mm")
+        : null;
+
+    const badgeEliminada = esEliminada
+        ? `<span class="venta-eliminada-badge"><i class="bi bi-trash"></i> Eliminada</span>`
+        : "";
+
+    const bloqueMotivo = esEliminada
+        ? `<div class="venta-motivo-eliminacion">
+                <span class="venta-motivo-label">Motivo de eliminación</span>
+                <div class="venta-motivo-text">${escapeHtml(motivoElim || "Sin motivo registrado")}</div>
+                ${fechaElim ? `<div class="venta-motivo-fecha">Eliminada el ${fechaElim}</div>` : ""}
+           </div>`
+        : "";
 
     /* =========================
        🔒 ACCIONES SEGÚN TIPO
@@ -534,7 +557,7 @@ function buildVentaItem(v) {
         `;
 
     return `
-    <div class="venta-item ${tipoClass}" id="ventaItem_${uniqueId}">
+    <div class="venta-item ${tipoClass}${esEliminada ? " venta-item-eliminada" : ""}" id="ventaItem_${uniqueId}">
         <div class="venta-head" data-venta="${uniqueId}">
             
             <div class="venta-head-main">
@@ -547,7 +570,11 @@ function buildVentaItem(v) {
                         ${tipoLabel}
                         <span class="venta-id">#${idVenta}</span>
                     </span>
+
+                    ${badgeEliminada}
                 </div>
+
+                ${bloqueMotivo}
 
                 <div class="venta-sub-grid">
                     <div class="mini-kpi">
@@ -865,38 +892,31 @@ function renderHistorial(ventaUniqueId, list) {
         return (b.Id || 0) - (a.Id || 0);
     });
 
-    const isMobile = window.innerWidth <= 768;
+    let cardsHtml = "";
+    let rowsHtml = "";
 
-    /* =========================
-       📱 MOBILE → CARDS
-    ========================= */
-    if (isMobile) {
+    list.forEach(h => {
+        const fecha = formatoFechaHistorial(h.Fecha);
+        const desc = h.Descripcion || h.Observacion || (h.Interes > 0 ? "Interés" : "—");
+        const cobr = h.Cobrador || "N/A";
+        const idInf = h.Id || 0;
 
-        const cards = list.map(h => {
-            const fecha = formatoFechaHistorial(h.Fecha);
-            const desc = h.Descripcion || h.Observacion || (h.Interes > 0 ? "Interés" : "—");
-            const cobr = h.Cobrador || "N/A";
-            const idInf = h.Id || 0;
+        const esVenta = (desc || "").toLowerCase().includes("venta");
+        const esElectro = isElectroVenta(ventaObj);
 
-            const esVenta = (desc || "").toLowerCase().includes("venta");
-            const esElectro = isElectroVenta(ventaObj);
+        const btnDel = ((userSession?.IdRol === 1) && !esVenta && !esElectro)
+            ? `<button class="btn-icon btn-del-info" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
+                   <i class="bi bi-trash"></i>
+               </button>`
+            : "";
 
-            const btnDel = ((userSession?.IdRol === 1) && !esVenta && !esElectro)
-                ? `<button class="btn-icon btn-del-info" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
-                        <i class="bi bi-trash"></i>
-                   </button>`
-                : "";
-
-            return `
+        cardsHtml += `
             <div class="hist-card ${histRowTipoClass(h)}" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
-
                 <div class="hist-card-top">
                     ${chipFecha(fecha, h)}
                     ${btnDel}
                 </div>
-
                 <div class="hist-desc">${escapeHtml(desc)}</div>
-
                 <div class="hist-grid">
                     <div>
                         <span>Cobrador</span>
@@ -915,47 +935,23 @@ function renderHistorial(ventaUniqueId, list) {
                         ${histMontoHtml(h.Restante, "restante")}
                     </div>
                 </div>
-
             </div>`;
-        }).join("");
 
-        wrap.innerHTML = `<div class="hist-mobile">${cards}</div>`;
-        return;
-    }
-
-    /* =========================
-       💻 DESKTOP → TABLA ORIGINAL
-    ========================= */
-
-    const rows = list.map(h => {
-        const fecha = formatoFechaHistorial(h.Fecha);
-        const desc = h.Descripcion || h.Observacion || (h.Interes > 0 ? "Interés" : "—");
-        const cobr = h.Cobrador || "N/A";
-        const idInf = h.Id || 0;
-
-        const esVenta = (desc || "").toLowerCase().includes("venta");
-        const esElectro = isElectroVenta(ventaObj);
-
-        const btnDel = ((userSession?.IdRol === 1) && !esVenta && !esElectro)
-            ? `<button class="btn-icon btn-del-info" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
-                   <i class="bi bi-trash"></i>
-               </button>`
-            : "";
-
-        return `
+        rowsHtml += `
         <tr class="${histRowTipoClass(h)}" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
             <td>${chipFecha(fecha, h)}</td>
-            <td>${escapeHtml(desc)}</td>
-            <td>${escapeHtml(cobr)}</td>
+            <td class="hist-td-desc">${escapeHtml(desc)}</td>
+            <td class="hist-td-cobr">${escapeHtml(cobr)}</td>
             <td class="hist-td-amt">${histMontoHtml(h.Entrega, "entrega")}</td>
             <td class="hist-td-amt">${histMontoHtml(h.Interes, "interes")}</td>
             <td class="hist-td-amt">${histMontoHtml(h.Restante, "restante")}</td>
             <td class="text-center">${btnDel}</td>
         </tr>`;
-    }).join("");
+    });
 
     wrap.innerHTML = `
-    <div class="table-responsive">
+    <div class="hist-view-mobile hist-mobile">${cardsHtml}</div>
+    <div class="hist-view-desktop table-responsive">
         <table class="table-mini">
             <colgroup>
                 <col class="col-fecha">
@@ -977,7 +973,7 @@ function renderHistorial(ventaUniqueId, list) {
                     <th class="text-center">Acc.</th>
                 </tr>
             </thead>
-            <tbody>${rows}</tbody>
+            <tbody>${rowsHtml}</tbody>
         </table>
     </div>`;
 }

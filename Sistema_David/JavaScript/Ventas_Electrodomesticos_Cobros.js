@@ -207,6 +207,7 @@ VC.showGlobalLoading = function (text = "Cargando datos...") {
 };
 
 VC.hideGlobalLoading = function () {
+    if (typeof detenerAvisoCargaLenta === "function") detenerAvisoCargaLenta();
     const loading = document.getElementById("globalLoading");
     if (!loading) return;
     loading.classList.add("hidden");
@@ -851,8 +852,13 @@ VC.cargarCombos = async function () {
         const resp = await $.getJSON("/Clientes/GetClientesElectrodomesticos");
         const ddl = $("#f_cliente").empty();
         ddl.append(`<option value="">Todos</option>`);
-        (resp.data || []).forEach(c => {
-            ddl.append(`<option value="${c.Id}">${c.Nombre} ${c.Apellido} - ${c.Dni} </option>`);
+        clientesCache = (resp.data || []).map(c => ({
+            id: c.Id,
+            nombre: `${c.Nombre || ""} ${c.Apellido || ""}`.trim(),
+            text: `${c.Nombre || ""} ${c.Apellido || ""} - ${c.Dni || ""}`.trim()
+        }));
+        clientesCache.forEach(c => {
+            ddl.append(`<option value="${c.id}">${c.text}</option>`);
         });
     } catch (e) {
         console.error("Error cargando clientes", e);
@@ -979,7 +985,16 @@ VC.cargarTabla = async function () {
         VC.aplicarFechasHoyCobrador();
     }
 
+    abortarXhrCargaTablas(VC._xhrCargaTabla);
     VC.showGlobalLoading("Cargando tablas...");
+    const genCarga = iniciarAvisoCargaLenta({
+        abort: function () {
+            abortarXhrCargaTablas(VC._xhrCargaTabla);
+        },
+        onReiniciarFiltros: function () {
+            VC.limpiarFiltros();
+        }
+    });
 
     cuotasReprogSel.clear();
     VC.actualizarReprogFabUI();
@@ -1004,30 +1019,28 @@ VC.cargarTabla = async function () {
         fechaDesde: fechas.desde,
         fechaHasta: fechas.hasta,
         idCliente: $("#f_cliente").val() || null,
-        idVendedor: $("#f_vendedor").val() || null,
-        idCobrador: $("#f_cobrador").val() || null,
-        estado: $("#f_estado").val() || null,
-
-        // 🔥 nuevos
-        idZona: $("#f_zona").val() || null,
-        turno: $("#f_turno").val() || null,
-        franjaHoraria: $("#f_franja").val() || null,
-
-        // Cliente o cobrador elegidos en UI: el backend no aplica rango de fechas a FechaCobro.
+        // Con cliente, no mandar el resto: la búsqueda general antepone.
+        idVendedor: hasClienteFiltro ? null : ($("#f_vendedor").val() || null),
+        idCobrador: hasClienteFiltro ? null : ($("#f_cobrador").val() || null),
+        estado: hasClienteFiltro ? null : ($("#f_estado").val() || null),
+        idZona: hasClienteFiltro ? null : ($("#f_zona").val() || null),
+        turno: hasClienteFiltro ? null : ($("#f_turno").val() || null),
+        franjaHoraria: hasClienteFiltro ? null : ($("#f_franja").val() || null),
         omitirRangoFecha: hasClienteFiltro || hasCobradorFiltro
     };
 
     try {
-        const resp = await $.getJSON(
+        VC._xhrCargaTabla = $.getJSON(
             "/Ventas_Electrodomesticos/ListarCuotasACobrar",
             params
         );
+        const resp = await VC._xhrCargaTabla;
 
-        // Cobro pendiente sigue en su sección. Transferencia pendiente: si hay cliente
-        // (nombre/apellido/DNI), incluirla acá para que la cuenta no desaparezca.
+        // Con cliente (nombre/DNI): el general trae también cobro/transferencia pendiente.
+        // Sin cliente: esas cuotas viven solo en sus secciones.
         const cuotas = (resp?.data || []).filter(x =>
             x && x.Estado !== "Pagada"
-            && Number(x.CobroPendiente) !== 1
+            && (hasClienteFiltro || Number(x.CobroPendiente) !== 1)
             && (hasClienteFiltro || Number(x.TransferenciaPendiente) !== 1)
         );
 
@@ -1044,9 +1057,10 @@ VC.cargarTabla = async function () {
         }
 
     } catch (e) {
+        if (esAbortAjax(e)) return;
         console.error(e);
         VC.toast("Error cargando cuotas", "danger");
-        VC.hideGlobalLoading();
+        if (genCarga === cargaTablasTokenActual()) VC.hideGlobalLoading();
         return;
     }
 
@@ -1056,7 +1070,7 @@ VC.cargarTabla = async function () {
         VC.reabrirAcordeon();
         VC.refrescarSeleccionUI();
         VC.ajustarTablasPostCarga();
-        VC.hideGlobalLoading();
+        if (genCarga === cargaTablasTokenActual()) VC.hideGlobalLoading();
         return;
     } else {
         inicializarEncabezadoColumnas("#vc_tabla")
@@ -1067,6 +1081,9 @@ VC.cargarTabla = async function () {
     tablaCobros = $("#vc_tabla").DataTable({
         data: cuotasCache,
         pageLength: 50,
+        lengthMenu: typeof DT_LENGTH_MENU !== "undefined"
+            ? DT_LENGTH_MENU
+            : [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
         responsive: false,
         scrollX: true,
         language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
@@ -1379,7 +1396,7 @@ VC.cargarTabla = async function () {
     });
 
     VC.ajustarTablasPostCarga();
-    VC.hideGlobalLoading();
+    if (genCarga === cargaTablasTokenActual()) VC.hideGlobalLoading();
 
     /* ===========================================================
        ✅ SELECCIÓN SINGLE (igual Historial) — TABLA PRINCIPAL
@@ -1459,7 +1476,13 @@ VC.cargarTabla = async function () {
 
         ventaAcordeonAbierta = data.IdVenta;
 
-        await VC.cargarDetalleVenta(data.IdVenta);
+        const hayClienteFiltro = !!($("#f_cliente").val());
+        const esValidacion =
+            Number(data.CobroPendiente) === 1 || Number(data.TransferenciaPendiente) === 1;
+
+        await VC.cargarDetalleVenta(data.IdVenta, {
+            incluirValidacion: hayClienteFiltro || esValidacion
+        });
     });
 
     VC.refrescarSeleccionUI();
@@ -2235,11 +2258,12 @@ $(document).on("click", ".js-fin-toggle", function (e) {
 
 VC.cargarCobrosPendientes = async function () {
 
+    const idCliente = $("#f_cliente").val() || null;
     const resp = await $.getJSON(
         "/Ventas_Electrodomesticos/ListarCobrosPendientes",
         {
-            idCliente: $("#f_cliente").val() || null,
-            idVendedor: $("#f_vendedor").val() || null
+            idCliente: idCliente,
+            idVendedor: idCliente ? null : ($("#f_vendedor").val() || null)
         }
     );
 
@@ -2504,11 +2528,12 @@ VC.cargarTransferenciasPendientes = async function () {
         return;
     }
 
+    const idCliente = $("#f_cliente").val() || null;
     const resp = await $.getJSON(
         "/Ventas_Electrodomesticos/ListarTransferenciasPendientes",
         {
-            idCliente: $("#f_cliente").val() || null,
-            idVendedor: $("#f_vendedor").val() || null
+            idCliente: idCliente,
+            idVendedor: idCliente ? null : ($("#f_vendedor").val() || null)
         }
     );
 
@@ -3116,132 +3141,98 @@ let selectedAccount = null;
 
 function renderAccounts() {
     const accountList = document.getElementById("accountList");
+    if (!accountList) return;
     accountList.innerHTML = "";
 
-    if (accounts.length === 0) return;
+    if (!accounts || accounts.length === 0) {
+        accountList.innerHTML = `<div class="cb-bank-empty"><i class="fa fa-inbox"></i><div class="mt-2">No hay cuentas para mostrar</div></div>`;
+        return;
+    }
+
+    const fmtMoney = (n) => "$" + (Number(n) || 0).toLocaleString("es-AR");
 
     accounts.forEach(account => {
-        const li = document.createElement("li");
-        li.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+        const card = document.createElement("div");
+        card.className = "cb-bank-card";
+        card.setAttribute("role", "listitem");
+        card.setAttribute("data-id", account.Id);
 
-        if (account.Activo == 0) {
-            li.style.backgroundColor = "rgba(194,14,2,0.7)";
-            li.classList.add("text-white");
+        const inactiva = Number(account.Activo) === 0;
+        if (inactiva) {
+            card.classList.add("bloqueado", "is-inactive");
         }
 
-        li.setAttribute("data-id", account.Id);
+        const monto = Number(account.MontoPagar) || 0;
+        const entrega = Number(account.Entrega) || 0;
+        const porcentaje = monto > 0 ? Math.min((entrega / monto) * 100, 100) : 0;
+        let progressClass = "low";
+        if (porcentaje >= 90) progressClass = "full";
+        else if (porcentaje >= 60) progressClass = "high";
+        else if (porcentaje >= 10) progressClass = "medium";
 
-        const contentContainer = document.createElement("div");
-        contentContainer.classList.add("d-flex", "align-items-center", "gap-2");
+        const cbu = (account.CBU || "").toString();
+        const cbuShort = cbu.length > 14 ? (cbu.slice(0, 6) + "…" + cbu.slice(-4)) : (cbu || "Sin CBU");
 
-        const accountName = document.createElement("div");
-        accountName.classList.add("account-name-scroll");
+        card.innerHTML = `
+            <div class="cb-bank-card-main">
+                <div class="cb-bank-card-icon"><i class="fa fa-university"></i></div>
+                <div class="cb-bank-card-info">
+                    <div class="cb-bank-card-name"></div>
+                    <div class="cb-bank-card-meta"></div>
+                    ${monto > 0 ? `
+                    <div class="cb-bank-card-progress">
+                        <div class="cb-bank-mini-bar">
+                            <div class="progress-bar ${progressClass}" style="width:${porcentaje}%"></div>
+                            <span class="cb-bank-mini-pct">${porcentaje >= 100 ? "Completo" : Math.round(porcentaje) + "%"}</span>
+                        </div>
+                    </div>` : ""}
+                </div>
+            </div>
+            <div class="cb-bank-card-actions">
+                <button type="button" class="btn btn-img" title="Adjuntar imágenes" data-action="img"><i class="fa fa-file-image-o"></i></button>
+                <button type="button" class="btn btn-edit" title="Editar" data-action="edit"><i class="fa fa-pencil"></i></button>
+                <button type="button" class="btn btn-del" title="Eliminar" data-action="del"><i class="fa fa-trash"></i></button>
+            </div>
+        `;
 
-        const spanScroll = document.createElement("span");
-        spanScroll.classList.add("scroll-inner");
-        spanScroll.textContent = account.Nombre;
+        card.querySelector(".cb-bank-card-name").textContent = account.Nombre || "Sin nombre";
+        card.querySelector(".cb-bank-card-meta").textContent =
+            `${cbuShort} · Meta ${fmtMoney(monto)} · Entregado ${fmtMoney(entrega)}`;
 
-        accountName.appendChild(spanScroll);
-        contentContainer.appendChild(accountName);
-
-        // Activar scroll con click (toggle)
-        accountName.addEventListener("click", (e) => {
-            e.stopPropagation(); // evitar que dispare el click de selección
-            spanScroll.classList.toggle("scrolling");
+        card.querySelector('[data-action="img"]').addEventListener("click", (e) => {
+            e.stopPropagation();
+            anadirComprobantes(account.Id);
+        });
+        card.querySelector('[data-action="edit"]').addEventListener("click", (e) => {
+            e.stopPropagation();
+            editAccount(account.Id);
+        });
+        card.querySelector('[data-action="del"]').addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteAccount(account.Id);
         });
 
-        if (account.MontoPagar > 0) {
-            const porcentaje = (account.Entrega / account.MontoPagar) * 100;
-
-            const progressWrapper = document.createElement("div");
-            progressWrapper.classList.add("position-relative");
-            progressWrapper.style.width = "80px";
-            progressWrapper.style.height = "10px";
-
-            const progressBarContainer = document.createElement("div");
-            progressBarContainer.classList.add("progress");
-            progressBarContainer.style.width = "100%";
-            progressBarContainer.style.height = "100%";
-
-            const progressBar = document.createElement("div");
-            progressBar.classList.add("progress-bar");
-            progressBar.style.width = `${porcentaje}%`;
-            progressBar.style.transition = "width 0.5s";
-
-            progressBar.classList.remove("low", "medium", "high", "full");
-            if (porcentaje < 10) {
-                progressBar.classList.add("low");
-            } else if (porcentaje < 60) {
-                progressBar.classList.add("medium");
-            } else if (porcentaje < 90) {
-                progressBar.classList.add("high");
-            } else {
-                progressBar.classList.add("full");
-            }
-
-            const percentageText = document.createElement("span");
-            percentageText.id = "progress-percentage-textCobro";
-            percentageText.textContent = porcentaje >= 100 ? "Completado" : `${Math.round(porcentaje)}%`;
-            percentageText.style.position = "absolute";
-            percentageText.style.left = "50%";
-            percentageText.style.top = "50%";
-            percentageText.style.transform = "translate(-50%, -50%)";
-            percentageText.style.color = "#fff";
-            percentageText.style.fontSize = "10px";
-            percentageText.style.fontWeight = "700";
-            percentageText.style.textShadow = "0 0 2px #000";
-
-            progressBarContainer.appendChild(progressBar);
-            progressWrapper.appendChild(progressBarContainer);
-            progressWrapper.appendChild(percentageText);
-            contentContainer.appendChild(progressWrapper);
-        }
-
-        li.appendChild(contentContainer);
-
-        const buttonContainer = document.createElement("div");
-        buttonContainer.innerHTML = `
-         <button class="btn btn-secondary btn-sm delete-btn" onclick="anadirComprobantes(${account.Id})" title="Adjuntar Imagenes">
-                <i class="fa fa-file-image-o"></i>
-            </button>
-            <button class="btn btn-warning btn-sm edit-btn" onclick="editAccount(${account.Id})" title="Editar">
-                <i class="fa fa-pencil"></i>
-            </button>
-            <button class="btn btn-danger btn-sm delete-btn" onclick="deleteAccount(${account.Id})" title="Eliminar">
-                <i class="fa fa-trash"></i>
-            </button>
-        `;
-        li.appendChild(buttonContainer);
-
-        li.addEventListener("click", () => selectAccount(account, li));
-
-        accountList.appendChild(li);
+        card.addEventListener("click", () => selectAccount(account, card));
+        accountList.appendChild(card);
     });
 
     if (accounts.length > 0) {
-        selectAccount(accounts[0], accountList.firstChild);
+        selectAccount(accounts[0], accountList.querySelector(".cb-bank-card"));
     }
 }
 
 // Función para seleccionar una cuenta y mostrar sus datos en los inputs
 function selectAccount(account, item) {
-
-    // Remover la clase 'active' de cualquier otra cuenta seleccionada
-    const allAccounts = document.querySelectorAll("#accountList .list-group-item");
-    allAccounts.forEach(item => item.classList.remove("active"));
-
-    // Añadir la clase 'active' al item seleccionado
-
-
-    item.classList.add("active");
+    document.querySelectorAll("#accountList .cb-bank-card").forEach(el => el.classList.remove("active"));
+    if (item) item.classList.add("active");
 
     selectedAccount = account;
 
-    document.getElementById("accountName").value = account.Nombre;
-    document.getElementById("accountCBU").value = account.CBU;
+    document.getElementById("accountName").value = account.Nombre || "";
+    document.getElementById("accountCBU").value = account.CBU || "";
     document.getElementById("accountMonto").value = account.MontoPagar;
-    document.getElementById("CuentaPropia").checked = account.CuentaPropia;
-    document.getElementById("Activo").checked = account.Activo;
+    document.getElementById("CuentaPropia").checked = !!account.CuentaPropia;
+    document.getElementById("Activo").checked = !!account.Activo;
     actualizarBarraProgreso(account.MontoPagar, account.Entrega);
 }
 
@@ -3454,31 +3445,30 @@ async function loadCuentasBancarias(activo) {
 async function abrirModalCuentasBancarias() {
     let toggleButton = $("#toggleBloqueadas");
 
-    // Resetear el botón al estado inicial
-    toggleButton.html('<i class="fa fa-eye text-danger"></i> Ver cuentas inactivas');
-    toggleButton.find("i").removeClass("text-success").addClass("text-danger");
+    toggleButton
+        .removeClass("is-showing-inactive")
+        .html('<i class="fa fa-eye"></i> Ver cuentas inactivas');
 
-    // Ocultar cuentas bloqueadas por defecto
     $(".bloqueado").hide();
-    cancelarNuevaCuenta()
+    cancelarNuevaCuenta();
     await loadCuentasBancarias(1);
-    $("#bankAccountsModal").modal('show');
+    $("#bankAccountsModal").modal("show");
 }
 
 
 $("#toggleBloqueadas").click(async function () {
-    let icon = $(this).find("i");
+    const btn = $(this);
 
-    if (icon.hasClass("text-danger")) {
-        icon.removeClass("text-danger").addClass("text-success");
-        $(this).html('<i class="fa fa-eye text-success"></i> Ocultar cuentas inactivas');
+    if (!btn.hasClass("is-showing-inactive")) {
+        btn.addClass("is-showing-inactive")
+            .html('<i class="fa fa-eye"></i> Ocultar cuentas inactivas');
         await loadCuentasBancarias(-1);
-        activoCuentasBancarias = -1
+        activoCuentasBancarias = -1;
         $(".bloqueado").show();
     } else {
-        icon.removeClass("text-success").addClass("text-danger");
-        $(this).html('<i class="fa fa-eye text-danger"></i> Ver cuentas inactivas');
-        activoCuentasBancarias = 1
+        btn.removeClass("is-showing-inactive")
+            .html('<i class="fa fa-eye"></i> Ver cuentas inactivas');
+        activoCuentasBancarias = 1;
         await loadCuentasBancarias(1);
         $(".bloqueado").hide();
     }

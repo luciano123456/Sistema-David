@@ -1,0 +1,408 @@
+@{
+    ViewBag.Title = "Análisis de Rendimiento";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+<link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
+<link href="~/Estilos/rendimiento.css?v=4.3" rel="stylesheet" />
+<link href="~/Estilos/RendimientoAnalisis.css?v=3.3" rel="stylesheet" />
+
+<body class="ve-dark ra-body">
+    @if (ViewData["ErrorPermisos"] == null)
+    {
+        <div class="container page-99 py-3 ra-page">
+
+            <section class="cc-header mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cc-badge ra-badge">
+                            <i class="fa fa-pie-chart"></i>
+                        </div>
+                        <div>
+                            <h2 class="m-0 fw-800">Análisis de rendimiento</h2>
+                            <div class="text-muted-cc" id="raPeriodoLabel">Cargando período…</div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-outline-light" href="@Url.Content("~/Rendimiento/Index/")">
+                            <i class="fa fa-arrow-left me-1"></i> Volver
+                        </a>
+                    </div>
+                </div>
+
+                <form id="raFormFiltros" class="ra-filtros" onsubmit="return false;">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-6 col-md-3 col-xl-2">
+                            <label class="form-label" for="raEstadoUsuario">Estado</label>
+                            <select id="raEstadoUsuario" class="form-select">
+                                <option value="-1">Todos</option>
+                                <option value="1" selected>Activo</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 col-xl-2">
+                            <label class="form-label" for="raFechaDesde">Desde</label>
+                            <input type="date" id="raFechaDesde" class="form-control" />
+                        </div>
+                        <div class="col-6 col-md-3 col-xl-2">
+                            <label class="form-label" for="raFechaHasta">Hasta</label>
+                            <input type="date" id="raFechaHasta" class="form-control" />
+                        </div>
+                        <div class="col-6 col-md-3 col-xl-2">
+                            <label class="form-label" for="raTipoNegocio">Tipo de negocio</label>
+                            <select id="raTipoNegocio" class="form-select">
+                                <option value="-1">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 col-xl-2">
+                            <label class="form-label" for="raMetodoPago">Método</label>
+                            <select id="raMetodoPago" class="form-select">
+                                <option value="Todos">Todos</option>
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Transferencia Propia">Transferencia Propia</option>
+                                <option value="Transferencia a Terceros">Transferencia a Terceros</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 col-xl-2" id="raWrapCuenta" hidden>
+                            <label class="form-label" for="raCuentaPago">Cuenta</label>
+                            <select id="raCuentaPago" class="form-select">
+                                <option value="-1">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3 col-xl-2">
+                            <label class="form-label" for="raVendedor">Vendedor</label>
+                            <select id="raVendedor" class="form-select">
+                                <option value="-1">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-xl-auto d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-primary" id="raBtnAplicar">
+                                <i class="fa fa-search me-1"></i> Aplicar
+                            </button>
+                            <button type="button" class="btn btn-outline-info" id="raBtnHoy">
+                                <i class="fa fa-calendar me-1"></i> Hoy
+                            </button>
+                            <button type="button" class="btn btn-outline-success" id="raBtnMensual">
+                                <i class="fa fa-calendar-check-o me-1"></i> Mensual
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <div id="globalLoading" class="global-loading hidden">
+                <div class="loading-box">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Armando el análisis del período…</div>
+                </div>
+            </div>
+
+            <div id="raContent" class="d-none">
+
+                <section class="ra-seccion mb-4" data-ra-seccion="periodo">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="text-white ra-section-title">
+                                    <i class="fa fa-balance-scale me-2"></i> En este período
+                                </div>
+                            </div>
+                            <div class="ra-sec-actions"></div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raResumenPeriodo"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="vendedor">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="text-white ra-section-title">
+                                    <i class="fa fa-users me-2"></i> Por vendedor
+                                </div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raPorVendedor" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raResumenFiado"></div>
+                            <div id="raPorVendedor" class="mt-3 ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="encero">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="text-white ra-section-title">
+                                    <i class="fa fa-check-circle me-2"></i> En cero
+                                </div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raClientesCero" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raClientesCero" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="menos">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white mb-1">
+                                    <i class="fa fa-user-times me-2"></i> Clientes a los que menos se les vendió
+                                </div>
+                                <p class="ra-sub mb-0">Top 50 para ir a venderles: primero los de menor venta en el período (incluye $0). Si faltan, se completan con clientes sin venta en estas fechas, por última venta más vieja.</p>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raClientesMenos" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raClientesMenos" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="kpis">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="text-white ra-section-title">
+                                    <i class="fa fa-th-large me-2"></i> Indicadores
+                                </div>
+                            </div>
+                            <div class="ra-sec-actions"></div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div class="row g-3" id="raKpis"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="destacados">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">Destacados</div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raDestacados" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raDestacados" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="insights">
+                    <div class="card-glass p-3 ra-insights">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">
+                                    <i class="fa fa-lightbulb-o me-2"></i> Lectura rápida del período
+                                </div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raInsights" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <ul id="raInsights" class="ra-insights-list ra-scroll mb-0"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="falencias">
+                    <div class="card-glass p-3 ra-insights ra-falencias">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white mb-1">
+                                    <i class="fa fa-exclamation-triangle me-2"></i> A observar
+                                </div>
+                                <p class="ra-sub mb-0">Falencias del recorte: poca venta, desfasaje cobro/venta o visitas en vacío.</p>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raFalencias" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <ul id="raFalencias" class="ra-insights-list ra-falencias-list ra-scroll mb-0"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="evolucion">
+                    <div class="card-glass p-3 ra-chart-card">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">Evolución diaria</div>
+                                <p class="ra-sub mb-0">Ventas, cobros e interés según las fechas filtradas</p>
+                            </div>
+                            <div class="ra-sec-actions"></div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div class="ra-chart-wrap ra-chart-lg">
+                                <canvas id="chartSerie"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="metodos">
+                    <div class="card-glass p-3 ra-chart-card">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">Cómo se cobró</div>
+                                <p class="ra-sub mb-0">Efectivo vs transferencias</p>
+                            </div>
+                            <div class="ra-sec-actions"></div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div class="ra-chart-wrap">
+                                <canvas id="chartMetodos"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="topventas">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">Quién más vendió</div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raTopVentas" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raTopVentas" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="topcobros">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">Quién más cobró</div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raTopCobros" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raTopCobros" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="ranking">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white mb-1">
+                                    <i class="fa fa-trophy me-2"></i> Ranking de rendimiento
+                                </div>
+                                <p class="ra-sub mb-0">Score que combina ventas, cobros, operaciones, interés y equilibrio vendedor/cobrador. El podio marca los tres mejores del período.</p>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raRanking" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raRanking" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="clienteventa">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">Clientes con más ventas</div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raClientesVenta" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raClientesVenta" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="clientecobro">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">Clientes que más pagaron</div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raClientesCobro" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raClientesCobro" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="cuentas">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">Cuentas bancarias (transferencias)</div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raCuentas" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raCuentas" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ra-seccion mb-4" data-ra-seccion="ausentes">
+                    <div class="card-glass p-3">
+                        <div class="ra-sec-toolbar">
+                            <div class="ra-sec-heading">
+                                <div class="fw-bold text-white">Clientes ausentes por cobrador</div>
+                            </div>
+                            <div class="ra-sec-actions">
+                                <input type="search" class="form-control ra-buscar" data-ra-filter-target="#raAusentes" placeholder="Buscar…" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="ra-sec-body">
+                            <div id="raAusentes" class="ra-scroll"></div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="container py-4">
+            <div class="alert alert-danger">
+                Error: No tienes permisos para acceder a esta pantalla
+            </div>
+        </div>
+    }
+</body>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.14"></script>
+    <script src="~/JavaScript/RendimientoAnalisis.js?v=3.3"></script>
+}

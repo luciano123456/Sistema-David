@@ -584,11 +584,25 @@ body {
     content: none !important;
 
 }
-.table-mini td {
-    text-overflow: unset !important;
-    overflow: visible !important;
-}
 
+    .table-mini td.hist-td-desc,
+    .table-mini td.hist-td-cobr {
+        white-space: normal;
+        word-break: break-word;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .table-mini td.hist-td-amt {
+        overflow: hidden;
+        text-align: right;
+    }
+
+        .table-mini td.hist-td-amt .hist-amt {
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
 
 .chip-cobro {
     background: rgba(34,197,94,.14);
@@ -997,19 +1011,72 @@ body {
 .hist-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 10px 12px;
     font-size: 13px;
 }
 
+    .hist-grid > div {
+        min-width: 0;
+    }
+
+        .hist-grid > div > span {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: rgba(255, 255, 255, .45);
+            margin-bottom: 4px;
+        }
+
+        .hist-grid > div > b {
+            display: block;
+            word-break: break-word;
+            line-height: 1.35;
+            color: #eaf2ff;
+        }
+
 .hist-desc {
-    margin: 6px 0;
+    margin: 6px 0 10px;
     font-size: 13px;
     color: #cbd5e1;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+/* Historial: cards en móvil, tabla en desktop */
+.hist-view-mobile {
+    display: none;
+}
+
+.hist-view-desktop {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .hist-view-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .hist-view-desktop {
+        display: none !important;
+    }
+
+    .hist-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .hist-grid .hist-amt {
+        width: fit-content;
+        max-width: 100%;
+    }
 }
 
 @media (max-width: 768px) {
     .table-mini {
-        display: none !important;
+        min-width: 0;
     }
 }
 
@@ -1067,4 +1134,53 @@ tbody tr:nth-child(odd) {
 .empty-ventas-text {
     font-size: 14px;
     color: rgba(255,255,255,.7);
+}
+
+.venta-item-eliminada {
+    opacity: .92;
+    border-left: 3px solid var(--danger);
+}
+
+.venta-eliminada-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .2rem .55rem;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    color: #fff;
+    background: rgba(239, 71, 111, .22);
+    border: 1px solid rgba(239, 71, 111, .45);
+}
+
+.venta-motivo-eliminacion {
+    margin-top: .65rem;
+    padding: .65rem .75rem;
+    border-radius: 12px;
+    background: rgba(239, 71, 111, .08);
+    border: 1px solid rgba(239, 71, 111, .22);
+}
+
+.venta-motivo-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: rgba(255,255,255,.65);
+    margin-bottom: .25rem;
+}
+
+.venta-motivo-text {
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.35;
+    white-space: pre-wrap;
+}
+
+.venta-motivo-fecha {
+    margin-top: .35rem;
+    font-size: 12px;
+    color: rgba(255,255,255,.55);
 }

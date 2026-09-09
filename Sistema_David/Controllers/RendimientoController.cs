@@ -31,7 +31,38 @@ namespace Sistema_David.Controllers
                 ViewBag.ErrorPermisos = "No puedes acceder a esta pantalla";
             }
 
+            ViewBag.EsAdmin = SessionHelper.GetUsuarioSesion() != null && SessionHelper.GetUsuarioSesion().IdRol == 1;
+
             return View();
+        }
+
+        public ActionResult Analisis()
+        {
+            ViewBag.ErrorPermisos = null;
+
+            if (SessionHelper.GetUsuarioSesion() == null || SessionHelper.GetUsuarioSesion().IdRol != 1)
+            {
+                ViewBag.ErrorPermisos = "No puedes acceder a esta pantalla";
+            }
+
+            return View();
+        }
+
+        [HttpGet]
+        public ActionResult ObtenerAnalisis(DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria, int idVendedor, int comprobantesEnviados = -1, int idEstado = 1)
+        {
+            if (SessionHelper.GetUsuarioSesion() == null || SessionHelper.GetUsuarioSesion().IdRol != 1)
+                return new HttpStatusCodeResult(403);
+
+            if (HttpContext != null && HttpContext.Server != null)
+                HttpContext.Server.ScriptTimeout = 600;
+
+            var result = RendimientoAnalisisModel.Analizar(
+                idVendedor, fechadesde, fechahasta, tiponegocio, metodoPago, IdCuentaBancaria, comprobantesEnviados, idEstado);
+
+            var json = Json(result, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = int.MaxValue;
+            return json;
         }
 
         public ActionResult Listar() 
@@ -42,13 +73,18 @@ namespace Sistema_David.Controllers
 
 
         [HttpGet]
-        public ActionResult MostrarRendimiento(int id, int ventas, int cobranzas,DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria, int ComprobantesEnviados)
+        public ActionResult MostrarRendimiento(int id, int ventas, int cobranzas, DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria, int ComprobantesEnviados)
         {
+            if (HttpContext != null && HttpContext.Server != null)
+                HttpContext.Server.ScriptTimeout = 600;
 
+            var result = RendimientosModel.MostrarRendimiento(id, ventas, cobranzas, fechadesde, fechahasta, tiponegocio, metodoPago, IdCuentaBancaria, ComprobantesEnviados)
+                         ?? new List<VMRendimiento>();
+            var kpis = RendimientosModel.CalcularKpis(result);
 
-            var result = RendimientosModel.MostrarRendimiento(id, ventas, cobranzas, fechadesde, fechahasta, tiponegocio, metodoPago, IdCuentaBancaria, ComprobantesEnviados);
-
-            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+            var json = Json(new { data = result, kpis }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = int.MaxValue;
+            return json;
         }
 
 
@@ -65,7 +101,9 @@ namespace Sistema_David.Controllers
 
             var result = RendimientosModel.MostrarClientesAusentes(fechadesde, fechahasta);
 
-            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+            var json = Json(new { data = result }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = int.MaxValue;
+            return json;
         }
 
         public ActionResult MostrarCantidadClientesAusentes()
@@ -107,7 +145,9 @@ namespace Sistema_David.Controllers
                 result.Add("Rendimiento", resultRendimiento);
                 result.Add("Cobrado", resultCobrado);
                 result.Add("ClientesAusentes", resultClientesAusentes);
-                return Json(result, JsonRequestBehavior.AllowGet);
+                var json = Json(result, JsonRequestBehavior.AllowGet);
+                json.MaxJsonLength = int.MaxValue;
+                return json;
             }
 
         }

@@ -4,7 +4,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
 -->
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <History>True|2026-08-13T05:52:28.4630629Z||;True|2026-08-08T09:19:37.1342306-03:00||;True|2026-08-08T09:18:18.3093511-03:00||;True|2026-08-08T03:35:09.5022398-03:00||;True|2026-06-15T04:11:55.8070765-03:00||;True|2026-06-12T13:56:05.3760078-03:00||;True|2026-06-12T13:42:57.8735686-03:00||;True|2026-06-11T00:29:56.1271609-03:00||;True|2026-06-08T13:19:45.1859370-03:00||;True|2026-06-08T13:19:37.3770563-03:00||;True|2026-06-06T00:27:27.8177373-03:00||;True|2026-06-06T00:27:23.3480143-03:00||;True|2026-06-06T00:27:14.5032868-03:00||;True|2026-06-06T00:27:06.8474628-03:00||;True|2026-06-05T00:47:39.6155403-03:00||;True|2026-06-01T11:54:11.4591860-03:00||;True|2026-06-01T01:01:16.8790217-03:00||;True|2026-05-26T10:38:05.4642774-03:00||;True|2026-05-26T10:19:26.7272884-03:00||;True|2026-05-26T10:19:17.9891568-03:00||;True|2026-05-23T14:11:46.7511253-03:00||;True|2026-05-23T13:31:52.2839291-03:00||;True|2026-05-23T13:31:48.8879978-03:00||;True|2026-05-19T17:01:28.6340863-03:00||;True|2026-05-19T17:01:13.6359820-03:00||;True|2026-05-19T12:07:21.5412947-03:00||;True|2026-05-19T12:07:05.2653864-03:00||;True|2026-05-19T09:57:28.5192060-03:00||;True|2026-05-19T09:57:19.2473634-03:00||;True|2026-05-14T02:34:56.0467602-03:00||;True|2026-05-12T18:00:27.4098397-03:00||;True|2026-05-12T18:00:15.7960984-03:00||;True|2026-05-09T10:13:08.4616796-03:00||;True|2026-05-09T10:13:05.5406298-03:00||;True|2026-05-09T05:38:04.3262320-03:00||;True|2026-05-09T05:28:22.1870277-03:00||;True|2026-04-27T01:03:59.0856038-03:00||;True|2026-04-25T16:46:43.0233268-03:00||;False|2026-04-25T16:46:28.7484915-03:00||;True|2026-04-25T16:24:21.8192421-03:00||;True|2026-04-25T15:12:56.3039210-03:00||;True|2026-04-25T15:12:48.1458770-03:00||;True|2026-04-23T09:42:30.8310709-03:00||;True|2026-04-23T09:41:12.8659980-03:00||;True|2026-04-23T09:24:24.2324671-03:00||;True|2026-04-18T17:37:15.5660191-03:00||;True|2026-04-18T13:41:58.9881731-03:00||;True|2026-04-18T13:41:34.2192065-03:00||;True|2026-04-17T01:24:24.2727427-03:00||;True|2026-04-17T00:48:24.4844947-03:00||;True|2026-04-17T00:48:18.6420937-03:00||;True|2026-04-16T00:47:08.6461024-03:00||;True|2026-04-16T00:45:38.1338533-03:00||;True|2026-04-16T00:45:34.0332306-03:00||;True|2026-04-14T10:33:44.6243136-03:00||;True|2026-04-14T10:33:29.1562036-03:00||;True|2026-04-14T10:33:04.1877197-03:00||;True|2026-04-02T02:13:02.3789765-03:00||;True|2026-03-28T10:27:37.1515567-03:00||;True|2026-03-28T10:26:57.1527952-03:00||;True|2026-03-28T10:26:38.3407407-03:00||;True|2026-03-26T16:28:59.8039978-03:00||;True|2026-03-26T16:28:41.8910562-03:00||;True|2026-03-26T09:55:22.5406238-03:00||;True|2026-03-25T15:02:59.6499829-03:00||;True|2026-03-25T11:29:50.7238426-03:00||;True|2026-03-25T11:21:54.5281921-03:00||;True|2026-03-25T10:58:18.3506937-03:00||;True|2026-03-25T10:53:11.8866277-03:00||;True|2026-03-25T10:50:07.4142112-03:00||;True|2026-03-25T10:48:43.5184679-03:00||;True|2026-03-25T00:50:37.2215862-03:00||;True|2026-03-25T00:50:30.9431208-03:00||;True|2026-03-25T00:36:05.7624240-03:00||;True|2026-03-24T22:41:34.8074745-03:00||;True|2026-03-24T22:26:36.8767044-03:00||;True|2026-03-24T22:15:18.8127692-03:00||;True|2026-03-24T21:40:09.4749854-03:00||;True|2026-03-16T21:50:40.3627618-03:00||;True|2026-03-16T17:28:08.3730753-03:00||;True|2026-02-28T21:00:13.4582810-03:00||;True|2026-02-28T10:57:37.5242538-03:00||;True|2026-02-21T04:13:51.2153456-03:00||;True|2026-02-14T05:18:13.0984609-03:00||;True|2026-01-24T05:12:09.4229606-03:00||;True|2026-01-21T03:01:19.1476573-03:00||;True|2026-01-21T02:52:27.7602986-03:00||;True|2026-01-21T02:52:17.3286906-03:00||;True|2026-01-17T23:20:25.3511386-03:00||;True|2026-01-17T05:23:27.3767292-03:00||;True|2026-01-17T05:20:59.8465983-03:00||;True|2025-12-26T03:19:48.3833066-03:00||;True|2025-12-26T03:19:41.9634060-03:00||;True|2025-12-26T03:17:01.3197249-03:00||;True|2025-12-24T04:10:14.9727738-03:00||;True|2025-12-24T04:08:39.4704080-03:00||;True|2025-12-22T03:00:32.3872561-03:00||;True|2025-12-20T21:39:38.7490333-03:00||;True|2025-12-19T02:12:24.2572163-03:00||;True|2025-12-19T02:06:31.3122827-03:00||;</History>
+    <History>True|2026-09-09T02:56:35.9014732Z||;True|2026-09-08T23:56:14.3871237-03:00||;True|2026-09-08T23:38:43.0030062-03:00||;True|2026-09-03T02:24:43.3833830-03:00||;True|2026-08-13T02:52:28.4630629-03:00||;True|2026-08-08T09:19:37.1342306-03:00||;True|2026-08-08T09:18:18.3093511-03:00||;True|2026-08-08T03:35:09.5022398-03:00||;True|2026-06-15T04:11:55.8070765-03:00||;True|2026-06-12T13:56:05.3760078-03:00||;True|2026-06-12T13:42:57.8735686-03:00||;True|2026-06-11T00:29:56.1271609-03:00||;True|2026-06-08T13:19:45.1859370-03:00||;True|2026-06-08T13:19:37.3770563-03:00||;True|2026-06-06T00:27:27.8177373-03:00||;True|2026-06-06T00:27:23.3480143-03:00||;True|2026-06-06T00:27:14.5032868-03:00||;True|2026-06-06T00:27:06.8474628-03:00||;True|2026-06-05T00:47:39.6155403-03:00||;True|2026-06-01T11:54:11.4591860-03:00||;True|2026-06-01T01:01:16.8790217-03:00||;True|2026-05-26T10:38:05.4642774-03:00||;True|2026-05-26T10:19:26.7272884-03:00||;True|2026-05-26T10:19:17.9891568-03:00||;True|2026-05-23T14:11:46.7511253-03:00||;True|2026-05-23T13:31:52.2839291-03:00||;True|2026-05-23T13:31:48.8879978-03:00||;True|2026-05-19T17:01:28.6340863-03:00||;True|2026-05-19T17:01:13.6359820-03:00||;True|2026-05-19T12:07:21.5412947-03:00||;True|2026-05-19T12:07:05.2653864-03:00||;True|2026-05-19T09:57:28.5192060-03:00||;True|2026-05-19T09:57:19.2473634-03:00||;True|2026-05-14T02:34:56.0467602-03:00||;True|2026-05-12T18:00:27.4098397-03:00||;True|2026-05-12T18:00:15.7960984-03:00||;True|2026-05-09T10:13:08.4616796-03:00||;True|2026-05-09T10:13:05.5406298-03:00||;True|2026-05-09T05:38:04.3262320-03:00||;True|2026-05-09T05:28:22.1870277-03:00||;True|2026-04-27T01:03:59.0856038-03:00||;True|2026-04-25T16:46:43.0233268-03:00||;False|2026-04-25T16:46:28.7484915-03:00||;True|2026-04-25T16:24:21.8192421-03:00||;True|2026-04-25T15:12:56.3039210-03:00||;True|2026-04-25T15:12:48.1458770-03:00||;True|2026-04-23T09:42:30.8310709-03:00||;True|2026-04-23T09:41:12.8659980-03:00||;True|2026-04-23T09:24:24.2324671-03:00||;True|2026-04-18T17:37:15.5660191-03:00||;True|2026-04-18T13:41:58.9881731-03:00||;True|2026-04-18T13:41:34.2192065-03:00||;True|2026-04-17T01:24:24.2727427-03:00||;True|2026-04-17T00:48:24.4844947-03:00||;True|2026-04-17T00:48:18.6420937-03:00||;True|2026-04-16T00:47:08.6461024-03:00||;True|2026-04-16T00:45:38.1338533-03:00||;True|2026-04-16T00:45:34.0332306-03:00||;True|2026-04-14T10:33:44.6243136-03:00||;True|2026-04-14T10:33:29.1562036-03:00||;True|2026-04-14T10:33:04.1877197-03:00||;True|2026-04-02T02:13:02.3789765-03:00||;True|2026-03-28T10:27:37.1515567-03:00||;True|2026-03-28T10:26:57.1527952-03:00||;True|2026-03-28T10:26:38.3407407-03:00||;True|2026-03-26T16:28:59.8039978-03:00||;True|2026-03-26T16:28:41.8910562-03:00||;True|2026-03-26T09:55:22.5406238-03:00||;True|2026-03-25T15:02:59.6499829-03:00||;True|2026-03-25T11:29:50.7238426-03:00||;True|2026-03-25T11:21:54.5281921-03:00||;True|2026-03-25T10:58:18.3506937-03:00||;True|2026-03-25T10:53:11.8866277-03:00||;True|2026-03-25T10:50:07.4142112-03:00||;True|2026-03-25T10:48:43.5184679-03:00||;True|2026-03-25T00:50:37.2215862-03:00||;True|2026-03-25T00:50:30.9431208-03:00||;True|2026-03-25T00:36:05.7624240-03:00||;True|2026-03-24T22:41:34.8074745-03:00||;True|2026-03-24T22:26:36.8767044-03:00||;True|2026-03-24T22:15:18.8127692-03:00||;True|2026-03-24T21:40:09.4749854-03:00||;True|2026-03-16T21:50:40.3627618-03:00||;True|2026-03-16T17:28:08.3730753-03:00||;True|2026-02-28T21:00:13.4582810-03:00||;True|2026-02-28T10:57:37.5242538-03:00||;True|2026-02-21T04:13:51.2153456-03:00||;True|2026-02-14T05:18:13.0984609-03:00||;True|2026-01-24T05:12:09.4229606-03:00||;True|2026-01-21T03:01:19.1476573-03:00||;True|2026-01-21T02:52:27.7602986-03:00||;True|2026-01-21T02:52:17.3286906-03:00||;True|2026-01-17T23:20:25.3511386-03:00||;True|2026-01-17T05:23:27.3767292-03:00||;True|2026-01-17T05:20:59.8465983-03:00||;True|2025-12-26T03:19:48.3833066-03:00||;True|2025-12-26T03:19:41.9634060-03:00||;True|2025-12-26T03:17:01.3197249-03:00||;True|2025-12-24T04:10:14.9727738-03:00||;True|2025-12-24T04:08:39.4704080-03:00||;</History>
     <_PublishTargetUrl>D:\Publicaciones Webs\Sistema David</_PublishTargetUrl>
     <LastFailureDetails />
   </PropertyGroup>
@@ -388,10 +388,10 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>08/08/2018 09:18:16</publishTime>
     </File>
     <File Include="bin/Sistema_David.dll">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>09/08/2026 23:56:09</publishTime>
     </File>
     <File Include="bin/Sistema_David.pdb">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>09/08/2026 23:56:09</publishTime>
     </File>
     <File Include="bin/SixLabors.Fonts.dll">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -648,6 +648,9 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
     <File Include="Estilos/Cobranzas.css">
       <publishTime>08/08/2026 00:44:58</publishTime>
     </File>
+    <File Include="Estilos/CuentasBancarias.css">
+      <publishTime>09/03/2026 02:15:13</publishTime>
+    </File>
     <File Include="Estilos/DireccionModal.css">
       <publishTime>08/08/2026 00:44:58</publishTime>
     </File>
@@ -655,7 +658,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="Estilos/InformacionVenta.css">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>09/02/2026 01:30:16</publishTime>
     </File>
     <File Include="Estilos/Login.css">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -679,7 +682,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="Estilos/Productos.css">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>09/02/2026 00:41:10</publishTime>
     </File>
     <File Include="Estilos/Recorrido.css">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -688,7 +691,10 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="Estilos/Rendimiento.css">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>09/08/2026 22:25:51</publishTime>
+    </File>
+    <File Include="Estilos/RendimientoAnalisis.css">
+      <publishTime>09/08/2026 23:53:44</publishTime>
     </File>
     <File Include="Estilos/ReprogAtrasadasModal.css">
       <publishTime>08/08/2026 00:44:58</publishTime>
@@ -712,7 +718,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="Estilos/Ventas_Electrodomesticos.css">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>09/08/2026 21:38:03</publishTime>
     </File>
     <File Include="favicon.ico">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -802,13 +808,13 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="JavaScript/bundle.js">
-      <publishTime>03/22/2025 23:25:50</publishTime>
+      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="JavaScript/Clientes.js">
       <publishTime>08/08/2026 00:44:58</publishTime>
     </File>
     <File Include="JavaScript/ClientesCero.js">
-      <publishTime>08/13/2026 02:10:28</publishTime>
+      <publishTime>09/08/2026 21:38:03</publishTime>
     </File>
     <File Include="JavaScript/ClientesEditar.js">
       <publishTime>08/08/2026 00:44:58</publishTime>
@@ -817,25 +823,25 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>08/08/2026 00:44:58</publishTime>
     </File>
     <File Include="JavaScript/Cobranzas.js">
-      <publishTime>08/08/2026 00:44:58</publishTime>
+      <publishTime>09/08/2026 21:46:33</publishTime>
     </File>
     <File Include="JavaScript/ImportacionExcelClientes.js">
-      <publishTime>03/22/2025 23:25:50</publishTime>
+      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="JavaScript/InformacionCliente.js">
       <publishTime>04/06/2025 05:46:35</publishTime>
     </File>
     <File Include="JavaScript/InformacionVenta.js">
-      <publishTime>08/13/2026 02:10:28</publishTime>
+      <publishTime>09/02/2026 01:30:33</publishTime>
     </File>
     <File Include="JavaScript/Login.js">
-      <publishTime>03/25/2026 10:45:45</publishTime>
+      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="JavaScript/NavBarLogin.js">
       <publishTime>05/09/2026 18:32:27</publishTime>
     </File>
     <File Include="JavaScript/NuevoModif.js">
-      <publishTime>03/22/2025 23:25:50</publishTime>
+      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="JavaScript/Pagos.js">
       <publishTime>02/08/2026 22:50:34</publishTime>
@@ -847,25 +853,28 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>04/06/2025 05:46:35</publishTime>
     </File>
     <File Include="JavaScript/PedidosEditar.js">
-      <publishTime>03/22/2025 23:25:50</publishTime>
+      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="JavaScript/PedidosNuevo.js">
       <publishTime>04/06/2025 05:46:35</publishTime>
     </File>
     <File Include="JavaScript/Productos.js">
-      <publishTime>08/13/2026 02:41:53</publishTime>
+      <publishTime>09/02/2026 00:50:25</publishTime>
     </File>
     <File Include="JavaScript/Recorrido.js">
-      <publishTime>12/20/2025 14:37:40</publishTime>
+      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="JavaScript/RecorridoCobranzas.js">
-      <publishTime>12/20/2025 14:37:25</publishTime>
+      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="JavaScript/Rendimiento.js">
-      <publishTime>08/13/2026 02:10:28</publishTime>
+      <publishTime>09/08/2026 23:09:43</publishTime>
+    </File>
+    <File Include="JavaScript/RendimientoAnalisis.js">
+      <publishTime>09/08/2026 23:53:44</publishTime>
     </File>
     <File Include="JavaScript/ReprogAtrasadasModal.js">
-      <publishTime>08/13/2026 02:10:28</publishTime>
+      <publishTime>09/02/2026 00:43:10</publishTime>
     </File>
     <File Include="JavaScript/Stock.js">
       <publishTime>08/08/2026 00:44:58</publishTime>
@@ -880,10 +889,10 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>08/08/2026 00:44:58</publishTime>
     </File>
     <File Include="JavaScript/Utils/Utils.js">
-      <publishTime>08/13/2026 02:45:00</publishTime>
+      <publishTime>09/08/2026 23:10:06</publishTime>
     </File>
     <File Include="JavaScript/Ventas.js">
-      <publishTime>03/25/2026 00:54:07</publishTime>
+      <publishTime>09/08/2026 21:46:52</publishTime>
     </File>
     <File Include="JavaScript/VentasEditar.js">
       <publishTime>04/06/2025 05:46:35</publishTime>
@@ -892,16 +901,16 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>02/08/2026 22:50:34</publishTime>
     </File>
     <File Include="JavaScript/Ventas_Electrodomesticos_Cobros.js">
-      <publishTime>08/13/2026 02:45:31</publishTime>
+      <publishTime>09/08/2026 21:46:27</publishTime>
     </File>
     <File Include="JavaScript/Ventas_Electrodomesticos_Historial.js">
-      <publishTime>08/13/2026 02:10:28</publishTime>
+      <publishTime>09/08/2026 21:47:14</publishTime>
     </File>
     <File Include="JavaScript/Ventas_Electrodomesticos_NuevoModif.js">
-      <publishTime>08/13/2026 02:10:28</publishTime>
+      <publishTime>09/08/2026 21:38:03</publishTime>
     </File>
     <File Include="JavaScript/_CobroModal_Partial.js">
-      <publishTime>08/13/2026 02:29:00</publishTime>
+      <publishTime>09/08/2026 21:38:03</publishTime>
     </File>
     <File Include="libman.json">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -1174,121 +1183,121 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>08/08/2026 03:33:22</publishTime>
     </File>
     <File Include="Scripts/bootstrap.bundle.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.bundle.js.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.bundle.min.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.bundle.min.js.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.esm.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.esm.js.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.esm.min.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.esm.min.js.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.js.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.min.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/bootstrap.min.js.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/Clientes_HistorialDireccion.sql">
       <publishTime>11/06/2026 00:20:22</publishTime>
     </File>
     <File Include="Scripts/jquery-3.4.1.intellisense.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery-3.4.1.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery-3.4.1.min.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery-3.4.1.min.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery-3.4.1.slim.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery-3.4.1.slim.min.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery-3.4.1.slim.min.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery.validate-vsdoc.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery.validate.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery.validate.min.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery.validate.unobtrusive.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/jquery.validate.unobtrusive.min.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/modernizr-2.8.3.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/moment-with-locales.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/moment-with-locales.min.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/moment-with-locales.min.js.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/moment.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/moment.min.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/moment.min.js.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Scripts/xlsx.full.min.js.js">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>03/22/2025 23:25:50</publishTime>
     </File>
     <File Include="Views/Clientes/Editar.cshtml">
-      <publishTime>08/08/2026 00:44:58</publishTime>
+      <publishTime>08/09/2026 23:10:21</publishTime>
     </File>
     <File Include="Views/Clientes/Index.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>08/09/2026 23:10:12</publishTime>
     </File>
     <File Include="Views/Clientes/_HistorialDireccionModal.cshtml">
       <publishTime>08/08/2026 00:44:58</publishTime>
     </File>
     <File Include="Views/ClientesCero/Index.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>08/09/2026 21:38:03</publishTime>
     </File>
     <File Include="Views/ClientesCero/Informacion.cshtml">
       <publishTime>06/04/2025 05:46:35</publishTime>
     </File>
     <File Include="Views/Cobranzas/Index.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>08/09/2026 23:10:09</publishTime>
     </File>
     <File Include="Views/Home/About.cshtml">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -1318,70 +1327,73 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="Views/Productos/Index.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>08/09/2026 23:10:13</publishTime>
     </File>
     <File Include="Views/Recorrido/Index.cshtml">
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
+    <File Include="Views/Rendimiento/Analisis.cshtml">
+      <publishTime>09/09/2026 00:05:38</publishTime>
+    </File>
     <File Include="Views/Rendimiento/Index.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>08/09/2026 23:10:07</publishTime>
     </File>
     <File Include="Views/Shared/Error.cshtml">
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="Views/Shared/Partials/NavBarLogin.cshtml">
-      <publishTime>08/08/2026 00:44:58</publishTime>
+      <publishTime>08/09/2026 23:10:07</publishTime>
     </File>
     <File Include="Views/Shared/_Layout.cshtml">
-      <publishTime>08/02/2026 22:50:35</publishTime>
+      <publishTime>03/09/2026 02:05:47</publishTime>
     </File>
     <File Include="Views/Stock/General.cshtml">
-      <publishTime>08/08/2026 00:44:58</publishTime>
+      <publishTime>08/09/2026 23:10:15</publishTime>
     </File>
     <File Include="Views/Stock/Index.cshtml">
-      <publishTime>08/08/2026 00:44:58</publishTime>
+      <publishTime>08/09/2026 23:10:15</publishTime>
     </File>
     <File Include="Views/StockPendiente/Index.cshtml">
-      <publishTime>08/08/2026 00:44:58</publishTime>
+      <publishTime>08/09/2026 23:10:22</publishTime>
     </File>
     <File Include="Views/Usuarios/Index.cshtml">
-      <publishTime>08/08/2026 00:44:58</publishTime>
+      <publishTime>08/09/2026 23:10:15</publishTime>
     </File>
     <File Include="Views/Utils/Modals.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>02/09/2026 00:31:05</publishTime>
     </File>
     <File Include="Views/Ventas/Editar.cshtml">
       <publishTime>06/04/2025 05:46:35</publishTime>
     </File>
     <File Include="Views/Ventas/Index.cshtml">
-      <publishTime>09/10/2025 22:50:55</publishTime>
+      <publishTime>08/09/2026 23:10:10</publishTime>
     </File>
     <File Include="Views/Ventas/Informacion.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>02/09/2026 01:30:34</publishTime>
     </File>
     <File Include="Views/Ventas/Nuevo.cshtml">
       <publishTime>08/02/2026 22:50:35</publishTime>
     </File>
     <File Include="Views/Ventas_Electrodomesticos/Cobros.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>08/09/2026 23:10:10</publishTime>
     </File>
     <File Include="Views/Ventas_Electrodomesticos/Historial.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>08/09/2026 23:10:11</publishTime>
     </File>
     <File Include="Views/Ventas_Electrodomesticos/NuevoModif.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>08/09/2026 21:38:03</publishTime>
     </File>
     <File Include="Views/Ventas_Electrodomesticos/_CobroModal_Partial.cshtml">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>08/09/2026 21:38:03</publishTime>
     </File>
     <File Include="Views/Web.config">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>02/09/2026 00:31:05</publishTime>
     </File>
     <File Include="Views/_ViewStart.cshtml">
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>01/01/0001 00:00:00</publishTime>
+      <publishTime>09/08/2026 23:56:13</publishTime>
     </File>
   </ItemGroup>
 </Project>

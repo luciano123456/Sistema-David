@@ -373,6 +373,12 @@
           <Property Name="EstadoCobro" Type="int" />
           <Property Name="ObservacionCobro" Type="varchar" MaxLength="255" />
           <Property Name="Whatssap" Type="int" />
+          <Property Name="Eliminada" Type="bit" Nullable="false" />
+          <Property Name="MotivoEliminacion" Type="nvarchar" MaxLength="500" />
+          <Property Name="FechaEliminacion" Type="datetime" />
+          <Property Name="UsuarioEliminacion" Type="int" />
+          <Property Name="EstadoAntesEliminacion" Type="varchar" MaxLength="20" />
+          <Property Name="StockDevueltoAlArchivar" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Cuotas">
           <Key>
@@ -1936,6 +1942,12 @@
           <NavigationProperty Name="Ventas_Electrodomesticos_Historial" Relationship="Sistema_DavidModel.FK_VEH_VE" FromRole="Ventas_Electrodomesticos" ToRole="Ventas_Electrodomesticos_Historial" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Pagos" Relationship="Sistema_DavidModel.FK_VEP_VE" FromRole="Ventas_Electrodomesticos" ToRole="Ventas_Electrodomesticos_Pagos" />
           <Property Name="Whatssap" Type="Int32" />
+          <Property Name="Eliminada" Type="Boolean" Nullable="false" />
+          <Property Name="MotivoEliminacion" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="FechaEliminacion" Type="DateTime" Precision="3" />
+          <Property Name="UsuarioEliminacion" Type="Int32" />
+          <Property Name="EstadoAntesEliminacion" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="StockDevueltoAlArchivar" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Cuotas">
           <Key>
@@ -3000,6 +3012,12 @@
           <EntitySetMapping Name="Ventas_Electrodomesticos">
             <EntityTypeMapping TypeName="Sistema_DavidModel.Ventas_Electrodomesticos">
               <MappingFragment StoreEntitySet="Ventas_Electrodomesticos">
+                <ScalarProperty Name="StockDevueltoAlArchivar" ColumnName="StockDevueltoAlArchivar" />
+                <ScalarProperty Name="EstadoAntesEliminacion" ColumnName="EstadoAntesEliminacion" />
+                <ScalarProperty Name="UsuarioEliminacion" ColumnName="UsuarioEliminacion" />
+                <ScalarProperty Name="FechaEliminacion" ColumnName="FechaEliminacion" />
+                <ScalarProperty Name="MotivoEliminacion" ColumnName="MotivoEliminacion" />
+                <ScalarProperty Name="Eliminada" ColumnName="Eliminada" />
                 <ScalarProperty Name="Whatssap" ColumnName="Whatssap" />
                 <ScalarProperty Name="ObservacionCobro" ColumnName="ObservacionCobro" />
                 <ScalarProperty Name="EstadoCobro" ColumnName="EstadoCobro" />

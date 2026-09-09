@@ -107,7 +107,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static List<VMUser> ListaUsuariosActivos(int TipoNegocio)
+        public static List<VMUser> ListaUsuariosActivos(int TipoNegocio, int idEstado = 1)
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
@@ -136,7 +136,7 @@ namespace Sistema_David.Models
                                     BloqueoSistema = d.BloqueoSistema,
                                     VistaStock = d.VistaStock,
                                     TipoNegocio = db.TipoNegocio.FirstOrDefault(u => u.Id == d.IdTipoNegocio).Nombre,
-                                }).Where(x => x.IdEstado == 1 && (x.IdTipoNegocio == TipoNegocio || TipoNegocio == -1 || (x.IdRol == 1 || x.IdRol == 3 || x.IdRol == 4))).ToList();
+                                }).Where(x => (idEstado <= 0 || x.IdEstado == idEstado) && (x.IdTipoNegocio == TipoNegocio || TipoNegocio == -1 || (x.IdRol == 1 || x.IdRol == 3 || x.IdRol == 4))).ToList();
 
 
                 return listUser;

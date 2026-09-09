@@ -987,6 +987,7 @@ async function confirmarCobro() {
             try {
                 const result = await ReprogAtrasadas.confirmarReprogramacion({
                     idCliente: ventaActual.IdCliente,
+                    idVenta: ventaActual.IdVenta,
                     idCuotaActual: cuotaActual.Id,
                     nuevaFecha: fecha,
                     observacion: obsReprog,
@@ -1971,6 +1972,28 @@ function normalizarTelefonoAR(tel) {
 
 
 
+function formatearProductosWhatsappElectro(v) {
+    if (!Array.isArray(v?.Items) || !v.Items.length) return "";
+
+    let productos = v.Items
+        .slice(0, 3)
+        .map(i => `• ${i.Cantidad || 1} x ${(i.Producto || "").trim()}`)
+        .filter(linea => !linea.endsWith(" x "))
+        .join("\n");
+
+    if (v.Items.length > 3) {
+        productos += `\n• y otros ${v.Items.length - 3} productos`;
+    }
+
+    return productos;
+}
+
+function bloqueProductosWhatsappElectro(v, titulo = "Productos") {
+    const productos = formatearProductosWhatsappElectro(v);
+    if (!productos) return "";
+    return `\n📦 *${titulo}:*\n${productos}\n`;
+}
+
 function armarMensajeWhatsappElectro(base, descripcion, idPago) {
 
     if (!base || !base.Venta || !base.Cliente)
@@ -1982,6 +2005,8 @@ function armarMensajeWhatsappElectro(base, descripcion, idPago) {
 
     const nombreCliente = (v.ClienteNombre || "").trim();
     const saldo = formatNumber(v.Restante || 0);
+    const bloqueProductos = bloqueProductosWhatsappElectro(v, "Productos");
+    const bloqueProductosAdquiridos = bloqueProductosWhatsappElectro(v, "Productos adquiridos");
 
     /* ===============================
        SALUDO
@@ -2029,26 +2054,11 @@ function armarMensajeWhatsappElectro(base, descripcion, idPago) {
         const total = formatNumber(v.ImporteTotal || 0);
         const entrega = formatNumber(v.Entrega || 0);
 
-        let productos = "";
-        if (Array.isArray(v.Items) && v.Items.length) {
-            productos = v.Items
-                .slice(0, 3)
-                .map(i => `• ${i.Cantidad || 1} x ${i.Producto}`)
-                .join("\n");
-
-            if (v.Items.length > 3) {
-                productos += `\n• y otros ${v.Items.length - 3} productos`;
-            }
-        }
-
         return `${saludo} ${nombreCliente} 😊
 
 🛒 *VENTA DE ELECTRODOMÉSTICOS*
 Le informamos que el día ${fechaVenta} hemos registrado una nueva venta.
-
-📦 *Productos adquiridos:*
-${productos}
-
+${bloqueProductosAdquiridos}
 💰 *Total:* ${total}
 💵 *Entrega:* ${entrega}
 📉 *Saldo pendiente:* ${saldo}
@@ -2130,7 +2140,7 @@ Ante cualquier consulta, quedamos a disposición.`;
 💳 *COBRO REGISTRADO – ELECTRODOMÉSTICOS*
 
 Se ha registrado correctamente el pago de la *${textoCuotaPagada}*.
-
+${bloqueProductos}
 💰 *Importe abonado:* ${formatNumber(importePagado)}
 ${lineasRestanteCuota}📉 *Saldo pendiente de la venta:* ${saldoVenta}
 📊 *Cuotas restantes:* ${cuotasRestantes}
@@ -2209,7 +2219,7 @@ Ante cualquier duda o consulta, quedamos a disposición.`;
 📅 *CAMBIO DE FECHA DE COBRO – ELECTRODOMÉSTICOS*
 
 Le informamos que se confirmó la nueva fecha de cobro de su *Cuota ${nroCuota}*.
-
+${bloqueProductos}
 📆 *Nueva fecha de cobro:* ${fechaCobro}
 📌 *Vencimiento de la cuota:* ${fechaVto}
 💲 *Saldo de la cuota:* ${restanteCuota}

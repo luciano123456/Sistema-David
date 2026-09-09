@@ -335,6 +335,10 @@ namespace Sistema_David.Models.Modelo
                                              Entrega = v.Entrega,
                                              Restante = v.Restante,
                                              TipoVenta = "ELECTRO",
+                                             Estado = v.Estado,
+                                             Eliminada = v.Eliminada,
+                                             MotivoEliminacion = v.MotivoEliminacion,
+                                             FechaEliminacion = v.FechaEliminacion,
 
                                              TotalVenta = db.Ventas_Electrodomesticos_Detalle
                                                  .Where(p => p.IdVenta == v.Id)
@@ -350,7 +354,9 @@ namespace Sistema_David.Models.Modelo
                         .OrderByDescending(v => v.Fecha)
                         .ToList();
 
-                    var totalRestante = todas.Sum(x => x.Restante ?? 0);
+                    var totalRestante = todas
+                        .Where(v => !v.Eliminada)
+                        .Sum(x => x.Restante ?? 0);
 
                     return (todas, totalRestante);
                 }
