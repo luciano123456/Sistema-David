@@ -50,6 +50,9 @@ namespace Sistema_David.Models.Modelo
         public string FranjaHoraria { get; set; }
         public bool EnRecorrido { get; set; }
         public string Estado { get; set; }
+        public bool Eliminada { get; set; }
+        public string MotivoEliminacion { get; set; }
+        public DateTime? FechaEliminacion { get; set; }
         public decimal ValorCuota { get; set; }
         public decimal SaldoCliente { get; set; }
         public decimal LimiteVentas { get; set; }

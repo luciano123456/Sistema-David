@@ -56,10 +56,28 @@ function prepararEncabezadoFiltrosColumnas(selector) {
 function aplicarFiltrosColumnasRendimiento(selector, columnConfig, storageKey, clearFilterIndices) {
     if (!$.fn.DataTable.isDataTable(selector)) return;
     const api = $(selector).DataTable();
-    inicializarFiltrosColumnas(api, columnConfig, storageKey, true, REND_COL_FILTER_UI);
-    const $row = $(api.table().container()).find("thead tr.filters");
-    (clearFilterIndices || []).forEach((i) => $row.find("th").eq(i).empty());
-    ajustarTablasRendimiento();
+
+    function montar() {
+        inicializarFiltrosColumnas(api, columnConfig, storageKey, true, REND_COL_FILTER_UI);
+        const $rows = $(api.table().container()).find("thead tr.filters");
+        (clearFilterIndices || []).forEach((i) => {
+            $rows.each(function () {
+                $(this).children("th").eq(i).empty();
+            });
+        });
+    }
+
+    try {
+        api.columns.adjust();
+    } catch (e) { /* ignore */ }
+    montar();
+    setTimeout(function () {
+        if (!$.fn.DataTable.isDataTable(selector)) return;
+        try {
+            $(selector).DataTable().columns.adjust();
+        } catch (e) { /* ignore */ }
+        montar();
+    }, 130);
 }
 
 $(document).ready(async function () {
@@ -69,6 +87,7 @@ $(document).ready(async function () {
 
     inicializarCompatibilidadHtmlNuevo();
     registrarEventosHtmlNuevo();
+    initRendimientoDropdownColumnas();
 
     if (userSession.IdRol == 1) { // ROL ADMINISTRADOR
         $("#exportacionExcel").removeAttr("hidden");
@@ -81,13 +100,15 @@ $(document).ready(async function () {
         $("#divTotalTransferencia").removeAttr("hidden");
         $("#divComprobantesEnviados").attr("style", "display: none !important;");
         mostrarPanelFiltrosNuevo(true);
-    } else if (userSession.IdRol == 4) { // ROL COMPROBANTES
-        $("#divCliente").attr("hidden", "hidden");
-     
-        $("#btnFechaMensual").attr("hidden", "hidden");
-        $("#divComprobantesEnviados").attr("style", "display: flex !important;");
-        $("#btnRendMensual").attr("hidden", "hidden");
-        mostrarPanelFiltrosNuevo(true);
+    } else {
+        $("#btnAnalisisRendimiento, #btnAnalisisRendimientoDiario").remove();
+        if (userSession.IdRol == 4) { // ROL COMPROBANTES
+            $("#divCliente").attr("hidden", "hidden");
+            $("#btnFechaMensual").attr("hidden", "hidden");
+            $("#divComprobantesEnviados").attr("style", "display: flex !important;");
+            $("#btnRendMensual").attr("hidden", "hidden");
+            mostrarPanelFiltrosNuevo(true);
+        }
     }
 
     await cargarCuentas();
@@ -146,6 +167,10 @@ function registrarEventosHtmlNuevo() {
 
     $("#btnRendMensual").off("click").on("click", async function () {
         await mostrarRendimiento('Mensual');
+    });
+
+    $("#btnAnalisisRendimiento, #btnAnalisisRendimientoDiario").off("click").on("click", function () {
+        abrirAnalisisRendimiento();
     });
 
     $("#MetodoPago").off("change").on("change", async function () {
@@ -671,6 +696,38 @@ async function cargarVentas(idvendedor) {
     }
 }
 
+function abrirAnalisisRendimiento() {
+    if (!userSession || Number(userSession.IdRol) !== 1) return;
+
+    const fechaDesdeEl = document.getElementById("FechaDesde");
+    const fechaHastaEl = document.getElementById("FechaHasta");
+    let fechaDesde = fechaDesdeEl ? fechaDesdeEl.value : "";
+    let fechaHasta = fechaHastaEl ? fechaHastaEl.value : "";
+    if (!fechaDesde) fechaDesde = localStorage.getItem("FechaDesdeRendimiento") || moment().add(-30, "days").format("YYYY-MM-DD");
+    if (!fechaHasta) fechaHasta = localStorage.getItem("FechaHastaRendimiento") || moment().format("YYYY-MM-DD");
+
+    const tipoNegocio = document.getElementById("TipoNegocio") ? document.getElementById("TipoNegocio").value : "-1";
+    const metodoSel = document.getElementById("MetodoPago");
+    const metodoPago = metodoSel && metodoSel.selectedIndex >= 0 ? metodoSel.options[metodoSel.selectedIndex].text : "Todos";
+    const idCuenta = document.getElementById("CuentaPago") ? document.getElementById("CuentaPago").value : "-1";
+    const usuarioSeleccionado = document.querySelector(".selected-user");
+    const idVendedor = usuarioSeleccionado ? (usuarioSeleccionado.getAttribute("data-id") || "-1") : "-1";
+    const chkComp = document.getElementById("ComprobantesEnviados");
+    const rol = (typeof userSession !== "undefined" && userSession) ? userSession.IdRol : 1;
+    const comprobantesEnviados = (chkComp && chkComp.checked) || rol == 1 ? -1 : 0;
+
+    const qs = new URLSearchParams({
+        fechaDesde: fechaDesde,
+        fechaHasta: fechaHasta,
+        tipoNegocio: tipoNegocio,
+        metodoPago: metodoPago,
+        idCuenta: idCuenta,
+        idVendedor: idVendedor,
+        comprobantesEnviados: String(comprobantesEnviados)
+    });
+    window.location.href = "/Rendimiento/Analisis?" + qs.toString();
+}
+
 function aplicarFiltros() {
     destroyAllCharts();
     dashboardRenderToken++;
@@ -726,10 +783,6 @@ function aplicarFiltros() {
         localStorage.setItem("FechaDesdeRendimiento", document.getElementById("FechaDesde").value);
         localStorage.setItem("FechaHastaRendimiento", document.getElementById("FechaHasta").value);
 
-        if ($.fn.DataTable.isDataTable('#grdRendimiento')) {
-            $('#grdRendimiento').DataTable().clear().draw();
-        }
-
         configurarDataTable(idVendedor, estadoVentas, estadoCobranzas, fechaDesde, fechaHasta, tipoNegocio, metodoPago, idcuenta, comprobantesEnviados);
 
     } else {
@@ -784,6 +837,21 @@ const safeDate = (v) => {
     return m.isValid() ? m.format("DD/MM/YYYY") : "";
 };
 
+const aplicarKpisRendimiento = (kpis) => {
+    if (!kpis) return false;
+    const totventa = document.getElementById("totventa");
+    const totcobro = document.getElementById("totcobro");
+    const totinteres = document.getElementById("totinteres");
+    const totefectivo = document.getElementById("totefectivo");
+    const tottransferencia = document.getElementById("tottransferencia");
+    if (totventa) totventa.textContent = formatNumber(safeNumber(kpis.venta));
+    if (totcobro) totcobro.textContent = formatNumber(safeNumber(kpis.cobro));
+    if (totinteres) totinteres.textContent = formatNumber(safeNumber(kpis.interes));
+    if (totefectivo) totefectivo.textContent = formatNumber(safeNumber(kpis.efectivo));
+    if (tottransferencia) tottransferencia.textContent = formatNumber(safeNumber(kpis.transferencia));
+    return true;
+};
+
 const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fechadesde, fechahasta, tipoNegocio, metodoPago, idcuenta, comprobantesEnviados) => {
 
     let totVenta = 0;
@@ -793,6 +861,15 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
     let totTransferencia = 0;
 
     showGlobalLoading("Cargando tablas...");
+    const genCarga = iniciarAvisoCargaLenta({
+        abort: function () {
+            abortarAjaxDataTable("#grdRendimiento");
+        },
+        onReiniciarFiltros: function () {
+            limpiarFiltrosRendimiento();
+            aplicarFiltros();
+        }
+    });
 
     const url = `/Rendimiento/MostrarRendimiento?id=${encodeURIComponent(idVendedor)}&ventas=${encodeURIComponent(estadoVentas)}&cobranzas=${encodeURIComponent(estadoCobranzas)}&fechadesde=${encodeURIComponent(fechadesde)}&fechahasta=${encodeURIComponent(fechahasta)}&tiponegocio=${encodeURIComponent(tipoNegocio)}&metodoPago=${encodeURIComponent(metodoPago)}&IdCuentaBancaria=${encodeURIComponent(idcuenta)}&ComprobantesEnviados=${encodeURIComponent(comprobantesEnviados)}`;
 
@@ -845,15 +922,23 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
                 url: url,
                 type: "GET",
                 dataType: "json",
+                cache: false,
+                timeout: 600000,
                 dataSrc: function (json) {
+                    if (json && json.kpis) aplicarKpisRendimiento(json.kpis);
                     if (Array.isArray(json)) return json;
                     if (json && Array.isArray(json.data)) return json.data;
                     if (json && Array.isArray(json.Data)) return json.Data;
                     console.error("Respuesta AJAX inesperada:", json);
                     return [];
                 },
-                error: function (xhr) {
-                    console.error("Error AJAX DataTable:", xhr.responseText);
+                error: function (xhr, status) {
+                    if (status === "abort" || (xhr && xhr.statusText === "abort")) return;
+                    console.error("Error AJAX DataTable:", xhr && xhr.responseText);
+                    if (typeof errorModal === "function") {
+                        errorModal("No se pudo cargar el rendimiento de ese rango. Esperá un poco y reintentá.");
+                    }
+                    if (genCarga === cargaTablasTokenActual()) hideGlobalLoading();
                 }
             },
             language: {
@@ -864,6 +949,9 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
             deferRender: true,
             processing: true,
             pageLength: 10,
+            lengthMenu: typeof DT_LENGTH_MENU !== "undefined"
+                ? DT_LENGTH_MENU
+                : [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
 
             columns: [
                 { data: "Fecha", render: d => safeDate(d) },
@@ -917,14 +1005,17 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
                         const descLower = safeString(row.Descripcion).toLowerCase();
                         const esCobranza = descLower.includes("cobranza");
+                        const esInteres = esFilaInteresRendimiento(row.Descripcion, row.MetodoPago);
                         const electro = esElectrodomesticosRendimiento(row);
+                        const movId = safeNumber(row.Id) || safeNumber(row.IdOriginal);
                         const eliminarBtn =
-                            userSession.IdRol === 1 && esCobranza
+                            userSession.IdRol === 1 && (esCobranza || esInteres) && movId > 0
                                 ? `<button type="button" class="btn btn-sm btnacciones ms-1"
-                                    data-rend-elim-id="${safeNumber(data)}"
+                                    data-rend-elim-id="${movId}"
                                     data-rend-elim-electro="${electro ? "1" : "0"}"
+                                    data-rend-elim-tipo="${esInteres ? "interes" : "cobranza"}"
                                     onclick="eliminarRendimientoCobranza(this)"
-                                    title="Eliminar cobranza">
+                                    title="${esInteres ? "Eliminar interés" : "Eliminar cobranza"}">
                                     <i class="fa fa-trash-o fa-lg text-danger"></i>
                                 </button>`
                                 : "";
@@ -942,9 +1033,11 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
 
             initComplete: async function () {
 
-                hideGlobalLoading();
+                if (genCarga === cargaTablasTokenActual()) hideGlobalLoading();
 
-                recalcularTotales(gridRendimiento);
+                if (!aplicarKpisRendimiento(gridRendimiento.ajax.json() && gridRendimiento.ajax.json().kpis)) {
+                    recalcularTotales(gridRendimiento);
+                }
                 cargarVentas(-1);
                 scheduleRenderDashboard(180);
                 await configurarOpcionesColumnas();
@@ -993,11 +1086,13 @@ const configurarDataTable = async (idVendedor, estadoVentas, estadoCobranzas, fe
         const table = $('#grdRendimiento').DataTable();
 
         table.ajax.url(url).load(function () {
-
-            recalcularTotales(table);
+            const json = table.ajax.json();
+            if (!aplicarKpisRendimiento(json && json.kpis)) {
+                recalcularTotales(table);
+            }
             ajustarTablasRendimiento();
             scheduleRenderDashboard(180);
-            hideGlobalLoading();
+            if (genCarga === cargaTablasTokenActual()) hideGlobalLoading();
 
         }, false);
     }
@@ -1199,7 +1294,6 @@ const configurarDataTableCobrado = async (selectorTabla, fechadesde, fechahasta,
                     columnConfigRendimientoCobrado,
                     REND_COL_FILTER_COBRADO_KEY
                 );
-                hideGlobalLoading();
             }
         });
     } else {
@@ -1508,15 +1602,21 @@ function armarMensajeWhatsappElectro(base, descripcion, nroCuota = null) {
     if (Array.isArray(v.Items) && v.Items.length) {
         productos = v.Items
             .slice(0, 3)
-            .map(i => `• ${i.Cantidad || 1} x ${i.Producto || ""}`)
+            .map(i => `• ${i.Cantidad || 1} x ${(i.Producto || "").trim()}`)
+            .filter(linea => !linea.endsWith(" x "))
             .join("\n");
 
         if (v.Items.length > 3) {
             productos += `\n• y otros ${v.Items.length - 3} productos`;
         }
-    } else {
-        productos = "• Productos según operación registrada";
     }
+
+    const bloqueProductos = productos
+        ? `\n📦 *Productos:*\n${productos}\n`
+        : "";
+    const bloqueProductosAdquiridos = productos
+        ? `\n📦 *Productos adquiridos:*\n${productos}\n`
+        : "";
 
     // ===============================
     // PRÓXIMA CUOTA
@@ -1539,10 +1639,7 @@ function armarMensajeWhatsappElectro(base, descripcion, nroCuota = null) {
 
 🛒 *VENTA DE ELECTRODOMÉSTICOS*
 Le informamos que el día ${fechaVenta} hemos registrado una nueva venta.
-
-📦 *Productos adquiridos:*
-${productos}
-
+${bloqueProductosAdquiridos}
 💰 *Total:* ${total}
 💵 *Entrega:* ${entrega}
 📉 *Saldo pendiente:* ${saldoVenta}
@@ -1622,7 +1719,7 @@ Ante cualquier consulta, quedamos a disposición.`;
 💳 *COBRO REGISTRADO – ELECTRODOMÉSTICOS*
 
 Se ha registrado correctamente el pago de la *${textoCuotaPagada}*.
-
+${bloqueProductos}
 💰 *Importe abonado:* ${formatNumber(importePagado)}
 ${lineasRestanteCuota}📉 *Saldo pendiente de la venta:* ${formatNumber(saldoVentaActual)}
 📊 *Cuotas restantes:* ${cuotasRestantes}
@@ -1747,12 +1844,28 @@ function armarMensajeWhatsappElectroGrupal(base, pagosPendientes = []) {
             `${formatNumber(proximaCuota.MontoRestante || 0)}`;
     }
 
+    let productos = "";
+    if (Array.isArray(v.Items) && v.Items.length) {
+        productos = v.Items
+            .slice(0, 3)
+            .map(i => `• ${i.Cantidad || 1} x ${(i.Producto || "").trim()}`)
+            .filter(linea => !linea.endsWith(" x "))
+            .join("\n");
+
+        if (v.Items.length > 3) {
+            productos += `\n• y otros ${v.Items.length - 3} productos`;
+        }
+    }
+    const bloqueProductos = productos
+        ? `\n📦 *Productos:*\n${productos}\n`
+        : "";
+
     return `${saludo} ${nombreCliente} 👋
 
 💳 *COBROS REGISTRADOS – ELECTRODOMÉSTICOS*
 
 Se han registrado correctamente los siguientes pagos:
-
+${bloqueProductos}
 ${detallePagos}💰 *Total abonado:* ${formatNumber(totalPagado)}
 📉 *Saldo pendiente de la venta:* ${formatNumber(saldoFinal > 0 ? saldoFinal : (v.Restante || 0))}
 📊 *Cuotas restantes:* ${cuotasRestantes}
@@ -2158,6 +2271,41 @@ function restarFecha() {
     document.getElementById("FechaHasta").value = FechaHastaNew;
 }
 
+function initRendimientoDropdownColumnas() {
+    const btn = document.getElementById("dropdownColumnas");
+    const menu = document.getElementById("configColumnasMenu");
+    if (!btn || !menu || btn.dataset.rendDropdownInit) return;
+    btn.dataset.rendDropdownInit = "1";
+
+    btn.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isOpen = menu.classList.contains("show");
+        document.querySelectorAll(".dropdown-menu.show").forEach(function (el) {
+            el.classList.remove("show");
+        });
+        document.querySelectorAll(".rend-columns-toggle[aria-expanded='true']").forEach(function (el) {
+            el.setAttribute("aria-expanded", "false");
+        });
+
+        if (!isOpen) {
+            menu.classList.add("show");
+            btn.setAttribute("aria-expanded", "true");
+        }
+    });
+
+    menu.addEventListener("click", function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener("click", function (event) {
+        if (btn.contains(event.target) || menu.contains(event.target)) return;
+        menu.classList.remove("show");
+        btn.setAttribute("aria-expanded", "false");
+    });
+}
+
 function configurarOpcionesColumnas() {
     const grid = $('#grdRendimiento').DataTable();
     const columnas = grid.settings().init().columns;
@@ -2300,6 +2448,8 @@ async function eliminarRendimientoCobranza(btn) {
 
     const id = Number(btn && btn.getAttribute("data-rend-elim-id"));
     const esElectro = btn && btn.getAttribute("data-rend-elim-electro") === "1";
+    const tipo = (btn && btn.getAttribute("data-rend-elim-tipo")) || "cobranza";
+    const esInteres = tipo === "interes";
 
     if (!id) {
         alert("Movimiento inválido.");
@@ -2307,9 +2457,28 @@ async function eliminarRendimientoCobranza(btn) {
     }
 
     try {
-        if (!confirm("¿Está seguro que desea eliminar esta cobranza?")) return;
+        const msgConfirm = esInteres
+            ? "¿Está seguro que desea eliminar este interés? Se revertirá el impacto en la venta."
+            : "¿Está seguro que desea eliminar esta cobranza?";
+        if (!confirm(msgConfirm)) return;
 
-        if (esElectro) {
+        if (esElectro && esInteres) {
+            const result = await $.ajax({
+                type: "POST",
+                url: "/Ventas_Electrodomesticos/EliminarRecargoCuota",
+                data: { idRecargo: id },
+                dataType: "json"
+            });
+
+            if (result && result.success) {
+                alert("Interés eliminado correctamente.");
+                if ($.fn.DataTable.isDataTable("#grdRendimiento")) {
+                    $("#grdRendimiento").DataTable().ajax.reload(null, false);
+                }
+            } else {
+                alert((result && result.message) || "Error al eliminar el interés.");
+            }
+        } else if (esElectro) {
             const result = await $.ajax({
                 type: "POST",
                 url: "/Ventas_Electrodomesticos/EliminarPago",
@@ -2334,12 +2503,12 @@ async function eliminarRendimientoCobranza(btn) {
             });
 
             if (result && result.data) {
-                alert("Información eliminada correctamente.");
+                alert(esInteres ? "Interés eliminado correctamente." : "Información eliminada correctamente.");
                 if ($.fn.DataTable.isDataTable("#grdRendimiento")) {
                     $("#grdRendimiento").DataTable().ajax.reload(null, false);
                 }
             } else {
-                alert("Error al eliminar.");
+                alert(esInteres ? "Error al eliminar el interés." : "Error al eliminar.");
             }
         }
     } catch (error) {
@@ -2962,6 +3131,8 @@ function showGlobalLoading(text = "Cargando datos...") {
 }
 
 function hideGlobalLoading() {
+    if (typeof detenerAvisoCargaLenta === "function") detenerAvisoCargaLenta();
+
     const loading = document.getElementById("globalLoading");
     if (!loading) return;
 

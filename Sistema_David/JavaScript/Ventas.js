@@ -121,11 +121,36 @@ function aplicarFiltros() {
 }
 
 const configurarDataTable = async (idVendedor, fechaDesde, fechaHasta, Finalizadas, tipoNegocio) => {
+    const genCarga = mostrarCargaTablas("Cargando tablas...", {
+        abort: function () {
+            abortarAjaxDataTable("#grdVentas");
+        },
+        onReiniciarFiltros: function () {
+            const hoy = moment().format("YYYY-MM-DD");
+            const fd = document.getElementById("FechaDesde");
+            const fh = document.getElementById("FechaHasta");
+            const vn = document.getElementById("Vendedores");
+            const tn = document.getElementById("TipoNegocio");
+            const vf = document.getElementById("VentaFinalizada");
+            if (fd) fd.value = hoy;
+            if (fh) fh.value = hoy;
+            if (vn) vn.value = "";
+            if (tn) tn.value = "";
+            if (vf) vf.checked = false;
+            aplicarFiltros();
+        }
+    });
+
     gridVentas = $('#grdVentas').DataTable({
         "ajax": {
             "url": `/Ventas/Listar?idVendedor=${idVendedor}&FechaDesde=${fechaDesde}&FechaHasta=${fechaHasta}&Finalizadas=${Finalizadas}&tipoNegocio=${tipoNegocio}`,
             "type": "GET",
-            "dataType": "json"
+            "dataType": "json",
+            "error": function (xhr, status) {
+                if (status === "abort") return;
+                console.error("Error AJAX Ventas:", xhr && xhr.responseText);
+                ocultarCargaTablas(genCarga);
+            }
         },
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
@@ -259,6 +284,7 @@ const configurarDataTable = async (idVendedor, fechaDesde, fechaHasta, Finalizad
             }
         ],
         "initComplete": async function (settings, json) {
+            ocultarCargaTablas(genCarga);
 
             await configurarOpcionesColumnas()
 

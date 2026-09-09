@@ -543,6 +543,10 @@ namespace Sistema_David.Controllers
                             Fecha = v.FechaVenta,
                             Entrega = v.Entrega,
                             Restante = v.Restante,
+                            Estado = v.Estado,
+                            Eliminada = v.Eliminada,
+                            MotivoEliminacion = v.MotivoEliminacion,
+                            FechaEliminacion = v.FechaEliminacion,
                             Productos = Ventas_ElectrodomesticosModel.ListaProductosVenta(id),
                             Historial = Ventas_ElectrodomesticosModel.ListarInformacionVenta(id)
                         }

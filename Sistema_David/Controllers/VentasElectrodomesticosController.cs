@@ -110,15 +110,25 @@ namespace Sistema_David.Controllers
 
                 var filtraPorCliente = filtro.IdCliente.HasValue && filtro.IdCliente.Value > 0;
 
-                if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR / COBRADOR
+                if (filtraPorCliente)
+                {
+                    // Búsqueda por cliente antepone: no restringir por rol/vendedor/cobrador/fechas.
+                    filtro.IdVendedor = null;
+                    filtro.IdCobrador = null;
+                    filtro.IdZona = null;
+                    filtro.Turno = null;
+                    filtro.FranjaHoraria = null;
+                    filtro.EstadoCuota = null;
+                    filtro.OmitirRangoFecha = true;
+                }
+                else if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR / COBRADOR
                 {
                     filtro.IdVendedor = usuarioSesion.Id;
-                    // Si se busca por cliente, no restringir por cobrador para mostrar todos sus cobros.
-                    filtro.IdCobrador = filtraPorCliente ? (int?)null : usuarioSesion.Id;
+                    filtro.IdCobrador = usuarioSesion.Id;
                 }
 
                 // Cobrador electro: sin panel de fechas; rango hoy para cartera sin asignar (asignadas ignoran fecha en el modelo).
-                if (usuarioSesion != null && usuarioSesion.IdRol == 3 && !filtraPorCliente)
+                if (!filtraPorCliente && usuarioSesion != null && usuarioSesion.IdRol == 3)
                 {
                     var hoy = DateTime.Today;
                     filtro.FechaDesde = hoy;
@@ -127,7 +137,9 @@ namespace Sistema_David.Controllers
                 }
 
                 var data = Ventas_ElectrodomesticosModel.ListarCuotasACobrar(filtro);
-                return Json(new { data }, JsonRequestBehavior.AllowGet);
+                var json = Json(new { data }, JsonRequestBehavior.AllowGet);
+                json.MaxJsonLength = 999999999;
+                return json;
             }
             catch (Exception ex)
             {
@@ -144,8 +156,14 @@ namespace Sistema_David.Controllers
                 IdUsuarioSesion = SessionHelper.GetUsuarioSesion()?.Id ?? 0
             };
 
+            // Con cliente, no restringir por vendedor.
+            if (filtro.IdCliente.HasValue && filtro.IdCliente.Value > 0)
+                filtro.IdVendedor = null;
+
             var data = Ventas_ElectrodomesticosModel.ListarCobrosPendientes(filtro);
-            return Json(new { data }, JsonRequestBehavior.AllowGet);
+            var json = Json(new { data }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = 999999999;
+            return json;
         }
 
 
@@ -163,13 +181,20 @@ namespace Sistema_David.Controllers
                 IdVendedor = idVendedor
             };
 
-            if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
+            // Con cliente, no restringir por vendedor/rol.
+            if (filtro.IdCliente.HasValue && filtro.IdCliente.Value > 0)
+            {
+                filtro.IdVendedor = null;
+            }
+            else if (usuarioSesion != null && (usuarioSesion.IdRol == 2 || usuarioSesion.IdRol == 3)) // ROL VENDEDOR
             {
                 filtro.IdVendedor = usuarioSesion.Id;
             }
 
                 var data = Ventas_ElectrodomesticosModel.ListarTransferenciasPendientes(filtro);
-            return Json(new { data }, JsonRequestBehavior.AllowGet);
+            var json = Json(new { data }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = 999999999;
+            return json;
         }
 
 
@@ -512,13 +537,13 @@ namespace Sistema_David.Controllers
 
         /* ================= ELIMINAR VENTA ================= */
         [HttpPost]
-        public ActionResult EliminarVenta(int id, bool forzar = false, string devolverStock = "1")
+        public ActionResult EliminarVenta(int id, string motivo, bool forzar = false, string devolverStock = "1")
         {
             try
             {
                 var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
                 var devolver = EsDevolverStockSi(devolverStock);
-                var msg = Ventas_ElectrodomesticosModel.EliminarVenta(id, usuario, forzar, devolver);
+                var msg = Ventas_ElectrodomesticosModel.ArchivarVenta(id, usuario, motivo, forzar, devolver);
 
                 if (msg == "TIENE_PAGOS")
                 {
@@ -527,6 +552,88 @@ namespace Sistema_David.Controllers
                         success = false,
                         tienePagos = true,
                         message = "La venta tiene pagos. ¿Desea eliminarla igual?"
+                    });
+                }
+
+                return Json(new { success = msg == "OK", message = msg });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al eliminar venta: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public ActionResult GetVentasEliminadas(int idVendedor = 0)
+        {
+            try
+            {
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (usuarioSesion == null || usuarioSesion.IdRol != 1)
+                    return Json(new { success = false, message = "No autorizado" }, JsonRequestBehavior.AllowGet);
+
+                var data = Ventas_ElectrodomesticosModel.ListarVentasEliminadas(idVendedor, (int)usuarioSesion.IdRol);
+
+                if (!string.IsNullOrEmpty(data.MensajeError))
+                    return Json(new { success = false, message = data.MensajeError }, JsonRequestBehavior.AllowGet);
+
+                return Json(new { success = true, data = data.Filas }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al listar ventas eliminadas: " + ex.Message },
+                    JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult RestaurarVenta(int id)
+        {
+            try
+            {
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (usuarioSesion == null || usuarioSesion.IdRol != 1)
+                    return Json(new { success = false, message = "No autorizado" });
+
+                var msg = Ventas_ElectrodomesticosModel.RestaurarVentaEliminada(id, usuarioSesion.Id);
+
+                if (msg == "OK" || msg == "OK_STOCK_DESCONTADO")
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = msg == "OK_STOCK_DESCONTADO"
+                            ? "Venta restaurada. Stock descontado nuevamente del vendedor."
+                            : "Venta restaurada. El stock del vendedor no cambió."
+                    });
+                }
+
+                return Json(new { success = false, message = msg });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al restaurar venta: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public ActionResult EliminarVentaDefinitiva(int id, bool forzar = false)
+        {
+            try
+            {
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (usuarioSesion == null || usuarioSesion.IdRol != 1)
+                    return Json(new { success = false, message = "No autorizado" });
+
+                var msg = Ventas_ElectrodomesticosModel.EliminarVentaDefinitiva(id, usuarioSesion.Id, forzar, false);
+
+                if (msg == "TIENE_PAGOS")
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        tienePagos = true,
+                        message = "La venta tiene pagos. ¿Desea eliminarla definitivamente igual?"
                     });
                 }
 

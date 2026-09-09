@@ -5,7 +5,7 @@
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
-<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.11" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.13" rel="stylesheet" />
 
 <style>
     /* ====== Venta seleccionada ====== */
@@ -267,6 +267,34 @@
             </div>
         </section>
 
+        <section id="cardVentasEliminadas" class="ve-card mb-3 mt-4" hidden>
+            <div class="ve-card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa fa-trash text-danger"></i>
+                    <span class="ve-card-title">Ventas eliminadas</span>
+                </div>
+            </div>
+            <div class="ve-card-body">
+                <div class="table-responsive vc-cobros-dt">
+                    <table id="grdVentasEliminadas"
+                           class="table ve-table ve-table-cobros align-middle nowrap w-100">
+                        <thead>
+                            <tr>
+                                <th>Nro</th>
+                                <th>Fecha venta</th>
+                                <th>Eliminada el</th>
+                                <th>Cliente</th>
+                                <th>Vendedor</th>
+                                <th>Motivo</th>
+                                <th>Total</th>
+                                <th style="width:120px" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <div class="d-flexv flex-wrap justify-content-end mt-2 mb-4">
             <div id="btnLimite" class="me-2 mb-2" style="display: none">
                 <a class="btn btn-success btnnuevo btn-uniform" onclick="modalLimite()" style="background-color: #f0ad4e; border-color: #4285F4; color: white;">
@@ -278,6 +306,68 @@
         </div>
 
 
+    </div>
+
+    <!-- Modal: motivo eliminación venta -->
+    <div class="modal fade" id="modalMotivoEliminacion" tabindex="-1" aria-labelledby="modalMotivoElimLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content modal-elim-venta">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="elim-icon">
+                            <i class="fa fa-trash"></i>
+                        </div>
+                        <div class="lh-sm">
+                            <h5 class="modal-title fw-bold mb-1 text-white" id="modalMotivoElimLabel">
+                                Eliminar venta
+                            </h5>
+                            <div class="text-muted small">
+                                La venta pasará a eliminadas y podrá restaurarse después
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body pt-4">
+                    <label class="form-label elim-label" for="inputMotivoElimVenta">
+                        Motivo de eliminación <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="elim-textarea-wrap">
+                        <textarea id="inputMotivoElimVenta"
+                                  class="elim-textarea"
+                                  rows="5"
+                                  maxlength="500"
+                                  placeholder="Ej: error de carga, cliente desistió, venta duplicada…"></textarea>
+                    </div>
+
+                    <div id="motivoElimError" class="elim-error d-none" role="alert">
+                        <i class="fa fa-exclamation-circle me-1"></i>
+                        Debe indicar un motivo para continuar.
+                    </div>
+
+                    <div class="elim-footer-meta">
+                        <span class="elim-help">
+                            <i class="fa fa-info-circle me-1"></i>
+                            Quedará visible en Información del cliente
+                        </span>
+                        <span class="elim-char-count"><span id="motivoElimCount">0</span>/500</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0 pb-4">
+                    <div class="d-flex gap-2 w-100">
+                        <button type="button" class="btn btn-outline-secondary btn-lg w-50" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger btn-lg w-50" id="btnMotivoElimContinuar">
+                            <i class="fa fa-trash me-2"></i>Continuar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="modal fade" id="modalLimite" tabindex="-1" aria-labelledby="modalLimitesLabel" aria-hidden="true">
@@ -373,8 +463,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
 
-    <script src="~/JavaScript/Utils/Utils.js?v=3.2"></script>
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Historial.js?v=3.4"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.14"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Historial.js?v=3.11"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {

@@ -86,7 +86,7 @@
             '          <div class="rp-reprog-icon"><i class="fa fa-calendar-check-o" aria-hidden="true"></i></div>' +
             '          <div>' +
             '            <h5 class="modal-title mb-0">¿Qué cuotas reprogramar?</h5>' +
-            '            <div class="rp-reprog-sub">Elegí las cuotas a las que querés aplicar la nueva fecha de cobro:</div>' +
+            '            <div class="rp-reprog-sub">Elegí las cuotas atrasadas de esta venta para aplicar la nueva fecha de cobro:</div>' +
             '            <div class="rp-reprog-cliente" id="rpReprogCliente"></div>' +
             '          </div>' +
             '        </div>' +

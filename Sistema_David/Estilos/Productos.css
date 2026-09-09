@@ -27,16 +27,17 @@
     color: #e5e7eb;
 }
 
-.prod-root table.dataTable.display tbody tr {
+.prod-root #grdProductos tbody tr {
     cursor: pointer;
 }
 
-.prod-root table.dataTable.display tbody tr.seleccionada td {
-    background: rgba(88, 166, 255, 0.1) !important;
+.prod-root #grdProductos tbody tr.seleccionada,
+.prod-root #grdProductos tbody tr.seleccionada td {
+    background: rgba(88, 166, 255, 0.22) !important;
+    color: #eaf1ff !important;
 }
 
-.prod-root table.dataTable.display tbody tr.seleccionada td.prod-col-seleccionada {
-    background: rgba(88, 166, 255, 0.14) !important;
+.prod-root #grdProductos tbody tr.seleccionada td:first-child {
     box-shadow: inset 3px 0 0 #58a6ff;
 }
 
@@ -636,6 +637,29 @@
     flex-shrink: 0;
 }
 
+/* Encender/apagar: verde habilitado, rojo deshabilitado (anula .btnacciones transparente) */
+.prod-actions-cell .prod-action-btn.prod-btn-estado.btn-success {
+    background: #2ecc71 !important;
+    border: none !important;
+    color: #fff !important;
+}
+
+.prod-actions-cell .prod-action-btn.prod-btn-estado.btn-success:hover {
+    background: #27ae60 !important;
+    filter: none;
+}
+
+.prod-actions-cell .prod-action-btn.prod-btn-estado.btn-danger {
+    background: #e74c3c !important;
+    border: none !important;
+    color: #fff !important;
+}
+
+.prod-actions-cell .prod-action-btn.prod-btn-estado.btn-danger:hover {
+    background: #c0392b !important;
+    filter: none;
+}
+
 .prod-table-wrap.dt-dark-wrap {
     overflow-x: auto;
 }
@@ -683,6 +707,16 @@
 
 .prod-action-btn i {
     font-size: 14px;
+    line-height: 1;
+}
+
+/* Anula reglas globales de Site.css (.btn-wsp i) en la grilla */
+.prod-actions-cell .prod-action-btn.btn-wsp i {
+    height: auto !important;
+    width: auto !important;
+    margin: 0 !important;
+    color: #fff !important;
+    font-size: 15px;
     line-height: 1;
 }
 

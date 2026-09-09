@@ -55,6 +55,12 @@ namespace Sistema_David.Models.DB
         public Nullable<int> EstadoCobro { get; set; }
         public string ObservacionCobro { get; set; }
         public Nullable<int> Whatssap { get; set; }
+        public bool Eliminada { get; set; }
+        public string MotivoEliminacion { get; set; }
+        public Nullable<System.DateTime> FechaEliminacion { get; set; }
+        public Nullable<int> UsuarioEliminacion { get; set; }
+        public string EstadoAntesEliminacion { get; set; }
+        public bool StockDevueltoAlArchivar { get; set; }
     
         public virtual Clientes Clientes { get; set; }
         public virtual Usuarios Usuarios { get; set; }

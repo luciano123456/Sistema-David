@@ -88,9 +88,17 @@ namespace Sistema_David.Controllers
         }
 
 
-        public ActionResult ListarActivos(int TipoNegocio)
+        public ActionResult ListarActivos(int TipoNegocio, int idEstado = 1)
         {
-            var result = UsuariosModel.ListaUsuariosActivos(TipoNegocio);
+            var result = UsuariosModel.ListaUsuariosActivos(TipoNegocio, idEstado);
+            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult ListarEstados()
+        {
+            var result = UsuariosModel.ListaEstados()
+                .Select(e => new { e.Id, e.Nombre })
+                .ToList();
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 

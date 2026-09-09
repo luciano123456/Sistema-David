@@ -173,6 +173,203 @@ namespace Sistema_David.Models
 
 
 
+        private static string SqlMostrarRendimiento()
+        {
+            return @"
+SELECT
+    IV.Id,
+    V.idVendedor AS IdVendedor,
+    C.Nombre + ' ' + C.Apellido AS Cliente,
+    IV.IdVenta,
+    (IV.Entrega + IV.Restante) AS CapitalInicial,
+    CASE WHEN IV.Descripcion LIKE '%venta%' THEN (IV.Entrega + IV.Restante) ELSE 0 END AS Venta,
+    ISNULL(IV.Entrega, 0) AS Cobro,
+    ISNULL(IV.Interes, 0) AS Interes,
+    IV.Restante AS CapitalFinal,
+    IV.Fecha,
+    IV.ProximoCobro,
+    IV.Descripcion,
+    IV.MetodoPago,
+    IV.IdTipoNegocio,
+    IV.whatssap,
+    IV.ActualizoUbicacion,
+    CB.Nombre AS CuentaBancaria,
+    V.FechaLimite AS FechaLimite,
+    ISNULL(IV.IdCobrador, 0) AS IdCobrador,
+    CASE WHEN DATALENGTH(IV.Imagen) > 2 THEN '1' ELSE NULL END AS Imagen,
+    'INDUMENTARIA' AS Origen,
+    IV.Id AS IdOriginal,
+    LTRIM(RTRIM(ISNULL(UV.Nombre, '') + ' ' + ISNULL(UV.Apellido, ''))) AS Vendedor,
+    LTRIM(RTRIM(ISNULL(UC.Nombre, '') + ' ' + ISNULL(UC.Apellido, ''))) AS UsuarioCobro,
+    TN.Nombre AS TipoNegocio
+FROM InformacionVentas IV
+INNER JOIN Ventas V ON V.Id = IV.IdVenta
+INNER JOIN Clientes C ON C.Id = V.IdCliente
+LEFT JOIN CuentasBancarias CB ON CB.Id = IV.IdCuentaBancaria
+LEFT JOIN Usuarios UV ON UV.Id = V.idVendedor
+LEFT JOIN Usuarios UC ON UC.Id = IV.IdCobrador
+LEFT JOIN TipoNegocio TN ON TN.Id = IV.IdTipoNegocio
+WHERE
+    (IV.IdTipoNegocio = @Idtiponegocio OR @Idtiponegocio = -1)
+    AND (IV.MetodoPago = @metodoPago OR @metodoPago = 'Todos')
+    AND (IV.IdCuentaBancaria = @IdCuentaBancaria OR @IdCuentaBancaria = -1)
+    AND (IV.whatssap = @ComprobantesEnviados OR @ComprobantesEnviados = -1)
+    AND (
+        (@ventas = 1 AND IV.Descripcion LIKE '%venta%' AND (V.idVendedor = @idVendedor OR @idVendedor = -1))
+        OR
+        (@cobranzas = 1 AND (IV.Descripcion LIKE '%cobranza%' OR IV.Descripcion LIKE '%interes%')
+            AND (ISNULL(IV.IdCobrador, 0) = @idVendedor OR @idVendedor = -1))
+    )
+    AND IV.Fecha >= @fechadesde
+    AND IV.Fecha < DATEADD(DAY, 1, @fechahasta)
+
+UNION ALL
+
+SELECT
+    VE.Id,
+    VE.IdVendedor,
+    C.Nombre + ' ' + C.Apellido AS Cliente,
+    VE.Id AS IdVenta,
+    VE.ImporteTotal AS CapitalInicial,
+    VE.ImporteTotal AS Venta,
+    ISNULL(VE.Entrega, 0) AS Cobro,
+    0 AS Interes,
+    VE.Restante AS CapitalFinal,
+    VE.FechaVenta AS Fecha,
+    PC.ProximoCobro,
+    'Venta Electrodomesticos #' + CAST(VE.Id AS VARCHAR(20)) AS Descripcion,
+    'ELECTRO' AS MetodoPago,
+    3 AS IdTipoNegocio,
+    VE.Whatssap AS whatssap,
+    0 AS ActualizoUbicacion,
+    NULL AS CuentaBancaria,
+    VE.FechaVencimiento AS FechaLimite,
+    0 AS IdCobrador,
+    NULL AS Imagen,
+    'ELECTRO' AS Origen,
+    VE.Id AS IdOriginal,
+    LTRIM(RTRIM(ISNULL(UV.Nombre, '') + ' ' + ISNULL(UV.Apellido, ''))) AS Vendedor,
+    NULL AS UsuarioCobro,
+    TN.Nombre AS TipoNegocio
+FROM Ventas_Electrodomesticos VE
+INNER JOIN Clientes C ON C.Id = VE.IdCliente
+LEFT JOIN Usuarios UV ON UV.Id = VE.IdVendedor
+LEFT JOIN TipoNegocio TN ON TN.Id = 3
+OUTER APPLY (
+    SELECT MIN(CU.FechaVencimiento) AS ProximoCobro
+    FROM Ventas_Electrodomesticos_Cuotas CU
+    WHERE CU.IdVenta = VE.Id AND CU.Estado <> 'Pagada'
+) PC
+WHERE
+    (@ventas = 1)
+    AND ISNULL(VE.Eliminada, 0) = 0
+    AND (VE.IdVendedor = @idVendedor OR @idVendedor = -1)
+    AND (3 = @Idtiponegocio OR @Idtiponegocio = -1)
+    AND VE.FechaVenta >= @fechadesde
+    AND VE.FechaVenta < DATEADD(DAY, 1, @fechahasta)
+
+UNION ALL
+
+SELECT
+    P.Id,
+    VE.IdVendedor,
+    C.Nombre + ' ' + C.Apellido AS Cliente,
+    VE.Id AS IdVenta,
+    0 AS CapitalInicial,
+    0 AS Venta,
+    PD.ImporteAplicado AS Cobro,
+    0 AS Interes,
+    VE.Restante AS CapitalFinal,
+    P.FechaPago AS Fecha,
+    CU.FechaVencimiento AS ProximoCobro,
+    'Cobranza Electrodomesticos #' + CAST(VE.Id AS VARCHAR(20))
+        + ' - ' + C.Nombre + ' ' + C.Apellido
+        + ' - Cuota ' + CAST(CU.NumeroCuota AS VARCHAR(10))
+        + ' - $' + CONVERT(VARCHAR(20), CAST(PD.ImporteAplicado AS INT)) AS Descripcion,
+    P.MedioPago AS MetodoPago,
+    3 AS IdTipoNegocio,
+    P.Whatssap AS whatssap,
+    0 AS ActualizoUbicacion,
+    CB.Nombre AS CuentaBancaria,
+    VE.FechaVencimiento AS FechaLimite,
+    ISNULL(P.UsuarioCreacion, 0) AS IdCobrador,
+    CASE WHEN DATALENGTH(P.Imagen) > 2 THEN '1' ELSE NULL END AS Imagen,
+    'ELECTRO' AS Origen,
+    P.Id AS IdOriginal,
+    LTRIM(RTRIM(ISNULL(UV.Nombre, '') + ' ' + ISNULL(UV.Apellido, ''))) AS Vendedor,
+    LTRIM(RTRIM(ISNULL(UC.Nombre, '') + ' ' + ISNULL(UC.Apellido, ''))) AS UsuarioCobro,
+    TN.Nombre AS TipoNegocio
+FROM Ventas_Electrodomesticos_Pagos P
+INNER JOIN Ventas_Electrodomesticos VE ON VE.Id = P.IdVenta
+INNER JOIN Clientes C ON C.Id = VE.IdCliente
+INNER JOIN Ventas_Electrodomesticos_Pagos_Detalle PD ON PD.IdPago = P.Id
+INNER JOIN Ventas_Electrodomesticos_Cuotas CU ON CU.Id = PD.IdCuota
+LEFT JOIN CuentasBancarias CB ON CB.Id = P.IdCuentaBancaria
+LEFT JOIN Usuarios UV ON UV.Id = VE.IdVendedor
+LEFT JOIN Usuarios UC ON UC.Id = P.UsuarioCreacion
+LEFT JOIN TipoNegocio TN ON TN.Id = 3
+WHERE
+    (@cobranzas = 1)
+    AND ISNULL(VE.Eliminada, 0) = 0
+    AND (ISNULL(P.UsuarioCreacion, 0) = @idVendedor OR @idVendedor = -1)
+    AND (3 = @Idtiponegocio OR @Idtiponegocio = -1)
+    AND (P.MedioPago = @metodoPago OR @metodoPago = 'Todos')
+    AND (P.IdCuentaBancaria = @IdCuentaBancaria OR @IdCuentaBancaria = -1)
+    AND P.FechaPago >= @fechadesde
+    AND P.FechaPago < DATEADD(DAY, 1, @fechahasta)
+
+UNION ALL
+
+SELECT
+    R.Id,
+    VE.IdVendedor,
+    C.Nombre + ' ' + C.Apellido AS Cliente,
+    VE.Id AS IdVenta,
+    0 AS CapitalInicial,
+    0 AS Venta,
+    0 AS Cobro,
+    R.ImporteCalculado AS Interes,
+    VE.Restante AS CapitalFinal,
+    R.Fecha AS Fecha,
+    CU.FechaVencimiento AS ProximoCobro,
+    'Interes Electrodomesticos #' + CAST(VE.Id AS VARCHAR(20))
+        + ' - Cuota ' + CAST(CU.NumeroCuota AS VARCHAR(10)) AS Descripcion,
+    'INTERÉS' AS MetodoPago,
+    3 AS IdTipoNegocio,
+    0 AS whatssap,
+    0 AS ActualizoUbicacion,
+    NULL AS CuentaBancaria,
+    VE.FechaVencimiento AS FechaLimite,
+    ISNULL(R.UsuarioCreacion, 0) AS IdCobrador,
+    NULL AS Imagen,
+    'ELECTRO' AS Origen,
+    R.Id AS IdOriginal,
+    LTRIM(RTRIM(ISNULL(UV.Nombre, '') + ' ' + ISNULL(UV.Apellido, ''))) AS Vendedor,
+    LTRIM(RTRIM(ISNULL(UC.Nombre, '') + ' ' + ISNULL(UC.Apellido, ''))) AS UsuarioCobro,
+    TN.Nombre AS TipoNegocio
+FROM Ventas_Electrodomesticos_Cuotas_Recargos R
+INNER JOIN Ventas_Electrodomesticos_Cuotas CU ON CU.Id = R.IdCuota
+INNER JOIN Ventas_Electrodomesticos VE ON VE.Id = CU.IdVenta
+INNER JOIN Clientes C ON C.Id = VE.IdCliente
+LEFT JOIN Usuarios UV ON UV.Id = VE.IdVendedor
+LEFT JOIN Usuarios UC ON UC.Id = R.UsuarioCreacion
+LEFT JOIN TipoNegocio TN ON TN.Id = 3
+WHERE
+    (@cobranzas = 1)
+    AND ISNULL(VE.Eliminada, 0) = 0
+    AND (
+        @idVendedor = -1
+        OR VE.IdVendedor = @idVendedor
+        OR ISNULL(R.UsuarioCreacion, 0) = @idVendedor
+        OR ISNULL(VE.IdCobrador, 0) = @idVendedor
+    )
+    AND (3 = @Idtiponegocio OR @Idtiponegocio = -1)
+    AND R.Fecha >= @fechadesde
+    AND R.Fecha < DATEADD(DAY, 1, @fechahasta)
+ORDER BY Fecha
+";
+        }
+
         public static List<VMRendimiento> MostrarRendimiento(int idVendedor, int ventas, int cobranzas, DateTime fechadesde, DateTime fechahasta, int tiponegocio, string metodoPago, int IdCuentaBancaria, int ComprobantesEnviados)
         {
 
@@ -180,28 +377,30 @@ namespace Sistema_David.Models
             {
                 using (Sistema_DavidEntities db = new Sistema_DavidEntities())
                 {
+                    db.Database.CommandTimeout = 300;
+                    db.Configuration.ProxyCreationEnabled = false;
+                    db.Configuration.LazyLoadingEnabled = false;
 
+                    var desde = fechadesde.Date;
+                    var hasta = fechahasta.Date;
 
                     var idVendedorParam = new SqlParameter("@idVendedor", SqlDbType.Int) { Value = idVendedor };
                     var ventasParam = new SqlParameter("@ventas", SqlDbType.Int) { Value = ventas };
                     var cobranzasParam = new SqlParameter("@cobranzas", SqlDbType.Int) { Value = cobranzas };
-                    var fechadesdeParam = new SqlParameter("@fechadesde", SqlDbType.DateTime) { Value = fechadesde };
-                    var fechahastaParam = new SqlParameter("@fechahasta", SqlDbType.DateTime) { Value = fechahasta };
+                    var fechadesdeParam = new SqlParameter("@fechadesde", SqlDbType.DateTime) { Value = desde };
+                    var fechahastaParam = new SqlParameter("@fechahasta", SqlDbType.DateTime) { Value = hasta };
                     var tiponegocioParam = new SqlParameter("@Idtiponegocio", SqlDbType.Int) { Value = tiponegocio };
 
-                    var metodoPagoParam = new SqlParameter("@metodoPago", SqlDbType.VarChar, 50) { Value = metodoPago };
+                    var metodoPagoParam = new SqlParameter("@metodoPago", SqlDbType.VarChar, 50) { Value = metodoPago ?? "" };
                     var cuentabancariaParam = new SqlParameter("@IdCuentaBancaria", SqlDbType.Int) { Value = IdCuentaBancaria };
                     var comprobantesEnviadosParam = new SqlParameter("@ComprobantesEnviados", SqlDbType.Int) { Value = ComprobantesEnviados };
 
+                    // Consulta propia: no usa el SP. El SP leía Imagen con LTRIM/RTRIM (nvarchar max)
+                    // y tardaba minutos al serializar comprobantes. Acá solo va un flag.
                     var resultList = db.Database.SqlQuery<VMRendimiento>(
-                        "EXEC sp_MostrarRendimiento @idVendedor, @ventas, @cobranzas, @fechadesde, @fechahasta, @Idtiponegocio, @metodoPago, @IdCuentaBancaria, @ComprobantesEnviados",
+                        SqlMostrarRendimiento(),
                         idVendedorParam, ventasParam, cobranzasParam, fechadesdeParam, fechahastaParam, tiponegocioParam, metodoPagoParam, cuentabancariaParam, comprobantesEnviadosParam
                     ).ToList();
-
-                    // El SP histórico solo trae intereses electro filtrando por IdVendedor de la venta
-                    // y con MetodoPago=RECARGO / IdCobrador=0. Completamos y normalizamos acá.
-                    AsegurarInteresesElectroEnRendimiento(
-                        db, resultList, idVendedor, cobranzas, tiponegocio, fechadesde, fechahasta);
 
                     EnriquecerRendimientoDespuesDeSp(db, resultList);
 
@@ -214,12 +413,79 @@ namespace Sistema_David.Models
                             .ToList();
                     }
 
+                    CompactarImagenesRendimiento(resultList);
+
                     return resultList;
                 }
-            } catch (Exception ex)
-            {
-                return null;
             }
+            catch (Exception)
+            {
+                return new List<VMRendimiento>();
+            }
+        }
+
+        public static object CalcularKpis(List<VMRendimiento> rows)
+        {
+            decimal totVenta = 0, totCobro = 0, totInteres = 0, totEfectivo = 0, totTransferencia = 0;
+            if (rows == null) return new { venta = 0m, cobro = 0m, interes = 0m, efectivo = 0m, transferencia = 0m };
+
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var r = rows[i];
+                if (r == null) continue;
+
+                var descripcion = r.Descripcion ?? "";
+                var metodo = (r.MetodoPago ?? "").Trim().ToUpperInvariant();
+                var cobro = r.Cobro ?? 0;
+                var venta = r.Venta ?? 0;
+                var interes = r.Interes ?? 0;
+
+                if (descripcion.IndexOf("Cobranza", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    totCobro += cobro;
+                    if (metodo == "EFECTIVO") totEfectivo += cobro;
+                    if (metodo == "TRANSFERENCIA PROPIA" || metodo == "TRANSFERENCIA A TERCEROS")
+                        totTransferencia += cobro;
+                }
+
+                if (descripcion.IndexOf("Venta", StringComparison.OrdinalIgnoreCase) >= 0)
+                    totVenta += venta;
+
+                var descN = descripcion.ToUpperInvariant();
+                if (descN.Contains("INTERES") || descN.Contains("INTERÉS") || descN.Contains("RECARGO")
+                    || metodo.Contains("INTERES") || metodo.Contains("INTERÉS") || metodo == "RECARGO")
+                    totInteres += interes;
+            }
+
+            return new
+            {
+                venta = totVenta,
+                cobro = totCobro,
+                interes = totInteres,
+                efectivo = totEfectivo,
+                transferencia = totTransferencia
+            };
+        }
+
+        private static void CompactarImagenesRendimiento(List<VMRendimiento> rows)
+        {
+            if (rows == null) return;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var r = rows[i];
+                if (r == null) continue;
+                if (!string.IsNullOrEmpty(r.Imagen))
+                    r.Imagen = "1";
+            }
+        }
+
+        private const int SqlIdChunk = 800;
+
+        private static IEnumerable<List<int>> PartirIds(IEnumerable<int> ids)
+        {
+            var list = ids == null ? new List<int>() : ids.Where(x => x > 0).Distinct().ToList();
+            for (int i = 0; i < list.Count; i += SqlIdChunk)
+                yield return list.GetRange(i, Math.Min(SqlIdChunk, list.Count - i));
         }
 
 
@@ -397,24 +663,29 @@ namespace Sistema_David.Models
                     .ToList()
                     .ToDictionary(u => u.Id, FormatearNombreUsuario);
 
-            var existentes = new HashSet<int>();
+            var filasInteresPorId = new Dictionary<int, List<VMRendimiento>>();
             foreach (var row in rows)
             {
                 if (!EsFilaInteresElectro(row)) continue;
                 var idRec = row.IdOriginal.HasValue && row.IdOriginal.Value > 0 ? row.IdOriginal.Value : row.Id;
-                if (idRec > 0) existentes.Add(idRec);
+                if (idRec <= 0) continue;
+                List<VMRendimiento> lista;
+                if (!filasInteresPorId.TryGetValue(idRec, out lista))
+                {
+                    lista = new List<VMRendimiento>();
+                    filasInteresPorId[idRec] = lista;
+                }
+                lista.Add(row);
             }
 
             foreach (var rec in recargos)
             {
-                if (existentes.Contains(rec.Id))
+                List<VMRendimiento> yaEstaban;
+                if (filasInteresPorId.TryGetValue(rec.Id, out yaEstaban))
                 {
-                    // Normalizar filas que ya trajo el SP
-                    foreach (var row in rows.Where(r =>
-                                 EsFilaInteresElectro(r)
-                                 && ((r.IdOriginal.HasValue && r.IdOriginal.Value == rec.Id) || r.Id == rec.Id)))
+                    for (int i = 0; i < yaEstaban.Count; i++)
                     {
-                        NormalizarFilaInteresElectro(row, rec.Id, rec.IdVenta, rec.IdVendedor, rec.UsuarioCreacion,
+                        NormalizarFilaInteresElectro(yaEstaban[i], rec.Id, rec.IdVenta, rec.IdVendedor, rec.UsuarioCreacion,
                             rec.ImporteCalculado, rec.Fecha, rec.Restante, rec.FechaVencimientoCuota, rec.FechaVencimiento,
                             rec.Cliente, rec.NumeroCuota, nombreTipoElectro, nombres);
                     }
@@ -426,7 +697,6 @@ namespace Sistema_David.Models
                     rec.ImporteCalculado, rec.Fecha, rec.Restante, rec.FechaVencimientoCuota, rec.FechaVencimiento,
                     rec.Cliente, rec.NumeroCuota, nombreTipoElectro, nombres);
                 rows.Add(nueva);
-                existentes.Add(rec.Id);
             }
         }
 
@@ -513,36 +783,55 @@ namespace Sistema_David.Models
                     idsInformacionClasica.Add(r.Id);
             }
 
-            var pagosElectroPorId = db.Ventas_Electrodomesticos_Pagos
-                .AsNoTracking()
-                .Where(p => idsPagoElectro.Contains(p.Id))
-                .Select(p => new { p.Id, p.UsuarioCreacion, p.Whatssap })
-                .ToList()
-                .GroupBy(x => x.Id)
-                .ToDictionary(g => g.Key, g => g.First());
+            var usuarioPorPagoId = new Dictionary<int, int>();
+            var whatssapPagoPorId = new Dictionary<int, int>();
+            foreach (var chunk in PartirIds(idsPagoElectro))
+            {
+                var parte = db.Ventas_Electrodomesticos_Pagos
+                    .AsNoTracking()
+                    .Where(p => chunk.Contains(p.Id))
+                    .Select(p => new { p.Id, p.UsuarioCreacion, p.Whatssap })
+                    .ToList();
+                foreach (var p in parte)
+                {
+                    if (!usuarioPorPagoId.ContainsKey(p.Id))
+                        usuarioPorPagoId[p.Id] = p.UsuarioCreacion;
+                    if (!whatssapPagoPorId.ContainsKey(p.Id))
+                        whatssapPagoPorId[p.Id] = p.Whatssap ?? 0;
+                }
+            }
 
-            var usuarioPorPagoId = pagosElectroPorId
-                .ToDictionary(kv => kv.Key, kv => kv.Value.UsuarioCreacion);
-
-            var whatssapPagoPorId = pagosElectroPorId
-                .ToDictionary(kv => kv.Key, kv => kv.Value.Whatssap ?? 0);
-
-            var cobradorPorInformacionId = db.InformacionVentas
-                .AsNoTracking()
-                .Where(iv => idsInformacionClasica.Contains(iv.Id))
-                .Select(iv => new { iv.Id, iv.idCobrador })
-                .ToList()
-                .ToDictionary(x => x.Id, x => x.idCobrador);
+            var cobradorPorInformacionId = new Dictionary<int, int?>();
+            foreach (var chunk in PartirIds(idsInformacionClasica))
+            {
+                var parte = db.InformacionVentas
+                    .AsNoTracking()
+                    .Where(iv => chunk.Contains(iv.Id))
+                    .Select(iv => new { iv.Id, iv.idCobrador })
+                    .ToList();
+                foreach (var x in parte)
+                {
+                    if (!cobradorPorInformacionId.ContainsKey(x.Id))
+                        cobradorPorInformacionId[x.Id] = x.idCobrador;
+                }
+            }
 
             var usuarioCreacionRecargoPorId = new Dictionary<int, int>();
             if (idsRecargoElectro.Count > 0)
             {
-                usuarioCreacionRecargoPorId = db.Ventas_Electrodomesticos_Cuotas_Recargos
-                    .AsNoTracking()
-                    .Where(r => idsRecargoElectro.Contains(r.Id))
-                    .Select(r => new { r.Id, r.UsuarioCreacion })
-                    .ToList()
-                    .ToDictionary(x => x.Id, x => x.UsuarioCreacion);
+                foreach (var chunk in PartirIds(idsRecargoElectro))
+                {
+                    var parte = db.Ventas_Electrodomesticos_Cuotas_Recargos
+                        .AsNoTracking()
+                        .Where(r => chunk.Contains(r.Id))
+                        .Select(r => new { r.Id, r.UsuarioCreacion })
+                        .ToList();
+                    foreach (var x in parte)
+                    {
+                        if (!usuarioCreacionRecargoPorId.ContainsKey(x.Id))
+                            usuarioCreacionRecargoPorId[x.Id] = x.UsuarioCreacion;
+                    }
+                }
             }
 
             var whatssapRecargoPorId = new Dictionary<int, int?>();
@@ -550,34 +839,51 @@ namespace Sistema_David.Models
             {
                 try
                 {
-                    var csvIds = string.Join(",", idsRecargoElectro.Where(x => x > 0).Distinct());
-                    if (!string.IsNullOrWhiteSpace(csvIds))
+                    foreach (var chunk in PartirIds(idsRecargoElectro))
                     {
-                        var q = $"SELECT Id, Whatssap FROM Ventas_Electrodomesticos_Cuotas_Recargos WHERE Id IN ({csvIds})";
+                        var csvIds = string.Join(",", chunk);
+                        if (string.IsNullOrWhiteSpace(csvIds)) continue;
+                        var q = "SELECT Id, Whatssap FROM Ventas_Electrodomesticos_Cuotas_Recargos WHERE Id IN (" + csvIds + ")";
                         var rowsRec = db.Database.SqlQuery<IdWhatsRow>(q).ToList();
-                        whatssapRecargoPorId = rowsRec.ToDictionary(x => x.Id, x => x.Whatssap);
+                        foreach (var x in rowsRec)
+                        {
+                            if (!whatssapRecargoPorId.ContainsKey(x.Id))
+                                whatssapRecargoPorId[x.Id] = x.Whatssap;
+                        }
                     }
                 }
                 catch
                 {
-                    // Columna Whatssap puede no existir aún en algunos ambientes.
                     whatssapRecargoPorId = new Dictionary<int, int?>();
                 }
             }
 
-            var vendedorIdPorVentaElectro = db.Ventas_Electrodomesticos
-                .AsNoTracking()
-                .Where(v => idVentas.Contains(v.Id))
-                .Select(v => new { v.Id, v.IdVendedor })
-                .ToList()
-                .ToDictionary(x => x.Id, x => x.IdVendedor);
+            var vendedorIdPorVentaElectro = new Dictionary<int, int>();
+            var vendedorIdPorVentaClasica = new Dictionary<int, int>();
+            foreach (var chunk in PartirIds(idVentas))
+            {
+                var electro = db.Ventas_Electrodomesticos
+                    .AsNoTracking()
+                    .Where(v => chunk.Contains(v.Id))
+                    .Select(v => new { v.Id, v.IdVendedor })
+                    .ToList();
+                foreach (var x in electro)
+                {
+                    if (!vendedorIdPorVentaElectro.ContainsKey(x.Id))
+                        vendedorIdPorVentaElectro[x.Id] = x.IdVendedor;
+                }
 
-            var vendedorIdPorVentaClasica = db.Ventas
-                .AsNoTracking()
-                .Where(v => idVentas.Contains(v.Id))
-                .Select(v => new { v.Id, v.idVendedor })
-                .ToList()
-                .ToDictionary(x => x.Id, x => x.idVendedor);
+                var clasica = db.Ventas
+                    .AsNoTracking()
+                    .Where(v => chunk.Contains(v.Id))
+                    .Select(v => new { v.Id, v.idVendedor })
+                    .ToList();
+                foreach (var x in clasica)
+                {
+                    if (!vendedorIdPorVentaClasica.ContainsKey(x.Id))
+                        vendedorIdPorVentaClasica[x.Id] = x.idVendedor;
+                }
+            }
 
             var idsTipoNegocio = rows
                 .Where(r => r != null && r.IdTipoNegocio.HasValue && r.IdTipoNegocio.Value > 0)

@@ -358,6 +358,32 @@ function getDataTableWrapper(api) {
     return $();
 }
 
+/** Con scrollX DataTables clona el thead: inputs solo en scrollHead (el de scrollBody queda para anchos). */
+function getColumnFilterRows(api) {
+    const $wrapper = getDataTableWrapper(api);
+    if (!$wrapper.length) return $();
+    const $head = $wrapper.find(".dataTables_scrollHead thead tr.filters");
+    if ($head.length) return $head;
+    return $wrapper.find("thead tr.filters").not($wrapper.find(".dataTables_scrollBody thead tr.filters"));
+}
+
+function ensureColumnFilterScrollCss() {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("rp-col-filter-scroll-css")) return;
+    const style = document.createElement("style");
+    style.id = "rp-col-filter-scroll-css";
+    style.textContent = [
+        "div.dataTables_scrollBody thead tr.filters .rp-filter-cell,",
+        "div.dataTables_scrollBody thead tr.filters .rp-filter-input,",
+        "div.dataTables_scrollBody thead tr.filters .rp-filter-select {",
+        "  display: none !important; height: 0 !important; min-height: 0 !important;",
+        "  padding: 0 !important; margin: 0 !important; border: none !important;",
+        "  overflow: hidden !important;",
+        "}"
+    ].join(" ");
+    (document.head || document.documentElement).appendChild(style);
+}
+
 function applyColumnFilterControlMarker($filterCell, active) {
     if (!$filterCell || !$filterCell.length) return;
     const $in = $filterCell.find(".rp-filter-input");
@@ -389,7 +415,7 @@ function applyColumnFilterTitleMarker($titleTh, active, showDot) {
 function syncColumnFilterMarkers(api, configColumns) {
     const $wrapper = getDataTableWrapper(api);
     // Con scrollX los inputs viven en el wrapper, no siempre en api.table().node()
-    const $filtersRow = $wrapper.find("thead tr.filters").first();
+    const $filtersRow = getColumnFilterRows(api).first();
     if (!$filtersRow.length) return;
 
     const states = configColumns.map((config) => {
@@ -427,17 +453,18 @@ function syncColumnFilterMarkers(api, configColumns) {
  */
 function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFilters, uiOptions) {
 
+    ensureColumnFilterScrollCss();
     const tableContainer = getDataTableWrapper(api);
-    const filtersRow = tableContainer.find("thead tr.filters");
+    const filtersRows = getColumnFilterRows(api);
     uiOptions = uiOptions || {};
     const useCobrosSkin = uiOptions.skin === "cobros";
     const filterPlaceholder = uiOptions.placeholder || "Buscar...";
     const filterInputType = uiOptions.inputType || "text";
 
-    if (!filtersRow.length) return;
+    if (!filtersRows.length) return;
 
     if (useCobrosSkin) {
-        filtersRow.addClass("rp-filters-row-cobros");
+        filtersRows.addClass("rp-filters-row-cobros");
         tableContainer.addClass("vc-cobros-filters-on");
     }
 
@@ -478,8 +505,9 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFi
         clearTimeout(persistTimer);
         persistTimer = setTimeout(function () {
             const out = {};
+            const $row = filtersRows.first();
             for (const config of configColumns) {
-                const cell = filtersRow.find("th").eq(config.index);
+                const cell = $row.children("th").eq(config.index);
                 if (!cell.length) continue;
                 const $in = cell.find(".rp-filter-input");
                 const $sel = cell.find(".rp-filter-select");
@@ -498,102 +526,105 @@ function inicializarFiltrosColumnas(api, configColumns, storageKey, markActiveFi
     }
 
     let appliedAnySaved = false;
+    const configuredIndices = new Set(configColumns.map((c) => c.index));
 
-    for (const config of configColumns) {
+    filtersRows.each(function () {
+        const $row = $(this);
 
-        const cell = filtersRow.find("th").eq(config.index);
+        for (const config of configColumns) {
 
-        if (!cell.length) continue;
+            const cell = $row.children("th").eq(config.index);
 
-        cell.empty();
+            if (!cell.length) continue;
 
-        const savedVal = saved[String(config.index)];
+            cell.empty();
 
-        if (config.filterType === "select" || config.filterType === "select_local") {
+            const savedVal = saved[String(config.index)];
 
-            const $select = $(`
+            if (config.filterType === "select" || config.filterType === "select_local") {
+
+                const $select = $(`
                 <select class="rp-filter-select">
                     <option value="">Todos</option>
                 </select>
             `);
-            mountFilterControl($select, cell, true);
+                mountFilterControl($select, cell, true);
 
-            const uniques = new Set();
+                const uniques = new Set();
 
-            api.column(config.index).data().each((v) => {
-                const txt = (v ?? "").toString().trim();
-                if (txt) uniques.add(txt);
-            });
+                api.column(config.index).data().each((v) => {
+                    const txt = (v ?? "").toString().trim();
+                    if (txt) uniques.add(txt);
+                });
 
-            [...uniques].sort().forEach((txt) => {
-                $("<option/>", { value: txt, text: txt }).appendTo($select);
-            });
+                [...uniques].sort().forEach((txt) => {
+                    $("<option/>", { value: txt, text: txt }).appendTo($select);
+                });
 
-            if (savedVal) {
-                const has = $select.find("option").filter(function () {
-                    return $(this).val() === savedVal;
-                }).length;
-                if (has) {
-                    $select.val(savedVal);
-                    api.column(config.index)
-                        .search("^" + escapeRegex(savedVal) + "$", true, false);
+                if (savedVal) {
+                    const has = $select.find("option").filter(function () {
+                        return $(this).val() === savedVal;
+                    }).length;
+                    if (has) {
+                        $select.val(savedVal);
+                        api.column(config.index)
+                            .search("^" + escapeRegex(savedVal) + "$", true, false);
+                        appliedAnySaved = true;
+                    }
+                }
+
+                $select.on("change", function () {
+
+                    const value = $(this).val();
+
+                    if (!value) {
+                        api.column(config.index).search("");
+                    } else {
+                        api.column(config.index)
+                            .search("^" + escapeRegex(value) + "$", true, false);
+                    }
+                    api.draw(false);
+                    persistColumnFilters();
+                    refreshFilterMarkers();
+                });
+
+            } else {
+
+                const $inp = $("<input>", {
+                    class: "rp-filter-input",
+                    type: filterInputType,
+                    placeholder: filterPlaceholder,
+                    autocomplete: "off",
+                    spellcheck: false
+                });
+                mountFilterControl($inp, cell, false);
+
+                if (savedVal) {
+                    $inp.val(savedVal);
+                    aplicarBusquedaTokensColumna(api, config.index, savedVal);
                     appliedAnySaved = true;
                 }
+
+                $inp.on("input keyup change", function () {
+                    const q = String(this.value || "");
+                    aplicarBusquedaTokensColumna(api, config.index, q);
+                    api.draw(false);
+                    persistColumnFilters();
+                    refreshFilterMarkers();
+                });
             }
-
-            $select.on("change", function () {
-
-                const value = $(this).val();
-
-                if (!value) {
-                    api.column(config.index).search("");
-                } else {
-                    api.column(config.index)
-                        .search("^" + escapeRegex(value) + "$", true, false);
-                }
-                api.draw(false);
-                persistColumnFilters();
-                refreshFilterMarkers();
-            });
-
-        } else {
-
-            const $inp = $("<input>", {
-                class: "rp-filter-input",
-                type: filterInputType,
-                placeholder: filterPlaceholder,
-                autocomplete: "off",
-                spellcheck: false
-            });
-            mountFilterControl($inp, cell, false);
-
-            if (savedVal) {
-                $inp.val(savedVal);
-                aplicarBusquedaTokensColumna(api, config.index, savedVal);
-                appliedAnySaved = true;
-            }
-
-            $inp.on("input keyup change", function () {
-                const q = String(this.value || "");
-                aplicarBusquedaTokensColumna(api, config.index, q);
-                api.draw(false);
-                persistColumnFilters();
-                refreshFilterMarkers();
-            });
         }
-    }
+
+        $row.children("th").each(function (i) {
+            if (!configuredIndices.has(i)) {
+                $(this).empty();
+            }
+        });
+    });
 
     if (appliedAnySaved) {
         api.draw(false);
     }
-
-    // Columnas sin filtro (p. ej. Acciones): el clone del thead copia el título; dejar la celda vacía.
-    const configuredIndices = new Set(configColumns.map((c) => c.index));
-    filtersRow.find("th").each(function (i) {
-        if (!configuredIndices.has(i)) {
-            $(this).empty();
-        }
-    });
 
     refreshFilterMarkers();
 }
@@ -617,15 +648,17 @@ function limpiarFiltrosColumnas(api, configColumns, storageKey) {
         api.column(config.index).search("");
     }
 
-    const tableContainer = getDataTableWrapper(api);
-    const filtersRow = tableContainer.find("thead tr.filters");
-    if (filtersRow.length) {
-        for (const config of configColumns) {
-            const cell = filtersRow.find("th").eq(config.index);
-            if (!cell.length) continue;
-            cell.find(".rp-filter-input").val("");
-            cell.find(".rp-filter-select").val("");
-        }
+    const filtersRows = getColumnFilterRows(api);
+    if (filtersRows.length) {
+        filtersRows.each(function () {
+            const $row = $(this);
+            for (const config of configColumns) {
+                const cell = $row.children("th").eq(config.index);
+                if (!cell.length) continue;
+                cell.find(".rp-filter-input").val("");
+                cell.find(".rp-filter-select").val("");
+            }
+        });
     }
 
     api.draw(false);
@@ -965,4 +998,386 @@ if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bootDireccionUi);
 } else {
     bootDireccionUi();
+}
+
+/** Menú estándar DataTables: 10 / 25 / 50 / 100 / Todos (-1). */
+var DT_LENGTH_MENU = [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]];
+
+function aplicarDefaultsDataTable() {
+    if (typeof jQuery === "undefined" || !jQuery.fn || !jQuery.fn.dataTable) return false;
+    jQuery.extend(true, jQuery.fn.dataTable.defaults, {
+        lengthMenu: DT_LENGTH_MENU
+    });
+    return true;
+}
+
+(function bootDataTableDefaults() {
+    function boot() {
+        if (aplicarDefaultsDataTable()) return;
+        var tries = 0;
+        var timer = setInterval(function () {
+            if (aplicarDefaultsDataTable() || ++tries > 40) clearInterval(timer);
+        }, 50);
+    }
+
+    if (typeof document !== "undefined") {
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", boot);
+        } else {
+            boot();
+        }
+    }
+})();
+
+/* ===========================================================
+   Carga lenta de tablas (Rendimiento / Cobranzas / Ventas)
+   Cambiar CARGA_TABLAS_LENTA_SEGUNDOS a mano: barra + aviso.
+=========================================================== */
+var CARGA_TABLAS_LENTA_SEGUNDOS = 60;
+
+function _msCargaTablasLenta() {
+    var s = Number(CARGA_TABLAS_LENTA_SEGUNDOS);
+    if (!isFinite(s) || s < 1) s = 60;
+    return Math.round(s) * 1000;
+}
+
+function _textoDuracionCargaLenta(segundos) {
+    var s = Math.max(1, Math.round(segundos));
+    if (s === 60) return "un minuto";
+    if (s === 1) return "1 segundo";
+    return s + " segundos";
+}
+
+function _textoPromptCargaLenta(elapsedMs) {
+    var intervalo = Math.max(1, Math.round(Number(CARGA_TABLAS_LENTA_SEGUNDOS) || 60));
+    var segs = elapsedMs != null
+        ? Math.max(intervalo, Math.floor(elapsedMs / 1000))
+        : intervalo;
+    var opts = _cargaTablasOpts || {};
+    if (typeof opts.textoLento === "function") {
+        try { return opts.textoLento(segs); } catch (e) { /* fallback */ }
+    } else if (opts.textoLento) {
+        return String(opts.textoLento);
+    }
+    return "La consulta lleva más de " + _textoDuracionCargaLenta(segs) +
+        " y todavía no terminó. Puede seguir esperando o reiniciar los filtros e intentar de nuevo.";
+}
+
+function _tituloCargaLenta() {
+    return "La carga está demorando";
+}
+
+function _htmlInnerPromptCargaLenta() {
+    return (
+        '<div class="gl-carga-prompt-card">' +
+        '<h5 id="glCargaLentaTitulo">' + _tituloCargaLenta() + "</h5>" +
+        "<p>" + _textoPromptCargaLenta() + "</p>" +
+        '<div class="gl-carga-prompt-actions">' +
+        '<button type="button" class="gl-carga-lenta-seguir" id="btnCargaLentaSeguir">Seguir esperando</button>' +
+        '<button type="button" class="gl-carga-lenta-reiniciar" id="btnCargaLentaReiniciar">Reiniciar filtros</button>' +
+        "</div></div>"
+    );
+}
+var _cargaTablasTimer = null;
+var _cargaTablasToken = 0;
+var _cargaTablasOpts = null;
+var _cargaTablasProgressRaf = null;
+var _cargaTablasProgressStart = 0;
+var _cargaTablasSiguienteAvisoMs = 0;
+var _cargaTablasModalVisible = false;
+
+function _ahoraCargaTablas() {
+    return (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+}
+
+function abortarAjaxDataTable(selector) {
+    try {
+        if (typeof $ === "undefined" || !$.fn.DataTable || !$.fn.DataTable.isDataTable(selector)) return;
+        var xhr = $(selector).DataTable().settings()[0].jqXHR;
+        if (xhr && typeof xhr.abort === "function") xhr.abort();
+    } catch (e) { /* ignore */ }
+}
+
+function abortarXhrCargaTablas(xhr) {
+    try {
+        if (xhr && typeof xhr.abort === "function") xhr.abort();
+    } catch (e) { /* ignore */ }
+}
+
+function esAbortAjax(err) {
+    if (!err) return false;
+    var status = err.status;
+    var text = err.statusText || err.statusMessage || "";
+    return status === 0 || String(text).toLowerCase() === "abort";
+}
+
+function _htmlPromptCargaLenta() {
+    return (
+        '<div id="modalCargaLenta" class="gl-carga-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="glCargaLentaTitulo">' +
+        _htmlInnerPromptCargaLenta() +
+        "</div>"
+    );
+}
+
+function _vincularBotonesCargaLenta() {
+    var btnSeguir = document.getElementById("btnCargaLentaSeguir");
+    var btnReiniciar = document.getElementById("btnCargaLentaReiniciar");
+    if (btnSeguir && !btnSeguir.getAttribute("data-gl-bound")) {
+        btnSeguir.setAttribute("data-gl-bound", "1");
+        btnSeguir.addEventListener("click", function () {
+            _continuarEsperandoCargaLenta();
+        });
+    }
+    if (btnReiniciar && !btnReiniciar.getAttribute("data-gl-bound")) {
+        btnReiniciar.setAttribute("data-gl-bound", "1");
+        btnReiniciar.addEventListener("click", function () {
+            var opts = _cargaTablasOpts || {};
+            detenerAvisoCargaLenta();
+            ocultarCargaTablas();
+            if (typeof opts.abort === "function") {
+                try { opts.abort(); } catch (e) { /* ignore */ }
+            }
+            if (typeof opts.onReiniciarFiltros === "function") {
+                try { opts.onReiniciarFiltros(); } catch (e) { console.error(e); }
+            }
+        });
+    }
+}
+
+function _asegurarPromptCargaTablas() {
+    var prompt = document.getElementById("modalCargaLenta");
+    if (!prompt) {
+        document.body.insertAdjacentHTML("beforeend", _htmlPromptCargaLenta());
+        prompt = document.getElementById("modalCargaLenta");
+    } else {
+        if (prompt.parentNode !== document.body) {
+            document.body.appendChild(prompt);
+        }
+        var estabaOculto = prompt.classList.contains("hidden");
+        prompt.className = "gl-carga-prompt" + (estabaOculto ? " hidden" : "");
+        if (!prompt.querySelector(".gl-carga-prompt-card")) {
+            prompt.innerHTML = _htmlInnerPromptCargaLenta();
+        } else {
+            var h5 = prompt.querySelector("#glCargaLentaTitulo");
+            var p = prompt.querySelector(".gl-carga-prompt-card p");
+            if (h5) h5.textContent = _tituloCargaLenta();
+            if (p) p.textContent = _textoPromptCargaLenta();
+        }
+    }
+    _vincularBotonesCargaLenta();
+    return prompt;
+}
+
+function asegurarUICargaTablas() {
+    var css = document.getElementById("gl-carga-tablas-css");
+    if (!css) {
+        css = document.createElement("style");
+        css.id = "gl-carga-tablas-css";
+        document.head.appendChild(css);
+    }
+    css.textContent =
+            ".gl-carga-overlay{position:fixed;inset:0;background:rgba(10,15,40,.85);backdrop-filter:blur(6px);z-index:99999;display:flex;align-items:center;justify-content:center}" +
+            ".gl-carga-overlay.hidden{display:none!important}" +
+            ".gl-carga-box,.global-loading .loading-box{text-align:center;color:#fff;font-weight:600;min-width:min(320px,86vw);max-width:420px;padding:18px 22px;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:#0f1725;box-shadow:0 12px 32px rgba(0,0,0,.45)}" +
+            ".gl-carga-spinner{width:36px;height:36px;margin:0 auto 10px;border-radius:50%;border:3px solid rgba(255,255,255,.2);border-top-color:#58a6ff;animation:glCargaSpin .8s linear infinite}" +
+            ".gl-carga-text{color:#e8f0ff;font-size:14px}" +
+            "@keyframes glCargaSpin{to{transform:rotate(360deg)}}" +
+            "#modalCargaLenta.gl-carga-prompt{position:fixed;inset:0;z-index:1000001;margin:0;padding:20px;display:flex;align-items:center;justify-content:center;background:rgba(4,8,18,.78);backdrop-filter:blur(5px)}" +
+            "#modalCargaLenta.gl-carga-prompt.hidden{display:none!important}" +
+            "#modalCargaLenta .gl-carga-prompt-card{width:min(420px,92vw);padding:24px 22px 20px;border-radius:16px;background:#1b2740;border:1px solid rgba(255,255,255,.22);box-shadow:0 24px 64px rgba(0,0,0,.72);text-align:center}" +
+            "#modalCargaLenta .gl-carga-prompt-card h5{margin:0 0 10px;font-size:18px;font-weight:800;color:#fff}" +
+            "#modalCargaLenta .gl-carga-prompt-card p{margin:0 0 16px;font-size:14px;line-height:1.5;color:#c5d0e6;font-weight:500}" +
+            "#modalCargaLenta .gl-carga-prompt-actions{display:flex;flex-wrap:wrap;gap:8px}" +
+            "#modalCargaLenta .gl-carga-prompt-actions button{flex:1 1 140px;border:0;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer}" +
+            "#modalCargaLenta .gl-carga-lenta-seguir{background:#1f3b63;color:#fff}" +
+            "#modalCargaLenta .gl-carga-lenta-reiniciar{background:#58a6ff;color:#081018}" +
+            ".gl-carga-progress{margin:14px auto 0;width:min(240px,72vw);text-align:center}" +
+            ".gl-carga-progress-track{height:7px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}" +
+            ".gl-carga-progress-fill{height:100%;width:0%;border-radius:99px;background:#3ddc97;box-shadow:0 0 12px rgba(61,220,151,.55)}" +
+            ".gl-carga-progress-label{margin-top:7px;font-size:11px;font-weight:700;letter-spacing:.2px;color:rgba(232,240,255,.78)}" +
+            ".global-loading .loading-box .gl-carga-progress,.gl-carga-box .gl-carga-progress{display:block}";
+
+    if (!document.getElementById("globalLoading") && !document.getElementById("overlayCargaTablas")) {
+        var overlay = document.createElement("div");
+        overlay.id = "overlayCargaTablas";
+        overlay.className = "gl-carga-overlay hidden";
+        overlay.innerHTML =
+            '<div class="gl-carga-box">' +
+            '<div class="gl-carga-spinner"></div>' +
+            '<div class="gl-carga-text loading-text">Cargando tablas...</div>' +
+            '<div class="gl-carga-progress">' +
+            '<div class="gl-carga-progress-track"><div class="gl-carga-progress-fill"></div></div>' +
+            '<div class="gl-carga-progress-label">' + _textoRestanteCargaTablas(_msCargaTablasLenta()) + '</div>' +
+            "</div>" +
+            "</div>";
+        document.body.appendChild(overlay);
+        _vincularBotonesCargaLenta();
+    }
+
+    _asegurarPromptCargaTablas();
+}
+
+function _overlayCargaTablasEl() {
+    return document.getElementById("globalLoading") || document.getElementById("overlayCargaTablas");
+}
+
+function _asegurarBarraCargaTablas(overlay) {
+    if (!overlay) return null;
+    var box = overlay.querySelector(".loading-box, .gl-carga-box");
+    if (!box) return null;
+    var wrap = box.querySelector(".gl-carga-progress");
+    if (!wrap) {
+        wrap = document.createElement("div");
+        wrap.className = "gl-carga-progress";
+        wrap.innerHTML =
+            '<div class="gl-carga-progress-track"><div class="gl-carga-progress-fill"></div></div>' +
+            '<div class="gl-carga-progress-label">' + _textoRestanteCargaTablas(_msCargaTablasLenta()) + '</div>';
+        box.appendChild(wrap);
+    }
+    return wrap;
+}
+
+function _colorBarraCargaTablas(p) {
+    var hue = Math.round(145 - (145 * Math.min(1, Math.max(0, p))));
+    return "hsl(" + hue + ", 85%, 55%)";
+}
+
+function _textoRelojCargaTablas(ms) {
+    var total = Math.max(0, Math.floor(ms / 1000));
+    var m = Math.floor(total / 60);
+    var s = total % 60;
+    return m + ":" + (s < 10 ? "0" : "") + s;
+}
+
+function _textoRestanteCargaTablas(msRestantes) {
+    return _textoRelojCargaTablas(Math.ceil(Math.max(0, msRestantes) / 1000) * 1000);
+}
+
+function _detenerBarraCargaTablas() {
+    if (_cargaTablasProgressRaf) {
+        cancelAnimationFrame(_cargaTablasProgressRaf);
+        _cargaTablasProgressRaf = null;
+    }
+}
+
+function _iniciarBarraCargaTablas(reiniciar) {
+    _detenerBarraCargaTablas();
+    var overlay = _overlayCargaTablasEl();
+    var wrap = _asegurarBarraCargaTablas(overlay);
+    if (!wrap) return;
+
+    var fill = wrap.querySelector(".gl-carga-progress-fill");
+    var label = wrap.querySelector(".gl-carga-progress-label");
+    var token = _cargaTablasToken;
+    var intervalo = _msCargaTablasLenta();
+
+    if (reiniciar !== false) {
+        _cargaTablasProgressStart = _ahoraCargaTablas();
+        _cargaTablasSiguienteAvisoMs = intervalo;
+        _cargaTablasModalVisible = false;
+    }
+
+    function tick(now) {
+        if (token !== _cargaTablasToken) return;
+        var elapsed = now - _cargaTablasProgressStart;
+        var vencido = elapsed >= intervalo;
+        var p = Math.min(1, elapsed / intervalo);
+        var color = _colorBarraCargaTablas(p);
+        if (fill) {
+            fill.style.width = (p * 100).toFixed(2) + "%";
+            fill.style.background = color;
+            fill.style.boxShadow = "0 0 12px " + color;
+        }
+        if (label) {
+            label.style.color = color;
+            label.textContent = vencido
+                ? _textoRelojCargaTablas(elapsed)
+                : _textoRestanteCargaTablas(intervalo - elapsed);
+        }
+        if (!_cargaTablasModalVisible && elapsed >= _cargaTablasSiguienteAvisoMs) {
+            _mostrarModalCargaLenta();
+        }
+        _cargaTablasProgressRaf = requestAnimationFrame(tick);
+    }
+
+    _cargaTablasProgressRaf = requestAnimationFrame(tick);
+}
+
+function _mostrarModalCargaLenta() {
+    asegurarUICargaTablas();
+    _cargaTablasModalVisible = true;
+    var prompt = _asegurarPromptCargaTablas();
+    if (!prompt) return;
+    var elapsed = _ahoraCargaTablas() - _cargaTablasProgressStart;
+    var p = prompt.querySelector(".gl-carga-prompt-card p");
+    if (p) p.textContent = _textoPromptCargaLenta(elapsed);
+    prompt.classList.remove("hidden");
+}
+
+function _continuarEsperandoCargaLenta() {
+    var intervalo = _msCargaTablasLenta();
+    var elapsed = _ahoraCargaTablas() - _cargaTablasProgressStart;
+    _cargaTablasSiguienteAvisoMs = (Math.floor(elapsed / intervalo) + 1) * intervalo;
+    var modal = document.getElementById("modalCargaLenta");
+    if (modal) modal.classList.add("hidden");
+    _cargaTablasModalVisible = false;
+    if (!_cargaTablasProgressRaf) _iniciarBarraCargaTablas(false);
+}
+
+function _programarAvisoCargaLenta() {
+    if (_cargaTablasTimer) {
+        clearTimeout(_cargaTablasTimer);
+        _cargaTablasTimer = null;
+    }
+    _iniciarBarraCargaTablas(true);
+}
+
+function ocultarModalCargaLenta() {
+    var modal = document.getElementById("modalCargaLenta");
+    if (modal) modal.classList.add("hidden");
+    _cargaTablasModalVisible = false;
+}
+
+function iniciarAvisoCargaLenta(options) {
+    asegurarUICargaTablas();
+    _cargaTablasToken += 1;
+    _cargaTablasOpts = options || {};
+    ocultarModalCargaLenta();
+    _programarAvisoCargaLenta();
+    return _cargaTablasToken;
+}
+
+function cargaTablasTokenActual() {
+    return _cargaTablasToken;
+}
+
+function detenerAvisoCargaLenta() {
+    _cargaTablasToken += 1;
+    if (_cargaTablasTimer) {
+        clearTimeout(_cargaTablasTimer);
+        _cargaTablasTimer = null;
+    }
+    _detenerBarraCargaTablas();
+    _cargaTablasModalVisible = false;
+    ocultarModalCargaLenta();
+}
+
+function mostrarCargaTablas(text, options) {
+    asegurarUICargaTablas();
+    var overlay = _overlayCargaTablasEl();
+    if (overlay) {
+        overlay.classList.remove("hidden");
+        var msg = overlay.querySelector(".loading-text, .gl-carga-text");
+        if (msg) msg.textContent = text || "Cargando tablas...";
+    }
+    document.body.classList.add("loading");
+    return iniciarAvisoCargaLenta(options);
+}
+
+function ocultarCargaTablas(token) {
+    if (token != null && token !== _cargaTablasToken) return;
+    detenerAvisoCargaLenta();
+    var overlay = _overlayCargaTablasEl();
+    if (overlay) overlay.classList.add("hidden");
+    document.body.classList.remove("loading");
 }

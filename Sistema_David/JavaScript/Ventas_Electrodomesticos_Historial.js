@@ -4,11 +4,22 @@
 
 let gridVentas = null;
 let gridVentasPendientes = null;
+let gridVentasEliminadas = null;
 let ventasCache = [];
 let ventaSeleccionada = null;
 let rowAbierto = null;
 
-const userSession = JSON.parse(localStorage.getItem('usuario'));
+const userSession = JSON.parse(localStorage.getItem('usuario') || 'null') || {};
+
+function escapeHtml(str) {
+    return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 const esVendedor = (userSession && Number(userSession.IdRol) === 2);
 
 let ventaClickeadaId = null; // NUEVO: la fila que el usuario clickeó
@@ -30,6 +41,7 @@ const columnConfig = [
 
 const VE_HIST_COL_FILTER_MAIN = "ve_hist_col_filtros_main";
 const VE_HIST_COL_FILTER_PEND = "ve_hist_col_filtros_pend";
+const VE_HIST_FILTROS_KEY = "ve_hist_filtros_v1";
 const VE_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
 
 
@@ -139,45 +151,99 @@ function toggleFiltros() {
     const form = $("#formFiltros");
     form.toggleClass("d-none");
     $("#iconFiltros").toggleClass("fa-chevron-down fa-chevron-up");
+    guardarFiltrosHistorial();
+}
+
+function fechasDefaultHistorial() {
+    if (Number(userSession.IdRol) === 1) {
+        return {
+            desde: moment().add(-30, "days").format("YYYY-MM-DD"),
+            hasta: moment().format("YYYY-MM-DD")
+        };
+    }
+    return {
+        desde: moment().format("YYYY-MM-DD"),
+        hasta: moment().format("YYYY-MM-DD")
+    };
+}
+
+function guardarFiltrosHistorial() {
+    try {
+        const estado = {
+            desde: $("#txtFechaDesde").val() || "",
+            hasta: $("#txtFechaHasta").val() || "",
+            vendedor: $("#filtroVendedor").val() ?? "",
+            estado: $("#filtroEstado").val() ?? "",
+            filtrosAbiertos: !$("#formFiltros").hasClass("d-none") && !$("#formFiltros").attr("hidden")
+        };
+        localStorage.setItem(VE_HIST_FILTROS_KEY, JSON.stringify(estado));
+    } catch (e) {
+        console.warn("No se pudieron guardar filtros de historial", e);
+    }
+}
+
+function restaurarFiltrosHistorial() {
+    try {
+        const raw = localStorage.getItem(VE_HIST_FILTROS_KEY);
+        if (!raw) return false;
+
+        const estado = JSON.parse(raw);
+        if (!estado || typeof estado !== "object") return false;
+
+        if (estado.desde) $("#txtFechaDesde").val(estado.desde);
+        if (estado.hasta) $("#txtFechaHasta").val(estado.hasta);
+
+        if (estado.vendedor !== undefined && estado.vendedor !== null && estado.vendedor !== "") {
+            const $vend = $("#filtroVendedor");
+            if ($vend.find(`option[value="${estado.vendedor}"]`).length) {
+                $vend.val(String(estado.vendedor));
+            }
+        }
+
+        if (estado.estado !== undefined && estado.estado !== null) {
+            $("#filtroEstado").val(estado.estado);
+        }
+
+        // Si había filtros guardados, mostrar el panel (admin/comprobantes).
+        if (estado.filtrosAbiertos && (Number(userSession.IdRol) === 1 || Number(userSession.IdRol) === 4)) {
+            $("#formFiltros").removeClass("d-none");
+            $("#iconFiltros").removeClass("fa-chevron-down").addClass("fa-chevron-up");
+        }
+
+        return true;
+    } catch (e) {
+        console.warn("No se pudieron restaurar filtros de historial", e);
+        return false;
+    }
 }
 
 async function iniciarFiltros() {
 
- 
-
-    await cargarUsuarios()
+    await cargarUsuarios();
 
     if (userSession.IdRol == 1 || userSession.IdRol == 4) { //ROL ADMINISTRADOR
         $("#formFiltros").removeAttr("hidden");
         $("#btnToggleFiltros").removeAttr("hidden");
     }
 
-    var FechaDesde, FechaHasta;
+    const def = fechasDefaultHistorial();
+    $("#txtFechaDesde").val(def.desde);
+    $("#txtFechaHasta").val(def.hasta);
 
     if (userSession.IdRol == 1) {
-        FechaDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
-        FechaHasta = moment().format('YYYY-MM-DD');
         document.getElementById("btnLimite").style.display = "block";
     } else if (userSession.IdRol == 4) {
-        FechaDesde = moment().format('YYYY-MM-DD');
-        FechaHasta = moment().format('YYYY-MM-DD');
         document.getElementById("btnLimite").style.display = "block";
-    } else {
-        FechaDesde = moment().format('YYYY-MM-DD');
-        FechaHasta = moment().format('YYYY-MM-DD');
-
     }
 
     if (userSession.IdRol != 4 && userSession.IdRol != 1) {
         $("#filtroEstado").val("Pendiente");
     }
 
-    $("#txtFechaDesde").val(FechaDesde);
-    $("#txtFechaHasta").val(FechaHasta);
-
+    // Restaurar después de defaults + combo de vendedores cargado.
+    restaurarFiltrosHistorial();
 
     cargarTabla();
-
 }
 
 function aplicarFiltros() {
@@ -198,29 +264,32 @@ function aplicarFiltros() {
         }
     }
 
+    guardarFiltrosHistorial();
     cargarTabla();
 }
 
 async function limpiarFiltros() {
 
-    
-    if (userSession.IdRol == 1) {
-        var FechaDesde = moment().add(-30, 'days').format('YYYY-MM-DD');
-        var FechaHasta = moment().format('YYYY-MM-DD');
-        $("#txtFechaDesde").val(FechaDesde);
-        $("#txtFechaHasta").val(FechaHasta);
-    } else if (userSession.IdRol == 4) {
-        var FechaDesde = moment().format('YYYY-MM-DD');
-        var FechaHasta = moment().format('YYYY-MM-DD');
-        $("#txtFechaDesde").val(FechaDesde);
-        $("#txtFechaHasta").val(FechaHasta);
+    const def = fechasDefaultHistorial();
+
+    if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+        $("#txtFechaDesde").val(def.desde);
+        $("#txtFechaHasta").val(def.hasta);
     } else {
         $("#txtFechaDesde").val("");
         $("#txtFechaHasta").val("");
     }
 
     $("#filtroEstado").val("");
-    $("#filtroVendedor").val("");
+    // Admin: "Todos" es -1
+    if ($("#filtroVendedor option[value='-1']").length) {
+        $("#filtroVendedor").val("-1");
+    } else {
+        $("#filtroVendedor").val("");
+    }
+
+    try { localStorage.removeItem(VE_HIST_FILTROS_KEY); } catch (_) { }
+    guardarFiltrosHistorial();
     cargarTabla();
 }
 
@@ -232,26 +301,58 @@ async function cargarTabla() {
     const estado = $("#filtroEstado").val();
     const vendedor = $("#filtroVendedor").val();
 
+    abortarXhrCargaTablas(window._xhrHistorialVentas);
+    const genCarga = mostrarCargaTablas("Cargando tablas...", {
+        abort: function () {
+            abortarXhrCargaTablas(window._xhrHistorialVentas);
+        },
+        onReiniciarFiltros: function () {
+            limpiarFiltros();
+        }
+    });
+
     let resp;
     try {
-        resp = await $.getJSON("/Ventas_Electrodomesticos/GetHistorialVentas", {
+        window._xhrHistorialVentas = $.getJSON("/Ventas_Electrodomesticos/GetHistorialVentas", {
             fechaDesde: desde || null,
             fechaHasta: hasta || null,
             estado: estado,
             IdVendedor: vendedor
         });
+        resp = await window._xhrHistorialVentas;
     } catch (e) {
+        if (esAbortAjax(e)) return;
         console.error("Error cargando ventas", e);
+        alert("Error al cargar el historial de ventas.");
+        ocultarCargaTablas(genCarga);
         return;
     }
 
-    ventasCache = resp.data || [];
-    actualizarKPIs(resp.kpis || {});
-    renderTabla(ventasCache);
+    try {
+        if (resp && resp.success === false) {
+            console.error("Historial ventas:", resp.message);
+            alert(resp.message || "Error al cargar el historial de ventas.");
+            ventasCache = [];
+            actualizarKPIs({});
+            if (gridVentas) {
+                gridVentas.clear().draw();
+            }
+            return;
+        }
 
+        ventasCache = resp.data || [];
+        actualizarKPIs(resp.kpis || {});
+        renderTabla(ventasCache);
 
-    if (userSession.IdRol == 1 || userSession.IdRol == 4) {
-        await VC.cargarVentasPendientes();
+        if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+            await VC.cargarVentasPendientes();
+        }
+
+        if (userSession.IdRol == 1) {
+            await cargarVentasEliminadas();
+        }
+    } finally {
+        ocultarCargaTablas(genCarga);
     }
 }
 
@@ -1153,13 +1254,85 @@ async function preguntarDevolverStockVendedor() {
     `);
 }
 
+async function preguntarMotivoEliminacion() {
+    const modalEl = document.getElementById("modalMotivoEliminacion");
+    const input = document.getElementById("inputMotivoElimVenta");
+    const wrap = input?.closest(".elim-textarea-wrap");
+    const errorEl = document.getElementById("motivoElimError");
+    const countEl = document.getElementById("motivoElimCount");
+    const btnOk = document.getElementById("btnMotivoElimContinuar");
+
+    if (!modalEl || !input || !btnOk) {
+        console.warn("Modal motivo eliminación no encontrado");
+        return null;
+    }
+
+    return new Promise((resolve) => {
+        input.value = "";
+        errorEl?.classList.add("d-none");
+        wrap?.classList.remove("is-invalid");
+        if (countEl) countEl.textContent = "0";
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl, {
+            backdrop: "static",
+            keyboard: false
+        });
+
+        let resuelto = false;
+
+        const actualizarContador = () => {
+            if (countEl) countEl.textContent = String(input.value.length);
+            if (input.value.trim()) {
+                errorEl?.classList.add("d-none");
+                wrap?.classList.remove("is-invalid");
+            }
+        };
+
+        const limpiar = () => {
+            input.removeEventListener("input", actualizarContador);
+            btnOk.onclick = null;
+        };
+
+        input.addEventListener("input", actualizarContador);
+
+        btnOk.onclick = () => {
+            const val = input.value.trim();
+            if (!val) {
+                errorEl?.classList.remove("d-none");
+                wrap?.classList.add("is-invalid");
+                input.focus();
+                return;
+            }
+
+            resuelto = true;
+            limpiar();
+            modal.hide();
+            resolve(val);
+        };
+
+        modalEl.addEventListener("hidden.bs.modal", function onHidden() {
+            modalEl.removeEventListener("hidden.bs.modal", onHidden);
+            limpiar();
+            wrap?.classList.remove("is-invalid");
+            if (!resuelto) resolve(null);
+        });
+
+        modal.show();
+        setTimeout(() => input.focus(), 250);
+    });
+}
+
 async function eliminarVenta(id) {
 
     try {
 
+        const motivo = await preguntarMotivoEliminacion();
+        if (!motivo) return;
+
         const confirmar = await confirmarModal(`
             ¿Está seguro que desea
             <b style="color:#dc3545">ELIMINAR</b> esta venta?
+            <div class="small text-muted mt-2">Motivo: ${escapeHtml(motivo)}</div>
         `);
 
         if (!confirmar) return;
@@ -1168,7 +1341,7 @@ async function eliminarVenta(id) {
 
         let resp = await $.post(
             "/Ventas_Electrodomesticos/EliminarVenta",
-            { id: id, forzar: false, devolverStock }
+            { id: id, motivo: motivo, forzar: false, devolverStock }
         );
 
         if (resp && resp.tienePagos) {
@@ -1182,11 +1355,9 @@ async function eliminarVenta(id) {
 
             if (!confirmarPagos) return;
 
-            devolverStock = await preguntarDevolverStockVendedor() ? 1 : 0;
-
             resp = await $.post(
                 "/Ventas_Electrodomesticos/EliminarVenta",
-                { id: id, forzar: true, devolverStock }
+                { id: id, motivo: motivo, forzar: true, devolverStock }
             );
         }
 
@@ -1207,6 +1378,157 @@ async function eliminarVenta(id) {
         console.error(e);
         alert("Error de conexión con el servidor");
     }
+}
+
+async function restaurarVentaEliminada(id, stockDevueltoAlArchivar) {
+    try {
+        const avisoStock = stockDevueltoAlArchivar
+            ? `<div class="small text-warning mt-2">Al eliminar se devolvió stock al vendedor: al restaurar se volverá a descontar.</div>`
+            : `<div class="small text-muted mt-2">El stock del vendedor no cambiará (no se había devuelto al eliminar).</div>`;
+
+        const confirmar = await confirmarModal(`
+            ¿Desea <b style="color:#198754">RESTAURAR</b> esta venta?
+            <div class="small text-muted mt-2">Volverá a pendientes de confirmación.</div>
+            ${avisoStock}
+        `);
+        if (!confirmar) return;
+
+        const resp = await $.post("/Ventas_Electrodomesticos/RestaurarVenta", { id });
+        if (!resp || !resp.success) {
+            alert(resp?.message || "Error al restaurar la venta");
+            return;
+        }
+
+        exitoModal(resp.message || "Venta restaurada.");
+        await cargarTabla();
+    } catch (e) {
+        console.error(e);
+        alert("Error de conexión con el servidor");
+    }
+}
+
+async function eliminarVentaDefinitiva(id) {
+    try {
+        const confirmar = await confirmarModal(`
+            ¿Eliminar <b style="color:#dc3545">DEFINITIVAMENTE</b> esta venta?
+            <div class="small text-muted mt-2">Se borrarán cuotas, pagos e historial. No se puede deshacer.</div>
+        `);
+        if (!confirmar) return;
+
+        let resp = await $.post(
+            "/Ventas_Electrodomesticos/EliminarVentaDefinitiva",
+            { id, forzar: false }
+        );
+
+        if (resp && resp.tienePagos) {
+            const confirmarPagos = await confirmarModal(`
+                <span style="color:#dc3545; font-weight:bold">
+                    ⚠ Esta venta tiene pagos registrados
+                </span><br>
+                ¿Desea borrarla definitivamente igual?
+            `);
+            if (!confirmarPagos) return;
+
+            resp = await $.post(
+                "/Ventas_Electrodomesticos/EliminarVentaDefinitiva",
+                { id, forzar: true }
+            );
+        }
+
+        if (!resp || !resp.success) {
+            alert(resp?.message || "Error al eliminar la venta");
+            return;
+        }
+
+        exitoModal("Venta eliminada definitivamente.");
+        await cargarVentasEliminadas();
+    } catch (e) {
+        console.error(e);
+        alert("Error de conexión con el servidor");
+    }
+}
+
+async function cargarVentasEliminadas() {
+    if (Number(userSession?.IdRol) !== 1) {
+        $("#cardVentasEliminadas").attr("hidden", true);
+        return;
+    }
+
+    let resp;
+    try {
+        resp = await $.getJSON("/Ventas_Electrodomesticos/GetVentasEliminadas", { idVendedor: 0 });
+    } catch (e) {
+        console.error("Error cargando ventas eliminadas", e);
+        return;
+    }
+
+    if (!resp || !resp.success) {
+        console.warn(resp?.message || "No se pudieron cargar ventas eliminadas");
+        return;
+    }
+
+    const data = resp.data || [];
+
+    if (data.length === 0) {
+        $("#cardVentasEliminadas").attr("hidden", true);
+        if (gridVentasEliminadas) {
+            gridVentasEliminadas.destroy();
+            gridVentasEliminadas = null;
+        }
+        return;
+    }
+
+    $("#cardVentasEliminadas").removeAttr("hidden");
+
+    if (gridVentasEliminadas) {
+        gridVentasEliminadas.destroy();
+        gridVentasEliminadas = null;
+    }
+
+    gridVentasEliminadas = $("#grdVentasEliminadas").DataTable({
+        destroy: true,
+        data,
+        pageLength: 25,
+        responsive: false,
+        scrollX: true,
+        language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+        columns: [
+            { data: "IdVenta" },
+            { data: "Fecha", render: x => x ? moment(x).format("DD/MM/YYYY") : "-" },
+            {
+                data: "FechaEliminacion",
+                render: x => x ? moment(x).format("DD/MM/YYYY HH:mm") : "-"
+            },
+            { data: "Cliente" },
+            { data: "Vendedor" },
+            {
+                data: "MotivoEliminacion",
+                render: x => `<span class="text-wrap">${escapeHtml(x || "-")}</span>`
+            },
+            { data: "Total", render: x => fmt(x || 0) },
+            {
+                data: null,
+                orderable: false,
+                className: "text-center",
+                render: (row) => {
+                    const id = row.IdVenta;
+                    return `
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn-accion btn-aprobar"
+                                    title="Restaurar venta"
+                                    onclick="restaurarVentaEliminada(${id}, ${row.StockDevueltoAlArchivar ? 1 : 0})">
+                                <i class="fa fa-undo"></i>
+                            </button>
+                            <button class="btn-accion btn-eliminar"
+                                    title="Eliminar definitivamente"
+                                    onclick="eliminarVentaDefinitiva(${id})">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>`;
+                }
+            }
+        ]
+    });
 }
 
 /* ------------ PDF INDIVIDUAL ------------ */

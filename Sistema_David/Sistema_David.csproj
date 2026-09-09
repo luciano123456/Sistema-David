@@ -528,6 +528,7 @@
     <Compile Include="Models\ClientesModel.cs" />
     <Compile Include="Models\Modelo\VMProducto.cs" />
     <Compile Include="Models\Modelo\VMRendimiento.cs" />
+    <Compile Include="Models\Modelo\VMAnalisisRendimiento.cs" />
     <Compile Include="Models\Modelo\VMCuentaBancariaConVentas.cs" />
     <Compile Include="Models\Modelo\VMUser.cs" />
     <Compile Include="Models\Modelo\VMPedido.cs" />
@@ -539,6 +540,7 @@
     <Compile Include="Models\StockPendienteModel.cs" />
     <Compile Include="Models\StockModel.cs" />
     <Compile Include="Models\CobranzasModel.cs" />
+    <Compile Include="Models\RendimientoAnalisisModel.cs" />
     <Compile Include="Models\RendimientoModel.cs" />
     <Compile Include="Models\PedidosModel.cs" />
     <Compile Include="Models\PayrollModel.cs" />
@@ -590,9 +592,11 @@
     <Content Include="Estilos\ReprogAtrasadasModal.css" />
     <Content Include="Estilos\Clientes.css" />
     <Content Include="Estilos\Rendimiento.css" />
+    <Content Include="Estilos\RendimientoAnalisis.css" />
     <Content Include="Estilos\Pedidos.css" />
     <Content Include="Estilos\PedidosNuevo.css" />
     <Content Include="Estilos\Cobranzas.css" />
+    <Content Include="Estilos\CuentasBancarias.css" />
     <Content Include="Estilos\NavBarLogin.css" />
     <Content Include="Estilos\VentasNuevo.css" />
     <Content Include="Estilos\Ventas.css" />
@@ -653,6 +657,7 @@
     <Content Include="JavaScript\Login.js" />
     <Content Include="JavaScript\Productos.js" />
     <Content Include="JavaScript\Rendimiento.js" />
+    <Content Include="JavaScript\RendimientoAnalisis.js" />
     <Content Include="JavaScript\Pagos.js" />
     <Content Include="JavaScript\Usuarios.js" />
     <Content Include="JavaScript\Utils\Utils.js" />
@@ -742,6 +747,7 @@
     <Content Include="Views\Pagos\NuevoModif.cshtml" />
     <Content Include="Views\Productos\Index.cshtml" />
     <Content Include="Views\Rendimiento\Index.cshtml" />
+    <Content Include="Views\Rendimiento\Analisis.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\Partials\NavBarLogin.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />

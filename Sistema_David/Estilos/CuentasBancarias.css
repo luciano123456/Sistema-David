@@ -1,0 +1,553 @@
+/* =========================================================
+   Cuentas Bancarias — modal oscuro responsive
+   Gama alineada a Cobranzas (indumentaria)
+   ========================================================= */
+
+.cb-bank-modal.cb-modal-shell .modal-dialog {
+    max-width: 1100px;
+    margin: 0.75rem auto;
+}
+
+.cb-bank-modal .modal-content {
+    background: linear-gradient(165deg, #172036 0%, #0f1628 55%, #0a101c 100%);
+    color: #e8eef9;
+    border: 1px solid rgba(88, 166, 255, 0.28);
+    border-radius: 18px;
+    box-shadow: 0 28px 56px rgba(0, 0, 0, 0.55);
+    overflow: hidden;
+}
+
+.cb-bank-modal .cb-modal-header {
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.18);
+    background: rgba(8, 14, 28, 0.55);
+}
+
+.cb-bank-modal .cb-modal-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cb-bank-modal .cb-modal-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #0ea5e9, #0369a1);
+    color: #fff;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.cb-bank-modal .modal-title {
+    color: #f0f5ff !important;
+    font-size: 1.15rem;
+}
+
+.cb-bank-modal .cb-bank-subtitle {
+    color: rgba(168, 190, 230, 0.72);
+    font-size: 0.78rem;
+    margin-top: 0.1rem;
+}
+
+.cb-bank-modal .cb-modal-close {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(118, 158, 255, 0.28);
+    color: #dbe6ff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+}
+
+.cb-bank-modal .cb-modal-close:hover {
+    background: rgba(88, 166, 255, 0.16);
+    color: #fff;
+}
+
+.cb-bank-modal .cb-bank-body {
+    padding: 1rem 1.15rem 1.25rem;
+    color: #e5ecf9;
+}
+
+/* Toolbar */
+.cb-bank-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+}
+
+.cb-bank-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-radius: 999px;
+    border: 1px solid rgba(118, 158, 255, 0.35);
+    background: rgba(12, 23, 49, 0.9);
+    color: #dbe6ff;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.cb-bank-toggle-btn:hover {
+    background: rgba(88, 166, 255, 0.14);
+    color: #fff;
+    border-color: rgba(88, 166, 255, 0.55);
+}
+
+.cb-bank-toggle-btn i {
+    color: #f87171;
+}
+
+.cb-bank-toggle-btn.is-showing-inactive i {
+    color: #6ee7b7;
+}
+
+/* Layout: lista + detalle */
+.cb-bank-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.cb-bank-list-panel,
+.cb-bank-detail-panel {
+    background: rgba(8, 14, 28, 0.45);
+    border: 1px solid rgba(88, 166, 255, 0.18);
+    border-radius: 14px;
+    padding: 0.85rem;
+}
+
+.cb-bank-panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.7rem;
+    color: #c9d6ef;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.cb-bank-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    max-height: min(38vh, 280px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.2rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cb-bank-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cb-bank-list::-webkit-scrollbar-thumb {
+    background: rgba(88, 166, 255, 0.35);
+    border-radius: 999px;
+}
+
+/* Card de cuenta */
+.cb-bank-card {
+    display: flex;
+    align-items: stretch;
+    gap: 0.55rem;
+    width: 100%;
+    text-align: left;
+    border-radius: 12px;
+    border: 1px solid rgba(118, 158, 255, 0.22);
+    background: linear-gradient(145deg, rgba(20, 32, 58, 0.95), rgba(12, 20, 40, 0.95));
+    color: #e8eef9;
+    padding: 0.7rem 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.cb-bank-card:hover {
+    border-color: rgba(88, 166, 255, 0.5);
+    background: rgba(30, 48, 82, 0.95);
+}
+
+.cb-bank-card.active {
+    border-color: rgba(14, 165, 233, 0.85);
+    box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.35), inset 0 0 0 1px rgba(14, 165, 233, 0.15);
+    background: linear-gradient(145deg, rgba(14, 165, 233, 0.18), rgba(12, 23, 49, 0.95));
+}
+
+.cb-bank-card.bloqueado,
+.cb-bank-card.is-inactive {
+    border-color: rgba(248, 113, 113, 0.45);
+    background: linear-gradient(145deg, rgba(90, 24, 24, 0.55), rgba(28, 12, 18, 0.9));
+}
+
+.cb-bank-card-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.cb-bank-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(14, 165, 233, 0.18);
+    color: #7dd3fc;
+    font-size: 0.95rem;
+}
+
+.cb-bank-card.is-inactive .cb-bank-card-icon {
+    background: rgba(248, 113, 113, 0.2);
+    color: #fca5a5;
+}
+
+.cb-bank-card-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.cb-bank-card-name {
+    font-weight: 700;
+    font-size: 0.92rem;
+    line-height: 1.25;
+    color: #f0f5ff;
+    word-break: break-word;
+}
+
+.cb-bank-card-meta {
+    margin-top: 0.2rem;
+    font-size: 0.75rem;
+    color: rgba(168, 190, 230, 0.78);
+    word-break: break-all;
+}
+
+.cb-bank-card-progress {
+    margin-top: 0.45rem;
+}
+
+.cb-bank-mini-bar {
+    position: relative;
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.cb-bank-mini-bar .progress-bar {
+    height: 100%;
+    border-radius: 999px;
+}
+
+.cb-bank-mini-pct {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 2px #000;
+    pointer-events: none;
+}
+
+.cb-bank-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex-shrink: 0;
+}
+
+.cb-bank-card-actions .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.85rem;
+}
+
+.cb-bank-card-actions .btn-img {
+    background: rgba(148, 163, 184, 0.25);
+    color: #e2e8f0;
+}
+
+.cb-bank-card-actions .btn-edit {
+    background: rgba(245, 158, 11, 0.85);
+    color: #1a1205;
+}
+
+.cb-bank-card-actions .btn-del {
+    background: rgba(239, 68, 68, 0.9);
+    color: #fff;
+}
+
+.cb-bank-empty {
+    text-align: center;
+    padding: 1.4rem 0.75rem;
+    color: rgba(168, 190, 230, 0.65);
+    font-size: 0.9rem;
+}
+
+/* Detalle */
+.cb-bank-fields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+.cb-bank-field label {
+    display: block;
+    color: #9ec5ff !important;
+    font-weight: 600;
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+}
+
+.cb-bank-field .form-control {
+    background: #0c1731 !important;
+    color: #f0f5ff !important;
+    border: 1px solid rgba(118, 158, 255, 0.35) !important;
+    border-radius: 10px !important;
+    min-height: 42px;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.cb-bank-field .form-control:disabled {
+    background: rgba(12, 23, 49, 0.65) !important;
+    color: rgba(224, 232, 255, 0.72) !important;
+    opacity: 1;
+}
+
+.cb-bank-field .form-control:focus {
+    border-color: rgba(14, 165, 233, 0.7) !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
+}
+
+/* Progress detalle */
+.cb-bank-progress-wrap {
+    margin-top: 0.9rem;
+    padding: 0.85rem;
+    border-radius: 12px;
+    background: rgba(8, 14, 28, 0.55);
+    border: 1px solid rgba(88, 166, 255, 0.16);
+}
+
+.cb-bank-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.35rem 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.cb-bank-stats span {
+    color: #dbe6ff !important;
+}
+
+.cb-bank-stats .is-warn {
+    color: #fbbf24 !important;
+}
+
+.cb-bank-bar-track {
+    position: relative;
+    height: 22px;
+    margin: 0.55rem 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1) !important;
+    overflow: hidden;
+}
+
+.cb-bank-bar-track .progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.45s ease;
+}
+
+.progress-bar.low { background: linear-gradient(90deg, #ef4444, #f87171); }
+.progress-bar.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.progress-bar.high { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.progress-bar.full { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
+
+/* Switches */
+.cb-bank-switches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin-top: 0.9rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: 12px;
+    background: rgba(8, 14, 28, 0.4);
+    border: 1px solid rgba(88, 166, 255, 0.14);
+}
+
+.cb-bank-switches .form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0;
+    min-height: auto;
+    padding-left: 0;
+}
+
+.cb-bank-switches .form-check-label {
+    color: #dbe6ff !important;
+    margin: 0 !important;
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+
+.cb-bank-switches .form-check-input {
+    width: 2.4em;
+    height: 1.25em;
+    margin: 0;
+    float: none;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(118, 158, 255, 0.4);
+}
+
+.cb-bank-switches .form-check-input:checked {
+    background-color: #0ea5e9;
+    border-color: #0ea5e9;
+}
+
+/* Actions */
+.cb-bank-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    justify-content: stretch;
+}
+
+.cb-bank-actions .btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-height: 42px;
+    border-radius: 11px;
+    font-weight: 650;
+    border: none;
+}
+
+.cb-bank-actions .btn-pdf {
+    background: linear-gradient(135deg, #b91c1c, #ef4444);
+    color: #fff;
+}
+
+.cb-bank-actions .btn-add {
+    background: linear-gradient(135deg, #059669, #34d399);
+    color: #06251a;
+}
+
+.cb-bank-actions .btn-cancel {
+    background: rgba(248, 113, 113, 0.2);
+    color: #fecaca;
+    border: 1px solid rgba(248, 113, 113, 0.45) !important;
+}
+
+.cb-bank-actions .btn-save {
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    color: #041018;
+}
+
+.cb-bank-actions .btn-edit-save {
+    background: linear-gradient(135deg, #d97706, #fbbf24);
+    color: #1a1205;
+}
+
+#detalleVentas {
+    margin-top: 0.75rem;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+    .cb-bank-modal.cb-modal-shell .modal-dialog {
+        max-width: 1080px;
+        margin: 1.5rem auto;
+    }
+
+    .cb-bank-layout {
+        grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.35fr);
+        align-items: start;
+        gap: 1.1rem;
+    }
+
+    .cb-bank-list {
+        max-height: min(62vh, 520px);
+    }
+
+    .cb-bank-fields {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cb-bank-fields .cb-bank-field-full {
+        grid-column: 1 / -1;
+    }
+
+    .cb-bank-card-actions {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .cb-bank-actions {
+        justify-content: flex-end;
+    }
+
+    .cb-bank-actions .btn {
+        flex: 0 1 auto;
+        min-width: 130px;
+    }
+}
+
+/* Teléfonos chicos */
+@media (max-width: 575.98px) {
+    .cb-bank-modal.cb-modal-shell .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+
+    .cb-bank-modal .modal-content {
+        border-radius: 0;
+        min-height: 100%;
+        border-left: none;
+        border-right: none;
+    }
+
+    .cb-bank-modal .cb-bank-body {
+        padding: 0.85rem;
+    }
+
+    .cb-bank-list {
+        max-height: 42vh;
+    }
+
+    .cb-bank-card {
+        padding: 0.65rem;
+    }
+
+    .cb-bank-actions .btn {
+        flex: 1 1 100%;
+    }
+
+    .cb-bank-modal .modal-title {
+        font-size: 1.05rem;
+    }
+}

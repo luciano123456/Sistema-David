@@ -24,6 +24,10 @@ namespace Sistema_David.Models.ViewModels
         public decimal PorcentajePago { get; set; }
         public int CuotasVencidas { get; set; }
         public string Estado { get; set; }
+        public string MotivoEliminacion { get; set; }
+        public DateTime? FechaEliminacion { get; set; }
+        public bool Eliminada { get; set; }
+        public bool StockDevueltoAlArchivar { get; set; }
 
         // Para desplegar cuotas en tabla
         public List<VM_HistorialCuota> Cuotas { get; set; } = new List<VM_HistorialCuota>();
