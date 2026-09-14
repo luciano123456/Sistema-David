@@ -20,6 +20,11 @@
 </head>
 
 <body>
+@{
+    var navSesion = Sistema_David.Helpers.SessionHelper.GetUsuarioSesion();
+    var navRol = (navSesion != null && navSesion.IdRol.HasValue) ? navSesion.IdRol.Value : 0;
+    var navVeProductos = navRol == 1 || navRol == 4;
+}
 
     <nav class="navbar navbar-expand-lg navbar-light" style="background-color: rgba(112,112,112,0.1);">
         <div class="container-fluid">
@@ -67,9 +72,9 @@
                         </a>
                     </li>
 
-                    <li class="nav-item" id="seccionProductos" hidden>
+                    <li class="nav-item" id="seccionProductos" @Html.Raw(navVeProductos ? "" : "hidden")>
                         <a class="nav-link" id="btnProductos" onclick="document.location.href='@Url.Content("~/Productos/Index/")'">
-                            Productos
+                            Productos <span id="badgeProdPendientes" class="badge bg-warning text-dark ms-1" hidden></span>
                         </a>
                     </li>
 
@@ -205,8 +210,8 @@
             </div>
         </div>
     </div>
-    <script src="~/JavaScript/Utils/Utils.js?v=3.14"></script>
-    <script src="~/JavaScript/NavBarLogin.js?v=2.5"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.17"></script>
+    <script src="~/JavaScript/NavBarLogin.js?v=2.9"></script>
 
 </body>
 </html>

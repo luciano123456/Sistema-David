@@ -389,7 +389,11 @@ VC.parseMoney = s => {
 
     return Math.ceil(num); // 🔥 sin decimales
 };
-VC.toast = function (msg, type = "info") {
+VC.toast = function (msg, type) {
+    if (typeof mostrarToast === "function") {
+        mostrarToast(msg, type || "info");
+        return;
+    }
     let cont = document.getElementById("toastContainerBR");
     if (!cont) {
         cont = document.createElement("div");
@@ -3834,6 +3838,8 @@ async function cancelarNuevaCuenta() {
 
 // Cargar cuentas bancarias desde el servidor
 async function loadCuentasBancarias(activo) {
+    if (!VC.esAdminOComprobantes()) return;
+
     var url = "/Cobranzas/ListaCuentasBancariasTotalesConInformacion";
     let value = JSON.stringify({ Activo: activo });
     let options = {
@@ -3857,6 +3863,8 @@ async function loadCuentasBancarias(activo) {
 
 // Abrir el modal de cuentas bancarias
 async function abrirModalCuentasBancarias() {
+    if (!VC.esAdminOComprobantes()) return;
+
     let toggleButton = $("#toggleBloqueadas");
 
     toggleButton

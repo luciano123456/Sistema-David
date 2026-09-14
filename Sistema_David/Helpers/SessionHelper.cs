@@ -64,5 +64,17 @@ namespace Sistema_David.Helpers
             else
                 return null;
         }
+
+        public static bool EsAdminOComprobantes()
+        {
+            var usuario = GetUsuarioSesion();
+            return usuario != null && (usuario.IdRol == 1 || usuario.IdRol == 4);
+        }
+
+        public static bool PuedeSeleccionarCuentaBancaria()
+        {
+            var usuario = GetUsuarioSesion();
+            return usuario != null && (usuario.IdRol == 1 || usuario.IdRol == 3 || usuario.IdRol == 4);
+        }
     }
 }

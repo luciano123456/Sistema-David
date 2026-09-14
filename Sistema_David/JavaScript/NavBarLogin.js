@@ -35,16 +35,35 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     await verificarRoles(userSession.IdRol);
+    if (userSession && userSession.IdRol == 1) {
+        try {
+            const r = await $.getJSON("/Productos/ContarPendientes");
+            const n = (r && r.Count) || 0;
+            const badge = document.getElementById("badgeProdPendientes");
+            if (badge && n > 0) {
+                badge.textContent = n;
+                badge.removeAttribute("hidden");
+            }
+        } catch (e) { }
+    }
 
     // ============================
     //  DROPDOWN ORIGINAL
     // ============================
+    function esDropdownProductos(el) {
+        if (!el || !el.closest) return false;
+        return !!el.closest('#prodDropColumnas, #prodDropMas, #prodHeadActions, .prod-head, .prod-root');
+    }
+
     var dropdownToggleList = document.querySelectorAll('.dropdown-toggle');
 
     dropdownToggleList.forEach(function (dropdownToggle) {
+        if (esDropdownProductos(dropdownToggle)) return;
+
         dropdownToggle.addEventListener('click', function (event) {
             event.preventDefault();
             var dropdownMenu = dropdownToggle.nextElementSibling;
+            if (!dropdownMenu) return;
             var isExpanded = dropdownToggle.getAttribute('aria-expanded') === 'true';
             dropdownToggle.setAttribute('aria-expanded', !isExpanded);
             dropdownMenu.classList.toggle('show');
@@ -58,8 +77,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (!isDropdownToggle && !isDropdownMenu) {
             var dropdownMenus = document.querySelectorAll('.dropdown-menu.show');
             dropdownMenus.forEach(function (dropdownMenu) {
+                if (esDropdownProductos(dropdownMenu)) return;
                 dropdownMenu.classList.remove('show');
-                dropdownMenu.previousElementSibling.setAttribute('aria-expanded', 'false');
+                if (dropdownMenu.previousElementSibling)
+                    dropdownMenu.previousElementSibling.setAttribute('aria-expanded', 'false');
             });
         }
     });
@@ -334,29 +355,33 @@ async function cerrarSession() {
 }
 
 function verificarRoles(idRol) {
+    function showSeccion(id) {
+        var el = document.getElementById(id);
+        if (el) el.removeAttribute("hidden");
+    }
 
     if (idRol == 1) { // ADMINISTRADOR
-        document.getElementById("seccionUsuarios").removeAttribute("hidden");
-        document.getElementById("seccionProductos").removeAttribute("hidden");
-        document.getElementById("seccionClientes").removeAttribute("hidden");
-        document.getElementById("seccionCobranzas").removeAttribute("hidden");
-        document.getElementById("seccionRendimiento").removeAttribute("hidden");
-        document.getElementById("seccionSueldos").removeAttribute("hidden");
+        showSeccion("seccionUsuarios");
+        showSeccion("seccionProductos");
+        showSeccion("seccionClientes");
+        showSeccion("seccionCobranzas");
+        showSeccion("seccionRendimiento");
+        showSeccion("seccionSueldos");
 
     } else if (idRol == 3) { // COBRADOR
-        document.getElementById("seccionCobranzas").removeAttribute("hidden");
-        document.getElementById("seccionClientesCero").removeAttribute("hidden");
-        document.getElementById("seccionStock").removeAttribute("hidden");
+        showSeccion("seccionCobranzas");
+        showSeccion("seccionClientesCero");
+        showSeccion("seccionStock");
 
     } else if (idRol == 4) { // COMPROBANTES
-        document.getElementById("seccionRendimiento").removeAttribute("hidden");
-        document.getElementById("seccionClientes").removeAttribute("hidden");
-        document.getElementById("seccionProductos").removeAttribute("hidden");
-        document.getElementById("seccionCobranzas").removeAttribute("hidden");
+        showSeccion("seccionRendimiento");
+        showSeccion("seccionClientes");
+        showSeccion("seccionProductos");
+        showSeccion("seccionCobranzas");
 
     } else { // VENDEDOR u otros
-        document.getElementById("seccionStock").removeAttribute("hidden");
-        document.getElementById("seccionClientesCero").removeAttribute("hidden");
+        showSeccion("seccionStock");
+        showSeccion("seccionClientesCero");
     }
 }
 

@@ -5,7 +5,7 @@
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
-<link href="~/Estilos/Productos.css?v=4.1" rel="stylesheet" />
+<link href="~/Estilos/Productos.css?v=7.7" rel="stylesheet" />
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
@@ -14,34 +14,83 @@
     @if (ViewData["ErrorPermisos"] == null)
     {
         <div class="container page-99 py-3">
-            <section class="cc-header mb-4">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                    <div class="d-flex align-items-center gap-3">
+            <section class="cc-header prod-head mb-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="prod-hero-main d-flex align-items-center gap-3">
                         <div class="cc-badge"><i class="fa fa-cubes"></i></div>
                         <div>
                             <h2 class="m-0 fw-800">Productos</h2>
-                            <div class="text-muted-cc">Catalogo, caracteristicas, financiacion y envio por WhatsApp</div>
+                            <div class="text-muted-cc prod-hero-sub">Catálogo, características, financiación y WhatsApp</div>
                         </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2 prod-toolbar-actions">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-light dropdown-toggle" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fa fa-cog me-1"></i> Config. columnas
+                    <div class="prod-toolbar-actions" id="prodHeadActions">
+                        <div class="prod-vista-toggle" id="prodVistaToggle" role="group" aria-label="Cambiar vista">
+                            <button type="button" data-vista="cards" id="btnProdVistaCards" title="Vista tarjetas">
+                                <i class="fa fa-th-large"></i><span>Cards</span>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-right cc-dropdown-menu" id="configColumnasMenu"></ul>
+                            <button type="button" data-vista="tabla" id="btnProdVistaTabla" title="Vista tabla">
+                                <i class="fa fa-table"></i><span>Tabla</span>
+                            </button>
                         </div>
-                        <a id="btnStockGeneral" class="btn btn-outline-info" onclick="abrirstockGeneral()"><i class="fa fa-archive me-1"></i> Stock General</a>
-                        <a id="btnImportarDatos" class="btn btn-outline-success" onclick="abrirmodalimportacionmasiva()" hidden><i class="fa fa-upload me-1"></i> Importar</a>
+                        <div class="dropdown prod-catalogo-only" id="prodDropColumnas">
+                            <button class="btn btn-outline-light dropdown-toggle" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-cog"></i><span> Columnas</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end cc-dropdown-menu" id="configColumnasMenu"></ul>
+                        </div>
+                        <div class="dropdown" id="prodDropMas">
+                            <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-ellipsis-v"></i><span> Más</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end cc-dropdown-menu">
+                                <li><a class="dropdown-item prod-admin-only" href="javascript:void(0)" onclick="abrirstockGeneral()" hidden id="btnStockGeneralMenu"><i class="fa fa-archive me-2"></i>Stock general</a></li>
+                                <li><a class="dropdown-item prod-admin-only" href="javascript:void(0)" onclick="abrirmodalimportacionmasiva()" hidden id="btnImportarMenu"><i class="fa fa-upload me-2"></i>Importar</a></li>
+                            </ul>
+                        </div>
+                        <a id="btnStockGeneral" class="btn btn-outline-info prod-admin-only prod-hide-mobile" hidden onclick="abrirstockGeneral()"><i class="fa fa-archive me-1"></i> Stock</a>
+                        <a id="btnImportarDatos" class="btn btn-outline-success prod-hide-mobile" onclick="abrirmodalimportacionmasiva()" hidden><i class="fa fa-upload me-1"></i> Importar</a>
                         <a id="btnNuevo" class="btn btn-primary" onclick="abrirmodal()" hidden><i class="fa fa-plus me-1"></i> Nuevo</a>
                     </div>
                 </div>
             </section>
 
+            <div class="prod-sec-tabs mb-3" id="prodSecTabs" role="tablist" hidden>
+                <button type="button" class="prod-sec-tab is-on" data-sec="catalogo"><i class="fa fa-cubes me-1"></i> Catálogo</button>
+                <button type="button" class="prod-sec-tab prod-admin-sec" data-sec="pendientes">
+                    <i class="fa fa-hourglass-half me-1"></i> Pendientes
+                    <span class="prod-pend-badge" id="prodPendCount" hidden>0</span>
+                </button>
+                <button type="button" class="prod-sec-tab prod-admin-sec" data-sec="historial"><i class="fa fa-clock-o me-1"></i> Historial</button>
+            </div>
+
             <div class="prod-kpi mb-3" id="divStock" hidden>
                 <span>Dinero en stock: </span><span id="precioventa">0</span>
             </div>
 
-            <section class="card-glass p-3 mb-3 prod-table-panel">
+            <section class="prod-sec" id="prodSecCatalogo">
+            <div class="prod-cards-toolbar prod-cards-only mb-3">
+                <div class="prod-cards-search">
+                    <i class="fa fa-search"></i>
+                    <input type="text" id="prodCardQ" placeholder="Buscar producto, marca..." />
+                </div>
+                <div class="prod-cards-chips" id="prodCardChips">
+                    <button type="button" class="prod-chip is-on" data-chip="todos">Todos</button>
+                    <button type="button" class="prod-chip" data-chip="activo">Activos</button>
+                    <button type="button" class="prod-chip" data-chip="inactivo">Inactivos</button>
+                </div>
+                <div class="prod-sel-wrap" id="prodSelWrap" @(ViewBag.EsAdmin == true ? null : "hidden")>
+                    <span class="prod-sel-count is-empty" id="prodSelCount">0 seleccionados</span>
+                    <button type="button" class="prod-sel-btn" id="prodSelAll">Seleccionar visibles</button>
+                    <button type="button" class="prod-sel-btn" id="prodSelClear" hidden>Limpiar</button>
+                    <span class="prod-sel-actions" id="prodSelActions" hidden>
+                        <button type="button" class="prod-sel-btn is-ok" id="prodSelActivar">Activar</button>
+                        <button type="button" class="prod-sel-btn is-off" id="prodSelDesactivar">Desactivar</button>
+                        <button type="button" class="prod-sel-btn is-del" id="prodSelEliminar">Eliminar</button>
+                    </span>
+                </div>
+            </div>
+            <div class="prod-cards-grid prod-cards-only" id="prodCardsGrid"></div>
+            <section class="card-glass p-3 mb-3 prod-table-panel" id="prodTablePanel">
                 <div class="prod-table-wrap dt-dark-wrap">
                     <table class="display nowrap w-100 dt-dark" id="grdProductos">
                         <thead>
@@ -60,6 +109,68 @@
                         </thead>
                         <tbody></tbody>
                     </table>
+                </div>
+            </section>
+            </section>
+
+            <section class="prod-sec d-none" id="prodSecPendientes">
+                <div class="prod-stage">
+                    <div class="prod-stage-head">
+                        <div class="prod-stage-icon is-warn"><i class="fa fa-hourglass-half"></i></div>
+                        <div class="prod-stage-copy">
+                            <h3>Productos pendientes</h3>
+                            <p id="prodPendHint">Los cambios de Comprobantes esperan acá. Aceptar impacta el catálogo; rechazar anula la operación.</p>
+                        </div>
+                    </div>
+                    <div class="prod-stage-tools">
+                        <div class="prod-cards-search">
+                            <i class="fa fa-search"></i>
+                            <input type="text" id="prodPendQ" placeholder="Buscar producto, usuario o tipo..." />
+                        </div>
+                        <div class="prod-sel-wrap" id="prodPendSelWrap">
+                            <span class="prod-sel-count is-empty" id="prodPendSelCount">0 seleccionadas</span>
+                            <button type="button" class="prod-sel-btn" id="prodPendSelAll">Seleccionar visibles</button>
+                            <button type="button" class="prod-sel-btn" id="prodPendSelClear" hidden>Limpiar</button>
+                            <span class="prod-sel-actions" id="prodPendSelActions" hidden>
+                                <button type="button" class="prod-sel-btn is-ok" id="prodPendAceptarSel">Aceptar seleccionados</button>
+                                <button type="button" class="prod-sel-btn is-del" id="prodPendRechazarSel">Rechazar seleccionados</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="prod-empty-hero d-none" id="prodPendEmpty">
+                        <div class="prod-empty-orb"><i class="fa fa-check"></i></div>
+                        <h4>Cola limpia</h4>
+                        <p>No hay solicitudes esperando revisión. Cuando Comprobantes mande un cambio, aparece acá.</p>
+                    </div>
+                    <div class="prod-pend-grid" id="prodPendGrid"></div>
+                </div>
+            </section>
+
+            <section class="prod-sec d-none" id="prodSecHistorial">
+                <div class="prod-stage">
+                    <div class="prod-stage-head">
+                        <div class="prod-stage-icon"><i class="fa fa-clock-o"></i></div>
+                        <div class="prod-stage-copy">
+                            <h3>Historial de productos</h3>
+                            <p>Todo lo que se aceptó, rechazó o cambió directo, con fecha, usuario y detalle de campos.</p>
+                        </div>
+                    </div>
+                    <div class="prod-hist-filters">
+                        <div>
+                            <label class="prod-field-label" for="prodHistDesde">Desde</label>
+                            <input type="date" id="prodHistDesde" class="form-control form-control-sm prod-field-input" />
+                        </div>
+                        <div>
+                            <label class="prod-field-label" for="prodHistHasta">Hasta</label>
+                            <input type="date" id="prodHistHasta" class="form-control form-control-sm prod-field-input" />
+                        </div>
+                        <div class="prod-cards-search prod-hist-search">
+                            <i class="fa fa-search"></i>
+                            <input type="text" id="prodHistQ" placeholder="Producto, usuario, tipo..." />
+                        </div>
+                        <button type="button" class="btn btn-outline-info" id="btnProdHistBuscar"><i class="fa fa-refresh me-1"></i> Actualizar</button>
+                    </div>
+                    <div class="prod-hist-timeline" id="prodHistTimeline"></div>
                 </div>
             </section>
         </div>
@@ -99,9 +210,9 @@
                             <div class="col-md-12"><label class="prod-field-label" for="Nombre">Nombre</label><input type="text" id="Nombre" class="form-control form-control-sm prod-field-input" /></div>
                             <div class="col-md-4"><label class="prod-field-label" for="Stock">Stock</label><input type="text" id="Stock" class="form-control form-control-sm prod-field-input miles" /></div>
                             <div class="col-md-4"><label class="prod-field-label" for="DiasVencimiento">Días vencimiento</label><input type="text" id="DiasVencimiento" class="form-control form-control-sm prod-field-input miles" /></div>
-                            <div class="col-md-4"><label class="prod-field-label" for="PrecioCompra">P. Compra</label><input type="text" id="PrecioCompra" class="form-control form-control-sm prod-field-input miles" /></div>
+                            <div class="col-md-4 prod-admin-field"><label class="prod-field-label" for="PrecioCompra">P. Compra</label><input type="text" id="PrecioCompra" class="form-control form-control-sm prod-field-input miles" /></div>
                             <div class="col-md-4"><label class="prod-field-label" for="PrecioVenta">P. Venta</label><input type="text" id="PrecioVenta" class="form-control form-control-sm prod-field-input miles" /></div>
-                            <div class="col-md-4"><label class="prod-field-label" for="PorcVenta">% Venta</label><input type="text" id="PorcVenta" class="form-control form-control-sm prod-field-input miles" /></div>
+                            <div class="col-md-4 prod-admin-field"><label class="prod-field-label" for="PorcVenta">% Venta</label><input type="text" id="PorcVenta" class="form-control form-control-sm prod-field-input miles" /></div>
                         </div>
                     </div>
 
@@ -161,6 +272,7 @@
                 <p id="datosProducto" class="mb-0 mt-3 text-center text-danger datos-error d-none"></p>
             </div>
             <div class="modal-footer border-0">
+                <p class="prod-hint me-auto mb-0 d-none" id="prodHintPendiente">Los cambios no impactan el catálogo hasta que el administrador los acepte.</p>
                 <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
                 <button id="btnRegistrarModificar" type="button" class="btn btn-primary" onclick="AccionBtn()">Registrar</button>
             </div>
@@ -242,9 +354,28 @@
 <div class="modal fade prod-modal-shell" id="imageModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header border-0"><h5 class="modal-title text-white">Imagen ampliada</h5></div>
-            <div class="modal-body text-center"><img id="modalImage" src="" class="img-fluid rounded" alt="" /></div>
-            <div class="modal-footer border-0"><button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button></div>
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white" id="imageModalTitle">Imagen ampliada</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="prod-img-drop" id="prodImgDrop">
+                    <img id="modalImage" src="" class="img-fluid rounded" alt="" />
+                    <div class="prod-img-drop-hint" id="prodImgDropHint">
+                        <i class="fa fa-camera"></i>
+                        <span>Arrastrá una foto o hacé clic para cargarla</span>
+                    </div>
+                </div>
+                <input type="file" id="prodImgModalFile" accept=".jpg,.jpeg,.png,image/jpeg,image/png" hidden />
+            </div>
+            <div class="modal-footer border-0 prod-img-modal-footer">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-outline-info" id="btnProdImgElegir" hidden>
+                    <i class="fa fa-folder-open-o me-1"></i> Elegir imagen
+                </button>
+                <button type="button" class="btn btn-primary" id="btnProdImgGuardar" hidden>
+                    Guardar
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -283,11 +414,44 @@
     </div>
 </div>
 
+<div class="modal fade prod-modal-shell" id="modalRevisionProducto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="prod-modal-icon"><i class="fa fa-exchange"></i></div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0" id="revTitulo">Revisión de cambios</h5>
+                        <div class="prod-hint mt-1" id="revSubtitulo"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="revIdSolicitud" />
+                <input type="hidden" id="revModo" />
+                <div class="prod-rev-meta" id="revMeta"></div>
+                <div class="prod-rev-fotos" id="revFotos"></div>
+                <div class="prod-rev-cambios" id="revCambios"></div>
+                <div class="mt-3 prod-rev-comentario-wrap" id="revComentarioWrap">
+                    <label class="prod-field-label" for="revComentario">Comentario (opcional)</label>
+                    <textarea id="revComentario" class="form-control prod-field-input" rows="2" placeholder="Nota al aceptar o rechazar..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-outline-danger prod-rev-admin-only" id="btnRevRechazar"><i class="fa fa-times me-1"></i> Rechazar</button>
+                <button type="button" class="btn btn-success prod-rev-admin-only" id="btnRevAceptar"><i class="fa fa-check me-1"></i> Aceptar y aplicar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section scripts {
     <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
     <script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
     <script src="~/Scripts/xlsx.full.min.js.js"></script>
-    <script src="~/JavaScript/Utils/Utils.js?v=3.14"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.17"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-    <script src="~/JavaScript/Productos.js?v=5.5"></script>
+    <script src="~/JavaScript/Productos.js?v=8.7"></script>
+    <script src="~/JavaScript/ProductosPendientes.js?v=1.9"></script>
 }
