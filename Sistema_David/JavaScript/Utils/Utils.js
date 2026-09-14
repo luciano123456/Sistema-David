@@ -142,6 +142,120 @@ function advertenciaModal(texto) {
     mostrarModalConContador('AdvertenciaModal', texto, 3000);
 }
 
+function mostrarToast(texto, tipo, duracionMs) {
+    tipo = String(tipo || "success").toLowerCase();
+    if (tipo === "danger") tipo = "error";
+    if (tipo === "warn" || tipo === "advertencia") tipo = "warning";
+    if (tipo === "info") tipo = "info";
+    else if (tipo !== "success" && tipo !== "error" && tipo !== "warning") tipo = "success";
+
+    var ms = Number(duracionMs);
+    if (!ms || ms < 800) {
+        ms = tipo === "error" ? 5000 : 4000;
+    }
+
+    var cssText =
+        ".sd-toast-container{position:fixed;right:16px;bottom:16px;z-index:10800;display:flex;flex-direction:column-reverse;gap:8px;max-width:min(380px,calc(100vw - 24px));pointer-events:none}" +
+        ".sd-toast{pointer-events:auto;position:relative;overflow:hidden;display:flex;align-items:flex-start;gap:10px;padding:12px 14px 14px;border-radius:12px;color:#eaf1ff;background:rgba(12,23,49,.96);border:1px solid rgba(118,158,255,.22);box-shadow:0 10px 28px rgba(0,0,0,.45);font-size:14px;line-height:1.35;animation:sdToastIn .18s ease-out}" +
+        ".sd-toast-success{border-left:4px solid #20d6a1}" +
+        ".sd-toast-error{border-left:4px solid #ef4444}" +
+        ".sd-toast-warning{border-left:4px solid #f59e0b}" +
+        ".sd-toast-info{border-left:4px solid #60a5fa}" +
+        ".sd-toast-msg{flex:1;word-break:break-word}" +
+        ".sd-toast-close{background:transparent;border:0;color:#9ec5ff;font-size:20px;line-height:1;cursor:pointer;padding:0 2px;opacity:.8}" +
+        ".sd-toast-close:hover{opacity:1;color:#fff}" +
+        ".sd-toast-out{opacity:0;transform:translateY(8px);transition:opacity .2s ease,transform .2s ease}" +
+        ".sd-toast-progress{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08);overflow:hidden}" +
+        ".sd-toast-progress span{display:block;height:100%;width:100%;transform-origin:left center;animation:sdToastBar var(--sd-toast-ms,4s) linear forwards}" +
+        ".sd-toast.is-paused .sd-toast-progress span{animation-play-state:paused}" +
+        ".sd-toast-success .sd-toast-progress span{background:linear-gradient(90deg,#059669,#34d399)}" +
+        ".sd-toast-error .sd-toast-progress span{background:linear-gradient(90deg,#dc2626,#f87171)}" +
+        ".sd-toast-warning .sd-toast-progress span{background:linear-gradient(90deg,#d97706,#fbbf24)}" +
+        ".sd-toast-info .sd-toast-progress span{background:linear-gradient(90deg,#2563eb,#60a5fa)}" +
+        "@keyframes sdToastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}" +
+        "@keyframes sdToastBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}";
+
+    var st = document.getElementById("sdToastStyles");
+    if (!st) {
+        st = document.createElement("style");
+        st.id = "sdToastStyles";
+        document.head.appendChild(st);
+    }
+    st.textContent = cssText;
+
+    var wrap = document.getElementById("sdToastContainer");
+    if (!wrap) {
+        wrap = document.createElement("div");
+        wrap.id = "sdToastContainer";
+        wrap.className = "sd-toast-container";
+        wrap.setAttribute("aria-live", "polite");
+        wrap.setAttribute("aria-relevant", "additions");
+        document.body.appendChild(wrap);
+    }
+
+    var el = document.createElement("div");
+    el.className = "sd-toast sd-toast-" + tipo;
+    el.setAttribute("role", tipo === "error" ? "alert" : "status");
+
+    var msg = document.createElement("div");
+    msg.className = "sd-toast-msg";
+    msg.textContent = texto == null ? "" : String(texto);
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sd-toast-close";
+    btn.setAttribute("aria-label", "Cerrar");
+    btn.innerHTML = "&times;";
+
+    var bar = document.createElement("div");
+    bar.className = "sd-toast-progress";
+    bar.setAttribute("aria-hidden", "true");
+    var barFill = document.createElement("span");
+    barFill.style.setProperty("--sd-toast-ms", ms + "ms");
+    bar.appendChild(barFill);
+
+    var hideTimer = null;
+    var remaining = ms;
+    var hideAt = 0;
+
+    function cerrar() {
+        if (!el.parentNode) return;
+        if (hideTimer) {
+            clearTimeout(hideTimer);
+            hideTimer = null;
+        }
+        el.classList.add("sd-toast-out");
+        setTimeout(function () {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, 220);
+    }
+
+    function scheduleHide(delay) {
+        if (hideTimer) clearTimeout(hideTimer);
+        hideAt = Date.now() + delay;
+        hideTimer = setTimeout(cerrar, delay);
+    }
+
+    btn.onclick = cerrar;
+    el.addEventListener("mouseenter", function () {
+        if (!hideTimer) return;
+        clearTimeout(hideTimer);
+        hideTimer = null;
+        remaining = Math.max(hideAt - Date.now(), 400);
+        el.classList.add("is-paused");
+    });
+    el.addEventListener("mouseleave", function () {
+        el.classList.remove("is-paused");
+        scheduleHide(remaining);
+    });
+
+    el.appendChild(msg);
+    el.appendChild(btn);
+    el.appendChild(bar);
+    wrap.appendChild(el);
+    scheduleHide(ms);
+}
+
 function confirmarModal(mensaje, options) {
     options = options || {};
     return new Promise((resolve) => {
@@ -162,7 +276,12 @@ function confirmarModal(mensaje, options) {
 
         if (nuevoTitulo) nuevoTitulo.textContent = options.titulo || "Confirmación";
         if (nuevoBtnCancelar) nuevoBtnCancelar.textContent = options.textoCancelar || "Cancelar";
-        if (nuevoBtnAceptar) nuevoBtnAceptar.textContent = options.textoAceptar || "Sí, continuar";
+        if (nuevoBtnAceptar) {
+            nuevoBtnAceptar.textContent = options.textoAceptar || "Sí, continuar";
+            if (options.claseAceptar) {
+                nuevoBtnAceptar.className = "btn px-4 " + options.claseAceptar;
+            }
+        }
 
         const nuevoModal = new bootstrap.Modal(nuevoModalEl, {
             backdrop: "static",

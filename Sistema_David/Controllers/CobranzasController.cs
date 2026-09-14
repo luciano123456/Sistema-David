@@ -49,6 +49,11 @@ namespace Sistema_David.Controllers
 
         }
 
+        private ActionResult JsonSinPermisoCuentas()
+        {
+            return Json(null);
+        }
+
         public ActionResult ListarPendientes()
         {
             List<VMVenta> result;
@@ -120,6 +125,9 @@ namespace Sistema_David.Controllers
 
         public ActionResult NuevaCuentaBancaria(VMCuentaBancaria cuentabancaria)
         {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return JsonSinPermisoCuentas();
+
             try
             {
                 var result = CuentasBancariasModel.Nuevo(cuentabancaria);
@@ -135,6 +143,9 @@ namespace Sistema_David.Controllers
         [HttpPost]
         public ActionResult EditarCuentaBancaria(VMCuentaBancaria cuentabancaria)
         {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return JsonSinPermisoCuentas();
+
             try
             {
                 var result = CuentasBancariasModel.Editar(cuentabancaria);
@@ -152,6 +163,9 @@ namespace Sistema_David.Controllers
 
         public ActionResult EliminarCuentaBancaria(int id)
         {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return JsonSinPermisoCuentas();
+
             try
             {
                 var result = CuentasBancariasModel.Eliminar(id);
@@ -169,6 +183,9 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListaCuentasBancarias(string metodopago, int activo = 1)
         {
+            if (!SessionHelper.PuedeSeleccionarCuentaBancaria())
+                return JsonSinPermisoCuentas();
+
             try
             {
                 var result = CuentasBancariasModel.Lista(metodopago, activo);
@@ -184,6 +201,9 @@ namespace Sistema_David.Controllers
 
         public ActionResult ObtenerComprobantes(int idCuenta)
         {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return Json(new List<VMComprobantesImagenes>(), JsonRequestBehavior.AllowGet);
+
             try
             {
                 var result = CuentasBancariasModel.ObtenerComprobantes(idCuenta);
@@ -200,6 +220,9 @@ namespace Sistema_David.Controllers
         [HttpPost]
         public ActionResult GuardarComprobantes(List<VMComprobantesImagenes> model)
         {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return Json(new { success = false });
+
             try
             {
                 var resultado = CuentasBancariasModel.GuardarComprobantes(model);
@@ -215,8 +238,14 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListaCuentasBancariasTotales(string metodopago, int activo = 1)
         {
+            if (!SessionHelper.PuedeSeleccionarCuentaBancaria())
+                return JsonSinPermisoCuentas();
+
             try
             {
+                if (!SessionHelper.EsAdminOComprobantes())
+                    return Json(CuentasBancariasModel.Lista(metodopago, activo));
+
                 var result = CuentasBancariasModel.ListaSoloTotales(metodopago, activo);
 
                 return Json(result);
@@ -230,6 +259,9 @@ namespace Sistema_David.Controllers
 
         public ActionResult ListaCuentasBancariasTotalesConInformacion(string metodopago, int activo = 1)
         {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return JsonSinPermisoCuentas();
+
             try
             {
                 var result = CuentasBancariasModel.ListaConTotalesInformacion(metodopago, activo);
@@ -245,6 +277,9 @@ namespace Sistema_David.Controllers
 
         public ActionResult InfoCuentaBancaria(int id)
         {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return Json(null, JsonRequestBehavior.AllowGet);
+
             try
             {
                 var result = CuentasBancariasModel.ObtenerInfoCuentaConTotales(id);

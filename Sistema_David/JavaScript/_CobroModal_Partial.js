@@ -215,6 +215,18 @@ function safeToggleClass(el, className, enabled) {
     el.classList.toggle(className, !!enabled);
 }
 
+function puedeVerMontosCuentasBancarias() {
+    try {
+        const sesion = (typeof userSession !== "undefined" && userSession)
+            ? userSession
+            : JSON.parse(localStorage.getItem("usuario") || "null");
+        const rol = Number(sesion && sesion.IdRol);
+        return rol === 1 || rol === 4;
+    } catch (e) {
+        return false;
+    }
+}
+
 /* ===================== PROGRESS ===================== */
 function clearProgress() {
     const cont = qs("progressBarContainerCobro");
@@ -241,6 +253,11 @@ function renderProgress(accountData) {
     const cont = qs("progressBarContainerCobro");
     const bar = qs("progressBarCobro");
     const pct = qs("progressPercentageCobro");
+
+    if (!puedeVerMontosCuentasBancarias()) {
+        clearProgress();
+        return;
+    }
 
     if (!cont || !bar) return;
 
@@ -560,6 +577,8 @@ async function cargarCuentasTotales() {
             return;
         }
 
+        qs("cb_wrapCuenta").hidden = false;
+
         cuentasCache = result.map(c => ({
             Id: Number(c.Id),
             Nombre: c.Nombre,
@@ -575,7 +594,11 @@ async function cargarCuentasTotales() {
         }
 
         select.selectedIndex = 0;
-        renderProgress(cuentasCache[0]);
+        if (puedeVerMontosCuentasBancarias()) {
+            renderProgress(cuentasCache[0]);
+        } else {
+            clearProgress();
+        }
     } catch {
         qs("cb_wrapCuenta").hidden = true;
         clearProgress();
@@ -1113,6 +1136,11 @@ async function confirmarCobro() {
             setCbError("Debe adjuntar el comprobante de transferencia.");
             return;
         }
+
+        if (!Number(qs("cb_cuenta")?.value || 0)) {
+            setCbError("Seleccioná la cuenta bancaria.");
+            return;
+        }
     }
 
     const payload = {
@@ -1210,6 +1238,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        clearProgress();
         await cargarCuentasTotales();
     });
 
@@ -1316,7 +1345,11 @@ function puedeCobrarCuota(venta, idCuota) {
 }
 
 
-function showToast(msg, type = "info") {
+function showToast(msg, type) {
+    if (typeof mostrarToast === "function") {
+        mostrarToast(msg, type);
+        return;
+    }
     let cont = document.getElementById("toastContainerBR");
     if (!cont) {
         cont = document.createElement("div");
@@ -1354,6 +1387,10 @@ function showToast(msg, type = "info") {
 
 /** Éxito post-cobro/reprogramación: VC.toast en Cobros, showToast si existe, sino exitoModal (layout). */
 function notificarExitoCobrosUi(mensaje) {
+    if (typeof mostrarToast === "function") {
+        mostrarToast(mensaje, "success");
+        return;
+    }
     if (window.VC && typeof VC.toast === "function") {
         VC.toast(mensaje, "success");
         return;
@@ -1367,6 +1404,10 @@ function notificarExitoCobrosUi(mensaje) {
 
 /** Error visible fuera del modal (toast o ErrorModal). */
 function notificarErrorCobrosUi(mensaje) {
+    if (typeof mostrarToast === "function") {
+        mostrarToast(mensaje, "error");
+        return;
+    }
     if (window.VC && typeof VC.toast === "function") {
         VC.toast(mensaje, "danger");
         return;
@@ -1761,10 +1802,10 @@ function toggleModoReprogramacion() {
 
     // Ocultar grupos de pago
     safeToggle(qs("cb_metodo")?.closest(".col-6, .col-lg-3"), !esReprogramacion);
-    safeToggle(qs("cb_wrapCuenta"), !esReprogramacion);
+    safeToggle(qs("cb_wrapCuenta"), !esReprogramacion && esTransferencia(qs("cb_metodo")?.value));
     safeToggle(qs("cb_wrapObs"), !esReprogramacion);
     safeToggle(qs("cb_wrapComprobante"), !esReprogramacion);
-    safeToggle(qs("progressBarContainerCobro"), !esReprogramacion);
+    safeToggle(qs("progressBarContainerCobro"), !esReprogramacion && puedeVerMontosCuentasBancarias() && esTransferencia(qs("cb_metodo")?.value));
 
     // Casitas
     safeToggle(qs("cb_casaNeutral")?.parentElement?.parentElement, !esReprogramacion);

@@ -527,6 +527,8 @@
     <Compile Include="Models\Modelo\VMCliente.cs" />
     <Compile Include="Models\ClientesModel.cs" />
     <Compile Include="Models\Modelo\VMProducto.cs" />
+    <Compile Include="Models\Modelo\VMProductoCambio.cs" />
+    <Compile Include="Models\ProductosCambiosModel.cs" />
     <Compile Include="Models\Modelo\VMRendimiento.cs" />
     <Compile Include="Models\Modelo\VMAnalisisRendimiento.cs" />
     <Compile Include="Models\Modelo\VMCuentaBancariaConVentas.cs" />
@@ -657,6 +659,7 @@
     <Content Include="JavaScript\NuevoModif.js" />
     <Content Include="JavaScript\Login.js" />
     <Content Include="JavaScript\Productos.js" />
+    <Content Include="JavaScript\ProductosPendientes.js" />
     <Content Include="JavaScript\Rendimiento.js" />
     <Content Include="JavaScript\RendimientoAnalisis.js" />
     <Content Include="JavaScript\Pagos.js" />

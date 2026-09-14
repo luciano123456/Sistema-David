@@ -20,24 +20,38 @@ namespace Sistema_David.Models
                 var usuario = db.Usuarios.FirstOrDefault(u => u.Id == id);
                 bool vistaStock = usuario != null && usuario.VistaStock == 1;
 
-                var stocks = (from d in db.StockUsuarios
-                              .SqlQuery("SELECT s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.Estado, u.VistaStock, s.IdCategoria, p.DiasVencimiento FROM StockUsuarios s INNER JOIN Usuarios u ON u.Id = s.IdUsuario INNER JOIN Productos p ON p.Id = s.IdProducto")
-                              select new VMStockUsuario
+                var stocks = (from s in db.StockUsuarios
+                              join u in db.Usuarios on s.IdUsuario equals u.Id
+                              join p in db.Productos on s.IdProducto equals p.Id
+                              where s.IdUsuario == id
+                              orderby p.Nombre
+                              select new
                               {
-                                  Id = d.Id,
-                                  IdProducto = d.IdProducto,
-                                  Cantidad = d.Cantidad,
-                                  IdUsuario = d.IdUsuario,
-                                  Usuario = d.Usuarios.Nombre,
-                                  Producto = d.Productos.Nombre,
-                                  PrecioVenta = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta : 0,
-                                  Total = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta * d.Cantidad : 0,
-                                  DiasVencimiento = d.Productos.DiasVencimiento,
-                                  Estado = d.Estado
+                                  s.Id,
+                                  s.IdProducto,
+                                  s.Cantidad,
+                                  s.IdUsuario,
+                                  Usuario = u.Nombre,
+                                  Producto = p.Nombre,
+                                  PrecioVenta = p.PrecioVenta,
+                                  DiasVencimiento = p.DiasVencimiento,
+                                  s.Estado
                               })
-                             .Where(x => x.IdUsuario == id)
-                             .OrderBy(x => x.Producto)
-                             .ToList();
+                              .AsEnumerable()
+                              .Select(x => new VMStockUsuario
+                              {
+                                  Id = x.Id,
+                                  IdProducto = x.IdProducto,
+                                  Cantidad = x.Cantidad,
+                                  IdUsuario = x.IdUsuario,
+                                  Usuario = x.Usuario,
+                                  Producto = x.Producto,
+                                  PrecioVenta = x.PrecioVenta != null ? (decimal)x.PrecioVenta : 0,
+                                  Total = x.PrecioVenta != null ? (decimal)x.PrecioVenta * x.Cantidad : 0,
+                                  DiasVencimiento = x.DiasVencimiento,
+                                  Estado = x.Estado
+                              })
+                              .ToList();
 
                 return new ResultadoStock
                 {
@@ -54,24 +68,38 @@ namespace Sistema_David.Models
                 var usuario = db.Usuarios.FirstOrDefault(u => u.Id == id);
                 bool vistaStock = usuario != null && usuario.VistaStock == 1;
 
-                var stocks = (from d in db.StockUsuarios
-                              .SqlQuery("SELECT s.Id, s.IdProducto, s.Cantidad, u.Nombre, s.IdUsuario, p.Nombre, s.Estado, u.VistaStock, s.IdCategoria, p.DiasVencimiento FROM StockUsuarios s INNER JOIN Usuarios u ON u.Id = s.IdUsuario INNER JOIN Productos p ON p.Id = s.IdProducto")
-                              select new VMStockUsuario
+                var stocks = (from s in db.StockUsuarios
+                              join u in db.Usuarios on s.IdUsuario equals u.Id
+                              join p in db.Productos on s.IdProducto equals p.Id
+                              where s.IdUsuario == id && p.DiasVencimiento > 0
+                              orderby p.Nombre
+                              select new
                               {
-                                  Id = d.Id,
-                                  IdProducto = d.IdProducto,
-                                  Cantidad = d.Cantidad,
-                                  IdUsuario = d.IdUsuario,
-                                  Usuario = d.Usuarios.Nombre,
-                                  Producto = d.Productos.Nombre,
-                                  PrecioVenta = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta : 0,
-                                  Total = d.Productos.PrecioVenta != null ? (decimal)d.Productos.PrecioVenta * d.Cantidad : 0,
-                                  DiasVencimiento = d.Productos.DiasVencimiento,
-                                  Estado = d.Estado
+                                  s.Id,
+                                  s.IdProducto,
+                                  s.Cantidad,
+                                  s.IdUsuario,
+                                  Usuario = u.Nombre,
+                                  Producto = p.Nombre,
+                                  PrecioVenta = p.PrecioVenta,
+                                  DiasVencimiento = p.DiasVencimiento,
+                                  s.Estado
                               })
-                             .Where(x => x.IdUsuario == id && x.DiasVencimiento > 0)
-                             .OrderBy(x => x.Producto)
-                             .ToList();
+                              .AsEnumerable()
+                              .Select(x => new VMStockUsuario
+                              {
+                                  Id = x.Id,
+                                  IdProducto = x.IdProducto,
+                                  Cantidad = x.Cantidad,
+                                  IdUsuario = x.IdUsuario,
+                                  Usuario = x.Usuario,
+                                  Producto = x.Producto,
+                                  PrecioVenta = x.PrecioVenta != null ? (decimal)x.PrecioVenta : 0,
+                                  Total = x.PrecioVenta != null ? (decimal)x.PrecioVenta * x.Cantidad : 0,
+                                  DiasVencimiento = x.DiasVencimiento,
+                                  Estado = x.Estado
+                              })
+                              .ToList();
 
                 return new ResultadoStock
                 {

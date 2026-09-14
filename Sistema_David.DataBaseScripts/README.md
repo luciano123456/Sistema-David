@@ -8,6 +8,7 @@ Ejecutar en SQL Server **en orden numérico**.
 | `001_Clientes_HistorialDireccion.sql` | Tabla historial de cambios de dirección/ubicación de clientes |
 | `002_Productos_ModuloActualizacion.sql` | Columnas extendidas de productos (marca, modelo, financiación, imágenes) |
 | `003_sp_MostrarRendimiento_InteresesElectro.sql` | Ajuste SP rendimiento: intereses electro como INTERÉS + filtro por operador |
+| `004_Productos_CambiosPendientes.sql` | Solicitudes de cambio (rol Comprobantes) + historial de auditoría de productos |
 
 ## Uso
 

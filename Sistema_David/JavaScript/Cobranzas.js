@@ -16,6 +16,15 @@ const CB_COLUMN_CONFIGURABLE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const CB_COL_IDX_ACCIONES = 13;
 const CB_COL_IDX_ENRECORRIDO = 14;
 
+function puedeGestionarCuentasBancarias() {
+    const rol = Number(userSession && userSession.IdRol);
+    return rol === 1 || rol === 4;
+}
+
+function puedeVerMontosCuentasBancarias() {
+    return puedeGestionarCuentasBancarias();
+}
+
 function cbAplicarVisibilidadFijaColumnas(api) {
     if (!api) return;
 
@@ -462,12 +471,16 @@ $(document).ready(async function () {
 
     localStorage.removeItem("Dni");
 
+    const btnCuentas = document.getElementById("btnCuentaBancaria");
+    if (btnCuentas) {
+        btnCuentas.style.display = puedeGestionarCuentasBancarias() ? "block" : "none";
+    }
+
     if (userSession.IdRol == 1) { //ROL ADMINISTRADOR
         $("#FechaCobroDesde").removeAttr("hidden");
         $("#FechaCobroHasta").removeAttr("hidden");
         $("#lblfechacobrodesde").removeAttr("hidden");
         $("#lblfechacobrohasta").removeAttr("hidden");
-        document.getElementById("btnCuentaBancaria").style.display = "block";
     }
 
     if (userSession.IdRol == 3) { //ROL COBRADOR
@@ -485,7 +498,6 @@ $(document).ready(async function () {
     if (userSession.IdRol == 4) {
         fechaCobroDesde = moment().format('YYYY-MM-DD');
         fechaCobroHasta = moment().format('YYYY-MM-DD');
-        document.getElementById("btnCuentaBancaria").style.display = "block";
     }
 
     document.getElementById("FechaCobroDesde").value = fechaCobroDesde;
@@ -1247,55 +1259,51 @@ async function habilitarCuentas() {
     var cuentaDiv = document.getElementById("divCuentaPago");
     var progressBarContainer = document.getElementById("progressBarContainerCobro");
     var divImagen = document.getElementById("divImagen");
+    var esTransferencia = formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" ||
+        formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS";
+    var verMontos = puedeVerMontosCuentasBancarias();
 
-    // Esperamos a cargar las cuentas
-    await cargarCuentas();
-
-    if (formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA PROPIA" ||
-        formaPagoSelect.value.toUpperCase() === "TRANSFERENCIA A TERCEROS") {
+    if (esTransferencia) {
+        await cargarCuentas();
         cuentaDiv.hidden = false;
-        progressBarContainer.hidden = false;
         divImagen.hidden = false;
         divImagen.classList.add("d-flex", "justify-content-center", "align-items-center");
 
+        document.getElementById("restante-labelCobro").hidden = !verMontos;
+        document.getElementById("total-labelCobro").hidden = !verMontos;
+        document.getElementById("entregas-labelCobro").hidden = !verMontos;
+        progressBarContainer.hidden = !verMontos;
 
-        // Si el rol no es vendedor, mostramos los labels "Restante" y "Monto a entregar"
-        if (userSession.IdRol == 1 || userSession.IdRol == 4) {
-            document.getElementById("restante-labelCobro").hidden = false;
-            document.getElementById("total-labelCobro").hidden = false;
-            document.getElementById("entregas-labelCobro").hidden = false;
-        } else {
-            document.getElementById("restante-labelCobro").hidden = true;
-            document.getElementById("total-labelCobro").hidden = true;
-            document.getElementById("entregas-labelCobro").hidden = true;
-        }
-
-        // Seleccionar la primera cuenta automáticamente
-        if (cuenta.options.length > 0) {
-            cuenta.selectedIndex = 0;  // Selecciona la primera opción (ignora la opción vacía)
+        if (verMontos && cuenta.options.length > 0) {
+            cuenta.selectedIndex = 0;
             var selectedAccountId = cuenta.value;
             var accountData = cuentasData.find(account => account.Id === parseInt(selectedAccountId));
             if (accountData) {
-                // Actualizamos la barra de progreso para la cuenta seleccionada
                 actualizarBarraProgresoCobro(accountData);
             }
+        } else if (!verMontos) {
+            progressBarContainer.hidden = true;
         }
     } else {
+        cuentasData = [];
+        $('#CuentaPago option').remove();
         cuentaDiv.hidden = true;
         divImagen.hidden = true;
         divImagen.classList.remove("d-flex", "justify-content-center", "align-items-center");
-
         progressBarContainer.hidden = true;
     }
 
-    // Cargar la barra de progreso cuando se selecciona una cuenta
-    cuenta.addEventListener("change", function () {
-        var selectedAccountId = cuenta.value;
-        var accountData = cuentasData.find(account => account.Id === parseInt(selectedAccountId));
-        if (accountData) {
-            actualizarBarraProgresoCobro(accountData);
-        }
-    });
+    if (!cuenta.dataset.cbCuentasChange) {
+        cuenta.dataset.cbCuentasChange = "1";
+        cuenta.addEventListener("change", function () {
+            if (!puedeVerMontosCuentasBancarias()) return;
+            var selectedAccountId = cuenta.value;
+            var accountData = cuentasData.find(account => account.Id === parseInt(selectedAccountId));
+            if (accountData) {
+                actualizarBarraProgresoCobro(accountData);
+            }
+        });
+    }
 }
 
 
@@ -3814,6 +3822,8 @@ async function cancelarNuevaCuenta() {
 
 // Cargar cuentas bancarias desde el servidor
 async function loadCuentasBancarias(activo) {
+    if (!puedeGestionarCuentasBancarias()) return;
+
     var url = "/Cobranzas/ListaCuentasBancariasTotalesConInformacion";
     let value = JSON.stringify({ Activo: activo });
     let options = {
@@ -3837,6 +3847,8 @@ async function loadCuentasBancarias(activo) {
 
 // Abrir el modal de cuentas bancarias
 async function abrirModalCuentasBancarias() {
+    if (!puedeGestionarCuentasBancarias()) return;
+
     let toggleButton = $("#toggleBloqueadas");
 
     toggleButton
@@ -3869,6 +3881,12 @@ $("#toggleBloqueadas").click(async function () {
 });
 
 function actualizarBarraProgresoCobro(accountData) {
+    if (!puedeVerMontosCuentasBancarias()) {
+        const progressBarContainerDenied = document.getElementById("progressBarContainerCobro");
+        if (progressBarContainerDenied) progressBarContainerDenied.hidden = true;
+        return;
+    }
+
     const progressBar = document.getElementById("progressBarCobro");
     const progressPercentage = document.getElementById("progressPercentageCobro");
     const totalLabel = document.getElementById("total-labelCobro");

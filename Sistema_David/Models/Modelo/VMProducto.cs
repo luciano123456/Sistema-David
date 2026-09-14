@@ -37,6 +37,10 @@ namespace Sistema_David.Models.Modelo
         /// <summary>Indica si el producto tiene imagen en BD (listado, sin cargar bytes).</summary>
         public bool TieneImagen { get; set; }
 
+        public bool TienePendiente { get; set; }
+        public int? IdSolicitudPendiente { get; set; }
+        public bool ConfirmOverwrite { get; set; }
+
         public virtual Categorias Categorias { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<VMStockUsuario> Stock1 { get; set; }

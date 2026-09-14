@@ -29,8 +29,32 @@ namespace Sistema_David.Controllers
 
         public ActionResult Index()
         {
+            var sesion = SessionHelper.GetUsuarioSesion();
+            if (!SessionHelper.EsAdminOComprobantes())
+            {
+                ViewData["ErrorPermisos"] = "No puedes acceder a esta pantalla";
+                return View();
+            }
+
             ViewBag.ErrorPermisos = null;
+            ViewBag.EsAdmin = sesion != null && sesion.IdRol == 1;
+            ViewBag.EsComprobante = sesion != null && sesion.IdRol == 4;
             return View();
+        }
+
+        private static Usuarios UsuarioActual()
+        {
+            return SessionHelper.GetUsuarioSesion();
+        }
+
+        private static bool EsAdmin()
+        {
+            return UsuarioActual()?.IdRol == 1;
+        }
+
+        private static bool EsComprobante()
+        {
+            return UsuarioActual()?.IdRol == 4;
         }
 
         public ActionResult ObtenerDetalle(int id)
@@ -57,35 +81,65 @@ namespace Sistema_David.Controllers
 
         public ActionResult Listar()
         {
-            var result = ProductosModel.ListaProductos();
-            var totalStock = ProductosModel.TotalDineroEnStock();
-            return Json(new { data = result, totalStock }, JsonRequestBehavior.AllowGet);
+            try
+            {
+                var result = ProductosModel.ListaProductos();
+                var totalStock = ProductosModel.TotalDineroEnStock();
+                var data = result.Select(x => new
+                {
+                    x.Id,
+                    x.Codigo,
+                    x.Nombre,
+                    x.idCategoria,
+                    x.Categoria,
+                    x.Stock,
+                    x.PrecioCompra,
+                    x.PrecioVenta,
+                    x.PorcVenta,
+                    x.Total,
+                    x.DiasVencimiento,
+                    x.Activo,
+                    x.Marca,
+                    x.TieneImagen,
+                    x.TienePendiente,
+                    x.IdSolicitudPendiente
+                }).ToList();
+                var json = Json(new { data, totalStock }, JsonRequestBehavior.AllowGet);
+                json.MaxJsonLength = int.MaxValue;
+                return json;
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 200;
+                var json = Json(new
+                {
+                    data = new object[0],
+                    totalStock = 0m,
+                    error = "No se pudieron cargar los productos. Intentá de nuevo."
+                }, JsonRequestBehavior.AllowGet);
+                json.MaxJsonLength = int.MaxValue;
+                return json;
+            }
         }
 
+        [HttpGet]
         public ActionResult ObtenerImagen(int id)
         {
-            using (var db = new Sistema_DavidEntities())
+            try
             {
-                var imagen = db.Productos
-                    .Where(p => p.Id == id)
-                    .Select(p => p.Imagen)
-                    .FirstOrDefault();
+                byte[] bytes;
+                string mime;
+                if (!ProductosModel.ObtenerImagenBytes(id, out bytes, out mime) || bytes == null || bytes.Length == 0)
+                    return ImagenProductoPorDefecto(cacheLong: false);
 
-                if (string.IsNullOrEmpty(imagen))
-                    return ImagenProductoPorDefecto(cacheLong: true);
-
-                try
-                {
-                    var bytes = Convert.FromBase64String(imagen);
-                    Response.Cache.SetCacheability(HttpCacheability.Public);
-                    Response.Cache.SetMaxAge(TimeSpan.FromDays(7));
-                    Response.Cache.SetExpires(DateTime.Now.AddDays(7));
-                    return File(bytes, "image/jpeg");
-                }
-                catch (FormatException)
-                {
-                    return ImagenProductoPorDefecto(cacheLong: true);
-                }
+                Response.Cache.SetCacheability(HttpCacheability.Public);
+                Response.Cache.SetMaxAge(TimeSpan.FromDays(7));
+                Response.Cache.SetExpires(DateTime.Now.AddDays(7));
+                return File(bytes, mime ?? "image/jpeg");
+            }
+            catch (Exception)
+            {
+                return ImagenProductoPorDefecto(cacheLong: false);
             }
         }
 
@@ -97,43 +151,59 @@ namespace Sistema_David.Controllers
                 Response.Cache.SetMaxAge(TimeSpan.FromDays(30));
                 Response.Cache.SetExpires(DateTime.Now.AddDays(30));
             }
-            return File(Server.MapPath("~/Imagenes/productodefault.png"), "image/png");
+            else
+            {
+                Response.Cache.SetCacheability(HttpCacheability.Private);
+                Response.Cache.SetMaxAge(TimeSpan.FromSeconds(30));
+            }
+            var path = Server.MapPath("~/Imagenes/productodefault.png");
+            if (System.IO.File.Exists(path))
+                return File(path, "image/png");
+
+            var tiny = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=");
+            return File(tiny, "image/png");
         }
 
-        public ActionResult AgregarStockCantidad(int id, int cantidad)
+        [HttpPost]
+        public ActionResult AgregarStockCantidad()
+        {
+            return MutarStock(true);
+        }
+
+        [HttpPost]
+        public ActionResult RestarStockCantidad()
+        {
+            return MutarStock(false);
+        }
+
+        private ActionResult MutarStock(bool sumar)
         {
             try
             {
+                var body = LeerJson<JObject>() ?? new JObject();
+                int id = JsonEntero(body, "Id", "id");
+                int cantidad = JsonEntero(body, "Cantidad", "cantidad");
+                bool overwrite = JsonBool(body, "ConfirmOverwrite", "confirmOverwrite");
 
-               
-                var result = ProductosModel.SumarStock(id, cantidad);
+                var user = UsuarioActual();
+                if (user == null) return Json(new { Status = false, Mensaje = "Sesión inválida." });
+                if (id <= 0) return Json(new { Status = false, Mensaje = "Producto inválido." });
 
+                if (EsComprobante())
+                    return Json(ProductosCambiosModel.SolicitarStock(id, cantidad, sumar, user.Id, overwrite));
+
+                var antes = ProductosModel.BuscarProducto(id);
+                var result = sumar ? ProductosModel.SumarStock(id, cantidad) : ProductosModel.RestarStock(id, cantidad);
+                if (result)
+                {
+                    ProductosCambiosModel.RegistrarCambioDirecto("Stock", antes, ProductosModel.BuscarProducto(id), user.Id);
+                }
                 return Json(new { Status = result });
-
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Json(new { Status = false });
             }
-
-        }
-
-        public ActionResult RestarStockCantidad(int id, int cantidad)
-        {
-            try
-            {
-
-
-                var result = ProductosModel.RestarStock(id, cantidad);
-
-                return Json(new { Status = result });
-
-            }
-            catch (Exception ex)
-            {
-                return Json(new { Status = false });
-            }
-
         }
 
         public ActionResult ListarActivos()
@@ -195,26 +265,50 @@ namespace Sistema_David.Controllers
                 if (model == null)
                     return Json(new { Status = false, Mensaje = "No se recibieron datos del producto." });
 
+                if (string.IsNullOrWhiteSpace(model.Nombre))
+                    return Json(new { Status = false, Mensaje = "Ingresá el nombre del producto." });
+
+                var user = UsuarioActual();
+                if (user == null)
+                    return Json(new { Status = false, Mensaje = "Sesión inválida." });
+
+                if (EsComprobante())
+                    return Json(ProductosCambiosModel.SolicitarNuevo(model, user.Id));
+
                 var result = ProductosModel.Nuevo(model);
                 if (result)
+                {
+                    ProductosCambiosModel.RegistrarCambioDirecto("Nuevo", null, model, user.Id);
                     return Json(new { Status = true });
+                }
 
-                return Json(new { Status = false, Mensaje = "No se pudo registrar. Verificá categoría, código y que la base tenga las columnas nuevas de Productos." });
+                return Json(new { Status = false, Mensaje = "No se pudo registrar el producto. Revisá los datos e intentá de nuevo." });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { Status = false, Mensaje = ex.Message });
+                return Json(new { Status = false, Mensaje = "No se pudo registrar el producto. Revisá los datos e intentá de nuevo." });
             }
         }
 
         [HttpPost]
-        public ActionResult Eliminar(int id)
+        public ActionResult Eliminar()
         {
             try
             {
+                var body = LeerJson<JObject>() ?? new JObject();
+                int id = JsonEntero(body, "Id", "id");
+                bool overwrite = JsonBool(body, "ConfirmOverwrite", "confirmOverwrite");
+
+                var user = UsuarioActual();
+                if (user == null) return Json(new { Status = false });
+                if (id <= 0) return Json(new { Status = false, Mensaje = "Producto inválido." });
+
+                if (EsComprobante())
+                    return Json(ProductosCambiosModel.SolicitarEliminar(id, user.Id, overwrite));
+
                 var stock = StockModel.ObtenerUsuariosConProductoEnStock(id);
 
-                if (stock.Any())
+                if (stock != null && stock.Any())
                 {
                     var mensaje = $"No puedes eliminar este producto ya que lo tienen {stock.Count} vendedores:";
                     var detalle = stock
@@ -231,7 +325,12 @@ namespace Sistema_David.Controllers
                 }
 
 
+                var antes = ProductosModel.BuscarProducto(id);
                 var result = ProductosModel.Eliminar(id);
+                if (result)
+                {
+                    ProductosCambiosModel.RegistrarCambioDirecto("Eliminar", antes, null, user.Id);
+                }
 
                 return Json(new { Status = result });
             }
@@ -243,49 +342,115 @@ namespace Sistema_David.Controllers
 
 
         [HttpPost]
-        public ActionResult EditarInfo(int id)
+        public ActionResult EditarInfo()
         {
             try
             {
-
+                var body = LeerJson<JObject>() ?? new JObject();
+                int id = JsonEntero(body, "Id", "id");
+                if (id <= 0) int.TryParse(Request["id"], out id);
                 var producto = ProductosModel.BuscarProducto(id);
+                if (producto == null)
+                    return Json(new { Status = false, Mensaje = "No se pudo cargar el producto. Intentá de nuevo." });
+
                 var categorias = ProductosModel.ListaCategorias();
 
                 var result = new Dictionary<string, object>();
+                result.Add("Status", true);
                 result.Add("Producto", producto);
                 result.Add("Categorias", categorias);
                 return Json(result, JsonRequestBehavior.AllowGet);
             }
-
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(null);
+                return Json(new { Status = false, Mensaje = "No se pudo cargar el producto. Intentá de nuevo." });
             }
-
         }
 
 
-        public ActionResult EditarActivo(int id, int activo)
+        [HttpPost]
+        public ActionResult EditarActivo()
         {
             try
             {
+                var body = LeerJson<JObject>() ?? new JObject();
+                int id = JsonEntero(body, "id", "Id");
+                int activo = JsonEntero(body, "activo", "Activo");
+                bool overwrite = JsonBool(body, "ConfirmOverwrite", "confirmOverwrite");
+                if (id <= 0)
+                {
+                    int.TryParse(Request["id"], out id);
+                    int.TryParse(Request["activo"], out activo);
+                }
 
+                var user = UsuarioActual();
+                if (user == null) return Json(new { Status = false, Mensaje = "Sesión inválida." });
+                if (id <= 0) return Json(new { Status = false, Mensaje = "Producto inválido." });
+
+                if (EsComprobante())
+                    return Json(ProductosCambiosModel.SolicitarActivo(id, activo, user.Id, overwrite));
+
+                var antes = ProductosModel.BuscarProducto(id);
                 var result = ProductosModel.EditarActivo(id, activo);
-
                 if (result)
-                    return Json(new { Status = true });
+                {
+                    ProductosCambiosModel.RegistrarCambioDirecto("Activo", antes, ProductosModel.BuscarProducto(id), user.Id);
+                }
 
-                else
-                    return Json(new { Status = false });
+                return Json(new { Status = result, Mensaje = result ? null : "No se pudo cambiar el estado. Intentá de nuevo." });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { Status = false });
+                return Json(new { Status = false, Mensaje = "No se pudo cambiar el estado. Intentá de nuevo." });
             }
-
         }
 
+        [HttpPost]
+        public ActionResult ActualizarImagen()
+        {
+            try
+            {
+                var body = LeerJson<JObject>() ?? new JObject();
+                int id = JsonEntero(body, "id", "Id");
+                bool overwrite = JsonBool(body, "ConfirmOverwrite", "confirmOverwrite");
+                var imagen = JsonTexto(body, "imagen", "Imagen");
 
+                var user = UsuarioActual();
+                if (user == null) return Json(new { Status = false, Mensaje = "Sesión inválida." });
+                if (id <= 0) return Json(new { Status = false, Mensaje = "Producto inválido." });
+                if (string.IsNullOrWhiteSpace(imagen))
+                    return Json(new { Status = false, Mensaje = "Elegí una imagen." });
+
+                if (EsComprobante())
+                {
+                    var actual = ProductosModel.BuscarProducto(id);
+                    if (actual == null)
+                        return Json(new { Status = false, Mensaje = "No se encontró el producto." });
+
+                    actual.Imagen = imagen;
+                    actual.ConfirmOverwrite = overwrite;
+                    return Json(ProductosCambiosModel.SolicitarEditar(actual, user.Id, true));
+                }
+
+                if (!EsAdmin())
+                    return Json(new { Status = false, Mensaje = "No tenés permiso para cambiar la imagen." });
+
+                var antes = ProductosModel.BuscarProducto(id);
+                var result = ProductosModel.ActualizarImagen(id, imagen);
+                if (result)
+                {
+                    var despues = ProductosModel.BuscarProducto(id);
+                    ProductosCambiosModel.RegistrarCambioDirecto("Editar", antes, despues, user.Id);
+                    return Json(new { Status = true });
+                }
+
+                return Json(new { Status = false, Mensaje = "No se pudo guardar la imagen. Intentá de nuevo." });
+            }
+            catch (Exception)
+            {
+                return Json(new { Status = false, Mensaje = "No se pudo guardar la imagen. Intentá de nuevo." });
+            }
+        }
 
         [HttpPost]
         public ActionResult Editar()
@@ -296,19 +461,276 @@ namespace Sistema_David.Controllers
                 if (model == null || model.Id <= 0)
                     return Json(new { Status = false, Mensaje = "Producto inválido." });
 
+                if (string.IsNullOrWhiteSpace(model.Nombre))
+                    return Json(new { Status = false, Mensaje = "Ingresá el nombre del producto." });
+
+                var user = UsuarioActual();
+                if (user == null)
+                    return Json(new { Status = false, Mensaje = "Sesión inválida." });
+
+                if (EsComprobante())
+                    return Json(ProductosCambiosModel.SolicitarEditar(model, user.Id, true));
+
+                var antes = ProductosModel.BuscarProducto(model.Id);
                 var result = ProductosModel.Editar(model);
                 if (result)
+                {
+                    ProductosCambiosModel.RegistrarCambioDirecto("Editar", antes, model, user.Id);
                     return Json(new { Status = true });
+                }
 
-                return Json(new { Status = false, Mensaje = "No se pudo modificar el producto." });
+                return Json(new { Status = false, Mensaje = "No se pudo guardar el producto. Intentá otra vez." });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { Status = false, Mensaje = ex.Message });
+                return Json(new { Status = false, Mensaje = "No se pudo guardar el producto. Intentá otra vez." });
             }
         }
 
-        private static VMProducto LeerProductoDesdeRequest()
+        public ActionResult ContarPendientes()
+        {
+            try
+            {
+                var user = UsuarioActual();
+                if (user == null || user.IdRol != 1)
+                    return Json(new { Status = false, Count = 0 }, JsonRequestBehavior.AllowGet);
+
+                var count = ProductosCambiosModel.ContarPendientes(user.IdRol ?? 0, user.Id);
+                return Json(new { Status = true, Count = count }, JsonRequestBehavior.AllowGet);
+            }
+            catch
+            {
+                return Json(new { Status = false, Count = 0 }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        public ActionResult ListarPendientes()
+        {
+            var user = UsuarioActual();
+            if (user == null || user.IdRol != 1)
+                return Json(new { data = new List<VMProductoSolicitud>() }, JsonRequestBehavior.AllowGet);
+
+            var data = ProductosCambiosModel.ListarPendientes(user.IdRol ?? 0, user.Id);
+            var json = Json(new { data }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = int.MaxValue;
+            return json;
+        }
+
+        public ActionResult DetallePendiente(int id)
+        {
+            var user = UsuarioActual();
+            if (user == null || user.IdRol != 1)
+                return Json(new { Status = false }, JsonRequestBehavior.AllowGet);
+
+            var row = ProductosCambiosModel.ObtenerSolicitud(id);
+            if (row == null)
+                return Json(new { Status = false }, JsonRequestBehavior.AllowGet);
+
+            if (user.IdRol == 4 && row.IdUsuarioSolicita != user.Id)
+                return Json(new { Status = false, Mensaje = "No tenés permiso para ver esta solicitud." }, JsonRequestBehavior.AllowGet);
+
+            return Json(new { Status = true, Solicitud = row }, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult ImagenSolicitud(int id, string lado = "despues", int extra = -1)
+        {
+            var user = UsuarioActual();
+            if (user == null || user.IdRol != 1)
+                return new HttpStatusCodeResult(403);
+
+            string mime;
+            var bytes = ProductosCambiosModel.ObtenerImagenSolicitud(id, lado, extra, out mime);
+            if (bytes == null || bytes.Length == 0)
+                return ImagenProductoPorDefecto(false);
+
+            return File(bytes, mime ?? "image/jpeg");
+        }
+
+        [HttpPost]
+        public ActionResult AceptarPendiente(VMResolverPendiente model)
+        {
+            if (!EsAdmin())
+                return Json(new { Status = false, Mensaje = "Solo el administrador puede aceptar cambios." });
+
+            if (model == null || model.Id <= 0)
+                return Json(new { Status = false, Mensaje = "Solicitud inválida." });
+
+            var result = ProductosCambiosModel.Aceptar(model.Id, UsuarioActual().Id, model.Comentario);
+            return Json(result);
+        }
+
+        [HttpPost]
+        public ActionResult RechazarPendiente(VMResolverPendiente model)
+        {
+            if (!EsAdmin())
+                return Json(new { Status = false, Mensaje = "Solo el administrador puede rechazar cambios." });
+
+            if (model == null || model.Id <= 0)
+                return Json(new { Status = false, Mensaje = "Solicitud inválida." });
+
+            var result = ProductosCambiosModel.Rechazar(model.Id, UsuarioActual().Id, model.Comentario);
+            return Json(result);
+        }
+
+        [HttpPost]
+        public ActionResult AceptarPendientes(VMResolverPendientes model)
+        {
+            if (!EsAdmin())
+                return Json(new { Status = false, Mensaje = "Solo el administrador puede aceptar cambios." });
+
+            if (model == null || model.Ids == null || model.Ids.Count == 0)
+                model = LeerJson<VMResolverPendientes>() ?? model;
+
+            if (model == null || model.Ids == null || model.Ids.Count == 0)
+                return Json(new { Status = false, Mensaje = "No hay solicitudes seleccionadas." });
+
+            var result = ProductosCambiosModel.AceptarVarios(model.Ids, UsuarioActual().Id, model.Comentario);
+            return Json(result);
+        }
+
+        [HttpPost]
+        public ActionResult RechazarPendientes(VMResolverPendientes model)
+        {
+            if (!EsAdmin())
+                return Json(new { Status = false, Mensaje = "Solo el administrador puede rechazar cambios." });
+
+            if (model == null || model.Ids == null || model.Ids.Count == 0)
+                model = LeerJson<VMResolverPendientes>() ?? model;
+
+            if (model == null || model.Ids == null || model.Ids.Count == 0)
+                return Json(new { Status = false, Mensaje = "No hay solicitudes seleccionadas." });
+
+            var result = ProductosCambiosModel.RechazarVarios(model.Ids, UsuarioActual().Id, model.Comentario);
+            return Json(result);
+        }
+
+        [HttpPost]
+        public ActionResult AccionMasiva(VMProductoAccionMasiva model)
+        {
+            try
+            {
+                var user = UsuarioActual();
+                if (user == null)
+                    return Json(new { Status = false, Mensaje = "Sesión inválida." });
+
+                if (model == null || model.Ids == null || model.Ids.Count == 0)
+                    model = LeerJson<VMProductoAccionMasiva>() ?? model;
+
+                if (!EsAdmin())
+                    return Json(new { Status = false, Mensaje = "La acción masiva solo está disponible para el administrador." });
+
+                if (model == null || model.Ids == null || model.Ids.Count == 0)
+                    return Json(new { Status = false, Mensaje = "No hay productos seleccionados." });
+
+                var accion = (model.Accion ?? "").Trim().ToLowerInvariant();
+                if (accion != "activar" && accion != "desactivar" && accion != "eliminar")
+                    return Json(new { Status = false, Mensaje = "Acción inválida." });
+
+                var ids = model.Ids.Where(x => x > 0).Distinct().ToList();
+                int ok = 0;
+                int fallidos = 0;
+                var detalle = new List<string>();
+
+                foreach (var id in ids)
+                {
+                    try
+                    {
+                        if (accion == "eliminar")
+                        {
+                            var stock = StockModel.ObtenerUsuariosConProductoEnStock(id);
+                            if (stock != null && stock.Any())
+                            {
+                                fallidos++;
+                                if (detalle.Count < 3)
+                                    detalle.Add("Hay vendedores con stock de uno de los productos.");
+                                continue;
+                            }
+                            var antes = ProductosModel.BuscarProducto(id);
+                            var result = ProductosModel.Eliminar(id);
+                            if (result)
+                            {
+                                ProductosCambiosModel.RegistrarCambioDirecto("Eliminar", antes, null, user.Id);
+                                ok++;
+                            }
+                            else fallidos++;
+                        }
+                        else
+                        {
+                            var activo = accion == "activar" ? 1 : 0;
+                            var antes = ProductosModel.BuscarProducto(id);
+                            var result = ProductosModel.EditarActivo(id, activo);
+                            if (result)
+                            {
+                                ProductosCambiosModel.RegistrarCambioDirecto("Activo", antes, ProductosModel.BuscarProducto(id), user.Id);
+                                ok++;
+                            }
+                            else fallidos++;
+                        }
+                    }
+                    catch
+                    {
+                        fallidos++;
+                    }
+                }
+
+                if (ok == 0)
+                {
+                    var msg = detalle.FirstOrDefault()
+                        ?? (accion == "eliminar"
+                            ? "No se pudieron eliminar los productos seleccionados."
+                            : "No se pudieron actualizar los productos seleccionados.");
+                    return Json(new { Status = false, Mensaje = msg, Detalle = detalle, Fallidos = fallidos });
+                }
+
+                string mensaje;
+                if (accion == "eliminar")
+                    mensaje = ok == 1 ? "Producto eliminado." : ok + " productos eliminados.";
+                else if (accion == "activar")
+                    mensaje = ok == 1 ? "Producto activado." : ok + " productos activados.";
+                else
+                    mensaje = ok == 1 ? "Producto desactivado." : ok + " productos desactivados.";
+
+                if (fallidos > 0)
+                    mensaje += " " + fallidos + " no se pudieron aplicar.";
+
+                return Json(new { Status = true, Mensaje = mensaje, Ok = ok, Fallidos = fallidos, Detalle = detalle });
+            }
+            catch (Exception)
+            {
+                return Json(new { Status = false, Mensaje = "No se pudo completar la acción. Intentá de nuevo." });
+            }
+        }
+
+        public ActionResult ListarHistorial(int? idProducto, string desde, string hasta)
+        {
+            var user = UsuarioActual();
+            if (user == null || user.IdRol != 1)
+                return Json(new { data = new List<VMProductoHistorial>() }, JsonRequestBehavior.AllowGet);
+
+            DateTime fd, fh;
+            DateTime? d1 = DateTime.TryParse(desde, out fd) ? fd : (DateTime?)null;
+            DateTime? d2 = DateTime.TryParse(hasta, out fh) ? fh : (DateTime?)null;
+
+            var data = ProductosCambiosModel.ListarHistorial(idProducto, d1, d2);
+            var json = Json(new { data }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = int.MaxValue;
+            return json;
+        }
+
+        public ActionResult DetalleHistorial(int id)
+        {
+            var user = UsuarioActual();
+            if (user == null || user.IdRol != 1)
+                return Json(new { Status = false }, JsonRequestBehavior.AllowGet);
+
+            var row = ProductosCambiosModel.ObtenerHistorial(id);
+            if (row == null)
+                return Json(new { Status = false }, JsonRequestBehavior.AllowGet);
+
+            return Json(new { Status = true, Historial = row }, JsonRequestBehavior.AllowGet);
+        }
+
+        private static T LeerJson<T>() where T : class
         {
             if (System.Web.HttpContext.Current?.Request?.InputStream == null)
                 return null;
@@ -323,8 +745,56 @@ namespace Sistema_David.Controllers
                 if (string.IsNullOrWhiteSpace(json))
                     return null;
 
-                return JsonConvert.DeserializeObject<VMProducto>(json);
+                return JsonConvert.DeserializeObject<T>(json);
             }
+        }
+
+        private static VMProducto LeerProductoDesdeRequest()
+        {
+            return LeerJson<VMProducto>();
+        }
+
+        private static int JsonEntero(JObject body, params string[] names)
+        {
+            if (body == null || names == null) return 0;
+            foreach (var n in names)
+            {
+                var t = body[n];
+                if (t == null || t.Type == JTokenType.Null) continue;
+                int v;
+                if (t.Type == JTokenType.Integer) return t.Value<int>();
+                if (int.TryParse(t.ToString(), out v)) return v;
+            }
+            return 0;
+        }
+
+        private static bool JsonBool(JObject body, params string[] names)
+        {
+            if (body == null || names == null) return false;
+            foreach (var n in names)
+            {
+                var t = body[n];
+                if (t == null || t.Type == JTokenType.Null) continue;
+                if (t.Type == JTokenType.Boolean) return t.Value<bool>();
+                bool b;
+                if (bool.TryParse(t.ToString(), out b)) return b;
+                int i;
+                if (int.TryParse(t.ToString(), out i)) return i != 0;
+            }
+            return false;
+        }
+
+        private static string JsonTexto(JObject body, params string[] names)
+        {
+            if (body == null || names == null) return "";
+            foreach (var n in names)
+            {
+                var t = body[n];
+                if (t == null || t.Type == JTokenType.Null) continue;
+                var s = t.Type == JTokenType.String ? t.Value<string>() : t.ToString();
+                if (!string.IsNullOrWhiteSpace(s)) return s;
+            }
+            return "";
         }
 
         /*
@@ -447,12 +917,12 @@ namespace Sistema_David.Controllers
                     });
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Json(new
                 {
                     Status = false,
-                    Mensaje = "Error al enviar el producto: " + ex.Message
+                    Mensaje = "No se pudo enviar el producto. Intentá de nuevo."
                 });
             }
         }
@@ -603,12 +1073,12 @@ namespace Sistema_David.Controllers
                     };
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new ResultadoSubidaImagen
                 {
                     Status = false,
-                    Mensaje = "No se pudo subir una imagen: " + ex.Message
+                    Mensaje = "No se pudo subir una imagen. Intentá de nuevo."
                 };
             }
         }
