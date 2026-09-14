@@ -89,6 +89,12 @@ const columnConfigTransferenciasPendientes = [
 
 
 let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
+let cobrosPendientesCache = [];
+let transferenciasPendientesCache = [];
+const VC_VISTA_KEY = "vc_cobros_vista";
+let vcCardChip = "todas";
+let vcCardQuery = "";
+let vcSheetCtx = null;
 
 /* ===========================================================
    HELPERS
@@ -215,6 +221,7 @@ VC.hideGlobalLoading = function () {
 };
 
 VC.ajustarTablasPostCarga = function () {
+    if (document.body.classList.contains("vc-mode-cards")) return;
     const ajustar = (dt) => {
         if (!dt) return;
         try { dt.columns.adjust().draw(false); } catch (_) { }
@@ -438,6 +445,389 @@ VC.extraerNumero = function (texto) {
 };
 
 /* ===========================================================
+   VISTA CARDS / TABLA
+=========================================================== */
+
+VC.esAdminSel = function () {
+    const rol = Number(userSession?.IdRol);
+    return rol === 1 || rol === 4;
+};
+
+VC.leerVista = function () {
+    try {
+        const v = localStorage.getItem(VC_VISTA_KEY);
+        if (v === "cards" || v === "tabla") return v;
+    } catch (_) { }
+    return window.matchMedia("(max-width: 992px)").matches ? "cards" : "tabla";
+};
+
+VC.guardarVista = function (v) {
+    try { localStorage.setItem(VC_VISTA_KEY, v); } catch (_) { }
+};
+
+VC.cerrarAcordeonesTabla = function () {
+    [tablaCobros, tablaPendientes, tablaTransferenciasPendientes].forEach((dt) => {
+        if (!dt) return;
+        try {
+            dt.rows().every(function () {
+                if (this.child && this.child.isShown()) {
+                    this.child.hide();
+                    $(this.node()).removeClass("shown venta-seleccionada");
+                    $(this.node()).find("button.btn-row-detail i, button.btn-row-detail-pendiente i, button.btn-row-detail-transf i")
+                        .removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                }
+            });
+        } catch (_) { }
+    });
+};
+
+VC.cerrarDetallesCards = function () {
+    document.querySelectorAll(".vc-cobro-card.is-open").forEach((el) => {
+        el.classList.remove("is-open");
+        const det = el.querySelector(".vc-card-detalle");
+        if (det) det.innerHTML = "";
+    });
+};
+
+VC.aplicarVista = function (vista, persist) {
+    const v = (vista === "tabla") ? "tabla" : "cards";
+    document.body.classList.toggle("vc-mode-cards", v === "cards");
+    document.body.classList.toggle("vc-mode-tabla", v === "tabla");
+    $("#btnVistaCards").toggleClass("is-on", v === "cards");
+    $("#btnVistaTabla").toggleClass("is-on", v === "tabla");
+    if (persist !== false) VC.guardarVista(v);
+
+    if (v === "cards") {
+        VC.cerrarAcordeonesTabla();
+        VC.refreshCardsViews();
+    } else {
+        VC.cerrarDetallesCards();
+        VC.ajustarTablasPostCarga();
+        if (ventaAcordeonAbierta) VC.reabrirAcordeon();
+    }
+};
+
+VC.initVista = function () {
+    VC.aplicarVista(VC.leerVista(), false);
+
+    $("#vcVistaToggle").off("click.vcVista").on("click.vcVista", "button[data-vista]", function () {
+        VC.aplicarVista(this.getAttribute("data-vista"), true);
+    });
+
+    $("#vcCardChips").off("click.vcChip").on("click.vcChip", "[data-chip]", function () {
+        vcCardChip = this.getAttribute("data-chip") || "todas";
+        $("#vcCardChips .vc-chip").removeClass("is-on");
+        $(this).addClass("is-on");
+        VC.filtrarCardsDom();
+    });
+
+    $("#vcCardQ").off("input.vcQ").on("input.vcQ", function () {
+        vcCardQuery = String(this.value || "").toLowerCase().trim();
+        VC.filtrarCardsDom();
+    });
+
+    $("#vc_cards_chk_all").off("change.vcCardAll").on("change.vcCardAll", function () {
+        const on = this.checked;
+        document.querySelectorAll("#vc_cards_main .vc-cobro-card:not(.is-hidden) .vc-card-check").forEach((chk) => {
+            const idV = Number(chk.getAttribute("data-idventa") || 0);
+            if (!idV) return;
+            if (on) ventasSeleccionadas.add(idV);
+            else ventasSeleccionadas.delete(idV);
+        });
+        VC.refrescarSeleccionUI();
+    });
+
+    $(document).off("click.vcCards").on("click.vcCards", "[data-vc-act]", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        VC.onCardAction(this);
+    });
+
+    $(document).off("click.vcCardSel").on("click.vcCardSel", ".vc-cobro-card", function (e) {
+        if ($(e.target).closest("button, a, input, label, [data-vc-act]").length) return;
+        const idVenta = Number(this.getAttribute("data-idventa") || 0);
+        const row = VC.findCardRow(idVenta, Number(this.getAttribute("data-idcuota") || 0));
+        if (row) {
+            ventaClickeadaId = idVenta;
+            VC.mostrarInfoCliente(row);
+            VC.pintarCardSeleccion();
+        }
+    });
+
+    $(document).off("change.vcCardChk").on("change.vcCardChk", ".vc-card-check", function (e) {
+        e.stopPropagation();
+        const idV = Number(this.getAttribute("data-idventa") || 0);
+        if (!idV) return;
+        if (this.checked) ventasSeleccionadas.add(idV);
+        else ventasSeleccionadas.delete(idV);
+        VC.refrescarSeleccionUI();
+    });
+
+    $(document).off("click.vcSheetClose").on("click.vcSheetClose", "[data-vc-sheet-close]", function () {
+        VC.cerrarSheet();
+    });
+
+    if (VC.esAdminSel()) {
+        $("#vcCardChkAllWrap").removeAttr("hidden");
+    }
+};
+
+VC.findCardRow = function (idVenta, idCuota) {
+    const pools = [cuotasCache, cobrosPendientesCache, transferenciasPendientesCache];
+    for (let i = 0; i < pools.length; i++) {
+        const hit = (pools[i] || []).find(x =>
+            Number(x.IdVenta) === Number(idVenta) &&
+            (!idCuota || Number(x.IdCuota) === Number(idCuota))
+        );
+        if (hit) return hit;
+    }
+    return null;
+};
+
+VC.montoRestanteVenta = function (d) {
+    const list = d.__TodasLasCuotas;
+    if (Array.isArray(list) && list.length) {
+        return list.reduce((s, c) => s + (Number(c.MontoRestante) || 0), 0);
+    }
+    return Number(d.MontoRestante) || 0;
+};
+
+VC.htmlCobroCard = function (d, kind) {
+    const dias = calcularDiasAtraso(d.FechaVencimiento);
+    const lateCls = dias >= 15 ? "is-late-hi" : dias >= 10 ? "is-late-mid" : dias > 0 ? "is-late" : "";
+    const kindCls = kind === "pend" ? "is-pend" : kind === "transf" ? "is-transf" : "";
+    const fechaCobro = d.FechaCobro ? moment(d.FechaCobro).format("DD/MM") : "—";
+    const nCuotas = Number(d.__CantidadCuotasPendientes || 1);
+    const tel = String(d.ClienteTelefono || "").replace(/\D/g, "");
+    const restante = VC.montoRestanteVenta(d);
+    const badge = dias > 0
+        ? `<span class="vc-card-badge badge ${dias >= 15 ? "bg-danger" : dias >= 10 ? "bg-orange" : "bg-warning text-dark"}">Vencida · ${dias}d</span>`
+        : `<span class="vc-card-badge badge bg-success">Al día</span>`;
+    const chk = (kind === "main" && VC.esAdminSel())
+        ? `<input type="checkbox" class="vc-card-check" data-idventa="${d.IdVenta}" ${ventasSeleccionadas.has(Number(d.IdVenta)) ? "checked" : ""}>`
+        : "";
+    const mapsBtn = (d.ClienteLatitud && d.ClienteLongitud)
+        ? `<button type="button" class="vc-ico-btn maps" data-vc-act="maps" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" title="Maps"><i class="fa fa-map-marker"></i></button>`
+        : `<button type="button" class="vc-ico-btn maps" data-vc-act="dir" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" title="Dirección"><i class="fa fa-map-marker"></i></button>`;
+    const wa = tel
+        ? `<button type="button" class="vc-ico-btn wa" data-vc-act="wa" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" data-tel="${VC.escAttr(tel)}" data-nom="${VC.escAttr(d.ClienteNombre || "")}" title="WhatsApp"><i class="fa fa-whatsapp"></i></button>`
+        : "";
+    const phone = tel
+        ? `<a class="vc-ico-btn phone" href="tel:${tel}" title="Llamar"><i class="fa fa-phone"></i></a>`
+        : "";
+
+    const q = `${d.ClienteNombre || ""} ${d.ZonaNombre || ""} ${d.ClienteDireccion || ""} ${d.IdVenta} ${d.CobradorNombre || ""}`.toLowerCase();
+
+    return `
+    <article class="vc-cobro-card ${lateCls} ${kindCls}" data-kind="${kind}" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" data-idcliente="${d.IdCliente || 0}" data-late="${dias > 0 ? 1 : 0}" data-q="${VC.escAttr(q)}">
+      <div class="vc-card-body">
+        <div class="vc-card-head">
+          ${chk}
+          <div class="vc-card-head-main">
+            <div class="vc-card-name">${VC.escHtml(d.ClienteNombre || "Sin nombre")}</div>
+            <div class="vc-card-sub">Venta #${d.IdVenta} · Cuota ${d.NumeroCuota}${nCuotas > 1 ? ` · ${nCuotas} cuotas` : ""} · Cobro ${fechaCobro}</div>
+          </div>
+          ${badge}
+        </div>
+        <div class="vc-card-money">
+          <strong>${VC.fmt(restante)}</strong>
+          <small>Restante</small>
+        </div>
+        <div class="vc-card-meta">
+          ${d.ZonaNombre ? `<span class="vc-pill">${VC.escHtml(d.ZonaNombre)}</span>` : ""}
+          ${d.Turno ? `<span class="vc-pill">${VC.escHtml(VC.turnoMT(d.Turno))}</span>` : ""}
+          ${d.FranjaHoraria ? `<span class="vc-pill">${VC.escHtml(d.FranjaHoraria)}</span>` : ""}
+          ${d.CobradorNombre ? `<span class="vc-pill">${VC.escHtml(d.CobradorNombre)}</span>` : ""}
+        </div>
+        <div class="vc-card-dir">${d.ClienteDireccion ? VC.escHtml(d.ClienteDireccion) : "Sin dirección"}</div>
+        <div class="vc-card-actions">
+          <button type="button" class="vc-card-pay" data-vc-act="cobrar" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}">Cobrar</button>
+          <button type="button" class="vc-ico-btn detalle" data-vc-act="detalle" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" title="Ver cuotas / productos"><i class="fa fa-chevron-down"></i></button>
+          ${wa}
+          ${phone}
+          ${mapsBtn}
+          <button type="button" class="vc-ico-btn" data-vc-act="more" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" title="Más"><i class="fa fa-ellipsis-v"></i></button>
+        </div>
+      </div>
+      <div class="vc-card-detalle"></div>
+    </article>`;
+};
+
+VC.pintarListaCards = function (containerId, rows, kind) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const list = rows || [];
+    if (!list.length) {
+        el.innerHTML = kind === "main"
+            ? `<div class="vc-cards-empty">No hay cuotas para cobrar con estos filtros.</div>`
+            : "";
+        return;
+    }
+    const parts = new Array(list.length);
+    for (let i = 0; i < list.length; i++) parts[i] = VC.htmlCobroCard(list[i], kind);
+    el.innerHTML = parts.join("");
+};
+
+VC.refreshCardsViews = function () {
+    if (!document.body.classList.contains("vc-mode-cards")) return;
+
+    VC.pintarListaCards("vc_cards_main", cuotasCache, "main");
+    VC.pintarListaCards("vc_cards_pend", cobrosPendientesCache, "pend");
+    VC.pintarListaCards("vc_cards_transf", transferenciasPendientesCache, "transf");
+
+    let total = 0;
+    let venc = 0;
+    (cuotasCache || []).forEach((d) => {
+        total += VC.montoRestanteVenta(d);
+        if (calcularDiasAtraso(d.FechaVencimiento) > 0) venc++;
+    });
+    const cantEl = document.getElementById("vcKpiCant");
+    const totEl = document.getElementById("vcKpiTotal");
+    const venEl = document.getElementById("vcKpiVenc");
+    if (cantEl) cantEl.textContent = String((cuotasCache || []).length);
+    if (totEl) totEl.textContent = VC.fmt(total);
+    if (venEl) venEl.textContent = String(venc);
+
+    VC.filtrarCardsDom();
+    VC.pintarCardSeleccion();
+    VC.refrescarSeleccionUI();
+};
+
+VC.filtrarCardsDom = function () {
+    const q = vcCardQuery;
+    const chip = vcCardChip;
+    document.querySelectorAll("#vc_cards_main .vc-cobro-card").forEach((card) => {
+        const late = card.getAttribute("data-late") === "1";
+        let ok = true;
+        if (chip === "vencidas") ok = late;
+        else if (chip === "aldia") ok = !late;
+        if (ok && q) ok = (card.getAttribute("data-q") || "").indexOf(q) !== -1;
+        card.classList.toggle("is-hidden", !ok);
+    });
+};
+
+VC.pintarCardSeleccion = function () {
+    document.querySelectorAll(".vc-cobro-card").forEach((el) => {
+        el.classList.toggle("is-sel", Number(el.getAttribute("data-idventa")) === Number(ventaClickeadaId));
+    });
+};
+
+VC.abrirCardDetalle = async function (idVenta, idCuota) {
+    const card = document.querySelector(`.vc-cobro-card[data-idventa="${idVenta}"][data-idcuota="${idCuota}"]`)
+        || document.querySelector(`.vc-cobro-card[data-idventa="${idVenta}"]`);
+    if (!card) return;
+
+    const ya = card.classList.contains("is-open");
+    VC.cerrarDetallesCards();
+    if (ya) {
+        ventaAcordeonAbierta = null;
+        return;
+    }
+
+    VC.cerrarAcordeonesTabla();
+    const row = VC.findCardRow(idVenta, idCuota);
+    if (!row) return;
+
+    const det = card.querySelector(".vc-card-detalle");
+    det.innerHTML = VC.formarAcordeonVenta(row);
+    card.classList.add("is-open");
+    ventaAcordeonAbierta = idVenta;
+
+    const hayClienteFiltro = !!($("#f_cliente").val());
+    const esValidacion = Number(row.CobroPendiente) === 1 || Number(row.TransferenciaPendiente) === 1;
+    await VC.cargarDetalleVenta(idVenta, { incluirValidacion: hayClienteFiltro || esValidacion });
+    card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+};
+
+VC.cerrarSheet = function () {
+    const sheet = document.getElementById("vcCardSheet");
+    if (sheet) sheet.hidden = true;
+    vcSheetCtx = null;
+};
+
+VC.abrirSheet = function (d) {
+    vcSheetCtx = d;
+    const acts = document.getElementById("vcSheetActs");
+    const title = document.getElementById("vcSheetTitle");
+    if (title) title.textContent = d.ClienteNombre || "Acciones";
+    const pendiente = (d.TransferenciaPendiente === 1 || d.TransferenciaPendiente === true);
+    const nuevoEstado = pendiente ? 0 : 1;
+    const estadoCobro = Number(d.EstadoCobro || 0) === 1;
+    const puede = VC.esAdminSel();
+    acts.innerHTML = `
+      <button type="button" class="vc-sheet-act" data-vc-act="obs" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-home"></i> ${estadoCobro ? "Obs. cobro (marcada)" : "Observación de cobro"}</button>
+      <button type="button" class="vc-sheet-act" data-vc-act="info" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-info-circle"></i> Información de la venta</button>
+      <button type="button" class="vc-sheet-act" data-vc-act="ajuste" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-bolt"></i> Ajuste</button>
+      <button type="button" class="vc-sheet-act" data-vc-act="hist" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-eye"></i> Historial</button>
+      ${puede ? `<button type="button" class="vc-sheet-act" data-vc-act="editcli" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-pencil"></i> Editar cliente</button>` : ""}
+      <button type="button" class="vc-sheet-act" data-vc-act="transf" data-estado="${nuevoEstado}" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-exclamation-circle"></i> ${pendiente ? "Revertir transferencia pend." : "Transferencia pendiente"}</button>
+      <button type="button" class="vc-sheet-act" data-vc-sheet-close="1"><i class="fa fa-times"></i> Cerrar</button>
+    `;
+    document.getElementById("vcCardSheet").hidden = false;
+};
+
+VC.onCardAction = function (btn) {
+    const act = btn.getAttribute("data-vc-act");
+    const idVenta = Number(btn.getAttribute("data-idventa") || 0);
+    const idCuota = Number(btn.getAttribute("data-idcuota") || 0);
+    const row = VC.findCardRow(idVenta, idCuota) || vcSheetCtx;
+    if (!row && act !== "more") return;
+
+    if (act === "cobrar") {
+        VC.cerrarSheet();
+        VC.abrirCobro(idCuota, idVenta);
+        return;
+    }
+    if (act === "wa") {
+        VC.abrirWhatsApp(btn.getAttribute("data-tel") || row.ClienteTelefono, btn.getAttribute("data-nom") || row.ClienteNombre);
+        return;
+    }
+    if (act === "maps" || act === "dir") {
+        VC.mostrarDireccionCompleta(row.ClienteDireccion, row.ClienteLatitud, row.ClienteLongitud);
+        return;
+    }
+    if (act === "more") {
+        VC.abrirSheet(row);
+        return;
+    }
+    if (act === "detalle") {
+        VC.cerrarSheet();
+        VC.abrirCardDetalle(idVenta, idCuota);
+        return;
+    }
+    if (act === "obs") {
+        VC.cerrarSheet();
+        VC.abrirObsCobro(idVenta);
+        return;
+    }
+    if (act === "info") {
+        VC.cerrarSheet();
+        if (typeof informacionVenta === "function") informacionVenta(idVenta, tablaCobros);
+        return;
+    }
+    if (act === "ajuste") {
+        VC.cerrarSheet();
+        VC.abrirAjuste(idVenta, idCuota);
+        return;
+    }
+    if (act === "hist") {
+        VC.cerrarSheet();
+        VC.abrirHistorialPartial(idVenta, idCuota);
+        return;
+    }
+    if (act === "editcli") {
+        VC.cerrarSheet();
+        VC.editarCliente(row.IdCliente);
+        return;
+    }
+    if (act === "transf") {
+        VC.cerrarSheet();
+        const nuevo = Number(btn.getAttribute("data-estado") || 0);
+        VC.transferenciaPendiente(nuevo, idCuota);
+    }
+};
+
+/* ===========================================================
    INIT
 =========================================================== */
 
@@ -472,6 +862,7 @@ $(document).ready(async function () {
 
    
     VC.initEventos();
+    VC.initVista();
     await VC.cargarTabla();
 
     habilitarSeleccionFilasCuotasCobros();
@@ -629,6 +1020,12 @@ VC.refrescarSeleccionUI = function () {
 
             // check DOM (fila)
             $(this).find("input.vc-row-check").prop("checked", checked);
+        });
+
+        document.querySelectorAll(".vc-card-check").forEach((chk) => {
+            const idV = Number(chk.getAttribute("data-idventa") || 0);
+            const on = ventasSeleccionadas.has(idV);
+            chk.checked = on;
         });
 
         // 2) setear vc_chk_all según estado (solo visibles/filtradas)
@@ -1054,7 +1451,11 @@ VC.cargarTabla = async function () {
         await VC.cargarCobrosPendientes();
         if (VC.esAdminOComprobantes()) {
             await VC.cargarTransferenciasPendientes();
+        } else {
+            transferenciasPendientesCache = [];
         }
+
+        VC.refreshCardsViews();
 
     } catch (e) {
         if (esAbortAjax(e)) return;
@@ -1494,6 +1895,12 @@ VC.cargarTabla = async function () {
 
 VC.reabrirAcordeon = function () {
     if (!ventaAcordeonAbierta) return;
+
+    if (document.body.classList.contains("vc-mode-cards")) {
+        const row = (cuotasCache || []).find(x => Number(x.IdVenta) === Number(ventaAcordeonAbierta));
+        if (row) VC.abrirCardDetalle(row.IdVenta, row.IdCuota);
+        return;
+    }
 
     $("#vc_tabla tbody tr").each(function () {
         const r = tablaCobros.row(this);
@@ -2268,12 +2675,14 @@ VC.cargarCobrosPendientes = async function () {
     );
 
     const data = resp.data || [];
+    cobrosPendientesCache = data;
 
     // ✅ FIX BUG PRECEDENCIA
     if (data.length > 0 && (userSession.IdRol == 1 || userSession.IdRol == 4)) {
         $("#divCobrosPendientes").removeAttr("hidden");
     } else {
         $("#divCobrosPendientes").attr("hidden", true);
+        VC.refreshCardsViews();
         return;
     }
 
@@ -2519,12 +2928,14 @@ VC.cargarCobrosPendientes = async function () {
 
             tablaPendientes.draw(false);
         });
+    VC.refreshCardsViews();
 };
 
 VC.cargarTransferenciasPendientes = async function () {
 
     if (!VC.esAdminOComprobantes()) {
         $("#divTransferenciasPendientes").attr("hidden", true);
+        transferenciasPendientesCache = [];
         return;
     }
 
@@ -2538,12 +2949,14 @@ VC.cargarTransferenciasPendientes = async function () {
     );
 
     const data = agruparCobrosPorVentaManteniendoColumnas(resp.data || []);
+    transferenciasPendientesCache = data;
 
     // ✅ MOSTRAR / OCULTAR BLOQUE
     if (data.length > 0) {
         $("#divTransferenciasPendientes").removeAttr("hidden");
     } else {
         $("#divTransferenciasPendientes").attr("hidden", true);
+        VC.refreshCardsViews();
         return; // no inicialices la tabla si no hay datos
     }
 
@@ -2854,6 +3267,7 @@ VC.cargarTransferenciasPendientes = async function () {
 
             await VC.cargarDetalleVenta(data.IdVenta, { incluirValidacion: true });
         });
+    VC.refreshCardsViews();
 };
 
 
