@@ -1,0 +1,452 @@
+/* Vista Cards / Tabla — Cobros electro (móvil primero) */
+
+.vc-cobros-topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 1.1rem;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    padding: 10px 0 8px;
+    background: linear-gradient(180deg, rgba(10, 16, 32, .94) 0%, rgba(10, 16, 32, .72) 70%, transparent);
+    backdrop-filter: blur(10px);
+}
+
+.vc-cobros-topbar-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+}
+
+.vc-cobros-topbar-left h1 {
+    font-size: 1.35rem;
+}
+
+.vc-vista-toggle {
+    display: inline-flex;
+    flex-shrink: 0;
+    padding: 3px;
+    border-radius: 999px;
+    border: 1px solid rgba(88, 166, 255, .28);
+    background: rgba(15, 26, 51, .9);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+}
+
+.vc-vista-toggle button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #9cb0d8;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .02em;
+    padding: 8px 12px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.vc-vista-toggle button.is-on {
+    background: linear-gradient(180deg, #3d8dff, #2563d6);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(37, 99, 214, .4);
+}
+
+.vc-vista-toggle button i {
+    font-size: 14px;
+}
+
+body.vc-mode-cards .vc-vista-tabla,
+body.vc-mode-tabla .vc-vista-cards,
+body.vc-mode-cards .vc-dt-scroll-hint,
+body.vc-mode-cards #btnLimpiarFiltrosColumnasCobros {
+    display: none !important;
+}
+
+body.vc-mode-tabla .vc-cards-only {
+    display: none !important;
+}
+
+.vc-cards-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.vc-cards-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.vc-kpi {
+    border-radius: 14px;
+    padding: 10px 10px 9px;
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.08);
+}
+
+.vc-kpi b {
+    display: block;
+    font-size: 15px;
+    color: #eaf1ff;
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-kpi span {
+    font-size: 11px;
+    color: #93a4c7;
+}
+
+.vc-kpi.is-warn b { color: #ffd166; }
+.vc-kpi.is-ok b { color: #20d6a1; }
+
+.vc-cards-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.vc-cards-search {
+    flex: 1 1 180px;
+    position: relative;
+}
+
+.vc-cards-search i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7e93b8;
+}
+
+.vc-cards-search input {
+    width: 100%;
+    min-height: 42px;
+    border-radius: 12px;
+    border: 1px solid #223055;
+    background: #0c1731;
+    color: #eaf1ff;
+    padding: 8px 12px 8px 34px;
+}
+
+.vc-cards-chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+}
+
+.vc-chip {
+    border: 1px solid rgba(255,255,255,.12);
+    background: #132041;
+    color: #c5d4f3;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    min-height: 36px;
+    touch-action: manipulation;
+}
+
+.vc-chip.is-on {
+    background: rgba(82, 165, 255, .22);
+    border-color: rgba(82, 165, 255, .55);
+    color: #fff;
+}
+
+.vc-cobro-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.vc-cobro-card {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,.045), transparent 42%), #101c38;
+    border: 1px solid rgba(88, 166, 255, .18);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .32);
+}
+
+.vc-cobro-card.is-sel {
+    border-color: rgba(88, 166, 255, .7);
+    box-shadow: 0 0 0 2px rgba(88, 166, 255, .28), 0 12px 28px rgba(0,0,0,.35);
+}
+
+.vc-cobro-card.is-hidden {
+    display: none !important;
+}
+
+.vc-cobro-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: #20d6a1;
+}
+
+.vc-cobro-card.is-late::before { background: #ffd166; }
+.vc-cobro-card.is-late-mid::before { background: #ff9f43; }
+.vc-cobro-card.is-late-hi::before { background: #ff6b6b; }
+.vc-cobro-card.is-pend::before { background: #f0ad4e; }
+.vc-cobro-card.is-transf::before { background: #ff6b6b; }
+
+.vc-card-body {
+    padding: 12px 12px 12px 16px;
+}
+
+.vc-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.vc-card-check {
+    margin-top: 4px;
+    transform: scale(1.15);
+}
+
+.vc-card-head-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.vc-card-name {
+    font-size: 16.5px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.vc-card-sub {
+    margin-top: 3px;
+    font-size: 12px;
+    color: #9cb0d8;
+}
+
+.vc-card-badge {
+    flex-shrink: 0;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 9px;
+}
+
+.vc-card-money {
+    margin: 10px 0 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.vc-card-money strong {
+    font-size: 26px;
+    letter-spacing: -.03em;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+}
+
+.vc-card-money small {
+    color: #93a4c7;
+    font-size: 12px;
+}
+
+.vc-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.vc-pill {
+    font-size: 11px;
+    font-weight: 700;
+    color: #d5e4ff;
+    background: #223055;
+    border-radius: 999px;
+    padding: 4px 9px;
+}
+
+.vc-card-dir {
+    font-size: 13px;
+    color: #c9d6f5;
+    margin-bottom: 10px;
+}
+
+.vc-card-actions {
+    display: flex;
+    gap: 5px;
+    align-items: stretch;
+}
+
+.vc-card-pay {
+    min-height: 40px;
+    min-width: 0;
+    flex: 1 1 70px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 13px;
+    color: #111;
+    background: linear-gradient(180deg, #ffd166, #f0ad4e);
+    box-shadow: 0 8px 18px rgba(240, 173, 78, .28);
+    touch-action: manipulation;
+}
+
+.vc-card-pay:active {
+    transform: scale(.98);
+}
+
+.vc-ico-btn {
+    width: 38px;
+    height: 40px;
+    flex: 0 0 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: #182648;
+    color: #eaf1ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    touch-action: manipulation;
+}
+
+.vc-ico-btn.wa { background: #128c47; border-color: transparent; }
+.vc-ico-btn.phone { background: #2563d6; border-color: transparent; }
+.vc-ico-btn.maps { color: #ffd166; }
+.vc-ico-btn.detalle i {
+    display: inline-block;
+    transition: transform .18s ease;
+}
+
+.vc-cobro-card.is-open .vc-ico-btn.detalle {
+    background: rgba(82, 165, 255, .28);
+    border-color: rgba(82, 165, 255, .45);
+}
+
+.vc-cobro-card.is-open .vc-ico-btn.detalle i {
+    transform: rotate(180deg);
+}
+
+.vc-card-detalle {
+    display: none;
+    padding: 0 10px 12px;
+}
+
+.vc-cobro-card.is-open .vc-card-detalle {
+    display: block;
+}
+
+.vc-cobro-card.is-open .vc-card-detalle .accordion-sub {
+    margin: 0;
+    padding: 12px;
+}
+
+.vc-cards-empty {
+    text-align: center;
+    padding: 28px 12px;
+    color: #93a4c7;
+    border: 1px dashed rgba(255,255,255,.12);
+    border-radius: 16px;
+}
+
+.vc-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 1080;
+}
+
+.vc-sheet[hidden] { display: none !important; }
+
+.vc-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 8, 18, .55);
+}
+
+.vc-sheet-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 12px calc(14px + env(safe-area-inset-bottom));
+    border-radius: 18px 18px 0 0;
+    background: #101b34;
+    border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 -12px 40px rgba(0,0,0,.45);
+}
+
+.vc-sheet-handle {
+    width: 42px;
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(255,255,255,.22);
+    margin: 4px auto 10px;
+}
+
+.vc-sheet-title {
+    color: #fff;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.vc-sheet-act {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    border: 0;
+    background: transparent;
+    color: #eaf1ff;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 0 8px;
+}
+
+.vc-sheet-act:active {
+    background: rgba(255,255,255,.06);
+}
+
+.vc-sheet-act i {
+    width: 22px;
+    text-align: center;
+    color: #58a6ff;
+}
+
+@media (min-width: 768px) {
+    .vc-cobro-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1200px) {
+    .vc-cobro-cards {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .vc-vista-toggle span { display: none; }
+    .vc-cobros-topbar-left h1 { font-size: 1.18rem; }
+    .vc-card-money strong { font-size: 22px; }
+}
