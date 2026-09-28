@@ -1,4 +1,5 @@
-/* Vista Cards / Tabla — Cobros electro (móvil primero) */
+/* Vista Cards / Tabla — Cobros electro (móvil primero) — v1.4 */
+
 
 .vc-cobros-topbar {
     display: flex;
@@ -131,12 +132,20 @@ body.vc-mode-tabla .vc-cards-only {
 
 .vc-cards-search input {
     width: 100%;
-    min-height: 42px;
-    border-radius: 12px;
-    border: 1px solid #223055;
-    background: #0c1731;
+    min-height: 48px;
+    border-radius: 16px;
+    border: 1px solid rgba(130, 168, 255, 0.32);
+    background: linear-gradient(180deg, rgba(16, 28, 62, .98), rgba(9, 16, 38, .98));
     color: #eaf1ff;
-    padding: 8px 12px 8px 34px;
+    padding: 8px 14px 8px 36px;
+    font-size: 16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.vc-cards-search input:focus {
+    outline: none;
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 4px rgba(88, 166, 255, .18);
 }
 
 .vc-cards-chips {
@@ -174,11 +183,11 @@ body.vc-mode-tabla .vc-cards-only {
 
 .vc-cobro-card {
     position: relative;
-    border-radius: 18px;
+    border-radius: 20px;
     overflow: hidden;
-    background: linear-gradient(180deg, rgba(255,255,255,.045), transparent 42%), #101c38;
-    border: 1px solid rgba(88, 166, 255, .18);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, .32);
+    background: linear-gradient(165deg, rgba(255,255,255,.06), transparent 46%), #101c38;
+    border: 1px solid rgba(130, 168, 255, .22);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .34);
 }
 
 .vc-cobro-card.is-sel {
@@ -449,4 +458,7 @@ body.vc-mode-tabla .vc-cards-only {
     .vc-vista-toggle span { display: none; }
     .vc-cobros-topbar-left h1 { font-size: 1.18rem; }
     .vc-card-money strong { font-size: 22px; }
+    .vc-cobro-cards { gap: 14px; }
+    .vc-card-body { padding: 14px 14px 14px 18px; }
+    .vc-chip { min-height: 40px; padding: 8px 14px; }
 }

@@ -12,6 +12,31 @@ const money = (v) =>
             maximumFractionDigits: 0
         });
 
+function fmtHistMoney(val) {
+    const n = (typeof val === "number" && Number.isFinite(val))
+        ? val
+        : parseMontoFlexible(val);
+    if (!Number.isFinite(n)) return "";
+    return Math.round(n).toLocaleString("es-AR", {
+        style: "currency",
+        currency: "ARS",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
+}
+
+function fmtHistTextoConMontos(texto) {
+    if (texto == null || texto === "") return "";
+    return String(texto).replace(
+        /\$\s*(?:\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)/g,
+        (m) => {
+            const raw = m.replace(/\$/g, "").trim();
+            const fmt = fmtHistMoney(raw);
+            return fmt || m;
+        }
+    );
+}
+
 /** Parsea montos guardados en auditoría (p. ej. "Antes=0,00", "Ahora=39000,00" desde C# N2 / cultura es-AR). */
 function parseValorAuditHistorial(val) {
     if (val == null) return 0;
@@ -707,262 +732,882 @@ async function aplicarRecargo() {
     }
 }
 
-function abrirHistorialCuota() {
+let histScopeModo = "cuota"; // "cuota" | "venta"
+let histCatFiltro = "todos";
+let histTimelineCache = [];
 
-    if (!ventaActual || !cuotaActual) {
-        setCbError("No hay cuota seleccionada.");
-        return;
+function esAdminHistorialElectro() {
+    try {
+        const u = window.userSession
+            || (typeof userSession !== "undefined" ? userSession : null)
+            || JSON.parse(localStorage.getItem("usuario") || "{}");
+        return Number(u?.IdRol) === 1;
+    } catch (e) {
+        return false;
+    }
+}
+
+function etiquetaEventoHistorial(campo) {
+    const map = {
+        CrearVenta: "Alta de venta",
+        RegistrarPago: "Cobro de la venta",
+        PagoCuota: "Pago de cuota",
+        EliminarPago: "Pago eliminado",
+        RecargoCuota: "Recargo / interés",
+        EliminarRecargoCuota: "Recargo eliminado",
+        MontoRecargosCuota: "Recargos de cuota",
+        MontoDescuentosCuota: "Descuentos de cuota",
+        MontoOriginalCuota: "Monto de cuota",
+        FechaVencimientoCuota: "Vencimiento de cuota",
+        NumeroCuota: "Número de cuota",
+        EstadoCuota: "Estado de cuota",
+        FechaCobro: "Fecha de cobro",
+        ReprogramarCobro: "Reprogramación",
+        CobroPendiente: "Cobro pendiente",
+        "Transferencia Pendiente": "Transferencia pendiente",
+        EstadoVenta: "Estado de la venta",
+        AsignarCobradorVenta: "Cobrador",
+        ObservacionCobro: "Observación de cobro",
+        EstadoCobro: "Marca de cobro",
+        ObservacionVenta: "Observación",
+        FechaVenta: "Fecha de venta",
+        IdVendedor: "Vendedor",
+        IdCliente: "Cliente",
+        FranjaHoraria: "Franja horaria",
+        Turno: "Turno",
+        ArchivarVenta: "Venta eliminada",
+        RestaurarVenta: "Venta restaurada",
+        Comprobante: "Comprobante",
+        WhatsAppPago: "WhatsApp de pago",
+        WhatsAppVenta: "WhatsApp de venta",
+        WhatsAppRecargo: "WhatsApp de recargo",
+        TipoInteres: "Tipo de interés",
+        RecargoTipo: "Tipo de recargo",
+        RecargoValor: "Valor de recargo",
+        DescuentoTipo: "Tipo de descuento",
+        DescuentoValor: "Valor de descuento",
+        EditarCuota: "Edición de cuota",
+        EditarVenta: "Edición de la venta",
+        Entrega: "Entrega / seña",
+        ImporteTotal: "Total de la venta",
+        CantidadCuotas: "Cantidad de cuotas",
+        FormaCuotas: "Forma de cuotas",
+        ProductoAgregado: "Producto agregado",
+        ProductoQuitado: "Producto quitado",
+        ProductoCantidad: "Cantidad de producto",
+        ProductoPrecio: "Precio de producto",
+        ProductoNombre: "Nombre de producto",
+        CuotaNueva: "Cuota agregada",
+        CuotaEliminada: "Cuota quitada"
+    };
+    return map[campo] || campo || "Movimiento";
+}
+
+function histCategoriaDe(campo) {
+    const c = String(campo || "");
+    if (/^Producto/.test(c)) return "productos";
+    const pagos = {
+        PagoCuota: 1, RegistrarPago: 1, EliminarPago: 1, RecargoCuota: 1,
+        EliminarRecargoCuota: 1, CobroPendiente: 1, ReprogramarCobro: 1,
+        FechaCobro: 1, TipoInteres: 1, RECARGO_LEGACY: 1
+    };
+    if (pagos[c] || c === "Transferencia Pendiente") return "pagos";
+    const cuotas = {
+        FechaVencimientoCuota: 1, MontoOriginalCuota: 1, EstadoCuota: 1,
+        CuotaNueva: 1, CuotaEliminada: 1, Entrega: 1, ImporteTotal: 1,
+        CantidadCuotas: 1, FormaCuotas: 1, EditarCuota: 1, NumeroCuota: 1,
+        MontoRecargosCuota: 1, MontoDescuentosCuota: 1, RecargoTipo: 1,
+        RecargoValor: 1, DescuentoTipo: 1, DescuentoValor: 1
+    };
+    if (cuotas[c]) return "cuotas";
+    return "general";
+}
+
+function histToneDe(campo) {
+    const c = String(campo || "");
+    if (c === "PagoCuota" || c === "RegistrarPago" || c === "ProductoAgregado" || c === "CuotaNueva" || c === "RestaurarVenta")
+        return "ok";
+    if (c === "EliminarPago" || c === "ArchivarVenta" || c === "ProductoQuitado" || c === "CuotaEliminada" || /^Eliminar/.test(c))
+        return "danger";
+    if (c === "RecargoCuota" || c === "TipoInteres" || c === "MontoRecargosCuota" || c === "RECARGO_LEGACY" || c === "CobroPendiente" || c === "Transferencia Pendiente")
+        return "warn";
+    if (c === "ReprogramarCobro" || c === "FechaCobro" || c === "FechaVencimientoCuota")
+        return "info";
+    if (c === "CrearVenta" || c === "EstadoVenta" || c === "EditarVenta" || /^Producto/.test(c) || c === "ImporteTotal")
+        return "edit";
+    if (c === "AsignarCobradorVenta" || c === "IdVendedor")
+        return "muted";
+    return "edit";
+}
+
+function histIconoDe(campo) {
+    const c = String(campo || "");
+    if (c === "PagoCuota" || c === "RegistrarPago") return "fa-money";
+    if (c === "EliminarPago") return "fa-undo";
+    if (c === "RecargoCuota" || c === "RECARGO_LEGACY" || c === "TipoInteres") return "fa-percent";
+    if (c === "ReprogramarCobro" || c === "FechaCobro" || c === "FechaVencimientoCuota") return "fa-calendar";
+    if (c === "AsignarCobradorVenta") return "fa-user";
+    if (c === "EstadoVenta" || c === "CrearVenta") return "fa-flag";
+    if (c === "ProductoAgregado") return "fa-plus";
+    if (c === "ProductoQuitado") return "fa-minus";
+    if (/^Producto/.test(c)) return "fa-cubes";
+    if (c === "CuotaNueva" || c === "CuotaEliminada" || c === "MontoOriginalCuota") return "fa-list-ol";
+    if (c === "Transferencia Pendiente") return "fa-exchange";
+    if (c === "EditarVenta") return "fa-pencil";
+    if (c === "ImporteTotal" || c === "Entrega") return "fa-tag";
+    return "fa-circle-o";
+}
+
+function histMoneyPretty(val) {
+    return fmtHistMoney(val);
+}
+
+function histModoCambioCampo(campo) {
+    const c = String(campo || "");
+    if (/^(ImporteTotal|Entrega|MontoOriginalCuota|MontoRecargosCuota|MontoDescuentosCuota|ProductoPrecio|RecargoValor|DescuentoValor)$/.test(c))
+        return "money";
+    if (/Cantidad|NumeroCuota/.test(c))
+        return "qty";
+    if (/Fecha|Reprogramar/.test(c))
+        return "date";
+    return "text";
+}
+
+function histTextoCambio(val, modo) {
+    if (val == null || String(val).trim() === "") return "—";
+    const s = String(val).trim();
+    if (modo === "money") {
+        return fmtHistMoney(s) || s;
+    }
+    if (modo === "date") {
+        const m = moment(s);
+        if (m.isValid() && (/^\d{4}-\d{2}-\d{2}/.test(s) || /T\d{2}:/.test(s) || /^\d{2}\/\d{2}\/\d{4}/.test(s)))
+            return m.format("DD/MM/YYYY");
+        return s;
+    }
+    return s;
+}
+
+function histDirCambio(anterior, nuevo) {
+    const a = parseValorAuditHistorial(anterior);
+    const n = parseValorAuditHistorial(nuevo);
+    const aOk = Number.isFinite(a) && /\d/.test(String(anterior ?? ""));
+    const nOk = Number.isFinite(n) && /\d/.test(String(nuevo ?? ""));
+    if (aOk && nOk) {
+        if (n > a) return "up";
+        if (n < a) return "down";
+        return "now";
+    }
+    const aq = parseMontoFlexible(anterior);
+    const nq = parseMontoFlexible(nuevo);
+    if (Number.isFinite(aq) && Number.isFinite(nq) && String(anterior ?? "").trim() !== "" && String(nuevo ?? "").trim() !== "") {
+        if (nq > aq) return "up";
+        if (nq < aq) return "down";
+    }
+    return "now";
+}
+
+function histPrefijoProductoObs(obs) {
+    const s = String(obs || "");
+    const m = s.match(/^(.+?)\s*:\s*(cantidad|precio)\b/i);
+    return m ? m[1].trim() : "";
+}
+
+function histHtmlParCambio(anterior, nuevo, modo) {
+    const dir = histDirCambio(anterior, nuevo);
+    const sign = dir === "down" ? "&gt;" : "&lt;";
+    return `<span class="ve-hist-old">${escapeHist(histTextoCambio(anterior, modo))}</span>` +
+        ` <span class="ve-hist-cmp">${sign}</span> ` +
+        `<span class="ve-hist-new">${escapeHist(histTextoCambio(nuevo, modo))}</span>`;
+}
+
+function histHayParCambio(h) {
+    if (!h) return false;
+    const a = h.anterior;
+    const n = h.nuevo;
+    if (a == null || n == null) return false;
+    if (String(a).trim() === "" || String(n).trim() === "") return false;
+    if (String(n).trim().toUpperCase() === "OK") return false;
+    return String(a) !== String(n);
+}
+
+function histParDeItem(h) {
+    if (histHayParCambio(h)) return { a: h.anterior, n: h.nuevo };
+    const s = String((h && h.obs) || "");
+    const m = s.match(/([\d][\d.,]*)\s*(?:\u2192|->|=>|[<>?])\s*([\d][\d.,]*)/);
+    return m ? { a: m[1], n: m[2] } : null;
+}
+
+function histNombreDesdeObs(obs, prefix) {
+    const s = String(obs || "");
+    const re = new RegExp((prefix || "cobrador") + "\\s*=\\s*(.+)$", "i");
+    const m = s.match(re);
+    return m ? m[1].trim() : "";
+}
+
+function tituloEventoHistorial(item) {
+    if (item._tipo === "RECARGO_LEGACY") {
+        const tipo = item.tipo === "Porcentaje" ? "Recargo (%)" : "Recargo ($)";
+        const nro = item.numeroCuota != null ? " cuota " + item.numeroCuota : "";
+        return tipo + nro + " — " + fmtHistMoney(item.importe);
     }
 
-    const tbody = qs("histCuotaBody");
-    tbody.innerHTML = "";
+    const h = item.h;
+    const campo = h.campo;
+    const nro = h.numeroCuota != null ? h.numeroCuota : null;
+    const cuotaTxt = nro != null ? " cuota " + nro : "";
 
-    // =============================
-    // 1) PAGOS (TU CÓDIGO TAL CUAL)
-    // =============================
-    const movimientos = Array.isArray(ventaActual.Historial)
-        ? ventaActual.Historial
-            .filter(h => {
-                const campo = h.Campo ?? h.campo;
-                const idCuota = h.IdCuota ?? h.idCuota;
-                return campo === "PagoCuota" && Number(idCuota) === Number(cuotaActual.Id);
-            })
-            .sort((a, b) => {
-                const fa = new Date(a.FechaCambio ?? a.fechaCambio);
-                const fb = new Date(b.FechaCambio ?? b.fechaCambio);
-                return fa - fb;
-            })
-        : [];
+    if (campo === "PagoCuota") {
+        const imp = parseAplicadoDesdeObs(h.obs);
+        return "Pago" + cuotaTxt + (imp ? " — " + fmtHistMoney(imp) : "");
+    }
+    if (campo === "RegistrarPago") {
+        const mPor = String(h.nuevo || h.obs || "").match(/por\s*([\d.,]+)/i);
+        const imp = parseValorAuditHistorial(h.nuevo)
+            || (mPor ? parseMontoFlexible(mPor[1]) : 0)
+            || parseValorAuditHistorial(h.obs);
+        const mPago = String(h.nuevo || h.obs || "").match(/Pago\s*#?\s*(\d+)/i);
+        const extra = mPago ? " · pago #" + mPago[1] : "";
+        return "Cobro de la venta" + (imp ? " — " + fmtHistMoney(imp) : "") + extra;
+    }
+    if (campo === "EliminarPago") {
+        const imp = parseValorAuditHistorial(h.anterior) || parseValorAuditHistorial(h.nuevo);
+        return "Pago eliminado" + (imp ? " — " + fmtHistMoney(imp) : "");
+    }
+    if (campo === "RecargoCuota") {
+        const mImp = String(h.nuevo || "").match(/Importe\s*=\s*([\d.,]+)/i);
+        const n = mImp ? parseMontoFlexible(mImp[1]) : 0;
+        return "Recargo" + cuotaTxt + (n ? " — " + fmtHistMoney(n) : "");
+    }
+    if (campo === "AsignarCobradorVenta") {
+        const nom = histNombreDesdeObs(h.obs, "cobrador")
+            || (h.nuevo && h.nuevo !== "(sin)" && !/^\d+$/.test(String(h.nuevo).trim()) ? h.nuevo : "");
+        if (h.nuevo === "(sin)" || /desasign/i.test(h.obs || ""))
+            return nom ? "Cobrador desasignado (" + nom + ")" : "Cobrador desasignado";
+        return nom ? "Cobrador: " + nom : "Cambio de cobrador";
+    }
+    if (campo === "EstadoVenta")
+        return "Estado: " + (h.anterior || "—") + " → " + (h.nuevo || "—");
+    if (campo === "ProductoAgregado")
+        return fmtHistTextoConMontos(h.obs && /^Se agreg/.test(h.obs) ? h.obs : ("Se agregó " + (h.nuevo || "producto")));
+    if (campo === "ProductoQuitado")
+        return fmtHistTextoConMontos(h.obs && /^Se quit/.test(h.obs) ? h.obs : ("Se quitó " + (h.anterior || "producto")));
+    if (campo === "ProductoCantidad") {
+        const pref = histPrefijoProductoObs(h.obs);
+        return (pref ? pref + ": " : "Cantidad") + (histHayParCambio(h) ? " " + h.anterior + " " + h.nuevo : "");
+    }
+    if (campo === "ProductoPrecio") {
+        const pref = histPrefijoProductoObs(h.obs);
+        return (pref ? pref + ": " : "Precio") + (histHayParCambio(h) ? " " + (histMoneyPretty(h.anterior) || h.anterior) + " " + (histMoneyPretty(h.nuevo) || h.nuevo) : "");
+    }
+    if (campo === "ProductoNombre")
+        return "Producto: " + (h.anterior || "") + " → " + (h.nuevo || "");
+    if (campo === "CuotaNueva" || campo === "CuotaEliminada")
+        return fmtHistTextoConMontos(h.obs) || etiquetaEventoHistorial(campo);
+    if (campo === "ImporteTotal" || campo === "Entrega" || campo === "MontoOriginalCuota") {
+        const a = histMoneyPretty(h.anterior) || h.anterior || "—";
+        const n = histMoneyPretty(h.nuevo) || h.nuevo || "—";
+        return etiquetaEventoHistorial(campo) + ": " + a + " → " + n;
+    }
+    if (campo === "EditarVenta")
+        return tituloEditarVentaHumano(item);
+    if (campo === "CrearVenta")
+        return "Se creó la venta";
+    if (campo === "ReprogramarCobro" || campo === "FechaCobro")
+        return "Reprogramó cobro" + cuotaTxt + (h.nuevo ? " → " + h.nuevo : "");
+    if (campo === "Transferencia Pendiente")
+        return "Transferencia pendiente" + cuotaTxt;
+    if (campo === "CobroPendiente")
+        return "Cobro pendiente" + cuotaTxt;
 
-    // =============================
-    // 1.b) FECHA REAL DE PAGO (desde tabla de pagos)
-    //      Si existe, se usa en lugar de FechaCambio del audit.
-    // =============================
-    const pagosCuota = Array.isArray(ventaActual.Pagos)
-        ? ventaActual.Pagos
-            .flatMap((p) => {
-                const detalles = Array.isArray(p.Detalles) ? p.Detalles : [];
-                return detalles
-                    .filter((d) => Number(d.IdCuota ?? d.idCuota) === Number(cuotaActual.Id))
-                    .map((d) => ({
-                        idPago: Number(p.Id ?? p.id),
-                        fechaPago: p.FechaPago ?? p.fechaPago,
-                        importeAplicado: Number(d.ImporteAplicado ?? d.importeAplicado ?? 0)
-                    }));
-            })
-            .sort((a, b) => {
-                const fa = new Date(a.fechaPago).getTime();
-                const fb = new Date(b.fechaPago).getTime();
-                if (fa !== fb) return fa - fb;
-                return a.idPago - b.idPago;
-            })
-        : [];
+    const label = etiquetaEventoHistorial(campo);
+    if (histHayParCambio(h))
+        return label + ": " + histTextoCambio(h.anterior, histModoCambioCampo(campo)) + " → " + histTextoCambio(h.nuevo, histModoCambioCampo(campo));
+    return label;
+}
 
-    const fechaPagoRealPorMovId = new Map();
-    if (movimientos.length && pagosCuota.length) {
-        // Emparejamos en orden cronológico: movimiento i <-> pago i para la misma cuota.
-        const n = Math.min(movimientos.length, pagosCuota.length);
-        for (let i = 0; i < n; i++) {
-            const movId = movimientos[i].Id ?? movimientos[i].id;
-            const fp = pagosCuota[i].fechaPago;
-            if (movId != null && fp) {
-                fechaPagoRealPorMovId.set(String(movId), fp);
-            }
+function tituloEventoHistorialHtml(item) {
+    if (item._tipo === "RECARGO_LEGACY")
+        return escapeHist(tituloEventoHistorial(item));
+
+    const h = item.h;
+    if (!h) return escapeHist(tituloEventoHistorial(item));
+    const campo = h.campo;
+    const nro = h.numeroCuota != null ? h.numeroCuota : null;
+    const cuotaTxt = nro != null ? " cuota " + nro : "";
+    const modo = histModoCambioCampo(campo);
+    const label = etiquetaEventoHistorial(campo);
+
+    if (campo === "PagoCuota" || campo === "RegistrarPago" || campo === "EliminarPago" || campo === "RecargoCuota")
+        return escapeHist(tituloEventoHistorial(item));
+
+    if (campo === "AsignarCobradorVenta") {
+        if (h.nuevo === "(sin)" || /desasign/i.test(h.obs || ""))
+            return escapeHist(tituloEventoHistorial(item));
+        if (histHayParCambio(h))
+            return escapeHist("Cobrador: ") + histHtmlParCambio(h.anterior, h.nuevo, "text");
+        return escapeHist(tituloEventoHistorial(item));
+    }
+    if (campo === "EstadoVenta" && histHayParCambio(h))
+        return escapeHist("Estado: ") + histHtmlParCambio(h.anterior, h.nuevo, "text");
+    if (campo === "ProductoCantidad") {
+        const par = histParDeItem(h);
+        if (par) {
+            const pref = histPrefijoProductoObs(h.obs);
+            return escapeHist((pref ? pref + ": " : "Cantidad: ")) + histHtmlParCambio(par.a, par.n, "qty");
         }
     }
-
-    // =============================
-    // 2) RECARGOS (NUEVO)
-    // =============================
-    const recargos = Array.isArray(cuotaActual.Recargos)
-        ? cuotaActual.Recargos
-            .map(r => ({
-                _tipo: "RECARGO",
-                FechaCambio: r.Fecha, // para ordenar igual que pagos
-                TipoRecargo: r.Tipo,
-                Importe: Number(r.ImporteCalculado || 0),
-                Observacion: r.Observacion || ""
-            }))
-            .sort((a, b) => new Date(a.FechaCambio) - new Date(b.FechaCambio))
-        : [];
-
-    // =============================
-    // 3) SI NO HAY NADA (PAGOS NI RECARGOS)
-    //    (mantiene tu mensaje, pero ampliado)
-    // =============================
-    if (!movimientos.length && !recargos.length) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center text-muted">
-                    Sin movimientos registrados para esta cuota
-                </td>
-            </tr>`;
-        getModal("mdHistorialCuota").show();
-        return;
+    if (campo === "ProductoPrecio") {
+        const par = histParDeItem(h);
+        if (par) {
+            const pref = histPrefijoProductoObs(h.obs);
+            return escapeHist((pref ? pref + ": " : "Precio: ")) + histHtmlParCambio(par.a, par.n, "money");
+        }
     }
+    if (campo === "ProductoNombre" && histHayParCambio(h))
+        return escapeHist("Producto: ") + histHtmlParCambio(h.anterior, h.nuevo, "text");
+    if (campo === "ImporteTotal" || campo === "Entrega" || campo === "MontoOriginalCuota" || campo === "MontoRecargosCuota" || campo === "MontoDescuentosCuota") {
+        if (histHayParCambio(h))
+            return escapeHist(label + ": ") + histHtmlParCambio(h.anterior, h.nuevo, "money");
+    }
+    if (campo === "CuotaNueva" || campo === "CuotaEliminada")
+        return escapeHist(fmtHistTextoConMontos(h.obs) || etiquetaEventoHistorial(campo));
+    if (campo === "EditarVenta")
+        return escapeHist(fmtHistTextoConMontos(tituloEditarVentaHumano(item)));
+    if (campo === "ReprogramarCobro" || campo === "FechaCobro") {
+        if (histHayParCambio(h))
+            return escapeHist("Reprogramó cobro" + cuotaTxt + ": ") + histHtmlParCambio(h.anterior, h.nuevo, "date");
+        if (h.nuevo)
+            return escapeHist("Reprogramó cobro" + cuotaTxt + " ") + `<span class="ve-hist-new is-now">${escapeHist(histTextoCambio(h.nuevo, "date"))}</span>`;
+        return escapeHist(tituloEventoHistorial(item));
+    }
+    if (histHayParCambio(h))
+        return escapeHist(label + ": ") + histHtmlParCambio(h.anterior, h.nuevo, modo);
+    return escapeHist(fmtHistTextoConMontos(tituloEventoHistorial(item)));
+}
 
-    // =============================
-    // 4) TIMELINE (PAGOS + RECARGOS)
-    // =============================
-    const timeline = [];
+function histObsTecnicaEdicion(obs) {
+    const s = String(obs || "");
+    return /Edición completa admin|Edición de cabecera y plan|Items\s*=\s*\d+|Cuotas\s*=\s*\d+/i.test(s)
+        || /^OK$/i.test(s.trim());
+}
 
-    // pagos -> los metemos con su estructura original
-    movimientos.forEach(h => {
-        timeline.push({ _tipo: "PAGO", h });
+function histHermanosEdicion(item) {
+    if (!item || !item.h) return [];
+    const t = new Date(item.h.fecha).getTime() || 0;
+    const user = item.h.usuario || "";
+    return histTimelineCache.filter((it) => {
+        if (it === item || it._tipo === "RECARGO_LEGACY" || !it.h) return false;
+        if (it.campo === "EditarVenta") return false;
+        const dt = Math.abs((new Date(it.fecha).getTime() || 0) - t);
+        if (dt > 120000) return false;
+        if (user && it.h.usuario && it.h.usuario !== user) return false;
+        return true;
     });
+}
 
-    // recargos -> ya vienen normalizados
-    recargos.forEach(r => {
-        timeline.push(r);
+function histEditarVentaRedundante(item) {
+    if (!item || item.campo !== "EditarVenta") return false;
+    return histHermanosEdicion(item).some((it) => {
+        const c = String(it.campo || "");
+        return /^Producto/.test(c)
+            || /^(CuotaNueva|CuotaEliminada|ImporteTotal|Entrega|CantidadCuotas|FormaCuotas|IdCliente|IdVendedor|FechaVenta|ObservacionVenta|MontoOriginalCuota|FechaVencimientoCuota|NumeroCuota)$/.test(c);
     });
+}
 
-    // ordenar todo por fecha (pago usa FechaCambio, recargo ya trae FechaCambio)
-    timeline.sort((a, b) => {
-        const fa = a._tipo === "PAGO"
-            ? new Date(
-                fechaPagoRealPorMovId.get(String(a.h.Id ?? a.h.id)) ??
-                a.h.FechaCambio ??
-                a.h.fechaCambio
-            )
-            : new Date(a.FechaCambio);
-        const fb = b._tipo === "PAGO"
-            ? new Date(
-                fechaPagoRealPorMovId.get(String(b.h.Id ?? b.h.id)) ??
-                b.h.FechaCambio ??
-                b.h.fechaCambio
-            )
-            : new Date(b.FechaCambio);
-        return fa - fb;
-    });
-
-    const sumRecTimeline = recargos.reduce(
-        (s, r) => s + Math.round(parseMontoFlexible(r.Importe) || 0),
-        0
+function tituloEditarVentaHumano(item) {
+    const h = item.h || {};
+    const obs = String(h.obs || "").trim();
+    const hermanos = histHermanosEdicion(item);
+    const hayProducto = hermanos.some((it) => /^Producto/.test(it.campo || ""));
+    const hayPlan = hermanos.some((it) =>
+        /^(CuotaNueva|CuotaEliminada|ImporteTotal|Entrega|CantidadCuotas|FormaCuotas|MontoOriginalCuota|FechaVencimientoCuota|NumeroCuota)$/.test(it.campo || "")
     );
-    const orig = pickCuotaNum(cuotaActual, ["MontoOriginal", "montoOriginal"]);
-    const desc = pickCuotaNum(cuotaActual, ["MontoDescuentos", "montoDescuentos"]);
-    const recField = pickCuotaNum(cuotaActual, ["MontoRecargos", "montoRecargos"]);
-    const mp = pickCuotaNum(cuotaActual, ["MontoPagado", "montoPagado"]);
-    const mr = pickCuotaNum(cuotaActual, ["MontoRestante", "montoRestante"]);
 
-    // Capital: original - desc + recargos ya reflejados en MontoRecargos pero no duplicados en filas del timeline
-    let deuda = Math.round(orig - desc + Math.max(0, recField - sumRecTimeline));
-    if (deuda <= 0) {
-        const tot = Math.round(mp + mr);
-        if (tot > 0) deuda = tot;
+    if (obs && !histObsTecnicaEdicion(obs))
+        return obs;
+
+    const mCuotas = obs.match(/Cuotas\s*=\s*(\d+)/i);
+    const mItems = obs.match(/Items\s*=\s*(\d+)/i);
+    if (!hayProducto && (hayPlan || (mCuotas && !mItems)))
+        return "Se modificó el plan de cuotas";
+    if (h.anterior && h.nuevo && h.nuevo !== "OK" && h.anterior !== h.nuevo)
+        return "Se actualizó la venta: " + h.anterior + " → " + h.nuevo;
+    return "Se actualizó la venta";
+}
+
+function detalleEventoHistorial(item) {
+    if (item._tipo === "RECARGO_LEGACY")
+        return item.obs || "";
+    const h = item.h;
+    const campo = h.campo;
+    if (campo === "EditarVenta")
+        return "";
+    const bits = [];
+    if (h.numeroCuota != null && !/cuota/i.test(tituloEventoHistorial(item)))
+        bits.push("Cuota " + h.numeroCuota);
+    const skipObs = /^(ProductoAgregado|ProductoQuitado|ProductoCantidad|ProductoPrecio|ProductoNombre|CuotaNueva|CuotaEliminada|ImporteTotal|Entrega|MontoOriginalCuota|EstadoVenta|FechaCobro|ReprogramarCobro)$/.test(campo);
+    if (h.obs && !skipObs) {
+        if (!histObsTecnicaEdicion(h.obs)) {
+            const titulo = tituloEventoHistorial(item);
+            if (titulo.indexOf(h.obs) === -1)
+                bits.push(fmtHistTextoConMontos(h.obs));
+        }
+    }
+    if ((campo === "PagoCuota" || campo === "RegistrarPago") && h.nuevo && bits.indexOf(h.nuevo) < 0) {
+        const t = tituloEventoHistorial(item);
+        if (h.nuevo && t.indexOf(h.nuevo) === -1 && !/^OK$/i.test(h.nuevo))
+            bits.push(fmtHistTextoConMontos(h.nuevo));
+    }
+    return bits.filter(Boolean).join(" · ");
+}
+
+function badgeClaseHistorial(campo) {
+    const tone = histToneDe(campo);
+    if (tone === "ok") return "ve-hist-badge ve-hist-badge-ok";
+    if (tone === "danger") return "ve-hist-badge ve-hist-badge-danger";
+    if (tone === "warn") return "ve-hist-badge ve-hist-badge-warn";
+    if (tone === "info") return "ve-hist-badge ve-hist-badge-info";
+    if (tone === "muted") return "ve-hist-badge ve-hist-badge-muted";
+    return "ve-hist-badge ve-hist-badge-edit";
+}
+
+function normalizarHistRow(h) {
+    return {
+        id: h.Id ?? h.id,
+        idCuota: h.IdCuota ?? h.idCuota,
+        numeroCuota: h.NumeroCuota ?? h.numeroCuota,
+        usuario: (h.UsuarioNombre ?? h.usuarioNombre) || ("#" + (h.UsuarioCambio ?? h.usuarioCambio ?? "")),
+        fecha: h.FechaCambio ?? h.fechaCambio,
+        campo: h.Campo ?? h.campo ?? "",
+        anterior: h.ValorAnterior ?? h.valorAnterior ?? "",
+        nuevo: h.ValorNuevo ?? h.valorNuevo ?? "",
+        obs: h.Observacion ?? h.observacion ?? ""
+    };
+}
+
+function escapeHist(s) {
+    return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function histDiaKey(fecha) {
+    const m = moment(fecha);
+    if (!m.isValid()) return "sin-fecha";
+    return m.format("YYYY-MM-DD");
+}
+
+function histDiaLabel(key) {
+    if (key === "sin-fecha") return "Sin fecha";
+    const m = moment(key, "YYYY-MM-DD");
+    if (m.isSame(moment(), "day")) return "Hoy";
+    if (m.isSame(moment().subtract(1, "day"), "day")) return "Ayer";
+    return m.format("dddd D [de] MMMM YYYY");
+}
+
+function histCamposPlanExtra(campo) {
+    const extra = {
+        RecargoCuota: 1,
+        EliminarRecargoCuota: 1,
+        ReprogramarCobro: 1,
+        FechaCobro: 1,
+        TipoInteres: 1,
+        RECARGO_LEGACY: 1,
+        RecargoTipo: 1,
+        RecargoValor: 1,
+        MontoRecargosCuota: 1
+    };
+    return !!extra[String(campo || "")];
+}
+
+function histPasaFiltroCat(it) {
+    const cat = it && it.cat;
+    const campo = it && it.campo;
+    if (histCatFiltro === "todos") return true;
+    if (histCatFiltro === "general") return cat === "general" || cat === "productos";
+    if (histCatFiltro === "cuotas")
+        return cat === "cuotas" || histCamposPlanExtra(campo);
+    return cat === histCatFiltro;
+}
+
+function pickVentaArr(venta, keys) {
+    if (!venta) return [];
+    for (const k of keys) {
+        if (Array.isArray(venta[k])) return venta[k];
+    }
+    return [];
+}
+
+function pickVentaStr(venta, keys) {
+    if (!venta) return "";
+    for (const k of keys) {
+        const v = venta[k];
+        if (v != null && String(v).trim() !== "") return String(v).trim();
+    }
+    return "";
+}
+
+function formaCuotasLabel(venta) {
+    const raw = pickVentaStr(venta, ["FormaCuotas", "formaCuotas"]);
+    if (!raw) return "";
+    const map = {
+        diaria: "Diaria",
+        semanal: "Semanal",
+        quincenal: "Quincenal",
+        mensual: "Mensual"
+    };
+    const k = raw.toLowerCase();
+    return map[k] || (raw.charAt(0).toUpperCase() + raw.slice(1));
+}
+
+function estadoCuotaActual(c) {
+    const est = String(c.Estado ?? c.estado ?? "").toLowerCase();
+    const orig = pickCuotaNum(c, ["MontoOriginal", "montoOriginal"]);
+    const rec = pickCuotaNum(c, ["MontoRecargos", "montoRecargos"]);
+    const desc = pickCuotaNum(c, ["MontoDescuentos", "montoDescuentos"]);
+    const pagado = pickCuotaNum(c, ["MontoPagado", "montoPagado"]);
+    const restPick = pickCuotaNum(c, ["MontoRestante", "montoRestante"]);
+    const total = orig + rec - desc;
+    const rest = restPick || (total - pagado);
+    if (est.indexOf("pagad") >= 0 || rest <= 0.5)
+        return { key: "pagada", label: "Pagada" };
+    const fv = c.FechaVencimiento ?? c.fechaVencimiento;
+    if (fv && moment(fv).isValid() && moment(fv).startOf("day").isBefore(moment().startOf("day")))
+        return { key: "vencida", label: "Vencida" };
+    return { key: "pendiente", label: "Pendiente" };
+}
+
+function histFechaCorta(val) {
+    const m = moment(val);
+    return m.isValid() ? m.format("DD/MM/YYYY") : "—";
+}
+
+function renderHistSnapshotCuotas() {
+    const cuotas = pickVentaArr(ventaActual, ["Cuotas", "cuotas"])
+        .slice()
+        .sort((a, b) =>
+            (Number(a.NumeroCuota ?? a.numeroCuota) || 0) -
+            (Number(b.NumeroCuota ?? b.numeroCuota) || 0)
+        );
+
+    const nPlan = Math.round(pickVentaNum(ventaActual, ["CantidadCuotas", "cantidadCuotas"])) || cuotas.length;
+    const forma = formaCuotasLabel(ventaActual);
+    let totalFin = 0;
+    let totalPag = 0;
+    let totalDeb = 0;
+    let nPagadas = 0;
+    cuotas.forEach((c) => {
+        const orig = pickCuotaNum(c, ["MontoOriginal", "montoOriginal"]);
+        const rec = pickCuotaNum(c, ["MontoRecargos", "montoRecargos"]);
+        const desc = pickCuotaNum(c, ["MontoDescuentos", "montoDescuentos"]);
+        const pagado = pickCuotaNum(c, ["MontoPagado", "montoPagado"]);
+        const restPick = pickCuotaNum(c, ["MontoRestante", "montoRestante"]);
+        const total = orig + rec - desc;
+        totalFin += total;
+        totalPag += pagado;
+        totalDeb += restPick || (total - pagado);
+        if (estadoCuotaActual(c).key === "pagada") nPagadas += 1;
+    });
+
+    let html = `<section class="ve-hist-snap">
+        <div class="ve-hist-section-label">Plan de cuotas</div>
+        <div class="ve-hist-kpis">
+            <article class="ve-hist-kpi">
+                <span>Cuotas</span>
+                <b>${escapeHist(String(nPlan || 0))}</b>
+            </article>
+            <article class="ve-hist-kpi ve-hist-kpi-ok">
+                <span>Pagadas</span>
+                <b>${escapeHist(String(nPagadas))} / ${escapeHist(String(nPlan || 0))}</b>
+            </article>
+            ${forma ? `<article class="ve-hist-kpi"><span>Forma</span><b>${escapeHist(forma)}</b></article>` : ""}
+            <article class="ve-hist-kpi">
+                <span>A financiar</span>
+                <b>${escapeHist(fmtHistMoney(totalFin))}</b>
+            </article>
+            <article class="ve-hist-kpi ve-hist-kpi-ok">
+                <span>Pagado</span>
+                <b>${escapeHist(fmtHistMoney(totalPag))}</b>
+            </article>
+            <article class="ve-hist-kpi ve-hist-kpi-warn">
+                <span>Debe</span>
+                <b>${escapeHist(fmtHistMoney(totalDeb))}</b>
+            </article>
+        </div>`;
+
+    if (!cuotas.length) {
+        html += `<div class="ve-hist-empty ve-hist-empty-sm"><span>Esta venta no tiene cuotas cargadas.</span></div></section>`;
+        return html;
     }
 
-    let pagadoAcum = 0;
+    html += `<div class="ve-hist-cuotas">`;
+    cuotas.forEach((c) => {
+        const nro = c.NumeroCuota ?? c.numeroCuota ?? "—";
+        const orig = pickCuotaNum(c, ["MontoOriginal", "montoOriginal"]);
+        const rec = pickCuotaNum(c, ["MontoRecargos", "montoRecargos"]);
+        const desc = pickCuotaNum(c, ["MontoDescuentos", "montoDescuentos"]);
+        const pagado = pickCuotaNum(c, ["MontoPagado", "montoPagado"]);
+        const restPick = pickCuotaNum(c, ["MontoRestante", "montoRestante"]);
+        const total = orig + rec - desc;
+        const rest = restPick || (total - pagado);
+        const st = estadoCuotaActual(c);
+        const fv = c.FechaVencimiento ?? c.fechaVencimiento;
+        html += `
+            <article class="ve-hist-cuota is-${escapeHist(st.key)}">
+                <div class="ve-hist-cuota-top">
+                    <h6>Cuota ${escapeHist(String(nro))}</h6>
+                    <span class="ve-hist-badge ve-hist-badge-${st.key === "pagada" ? "ok" : (st.key === "vencida" ? "danger" : "warn")}">${escapeHist(st.label)}</span>
+                </div>
+                <div class="ve-hist-cuota-vence">Vence ${escapeHist(histFechaCorta(fv))}</div>
+                <div class="ve-hist-cuota-grid">
+                    <div><span>Original</span><b>${escapeHist(fmtHistMoney(orig))}</b></div>
+                    <div><span>Recargos</span><b>${escapeHist(fmtHistMoney(rec))}</b></div>
+                    <div><span>Descuentos</span><b>${escapeHist(fmtHistMoney(desc))}</b></div>
+                    <div><span>Total</span><b>${escapeHist(fmtHistMoney(total))}</b></div>
+                    <div><span>Pagado</span><b>${escapeHist(fmtHistMoney(pagado))}</b></div>
+                    <div><span>Restante</span><b>${escapeHist(fmtHistMoney(rest))}</b></div>
+                </div>
+            </article>`;
+    });
+    html += `</div></section>`;
+    return html;
+}
 
-    const restanteVentaDespuesPago = buildMapRestanteVentaDespuesDePago(ventaActual);
+function renderHistSnapshotProductos() {
+    const items = pickVentaArr(ventaActual, ["Items", "items"]);
+    let html = `<section class="ve-hist-snap">
+        <div class="ve-hist-section-label">Productos de la venta</div>`;
 
-    // =============================
-    // 5) RENDER (TU TABLA, MISMO FORMATO)
-    // =============================
-    timeline.forEach((item, i) => {
+    if (!items.length) {
+        html += `<div class="ve-hist-empty ve-hist-empty-sm"><span>Esta venta no tiene productos cargados.</span></div></section>`;
+        return html;
+    }
 
-        // ---------- PAGO (TU LÓGICA ORIGINAL) ----------
-        if (item._tipo === "PAGO") {
-            const h = item.h;
-            const fechaC =
-                fechaPagoRealPorMovId.get(String(h.Id ?? h.id)) ??
-                h.FechaCambio ??
-                h.fechaCambio;
-            const fecha = moment(fechaC).format("DD/MM/YYYY HH:mm");
+    html += `<div class="ve-hist-prods">`;
+    items.forEach((it) => {
+        const nom = it.Producto ?? it.producto ?? "Producto";
+        const cant = pickCuotaNum(it, ["Cantidad", "cantidad"]);
+        const pu = pickCuotaNum(it, ["PrecioUnitario", "precioUnitario"]);
+        const subPick = pickCuotaNum(it, ["Subtotal", "subtotal"]);
+        const sub = subPick || (cant * pu);
+        html += `
+            <article class="ve-hist-prod">
+                <h6>${escapeHist(nom)}</h6>
+                <div class="ve-hist-prod-row">
+                    <span>${escapeHist(String(cant))} × ${escapeHist(fmtHistMoney(pu))}</span>
+                    <b>${escapeHist(fmtHistMoney(sub))}</b>
+                </div>
+            </article>`;
+    });
+    html += `</div></section>`;
+    return html;
+}
 
-            const va = h.ValorAnterior ?? h.valorAnterior;
-            const vn = h.ValorNuevo ?? h.valorNuevo;
-            const obsRaw = h.Observacion ?? h.observacion;
+function renderHistTimelineHtml(items) {
+    const groups = [];
+    const map = {};
+    items.forEach((it) => {
+        const k = histDiaKey(it.fecha);
+        if (!map[k]) {
+            map[k] = [];
+            groups.push(k);
+        }
+        map[k].push(it);
+    });
 
-            // El back a veces guarda Antes=0 mal; simulamos "MontoPagado antes" recorriendo el tiempo (orden del timeline).
-            const valorAnteriorSim = pagadoAcum;
-            const ahoraCum = parseValorAuditHistorial(vn);
+    let html = "";
+    groups.forEach((k) => {
+        html += `<div class="ve-hist-day"><div class="ve-hist-day-label">${escapeHist(histDiaLabel(k))}</div>`;
+        map[k].forEach((it) => {
+            const campo = it.campo;
+            const titulo = tituloEventoHistorialHtml(it);
+            const det = detalleEventoHistorial(it);
+            const hora = it.fecha && moment(it.fecha).isValid()
+                ? moment(it.fecha).format("HH:mm")
+                : "";
+            const usuario = it._tipo === "RECARGO_LEGACY" ? "" : (it.h.usuario || "");
+            const badge = etiquetaEventoHistorial(campo === "RECARGO_LEGACY" ? "RecargoCuota" : campo);
+            html += `
+                <article class="ve-hist-card tone-${histToneDe(campo)}">
+                    <div class="ve-hist-icon"><i class="fa ${histIconoDe(campo)}"></i></div>
+                    <div class="ve-hist-main">
+                        <div class="ve-hist-top">
+                            <span class="${badgeClaseHistorial(campo)}">${escapeHist(badge)}</span>
+                            <span class="ve-hist-meta">${hora ? escapeHist(hora) : ""}${usuario ? " · " + escapeHist(usuario) : ""}</span>
+                        </div>
+                        <h6 class="ve-hist-title">${titulo}</h6>
+                        ${det ? `<p class="ve-hist-detail">${escapeHist(det)}</p>` : ""}
+                    </div>
+                </article>`;
+        });
+        html += `</div>`;
+    });
+    return html;
+}
 
-            // 1) Aplicado= en obs (importe de ESTE movimiento).
-            let importePagado = Math.round(parseAplicadoDesdeObs(obsRaw));
-            // 2) Si Ahora es acumulado y > lo ya pagado en simulación, la cuota del movimiento es la diferencia.
-            if (!Number.isFinite(importePagado) || importePagado <= 0) {
-                if (ahoraCum > valorAnteriorSim) {
-                    importePagado = Math.round(ahoraCum - valorAnteriorSim);
-                }
-            }
-            // 3) Último recurso: strings del audit (pueden venir con cultura rara).
-            if (!Number.isFinite(importePagado) || importePagado <= 0) {
-                const antesAudit = parseValorAuditHistorial(va);
-                const ahoraAudit = parseValorAuditHistorial(vn);
-                importePagado = Math.round(ahoraAudit - antesAudit);
-            }
+function syncHistChips() {
+    document.querySelectorAll("#histCatChips .ve-hist-chip").forEach((btn) => {
+        const on = btn.getAttribute("data-hist-cat") === histCatFiltro;
+        btn.classList.toggle("is-on", on);
+        btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+}
 
-            pagadoAcum = Math.round(pagadoAcum + importePagado);
+function renderHistFeed() {
+    const feed = qs("histCuotaBody");
+    if (!feed) return;
 
-            const importeActual = Math.max(0, Math.round(deuda - pagadoAcum));
+    const snap = histCatFiltro === "cuotas"
+        ? renderHistSnapshotCuotas()
+        : (histCatFiltro === "productos" ? renderHistSnapshotProductos() : "");
 
-            const hid = h.Id ?? h.id;
-            const restVenta =
-                restanteVentaDespuesPago.get(hid) ??
-                restanteVentaDespuesPago.get(String(hid)) ??
-                restanteVentaDespuesPago.get(Number(hid));
-            const ventaCell =
-                restVenta != null && Number.isFinite(restVenta)
-                    ? money(restVenta)
-                    : '<span class="text-muted">—</span>';
+    const items = histTimelineCache.filter(it =>
+        histPasaFiltroCat(it) && !histEditarVentaRedundante(it)
+    );
 
-            // Observación limpia (solo lo útil)
-            let obs = "";
-            if (obsRaw) {
-                obs = String(obsRaw).split("|")[0].trim();
-            }
+    const richTab = histCatFiltro === "cuotas" || histCatFiltro === "productos";
+    const timelineHtml = items.length ? renderHistTimelineHtml(items) : "";
 
-            tbody.insertAdjacentHTML("beforeend", `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td>${fecha}</td>
-                    <td>
-                        <span class="badge bg-success">
-                            Pago de cuota
-                        </span>
-                    </td>
-                    <td class="text-end">${money(importePagado)}</td>
-                    <td class="text-end">${money(importeActual)}</td>
-                    <td class="text-end">${ventaCell}</td>
-                    <td>${obs}</td>
-                </tr>
-            `);
-
+    if (!snap && !items.length) {
+        if (!histTimelineCache.length) {
+            feed.innerHTML = `
+            <div class="ve-hist-empty">
+                <i class="fa fa-clock-o"></i>
+                <strong>Sin movimientos</strong>
+                <span>Cuando haya cobros, cambios de cobrador o ediciones, van a aparecer acá.</span>
+            </div>`;
             return;
         }
+        feed.innerHTML = `
+            <div class="ve-hist-empty">
+                <i class="fa fa-filter"></i>
+                <strong>Nada en este filtro</strong>
+                <span>Probá con Todos o con otra categoría.</span>
+            </div>`;
+        return;
+    }
 
-        // ---------- RECARGO (NUEVO) ----------
-        const fechaR = moment(item.FechaCambio).format("DD/MM/YYYY HH:mm");
-        const importeRec = Math.round(Number(item.Importe || 0));
+    let html = snap || "";
+    if (richTab) {
+        html += `<div class="ve-hist-section-label">${histCatFiltro === "cuotas" ? "Cambios del plan" : "Cambios de productos"}</div>`;
+        html += timelineHtml || `
+            <div class="ve-hist-empty ve-hist-empty-sm">
+                <span>Todavía no hay cambios en esta pestaña.</span>
+            </div>`;
+    } else {
+        html += timelineHtml;
+    }
+    feed.innerHTML = html;
+}
 
-        deuda = Math.round(deuda + importeRec);
+function abrirHistorialCuota() {
 
-        const importeActualRec = Math.max(0, Math.round(deuda - pagadoAcum));
+    if (!ventaActual) {
+        setCbError("No hay venta seleccionada.");
+        return;
+    }
 
-        let obsR = (item.Observacion || "").trim();
+    const esAdmin = esAdminHistorialElectro();
+    const filtros = qs("histCuotaFiltros");
+    const btnCuota = qs("histBtnCuota");
+    const btnVenta = qs("histBtnVenta");
+    const titulo = qs("histCuotaTitulo");
+    const nroCuota = cuotaActual
+        ? (cuotaActual.NumeroCuota ?? cuotaActual.numeroCuota)
+        : null;
+    const hayCuotaContexto = !!(cuotaActual && cuotaActual.Id);
 
-        const badgeTxt = item.TipoRecargo === "Porcentaje"
-            ? "Recargo (%)"
-            : "Recargo ($)";
+    if (btnCuota) {
+        btnCuota.hidden = !hayCuotaContexto;
+        btnCuota.classList.toggle("d-none", !hayCuotaContexto);
+        btnCuota.disabled = false;
+    }
+    if (filtros) {
+        const mostrarFiltros = esAdmin && hayCuotaContexto;
+        filtros.hidden = !mostrarFiltros;
+        filtros.classList.toggle("d-none", !mostrarFiltros);
+        filtros.classList.toggle("d-flex", mostrarFiltros);
+    }
 
-        tbody.insertAdjacentHTML("beforeend", `
-            <tr>
-                <td>${i + 1}</td>
-                <td>${fechaR}</td>
-                <td>
-                    <span class="badge bg-warning text-dark">
-                        ${badgeTxt}
-                    </span>
-                </td>
-                <td class="text-end">${money(importeRec)}</td>
-                <td class="text-end">${money(importeActualRec)}</td>
-                <td class="text-end text-muted">—</td>
-                <td>${obsR}</td>
-            </tr>
-        `);
+    const verVentaCompleta = histScopeModo === "venta" || !hayCuotaContexto;
+    if (titulo) {
+        titulo.innerHTML = verVentaCompleta
+            ? '<i class="fa fa-clock-o text-info me-2"></i>Movimientos de la venta'
+            : ('<i class="fa fa-clock-o text-info me-2"></i>Historial cuota ' + (nroCuota ?? ""));
+    }
+
+    btnCuota?.classList.toggle("btn-info", !verVentaCompleta);
+    btnCuota?.classList.toggle("btn-outline-info", verVentaCompleta);
+    btnVenta?.classList.toggle("btn-info", verVentaCompleta);
+    btnVenta?.classList.toggle("btn-outline-info", !verVentaCompleta);
+
+    const histAll = Array.isArray(ventaActual.Historial)
+        ? ventaActual.Historial.map(normalizarHistRow)
+        : [];
+
+    let movimientos = histAll;
+    if (!verVentaCompleta && cuotaActual) {
+        const idC = Number(cuotaActual.Id);
+        movimientos = histAll.filter(h => {
+            const id = h.idCuota == null || h.idCuota === "" ? null : Number(h.idCuota);
+            return id === idC;
+        });
+    }
+
+    movimientos = movimientos.slice().sort((a, b) => {
+        const fa = new Date(a.fecha).getTime() || 0;
+        const fb = new Date(b.fecha).getTime() || 0;
+        if (fa !== fb) return fb - fa;
+        return (b.id || 0) - (a.id || 0);
     });
 
+    const recargosLegacy = [];
+    const cuotasSrc = verVentaCompleta
+        ? (Array.isArray(ventaActual.Cuotas) ? ventaActual.Cuotas : [])
+        : (cuotaActual ? [cuotaActual] : []);
+
+    cuotasSrc.forEach((c) => {
+        const idC = Number(c.Id ?? c.id);
+        const hayAuditRec = histAll.some(h =>
+            Number(h.idCuota) === idC &&
+            (h.campo === "RecargoCuota" || h.campo === "EliminarRecargoCuota")
+        );
+        if (hayAuditRec) return;
+        const recs = Array.isArray(c.Recargos) ? c.Recargos : [];
+        recs.forEach((r) => {
+            recargosLegacy.push({
+                _tipo: "RECARGO_LEGACY",
+                fecha: r.Fecha,
+                numeroCuota: c.NumeroCuota ?? c.numeroCuota,
+                importe: Number(r.ImporteCalculado || 0),
+                obs: r.Observacion || "",
+                tipo: r.Tipo,
+                campo: "RECARGO_LEGACY",
+                cat: "pagos"
+            });
+        });
+    });
+
+    histTimelineCache = movimientos.map(h => ({
+        _tipo: "AUDIT",
+        h,
+        fecha: h.fecha,
+        campo: h.campo,
+        cat: histCategoriaDe(h.campo)
+    })).concat(recargosLegacy);
+
+    histTimelineCache.sort((a, b) => {
+        const fa = new Date(a.fecha).getTime() || 0;
+        const fb = new Date(b.fecha).getTime() || 0;
+        return fb - fa;
+    });
+
+    histCatFiltro = "todos";
+    syncHistChips();
+    renderHistFeed();
     getModal("mdHistorialCuota").show();
 }
 
@@ -1318,7 +1963,26 @@ document.addEventListener("DOMContentLoaded", () => {
     qs("aj_btnAplicar")?.addEventListener("click", aplicarRecargo);
 
     // Historial
-    qs("cb_btnHistorial")?.addEventListener("click", abrirHistorialCuota);
+    qs("cb_btnHistorial")?.addEventListener("click", () => {
+        histScopeModo = "cuota";
+        abrirHistorialCuota();
+    });
+    qs("histBtnCuota")?.addEventListener("click", () => {
+        if (!cuotaActual?.Id) return;
+        histScopeModo = "cuota";
+        abrirHistorialCuota();
+    });
+    qs("histBtnVenta")?.addEventListener("click", () => {
+        histScopeModo = "venta";
+        abrirHistorialCuota();
+    });
+    qs("histCatChips")?.addEventListener("click", (ev) => {
+        const btn = ev.target.closest("[data-hist-cat]");
+        if (!btn) return;
+        histCatFiltro = btn.getAttribute("data-hist-cat") || "todos";
+        syncHistChips();
+        renderHistFeed();
+    });
 
     // Confirmar cobro
     qs("cb_confirmarBtn")?.addEventListener("click", confirmarCobro);
@@ -1451,20 +2115,27 @@ window.abrirHistorialDesdeCobros = async function (idVenta, idCuota) {
         ventaActual = json.data;
 
         const cuotas = Array.isArray(ventaActual.Cuotas) ? ventaActual.Cuotas : [];
-        cuotaActual = cuotas.find(c => Number(c.Id) === Number(idCuota));
+        const idC = idCuota == null || idCuota === "" ? 0 : Number(idCuota);
+        cuotaActual = idC > 0
+            ? cuotas.find(c => Number(c.Id) === idC)
+            : null;
 
-        if (!cuotaActual) {
+        if (idC > 0 && !cuotaActual) {
             showToast("Cuota no encontrada", "danger");
             return;
         }
 
-        // 🔥 abre SOLO el historial
+        histScopeModo = (idC > 0) ? "cuota" : "venta";
         abrirHistorialCuota();
 
     } catch (e) {
         console.error(e);
         showToast("Error cargando historial", "danger");
     }
+};
+
+window.abrirHistorialVentaCompleto = function (idVenta) {
+    return window.abrirHistorialDesdeCobros(idVenta, null);
 };
 
 

@@ -43,6 +43,12 @@ const VE_HIST_COL_FILTER_MAIN = "ve_hist_col_filtros_main";
 const VE_HIST_COL_FILTER_PEND = "ve_hist_col_filtros_pend";
 const VE_HIST_FILTROS_KEY = "ve_hist_filtros_v1";
 const VE_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
+const VE_HIST_VISTA_KEY = "ve_historial_view";
+
+let ventasPendientesCache = [];
+let ventasEliminadasCache = [];
+let vhCardChip = "todos";
+let vhCardQuery = "";
 
 
 /* ------------ HELPERS ------------ */
@@ -141,9 +147,303 @@ $(document).ready(() => {
     iniciarFiltros();
     habilitarSeleccionFilaVentas();
     habilitarSeleccionFilasCuotas();
+    vhInitVista();
 
     $("#btnToggleFiltros").on("click", toggleFiltros);
 });
+
+/* ------------ VISTA CARDS / TABLA ------------ */
+
+function vhLeerVista() {
+    try {
+        const v = localStorage.getItem(VE_HIST_VISTA_KEY);
+        if (v === "cards" || v === "tabla") return v;
+    } catch (_) { }
+    return window.matchMedia("(max-width: 992px)").matches ? "cards" : "tabla";
+}
+
+function vhGuardarVista(v) {
+    try { localStorage.setItem(VE_HIST_VISTA_KEY, v); } catch (_) { }
+}
+
+function vhCerrarAcordeonesTabla() {
+    [gridVentas, gridVentasPendientes].forEach((dt) => {
+        if (!dt) return;
+        try {
+            dt.rows().every(function () {
+                if (this.child && this.child.isShown()) {
+                    this.child.hide();
+                    $(this.node()).removeClass("shown venta-seleccionada");
+                    $(this.node()).find("button.btn-row-detail i")
+                        .removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                }
+            });
+        } catch (_) { }
+    });
+    rowAbierto = null;
+}
+
+function vhCerrarDetallesCards() {
+    document.querySelectorAll(".vh-venta-card.is-open").forEach((el) => {
+        el.classList.remove("is-open");
+        const det = el.querySelector(".vh-card-detalle");
+        if (det) det.innerHTML = "";
+        const icon = el.querySelector('[data-vh-act="detalle"] i');
+        if (icon) {
+            icon.classList.remove("fa-chevron-up");
+            icon.classList.add("fa-chevron-down");
+        }
+    });
+}
+
+function vhAjustarTablas() {
+    if (document.body.classList.contains("vh-mode-cards")) return;
+    const ajustar = (dt) => {
+        if (!dt) return;
+        try { dt.columns.adjust().draw(false); } catch (_) { }
+    };
+    setTimeout(() => {
+        ajustar(gridVentas);
+        ajustar(gridVentasPendientes);
+        ajustar(gridVentasEliminadas);
+    }, 120);
+}
+
+function vhAplicarVista(vista, persist) {
+    const v = (vista === "tabla") ? "tabla" : "cards";
+    document.body.classList.toggle("vh-mode-cards", v === "cards");
+    document.body.classList.toggle("vh-mode-tabla", v === "tabla");
+    $("#btnHistVistaCards").toggleClass("is-on", v === "cards");
+    $("#btnHistVistaTabla").toggleClass("is-on", v === "tabla");
+    if (persist !== false) vhGuardarVista(v);
+
+    if (v === "cards") {
+        vhCerrarAcordeonesTabla();
+        vhRefreshCards();
+    } else {
+        vhCerrarDetallesCards();
+        vhAjustarTablas();
+        reabrirRowSeleccionado();
+    }
+}
+
+function vhInitVista() {
+    vhAplicarVista(vhLeerVista(), false);
+
+    $("#vhVistaToggle").off("click.vhVista").on("click.vhVista", "button[data-vista]", function () {
+        vhAplicarVista(this.getAttribute("data-vista"), true);
+    });
+
+    $("#vhCardChips").off("click.vhChip").on("click.vhChip", "[data-chip]", function () {
+        vhCardChip = this.getAttribute("data-chip") || "todos";
+        $("#vhCardChips .vh-chip").removeClass("is-on");
+        $(this).addClass("is-on");
+        vhFiltrarCardsDom();
+    });
+
+    $("#vhCardQ").off("input.vhQ").on("input.vhQ", function () {
+        vhCardQuery = String(this.value || "").toLowerCase().trim();
+        vhFiltrarCardsDom();
+    });
+
+    $(document).off("click.vhCards").on("click.vhCards", "[data-vh-act]", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        vhOnCardAction(this);
+    });
+
+    $(document).off("click.vhCardSel").on("click.vhCardSel", ".vh-venta-card", function (e) {
+        if ($(e.target).closest("button, a, input, label, [data-vh-act]").length) return;
+        const idVenta = Number(this.getAttribute("data-idventa") || 0);
+        if (!idVenta) return;
+        ventaClickeadaId = idVenta;
+        vhPintarCardSeleccion();
+    });
+}
+
+function vhRowsFromDt(dt, fallback) {
+    if (dt) {
+        try { return dt.rows({ search: "applied" }).data().toArray(); } catch (_) { }
+    }
+    return fallback || [];
+}
+
+function vhIcoBtn(cls, act, id, title, icon, extra) {
+    return `<button type="button" class="btn-accion ${cls}" data-vh-act="${act}" data-idventa="${id}" ${extra || ""} title="${title}"><i class="fa ${icon}"></i></button>`;
+}
+
+function vhHtmlVentaCard(d, kind) {
+    const id = d.IdVenta;
+    const vencidas = Number(d.CuotasVencidas || 0);
+    const estado = String(d.Estado || "");
+    const lateCls = vencidas > 0 ? "is-late" : "";
+    const fecha = d.Fecha ? moment(d.Fecha).format("DD/MM/YYYY") : "—";
+    const fechaElim = d.FechaEliminacion ? moment(d.FechaEliminacion).format("DD/MM/YYYY HH:mm") : "";
+    const rol = Number(userSession?.IdRol);
+    const tel = String(d.ClienteTelefono || "").replace(/\D/g, "");
+    const puedeContactar = rol === 1 || rol === 4;
+    const q = `${d.Cliente || ""} ${d.Vendedor || ""} ${d.ClienteDni || ""} ${id} ${estado}`.toLowerCase();
+
+    let badgeEstado = "";
+    if (kind === "elim") {
+        badgeEstado = `<span class="vh-card-badge badge bg-danger">Eliminada</span>`;
+    } else if (estado === "Pendiente") {
+        badgeEstado = `<span class="vh-card-badge badge bg-warning text-dark">Pendiente</span>`;
+    } else if (estado === "Cancelada") {
+        badgeEstado = `<span class="vh-card-badge badge bg-secondary">Cancelada</span>`;
+    } else if (vencidas > 0) {
+        badgeEstado = `<span class="vh-card-badge badge bg-danger">Atrasada</span>`;
+    } else {
+        badgeEstado = `<span class="vh-card-badge badge bg-success">Al día</span>`;
+    }
+
+    let acciones = "";
+    if (kind === "pend") {
+        if (rol === 1) {
+            acciones =
+                vhIcoBtn("btn-aprobar", "aceptar", id, "Aceptar venta", "fa-check") +
+                vhIcoBtn("btn-cancelar", "rechazar", id, "Rechazar venta", "fa-times") +
+                vhIcoBtn("btn-editar", "editar", id, "Editar", "fa-pencil") +
+                vhIcoBtn(d.Comprobante ? "btn-pdf-ok" : "btn-pdf-pend", "pdf", id, "Descargar PDF", "fa-file-pdf-o") +
+                (tel ? vhIcoBtn("btn-wa", "wa", id, "WhatsApp", "fa-whatsapp", `data-tel="${escapeHtml(tel)}" data-nom="${escapeHtml(d.Cliente || "")}"`) : "");
+        } else if (rol === 4) {
+            acciones =
+                vhIcoBtn("btn-aprobar", "aceptar", id, "Aceptar venta", "fa-check") +
+                vhIcoBtn("btn-editar", "editar", id, "Editar", "fa-pencil") +
+                vhIcoBtn(d.Comprobante ? "btn-pdf-ok" : "btn-pdf-pend", "pdf", id, "Descargar PDF", "fa-file-pdf-o") +
+                (tel ? vhIcoBtn("btn-wa", "wa", id, "WhatsApp", "fa-whatsapp", `data-tel="${escapeHtml(tel)}" data-nom="${escapeHtml(d.Cliente || "")}"`) : "");
+        }
+    } else if (kind === "elim") {
+        acciones =
+            vhIcoBtn("btn-aprobar", "restaurar", id, "Restaurar venta", "fa-undo", `data-stock="${d.StockDevueltoAlArchivar ? 1 : 0}"`) +
+            vhIcoBtn("btn-eliminar", "elimdef", id, "Eliminar definitivamente", "fa-trash");
+    } else {
+        if (rol === 1 || rol === 4) {
+            acciones += vhIcoBtn("btn-editar", "editar", id, "Editar venta", "fa-pencil");
+        }
+        if (rol === 1) {
+            acciones += vhIcoBtn("btn-historial", "movimientos", id, "Movimientos de la venta", "fa-clock-o");
+            acciones += vhIcoBtn("btn-eliminar", "eliminar", id, "Eliminar venta", "fa-trash");
+        }
+        if (rol === 1 || rol === 4) {
+            acciones += vhIcoBtn(Number(d.Comprobante) === 1 ? "btn-pdf-ok" : "btn-pdf-pend", "pdf", id, Number(d.Comprobante) === 1 ? "Comprobante emitido" : "Comprobante no enviado", "fa-file-pdf-o");
+        }
+        if (puedeContactar && tel) {
+            acciones += vhIcoBtn("btn-wa", "wa", id, "Enviar WhatsApp", "fa-whatsapp", `data-tel="${escapeHtml(tel)}" data-nom="${escapeHtml(d.Cliente || "")}"`);
+        }
+        acciones += `<button type="button" class="btn-accion btn-historial" data-vh-act="detalle" data-idventa="${id}" title="Ver detalle"><i class="fa fa-chevron-down"></i></button>`;
+    }
+
+    const sub = kind === "elim"
+        ? `Venta #${id} · Eliminada ${fechaElim || "—"}`
+        : `Venta #${id} · ${fecha}${d.Vendedor ? ` · ${escapeHtml(d.Vendedor)}` : ""}`;
+
+    const money = kind === "elim"
+        ? `<strong>${fmt(d.Total)}</strong><small>Total</small>`
+        : `<strong>${fmt(d.Pendiente)}</strong><small>Pendiente · Total ${fmt(d.Total)}</small>`;
+
+    const extra = kind === "elim" && d.MotivoEliminacion
+        ? `<div class="vh-card-dir">${escapeHtml(d.MotivoEliminacion)}</div>`
+        : (d.ClienteDni ? `<div class="vh-card-dir">DNI ${escapeHtml(d.ClienteDni)}</div>` : "");
+
+    return `
+    <article class="vh-venta-card ${lateCls}" data-kind="${kind}" data-idventa="${id}" data-late="${vencidas > 0 ? 1 : 0}" data-q="${escapeHtml(q)}">
+      <div class="vh-card-body">
+        <div class="vh-card-head">
+          <div class="vh-card-head-main">
+            <div class="vh-card-name">${escapeHtml(d.Cliente || "Sin cliente")}</div>
+            <div class="vh-card-sub">${sub}</div>
+          </div>
+          ${badgeEstado}
+        </div>
+        <div class="vh-card-money">${money}</div>
+        ${extra}
+        ${acciones ? `<div class="vh-card-actions">${acciones}</div>` : ""}
+      </div>
+      <div class="vh-card-detalle"></div>
+    </article>`;
+}
+
+function vhPintarLista(containerId, rows, kind, emptyMsg) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const list = rows || [];
+    if (!list.length) {
+        el.innerHTML = emptyMsg ? `<div class="vh-cards-empty">${emptyMsg}</div>` : "";
+        return;
+    }
+    el.innerHTML = list.map((d) => vhHtmlVentaCard(d, kind)).join("");
+}
+
+function vhRefreshCards() {
+    if (!document.body.classList.contains("vh-mode-cards")) return;
+
+    const main = vhRowsFromDt(gridVentas, ventasCache);
+    vhPintarLista("vh_cards_main", main, "main", "No hay ventas con estos filtros.");
+    vhPintarLista("vh_cards_pend", ventasPendientesCache, "pend", "");
+    vhPintarLista("vh_cards_elim", ventasEliminadasCache, "elim", "");
+    vhFiltrarCardsDom();
+    vhPintarCardSeleccion();
+}
+
+function vhFiltrarCardsDom() {
+    const q = vhCardQuery;
+    const chip = vhCardChip;
+    document.querySelectorAll("#vh_cards_main .vh-venta-card").forEach((card) => {
+        const late = card.getAttribute("data-late") === "1";
+        let ok = true;
+        if (chip === "atrasadas") ok = late;
+        else if (chip === "aldia") ok = !late;
+        if (ok && q) ok = (card.getAttribute("data-q") || "").indexOf(q) !== -1;
+        card.classList.toggle("is-hidden", !ok);
+    });
+}
+
+function vhPintarCardSeleccion() {
+    document.querySelectorAll(".vh-venta-card").forEach((el) => {
+        el.classList.toggle("is-sel", Number(el.getAttribute("data-idventa")) === Number(ventaClickeadaId));
+    });
+}
+
+async function vhOnCardAction(btn) {
+    const act = btn.getAttribute("data-vh-act");
+    const id = Number(btn.getAttribute("data-idventa") || 0);
+    if (!id) return;
+
+    ventaClickeadaId = id;
+    vhPintarCardSeleccion();
+
+    if (act === "editar") return editarVenta(id);
+    if (act === "movimientos") return abrirHistorialVentaCompleto(id);
+    if (act === "eliminar") return eliminarVenta(id);
+    if (act === "pdf") return exportarPdfVenta(id);
+    if (act === "aceptar") return VC.cambiarEstadoVenta(id, "Activa");
+    if (act === "rechazar") return VC.cambiarEstadoVenta(id, "Cancelada");
+    if (act === "restaurar") return restaurarVentaEliminada(id, Number(btn.getAttribute("data-stock") || 0));
+    if (act === "elimdef") return eliminarVentaDefinitiva(id);
+    if (act === "wa") {
+        const tel = btn.getAttribute("data-tel") || "";
+        const nom = btn.getAttribute("data-nom") || "";
+        return VC.abrirWhatsApp(tel, nom);
+    }
+    if (act === "detalle") {
+        const card = btn.closest(".vh-venta-card");
+        if (!card) return;
+        const det = card.querySelector(".vh-card-detalle");
+        const icon = btn.querySelector("i");
+        const abierto = card.classList.contains("is-open");
+        vhCerrarDetallesCards();
+        if (abierto) return;
+        const row = (ventasCache || []).concat(ventasPendientesCache || []).find(x => Number(x.IdVenta) === id);
+        if (!row) return;
+        vhCerrarAcordeonesTabla();
+        card.classList.add("is-open");
+        det.innerHTML = formarAcordeon(row);
+        if (icon) icon.classList.remove("fa-chevron-down"), icon.classList.add("fa-chevron-up");
+        rowAbierto = id;
+        await cargarDetalleVenta(id);
+    }
+}
 
 /* ------------ FILTROS ------------ */
 
@@ -337,12 +637,14 @@ async function cargarTabla() {
             if (gridVentas) {
                 gridVentas.clear().draw();
             }
+            vhRefreshCards();
             return;
         }
 
         ventasCache = resp.data || [];
         actualizarKPIs(resp.kpis || {});
         renderTabla(ventasCache);
+        vhRefreshCards();
 
         if (userSession.IdRol == 1 || userSession.IdRol == 4) {
             await VC.cargarVentasPendientes();
@@ -353,6 +655,7 @@ async function cargarTabla() {
         }
     } finally {
         ocultarCargaTablas(genCarga);
+        vhAjustarTablas();
     }
 }
 
@@ -639,7 +942,8 @@ function renderTablaBase(selector, data, tipo) {
 function renderTabla(data) {
     if (gridVentas) {
         gridVentas.clear().rows.add(data).draw();
-        reabrirRowSeleccionado();
+        if (document.body.classList.contains("vh-mode-tabla")) reabrirRowSeleccionado();
+        vhRefreshCards();
         return;
     } else {
        inicializarEncabezadoColumnas("#grdVentas")
@@ -782,6 +1086,14 @@ function renderTabla(data) {
         ` : ""}
 
         ${userSession.IdRol == 1 ? `
+            <button class="btn-accion btn-historial"
+                    onclick="abrirHistorialVentaCompleto(${id})"
+                    title="Movimientos de la venta">
+                <i class="fa fa-clock-o"></i>
+            </button>
+        ` : ""}
+
+        ${userSession.IdRol == 1 ? `
             <button class="btn-accion btn-eliminar"
                     onclick="eliminarVenta(${id})"
                     title="Eliminar venta">
@@ -892,7 +1204,8 @@ function renderTabla(data) {
 }
 
 function reabrirRowSeleccionado() {
-    if (!rowAbierto) return;
+    if (!rowAbierto || !gridVentas) return;
+    if (document.body.classList.contains("vh-mode-cards")) return;
 
     $("#grdVentas tbody tr").each(function () {
         const data = gridVentas.row(this).data();
@@ -1019,12 +1332,15 @@ async function cargarDetalleVenta(idVenta) {
 function remarcarVentaSeleccionada() {
     $("#grdVentas tbody tr").removeClass("venta-seleccionada");
 
-    $("#grdVentas tbody tr").each(function () {
-        const data = gridVentas.row(this).data();
-        if (data?.IdVenta === ventaSeleccionada.IdVenta) {
-            $(this).addClass("venta-seleccionada");
-        }
-    });
+    if (gridVentas) {
+        $("#grdVentas tbody tr").each(function () {
+            const data = gridVentas.row(this).data();
+            if (data?.IdVenta === ventaSeleccionada.IdVenta) {
+                $(this).addClass("venta-seleccionada");
+            }
+        });
+    }
+    vhPintarCardSeleccion();
 }
 
 /* ------------ PRODUCTOS ------------ */
@@ -1468,6 +1784,7 @@ async function cargarVentasEliminadas() {
     }
 
     const data = resp.data || [];
+    ventasEliminadasCache = data;
 
     if (data.length === 0) {
         $("#cardVentasEliminadas").attr("hidden", true);
@@ -1475,6 +1792,7 @@ async function cargarVentasEliminadas() {
             gridVentasEliminadas.destroy();
             gridVentasEliminadas = null;
         }
+        vhRefreshCards();
         return;
     }
 
@@ -1529,6 +1847,7 @@ async function cargarVentasEliminadas() {
             }
         ]
     });
+    vhRefreshCards();
 }
 
 /* ------------ PDF INDIVIDUAL ------------ */
@@ -1977,15 +2296,18 @@ VC.cargarVentasPendientes = async function () {
     );
 
     const data = resp.data || [];
+    ventasPendientesCache = data;
 
     if (data.length === 0) {
         $("#cardVentasPendientes").attr("hidden", true);
+        vhRefreshCards();
         return;
     }
 
     $("#cardVentasPendientes").removeAttr("hidden");
 
     renderTablaBase("#grdVentasPendientes", data, "pendiente");
+    vhRefreshCards();
 };
 
 

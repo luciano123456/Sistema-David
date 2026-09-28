@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
   <!-- EF Runtime content -->
   <edmx:Runtime>
@@ -438,9 +438,9 @@
           <Property Name="UsuarioCambio" Type="int" Nullable="false" />
           <Property Name="FechaCambio" Type="datetime" Nullable="false" />
           <Property Name="Campo" Type="varchar" MaxLength="255" />
-          <Property Name="ValorAnterior" Type="varchar" MaxLength="255" />
-          <Property Name="ValorNuevo" Type="varchar" MaxLength="255" />
-          <Property Name="Observacion" Type="varchar" MaxLength="500" />
+          <Property Name="ValorAnterior" Type="varchar" MaxLength="2000" />
+          <Property Name="ValorNuevo" Type="varchar" MaxLength="2000" />
+          <Property Name="Observacion" Type="varchar" MaxLength="2000" />
         </EntityType>
         <EntityType Name="Ventas_Electrodomesticos_Pagos">
           <Key>
@@ -2016,9 +2016,9 @@
           <Property Name="UsuarioCambio" Type="Int32" Nullable="false" />
           <Property Name="FechaCambio" Type="DateTime" Nullable="false" Precision="3" />
           <Property Name="Campo" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
-          <Property Name="ValorAnterior" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
-          <Property Name="ValorNuevo" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
-          <Property Name="Observacion" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Name="ValorAnterior" Type="String" MaxLength="2000" FixedLength="false" Unicode="false" />
+          <Property Name="ValorNuevo" Type="String" MaxLength="2000" FixedLength="false" Unicode="false" />
+          <Property Name="Observacion" Type="String" MaxLength="2000" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="Usuarios" Relationship="Sistema_DavidModel.FK_VEH_User" FromRole="Ventas_Electrodomesticos_Historial" ToRole="Usuarios" />
           <NavigationProperty Name="Ventas_Electrodomesticos" Relationship="Sistema_DavidModel.FK_VEH_VE" FromRole="Ventas_Electrodomesticos_Historial" ToRole="Ventas_Electrodomesticos" />
           <NavigationProperty Name="Ventas_Electrodomesticos_Cuotas" Relationship="Sistema_DavidModel.FK_VEH_VEC" FromRole="Ventas_Electrodomesticos_Historial" ToRole="Ventas_Electrodomesticos_Cuotas" />
