@@ -331,6 +331,7 @@ namespace Sistema_David.Models.ViewModels
 
     public class VM_Ventas_Electrodomesticos_CuotaPlan
     {
+        public int Id { get; set; }
         public int NumeroCuota { get; set; }
         public DateTime FechaVencimiento { get; set; }
         public decimal MontoOriginal { get; set; }

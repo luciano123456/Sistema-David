@@ -210,7 +210,8 @@ namespace Sistema_David.Controllers
         [HttpPost]
         public ActionResult MarcarComprobante(int idVenta)
         {
-            var msg = Ventas_ElectrodomesticosModel.MarcarComprobante(idVenta);
+            var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+            var msg = Ventas_ElectrodomesticosModel.MarcarComprobante(idVenta, usuario);
             return Json(new { success = msg == "OK", message = msg });
         }
 
@@ -311,8 +312,9 @@ namespace Sistema_David.Controllers
                     return Json(new { success = false, message = "Datos inválidos" });
 
                 model.UsuarioOperador = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var idRol = SessionHelper.GetUsuarioSesion()?.IdRol ?? 0;
 
-                var resp = Ventas_ElectrodomesticosModel.EditarVenta(model);
+                var resp = Ventas_ElectrodomesticosModel.EditarVenta(model, (int)idRol);
                 return Json(new { success = resp == "OK", message = resp });
             }
             catch (Exception ex)
@@ -412,7 +414,8 @@ namespace Sistema_David.Controllers
             if (data == null)
                 return Json(null);
 
-            var msg = Ventas_ElectrodomesticosModel.MarcarWhatssap(id, "");
+            var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+            Ventas_ElectrodomesticosModel.MarcarWhatssap(id, "", usuario);
 
             return Json(new
             {
@@ -430,7 +433,8 @@ namespace Sistema_David.Controllers
         {
             try
             {
-                var msg = Ventas_ElectrodomesticosModel.MarcarWhatssap(id, descripcion);
+                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var msg = Ventas_ElectrodomesticosModel.MarcarWhatssap(id, descripcion, usuario);
 
                 return Json(new
                 {

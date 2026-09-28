@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Globalization;
@@ -26,6 +26,114 @@ namespace Sistema_David.Models
             if (cuotas == null) return 0m;
             return R2(cuotas.Sum(c =>
                 (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado));
+        }
+
+        private const decimal TolPlan = 0.05m;
+
+        /// <summary>
+        /// Recargo/descuento del plan: % sobre el capital a financiar; $ es el TOTAL del plan (no por cuota).
+        /// </summary>
+        private static decimal CalcularAjustePlan(decimal baseCapital, decimal? valor, string tipo)
+        {
+            var v = R2(valor ?? 0);
+            if (v <= 0) return 0m;
+            var t = (tipo ?? "").Trim();
+            if (t == "%")
+                return R2(baseCapital * v / 100m);
+            return v;
+        }
+
+        private struct PlanCuotaCheck
+        {
+            public decimal Original;
+            public decimal Recargo;
+            public decimal Descuento;
+            public decimal Pagado;
+            public bool Conservada;
+            public bool EsExistente;
+        }
+
+        /// <summary>
+        /// Cuadre del armado inicial: suma(original) = productos − entrega;
+        /// recargo/descuento $ del plan es un total prorrateado (no N × valor).
+        /// Recargos de mora posteriores en cuotas conservadas no entran en este tope.
+        /// </summary>
+        private static string ValidarCuadrePlanCuotas(
+            decimal importeTotal,
+            decimal entrega,
+            string recargoTipo,
+            decimal? recargoValor,
+            string descuentoTipo,
+            decimal? descuentoValor,
+            IReadOnlyList<PlanCuotaCheck> cuotas)
+        {
+            if (entrega < 0)
+                return "La entrega no puede ser negativa.";
+            if (entrega > importeTotal + TolPlan)
+                return "La entrega no puede ser mayor al total de productos.";
+
+            var baseFin = R2(Math.Max(0, importeTotal - entrega));
+            var lista = cuotas ?? new List<PlanCuotaCheck>();
+            var origConservadas = R2(lista.Where(c => c.Conservada).Sum(c => c.Original));
+            var basePend = R2(baseFin - origConservadas);
+
+            if (basePend < -TolPlan)
+                return "El nuevo total (menos entrega) queda por debajo de lo ya cobrado en cuotas.";
+
+            var recEsp = CalcularAjustePlan(Math.Max(0, basePend), recargoValor, recargoTipo);
+            var descEsp = CalcularAjustePlan(Math.Max(0, basePend), descuentoValor, descuentoTipo);
+            var aFinanciarPend = R2(Math.Max(0, basePend) + recEsp - descEsp);
+
+            if (aFinanciarPend < -TolPlan)
+                return "El descuento del plan supera el restante más el recargo.";
+
+            if (lista.Count == 0)
+            {
+                if (baseFin > TolPlan || aFinanciarPend > TolPlan)
+                    return "Generá el plan de cuotas: hay un restante a financiar y no hay cuotas.";
+                return null;
+            }
+
+            foreach (var c in lista)
+            {
+                var total = R2(c.Original + c.Recargo - c.Descuento);
+                if (total <= 0)
+                    return "Hay cuotas con importe inválido. Revisá el plan.";
+                if (c.Pagado > total + TolPlan)
+                    return "Hay una cuota por debajo de lo ya cobrado.";
+            }
+
+            var sumOrig = R2(lista.Sum(c => c.Original));
+            if (Math.Abs(sumOrig - baseFin) > TolPlan)
+                return "El plan no cierra: la suma de los importes originales de las cuotas debe ser productos − entrega (ajuste de centavos en la última cuota). "
+                    + "Suma originales=" + sumOrig.ToString("N2")
+                    + " / esperado=" + baseFin.ToString("N2") + ".";
+
+            var pendientes = lista.Where(c => !c.Conservada).ToList();
+            var validarAjustePend = pendientes.Count > 0 && pendientes.All(c => !c.EsExistente);
+            if (validarAjustePend)
+            {
+                var sumRec = R2(pendientes.Sum(c => c.Recargo));
+                var sumDesc = R2(pendientes.Sum(c => c.Descuento));
+                var sumTot = R2(pendientes.Sum(c => c.Original + c.Recargo - c.Descuento));
+
+                if (Math.Abs(sumRec - recEsp) > TolPlan)
+                    return "El recargo del plan no cierra (el $ es el total del plan, no un recargo por cada cuota). "
+                        + "Recargos=" + sumRec.ToString("N2")
+                        + " / esperado=" + recEsp.ToString("N2") + ".";
+
+                if (Math.Abs(sumDesc - descEsp) > TolPlan)
+                    return "El descuento del plan no cierra (el $ es el total del plan, no un descuento por cada cuota). "
+                        + "Descuentos=" + sumDesc.ToString("N2")
+                        + " / esperado=" + descEsp.ToString("N2") + ".";
+
+                if (Math.Abs(sumTot - aFinanciarPend) > TolPlan)
+                    return "La suma de cuotas pendientes no coincide con (productos − entrega − ya cobrado) + recargo de plan − descuento de plan. "
+                        + "Suma=" + sumTot.ToString("N2")
+                        + " / esperado=" + aFinanciarPend.ToString("N2") + ".";
+            }
+
+            return null;
         }
 
         public class LimiteVentaExcedidoException : Exception
@@ -481,6 +589,33 @@ namespace Sistema_David.Models
         /* ===========================================================
          * Audit
          * =========================================================== */
+        private static string AuditTxt(string s, int max)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            s = s.Trim();
+            if (s.Length <= max) return s;
+            return s.Substring(0, max - 1);
+        }
+
+        private static string AuditVal(object v)
+        {
+            if (v == null) return null;
+            if (v is DateTime dt) return dt.ToString("dd/MM/yyyy HH:mm");
+            if (v is DateTime?)
+            {
+                var n = (DateTime?)v;
+                return n.HasValue ? n.Value.ToString("dd/MM/yyyy HH:mm") : null;
+            }
+            if (v is decimal d) return AuditDecimal(d);
+            if (v is decimal?)
+            {
+                var n = (decimal?)v;
+                return n.HasValue ? AuditDecimal(n.Value) : null;
+            }
+            var s = Convert.ToString(v, CultureInfo.InvariantCulture);
+            return string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+        }
+
         private static void Audit(Sistema_DavidEntities db, int? idVenta, int? idCuota,
             int usuario, string campo, string anterior, string nuevo, string obs = null)
         {
@@ -488,13 +623,108 @@ namespace Sistema_David.Models
             {
                 IdVenta = idVenta,
                 IdCuota = idCuota,
-                UsuarioCambio = usuario,
+                UsuarioCambio = usuario > 0 ? usuario : 0,
                 FechaCambio = DateTime.Now,
-                Campo = campo,
-                ValorAnterior = anterior,
-                ValorNuevo = nuevo,
-                Observacion = obs
+                Campo = AuditTxt(campo, 255),
+                ValorAnterior = AuditTxt(anterior, 2000),
+                ValorNuevo = AuditTxt(nuevo, 2000),
+                Observacion = AuditTxt(obs, 2000)
             });
+        }
+
+        private static void AuditSiCambio(Sistema_DavidEntities db, int? idVenta, int? idCuota,
+            int usuario, string campo, object anterior, object nuevo, string obs = null)
+        {
+            var a = AuditVal(anterior) ?? "(vacío)";
+            var n = AuditVal(nuevo) ?? "(vacío)";
+            if (string.Equals(a, n, StringComparison.Ordinal))
+                return;
+            Audit(db, idVenta, idCuota, usuario, campo, a, n, obs);
+        }
+
+        private static string KeyDetElectro(int? idProducto, string producto)
+        {
+            if (idProducto.HasValue && idProducto.Value > 0)
+                return "id:" + idProducto.Value;
+            return "nom:" + (producto ?? "").Trim().ToUpperInvariant();
+        }
+
+        private static string LabelDetElectro(string producto, decimal cantidad, decimal? precio = null)
+        {
+            var n = string.IsNullOrWhiteSpace(producto) ? "Producto" : producto.Trim();
+            var txt = n + " x" + cantidad.ToString("0.##", CultureInfo.InvariantCulture);
+            if (precio.HasValue)
+                txt += " ($" + AuditDecimal(precio.Value) + ")";
+            return txt;
+        }
+
+        private static void AuditDiffItemsElectro(
+            Sistema_DavidEntities db,
+            int idVenta,
+            int usuario,
+            IEnumerable<Ventas_Electrodomesticos_Detalle> oldList,
+            IEnumerable<VM_Ventas_Electrodomesticos_Item> newList,
+            List<string> resumen)
+        {
+            var oldMap = (oldList ?? Enumerable.Empty<Ventas_Electrodomesticos_Detalle>())
+                .GroupBy(x => KeyDetElectro(x.IdProducto, x.Producto))
+                .ToDictionary(g => g.Key, g => new
+                {
+                    Nombre = g.Select(x => x.Producto).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)) ?? "Producto",
+                    Cant = g.Sum(x => x.Cantidad),
+                    Precio = g.Last().PrecioUnitario
+                });
+
+            var newMap = (newList ?? Enumerable.Empty<VM_Ventas_Electrodomesticos_Item>())
+                .GroupBy(x => KeyDetElectro(x.IdProducto, x.Producto))
+                .ToDictionary(g => g.Key, g => new
+                {
+                    Nombre = g.Select(x => x.Producto).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)) ?? "Producto",
+                    Cant = g.Sum(x => x.Cantidad),
+                    Precio = g.Last().PrecioUnitario
+                });
+
+            foreach (var kv in newMap)
+            {
+                if (!oldMap.ContainsKey(kv.Key))
+                {
+                    var label = LabelDetElectro(kv.Value.Nombre, kv.Value.Cant, kv.Value.Precio);
+                    Audit(db, idVenta, null, usuario, "ProductoAgregado", null, label, "Se agregó " + label);
+                    resumen.Add("Se agregó " + LabelDetElectro(kv.Value.Nombre, kv.Value.Cant));
+                    continue;
+                }
+
+                var ant = oldMap[kv.Key];
+                var neu = kv.Value;
+                if (!string.Equals((ant.Nombre ?? "").Trim(), (neu.Nombre ?? "").Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    AuditSiCambio(db, idVenta, null, usuario, "ProductoNombre", ant.Nombre, neu.Nombre,
+                        (ant.Nombre ?? "Producto") + " → " + (neu.Nombre ?? "Producto"));
+                    resumen.Add("Nombre: " + (ant.Nombre ?? "") + " → " + (neu.Nombre ?? ""));
+                }
+                if (ant.Cant != neu.Cant)
+                {
+                    AuditSiCambio(db, idVenta, null, usuario, "ProductoCantidad", ant.Cant, neu.Cant,
+                        neu.Nombre + ": cantidad " + ant.Cant.ToString("0.##", CultureInfo.InvariantCulture)
+                        + " → " + neu.Cant.ToString("0.##", CultureInfo.InvariantCulture));
+                    resumen.Add(neu.Nombre + " x" + ant.Cant.ToString("0.##", CultureInfo.InvariantCulture)
+                        + " → x" + neu.Cant.ToString("0.##", CultureInfo.InvariantCulture));
+                }
+                if (ant.Precio != neu.Precio)
+                {
+                    AuditSiCambio(db, idVenta, null, usuario, "ProductoPrecio", ant.Precio, neu.Precio,
+                        neu.Nombre + ": precio $" + AuditDecimal(ant.Precio) + " → $" + AuditDecimal(neu.Precio));
+                    resumen.Add(neu.Nombre + " precio $" + AuditDecimal(ant.Precio) + " → $" + AuditDecimal(neu.Precio));
+                }
+            }
+
+            foreach (var kv in oldMap)
+            {
+                if (newMap.ContainsKey(kv.Key)) continue;
+                var label = LabelDetElectro(kv.Value.Nombre, kv.Value.Cant, kv.Value.Precio);
+                Audit(db, idVenta, null, usuario, "ProductoQuitado", label, null, "Se quitó " + label);
+                resumen.Add("Se quitó " + LabelDetElectro(kv.Value.Nombre, kv.Value.Cant));
+            }
         }
 
         /* ===========================================================
@@ -637,6 +867,36 @@ namespace Sistema_David.Models
                             throw new Exception($"Stock insuficiente para {it.Producto}");
                     }
 
+                    if (m.Items != null && m.Items.Count > 0)
+                    {
+                        var sumItems = R2(m.Items.Sum(i => i.Subtotal));
+                        if (Math.Abs(sumItems - R2(m.ImporteTotal)) > TolPlan)
+                            throw new Exception("El total de la venta no coincide con los productos.");
+                    }
+
+                    var checksAlta = (m.Cuotas ?? new List<VM_Ventas_Electrodomesticos_CuotaPlan>())
+                        .Select(c => new PlanCuotaCheck
+                        {
+                            Original = R2(c.MontoOriginal),
+                            Recargo = R2(c.MontoRecargos),
+                            Descuento = R2(c.MontoDescuentos),
+                            Pagado = 0,
+                            Conservada = false,
+                            EsExistente = false
+                        })
+                        .ToList();
+
+                    var errPlan = ValidarCuadrePlanCuotas(
+                        R2(m.ImporteTotal),
+                        R2(m.Entrega ?? 0),
+                        m.RecargoTipo,
+                        m.RecargoValor,
+                        m.DescuentoTipo,
+                        m.DescuentoValor,
+                        checksAlta);
+                    if (errPlan != null)
+                        throw new Exception(errPlan);
+
                     /* ===============================
                      * 🔥 CALCULAR RECARGOS / DESCUENTOS
                      * =============================== */
@@ -755,6 +1015,31 @@ namespace Sistema_David.Models
                             }
                         );
                     }
+
+                    db.SaveChanges();
+
+                    RecalcularEstadoVenta(db, venta, m.UsuarioOperador);
+
+                    var itemsTxt = m.Items == null
+                        ? ""
+                        : string.Join("; ", m.Items.Select(i =>
+                            (string.IsNullOrWhiteSpace(i.Producto) ? "Producto" : i.Producto)
+                            + " x" + i.Cantidad.ToString(CultureInfo.InvariantCulture)));
+
+                    Audit(
+                        db,
+                        venta.Id,
+                        null,
+                        m.UsuarioOperador,
+                        "CrearVenta",
+                        null,
+                        "Pendiente",
+                        "Total=" + AuditDecimal(venta.ImporteTotal)
+                        + " Entrega=" + AuditDecimal(entrega)
+                        + " Restante=" + AuditDecimal(restante)
+                        + " Cuotas=" + (m.Cuotas?.Count ?? 0)
+                        + (string.IsNullOrWhiteSpace(itemsTxt) ? "" : " | " + itemsTxt)
+                    );
 
                     db.SaveChanges();
                     tx.Commit();
@@ -986,14 +1271,29 @@ namespace Sistema_David.Models
                     .ToList();
 
                 /* ================= HISTORIAL ================= */
+                var nombresUsuariosHist = db.Usuarios
+                    .Select(u => new { u.Id, u.Nombre })
+                    .ToList()
+                    .ToDictionary(u => u.Id, u => string.IsNullOrWhiteSpace(u.Nombre) ? "Usuario" : u.Nombre);
+
+                var nroCuotaPorId = v.Ventas_Electrodomesticos_Cuotas
+                    .ToDictionary(c => c.Id, c => c.NumeroCuota);
+
                 vm.Historial = v.Ventas_Electrodomesticos_Historial
                     .OrderByDescending(h => h.FechaCambio)
+                    .ThenByDescending(h => h.Id)
                     .Select(h => new
                     {
                         h.Id,
                         h.IdVenta,
                         h.IdCuota,
+                        NumeroCuota = h.IdCuota.HasValue && nroCuotaPorId.ContainsKey(h.IdCuota.Value)
+                            ? (int?)nroCuotaPorId[h.IdCuota.Value]
+                            : null,
                         h.UsuarioCambio,
+                        UsuarioNombre = nombresUsuariosHist.ContainsKey(h.UsuarioCambio)
+                            ? nombresUsuariosHist[h.UsuarioCambio]
+                            : ("#" + h.UsuarioCambio),
                         h.FechaCambio,
                         h.Campo,
                         h.ValorAnterior,
@@ -1030,9 +1330,35 @@ namespace Sistema_David.Models
                     if (venta == null)
                         throw new Exception("Venta inexistente");
 
+                    var cobradorAntPago = venta.IdCobrador;
+                    var obsCobroAntPago = venta.ObservacionCobro;
+                    var estadoCobroAntPago = venta.EstadoCobro;
+
                     venta.ObservacionCobro = "";
                     venta.EstadoCobro = 0;
                     venta.IdCobrador = null;
+
+                    if (cobradorAntPago.HasValue && cobradorAntPago.Value != 0)
+                    {
+                        Audit(db, venta.Id, null, m.UsuarioOperador,
+                            "AsignarCobradorVenta",
+                            cobradorAntPago.Value.ToString(),
+                            "(sin)",
+                            "Desasignado al registrar cobro");
+                    }
+                    if (!string.IsNullOrWhiteSpace(obsCobroAntPago))
+                    {
+                        Audit(db, venta.Id, null, m.UsuarioOperador,
+                            "ObservacionCobro",
+                            obsCobroAntPago,
+                            "",
+                            "Limpiada al registrar cobro");
+                    }
+                    if (estadoCobroAntPago == 1)
+                    {
+                        Audit(db, venta.Id, null, m.UsuarioOperador,
+                            "EstadoCobro", "1", "0", "Limpiado al registrar cobro");
+                    }
 
                     // ===============================
                     // 🔒 RESTANTE TOTAL DE LA VENTA (incluye recargos en cuotas)
@@ -1108,6 +1434,10 @@ namespace Sistema_David.Models
                             });
 
                         var pagAnt = cuota.MontoPagado;
+                        var estadoCuotaAnt = cuota.Estado;
+                        var fechaCobroAnt = cuota.FechaCobro;
+                        var cobroPendAnt = cuota.CobroPendiente;
+                        var transfPendAnt = cuota.TransferenciaPendiente;
 
                         cuota.MontoPagado = R2(cuota.MontoPagado + aplicar);
 
@@ -1153,7 +1483,21 @@ namespace Sistema_David.Models
                             $"Antes={AuditDecimal(pagAnt)}",
                             $"Ahora={AuditDecimal(cuota.MontoPagado)}",
                             $"Pago #{pago.Id} | Aplicado={AuditDecimal(aplicar)}"
+                            + " | Medio=" + (m.MedioPago ?? "")
+                            + (string.IsNullOrWhiteSpace(m.TipoInteres) ? "" : " | Interes=" + m.TipoInteres)
                         );
+
+                        AuditSiCambio(db, venta.Id, cuota.Id, m.UsuarioOperador,
+                            "EstadoCuota", estadoCuotaAnt, cuota.Estado, "Al registrar pago");
+                        AuditSiCambio(db, venta.Id, cuota.Id, m.UsuarioOperador,
+                            "FechaCobro",
+                            fechaCobroAnt?.ToString("dd/MM/yyyy HH:mm"),
+                            cuota.FechaCobro?.ToString("dd/MM/yyyy HH:mm"),
+                            "Al registrar pago");
+                        AuditSiCambio(db, venta.Id, cuota.Id, m.UsuarioOperador,
+                            "CobroPendiente", cobroPendAnt ?? 0, 0, "Al registrar pago");
+                        AuditSiCambio(db, venta.Id, cuota.Id, m.UsuarioOperador,
+                            "Transferencia Pendiente", transfPendAnt ?? 0, 0, "Al registrar pago");
 
                         montoDisponible -= aplicar;
                     }
@@ -1172,10 +1516,22 @@ namespace Sistema_David.Models
                         null,
                         m.UsuarioOperador,
                         "RegistrarPago",
-                        null,
-                        $"Pago #{pago.Id} por {pago.ImporteTotal}",
-                        $"Cuenta={m.IdCuentaBancaria} | ClienteAusente={m.ClienteAusente}"
+                        AuditDecimal(restanteVenta),
+                        AuditDecimal(SaldoPendienteDesdeCuotas(venta.Ventas_Electrodomesticos_Cuotas)),
+                        "Pago #" + pago.Id
+                        + " Importe=" + AuditDecimal(pago.ImporteTotal)
+                        + " | Medio=" + (m.MedioPago ?? "")
+                        + " | Cuenta=" + (m.IdCuentaBancaria?.ToString() ?? "")
+                        + " | Ausente=" + m.ClienteAusente
+                        + (string.IsNullOrWhiteSpace(m.TipoInteres) ? "" : " | Interes=" + m.TipoInteres)
+                        + (string.IsNullOrWhiteSpace(m.Observacion) ? "" : " | Obs=" + m.Observacion)
                     );
+
+                    if (!string.IsNullOrWhiteSpace(m.TipoInteres))
+                    {
+                        Audit(db, venta.Id, null, m.UsuarioOperador,
+                            "TipoInteres", null, m.TipoInteres, "Pago #" + pago.Id);
+                    }
 
                     db.SaveChanges();
                     tx.Commit();
@@ -1209,6 +1565,10 @@ namespace Sistema_David.Models
                     if (c == null)
                         throw new Exception("Cuota inexistente");
 
+                    var fecAnt = c.FechaVencimiento;
+                    var monAnt = c.MontoOriginal;
+                    var estadoAnt = c.Estado;
+
                     if (nuevaFecha.HasValue)
                         c.FechaVencimiento = nuevaFecha.Value.Date;
 
@@ -1222,8 +1582,14 @@ namespace Sistema_David.Models
                     c.UsuarioModificacion = usuario;
                     c.FechaModificacion = DateTime.Now;
 
-                    Audit(db, c.IdVenta, c.Id, usuario,
-                        "EditarCuota", null, null);
+                    AuditSiCambio(db, c.IdVenta, c.Id, usuario,
+                        "FechaVencimientoCuota",
+                        fecAnt.ToString("dd/MM/yyyy"),
+                        c.FechaVencimiento.ToString("dd/MM/yyyy"));
+                    AuditSiCambio(db, c.IdVenta, c.Id, usuario,
+                        "MontoOriginalCuota", monAnt, c.MontoOriginal);
+                    AuditSiCambio(db, c.IdVenta, c.Id, usuario,
+                        "EstadoCuota", estadoAnt, c.Estado, "Al editar cuota");
 
                     RecalcularEstadoVenta(db, c.Ventas_Electrodomesticos, usuario);
 
@@ -1256,6 +1622,8 @@ namespace Sistema_David.Models
                     if (c == null)
                         throw new Exception("Cuota inexistente");
 
+                    var recAnt = c.MontoRecargos;
+
                     // Ya no se usa descuento "on the fly" desde ajustes nuevos.
                     // Este método queda por compatibilidad.
                     if (recargo.HasValue)
@@ -1268,8 +1636,8 @@ namespace Sistema_David.Models
                     c.UsuarioModificacion = usuario;
                     c.FechaModificacion = DateTime.Now;
 
-                    Audit(db, c.IdVenta, c.Id, usuario,
-                        "Recargo/Descuento (legacy)", null, null);
+                    AuditSiCambio(db, c.IdVenta, c.Id, usuario,
+                        "MontoRecargosCuota", recAnt, c.MontoRecargos, "Recargo/descuento legacy");
 
                     RecalcularEstadoVenta(db, c.Ventas_Electrodomesticos, usuario);
 
@@ -1688,9 +2056,11 @@ namespace Sistema_David.Models
 
 
         /* ===========================================================
-         * EDITAR VENTA (SIN RESTRICCIONES DEL BACKEND)
+         * EDITAR VENTA
+         * Admin (rol 1): puede cambiar cliente, productos, plan, montos.
+         * Otros roles: solo datos de cabecera.
          * =========================================================== */
-        public static string EditarVenta(VM_Ventas_Electrodomesticos_Crear m)
+        public static string EditarVenta(VM_Ventas_Electrodomesticos_Crear m, int idRol = 0)
         {
             using (var db = new Sistema_DavidEntities())
             using (var tx = db.Database.BeginTransaction())
@@ -1699,7 +2069,11 @@ namespace Sistema_David.Models
                 {
                     var venta = db.Ventas_Electrodomesticos
                         .Include(x => x.Ventas_Electrodomesticos_Detalle)
-                        .Include(x => x.Ventas_Electrodomesticos_Cuotas)
+                        .Include(x => x.Ventas_Electrodomesticos_Cuotas
+                            .Select(c => c.Ventas_Electrodomesticos_Cuotas_Recargos))
+                        .Include(x => x.Ventas_Electrodomesticos_Cuotas
+                            .Select(c => c.Ventas_Electrodomesticos_Pagos_Detalle))
+                        .Include(x => x.Ventas_Electrodomesticos_Historial)
                         .FirstOrDefault(x => x.Id == m.IdVenta);
 
                     if (venta == null)
@@ -1708,11 +2082,291 @@ namespace Sistema_David.Models
                     if (venta.Eliminada)
                         return "No se puede editar una venta eliminada";
 
+                    var esAdmin = idRol == 1;
+                    var idVendedorDestino = m.IdVendedor > 0 ? m.IdVendedor : venta.IdVendedor;
+
+                    AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
+                        "FechaVenta",
+                        venta.FechaVenta.ToString("dd/MM/yyyy HH:mm"),
+                        m.FechaVenta.ToString("dd/MM/yyyy HH:mm"));
+                    AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
+                        "ObservacionVenta", venta.Observacion, m.Observacion);
+                    AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
+                        "IdVendedor", venta.IdVendedor, idVendedorDestino);
+                    AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
+                        "FranjaHoraria", venta.FranjaHoraria, m.FranjaHoraria);
+                    AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
+                        "Turno", venta.Turno, m.Turno);
+
+                    if (m.IdCliente > 0)
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
+                            "IdCliente", venta.IdCliente, m.IdCliente);
+
                     venta.FechaVenta = m.FechaVenta;
                     venta.Observacion = m.Observacion;
-                    venta.IdVendedor = m.IdVendedor;
+                    if (m.IdCliente > 0)
+                        venta.IdCliente = m.IdCliente;
                     venta.FranjaHoraria = m.FranjaHoraria;
                     venta.Turno = m.Turno;
+
+                    if (m.Entrega.HasValue)
+                    {
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "Entrega", venta.Entrega, R2(m.Entrega.Value));
+                        venta.Entrega = R2(m.Entrega.Value);
+                    }
+
+                    if (esAdmin)
+                    {
+                        var restanteOld = venta.Restante ?? 0;
+                        var resumenEdicion = new List<string>();
+
+                        if (m.Items != null && m.Items.Count > 0)
+                        {
+                            AuditDiffItemsElectro(
+                                db, venta.Id, m.UsuarioOperador,
+                                venta.Ventas_Electrodomesticos_Detalle.ToList(),
+                                m.Items,
+                                resumenEdicion);
+
+                            DevolverStockAlVendedor(db, venta);
+                            venta.IdVendedor = idVendedorDestino;
+
+                            db.Ventas_Electrodomesticos_Detalle.RemoveRange(venta.Ventas_Electrodomesticos_Detalle);
+                            venta.Ventas_Electrodomesticos_Detalle.Clear();
+
+                            foreach (var it in m.Items)
+                            {
+                                var det = new Ventas_Electrodomesticos_Detalle
+                                {
+                                    IdVenta = venta.Id,
+                                    IdProducto = it.IdProducto,
+                                    Producto = it.Producto,
+                                    Cantidad = it.Cantidad,
+                                    PrecioUnitario = it.PrecioUnitario,
+                                    Subtotal = it.Subtotal
+                                };
+                                venta.Ventas_Electrodomesticos_Detalle.Add(det);
+                            }
+                            db.SaveChanges();
+
+                            var stockMsg = DescontarStockDelVendedor(db, venta);
+                            if (stockMsg != "OK")
+                            {
+                                tx.Rollback();
+                                return stockMsg;
+                            }
+
+                            var sumItems = R2(m.Items.Sum(i => i.Subtotal));
+                            if (Math.Abs(sumItems - R2(m.ImporteTotal)) > TolPlan)
+                            {
+                                tx.Rollback();
+                                return "El total de la venta no coincide con los productos.";
+                            }
+                        }
+                        else
+                        {
+                            venta.IdVendedor = idVendedorDestino;
+                        }
+
+                        if (m.Cuotas != null && m.Cuotas.Count > 0)
+                        {
+                        var checksEdicion = m.Cuotas.Select(plan =>
+                        {
+                            var dbc = plan.Id > 0
+                                ? venta.Ventas_Electrodomesticos_Cuotas.FirstOrDefault(x => x.Id == plan.Id)
+                                : null;
+                            var conservada = dbc != null && dbc.MontoPagado > 0;
+                            return new PlanCuotaCheck
+                            {
+                                Original = conservada ? dbc.MontoOriginal : R2(plan.MontoOriginal),
+                                Recargo = conservada ? dbc.MontoRecargos : R2(plan.MontoRecargos),
+                                Descuento = conservada ? dbc.MontoDescuentos : R2(plan.MontoDescuentos),
+                                Pagado = conservada ? dbc.MontoPagado : 0,
+                                Conservada = conservada,
+                                EsExistente = plan.Id > 0
+                            };
+                        }).ToList();
+
+                        var errPlanEd = ValidarCuadrePlanCuotas(
+                            R2(m.ImporteTotal),
+                            R2(m.Entrega ?? venta.Entrega ?? 0),
+                            m.RecargoTipo,
+                            m.RecargoValor,
+                            m.DescuentoTipo,
+                            m.DescuentoValor,
+                            checksEdicion);
+                        if (errPlanEd != null)
+                        {
+                            tx.Rollback();
+                            return errPlanEd;
+                        }
+
+                        var idsKeep = m.Cuotas.Where(c => c.Id > 0).Select(c => c.Id).ToList();
+                        var aBorrar = venta.Ventas_Electrodomesticos_Cuotas
+                            .Where(c => !idsKeep.Contains(c.Id))
+                            .ToList();
+
+                        foreach (var c in aBorrar)
+                        {
+                            if (c.MontoPagado > 0 || (c.Ventas_Electrodomesticos_Pagos_Detalle != null && c.Ventas_Electrodomesticos_Pagos_Detalle.Any()))
+                            {
+                                tx.Rollback();
+                                return "No se puede quitar la cuota " + c.NumeroCuota + " porque ya tiene pagos.";
+                            }
+
+                            var obsQuitar = "Se quitó la cuota " + c.NumeroCuota
+                                + " de $" + AuditDecimal(c.MontoOriginal)
+                                + " (vto " + c.FechaVencimiento.ToString("dd/MM/yyyy") + ")";
+                            Audit(db, venta.Id, null, m.UsuarioOperador, "CuotaEliminada",
+                                "Cuota " + c.NumeroCuota + " $" + AuditDecimal(c.MontoOriginal),
+                                "(eliminada)",
+                                obsQuitar);
+                            resumenEdicion.Add("Se quitó la cuota " + c.NumeroCuota);
+
+                            foreach (var h in venta.Ventas_Electrodomesticos_Historial.Where(h => h.IdCuota == c.Id).ToList())
+                                h.IdCuota = null;
+
+                            if (c.Ventas_Electrodomesticos_Cuotas_Recargos != null && c.Ventas_Electrodomesticos_Cuotas_Recargos.Any())
+                                db.Ventas_Electrodomesticos_Cuotas_Recargos.RemoveRange(c.Ventas_Electrodomesticos_Cuotas_Recargos);
+
+                            db.Ventas_Electrodomesticos_Cuotas.Remove(c);
+                        }
+
+                        foreach (var plan in m.Cuotas.OrderBy(x => x.NumeroCuota))
+                        {
+                            var totalPlan = R2(plan.MontoOriginal + plan.MontoRecargos - plan.MontoDescuentos);
+                            if (plan.Id > 0)
+                            {
+                                var c = venta.Ventas_Electrodomesticos_Cuotas.FirstOrDefault(x => x.Id == plan.Id);
+                                if (c == null) continue;
+
+                                if (totalPlan + 0.009m < c.MontoPagado)
+                                {
+                                    tx.Rollback();
+                                    return "La cuota " + c.NumeroCuota + " quedaría por debajo de lo ya cobrado.";
+                                }
+
+                                AuditSiCambio(db, venta.Id, c.Id, m.UsuarioOperador,
+                                    "NumeroCuota", c.NumeroCuota, plan.NumeroCuota,
+                                    "Cuota " + c.NumeroCuota + " → " + plan.NumeroCuota);
+                                AuditSiCambio(db, venta.Id, c.Id, m.UsuarioOperador,
+                                    "FechaVencimientoCuota",
+                                    c.FechaVencimiento.ToString("dd/MM/yyyy"),
+                                    plan.FechaVencimiento.ToString("dd/MM/yyyy"),
+                                    "Cuota " + plan.NumeroCuota + ": vencimiento");
+                                AuditSiCambio(db, venta.Id, c.Id, m.UsuarioOperador,
+                                    "MontoOriginalCuota", c.MontoOriginal, R2(plan.MontoOriginal),
+                                    "Cuota " + plan.NumeroCuota + ": monto original");
+                                if (c.MontoPagado <= 0)
+                                {
+                                    AuditSiCambio(db, venta.Id, c.Id, m.UsuarioOperador,
+                                        "MontoRecargosCuota", c.MontoRecargos, R2(plan.MontoRecargos),
+                                        "Cuota " + plan.NumeroCuota + ": recargos del plan");
+                                    AuditSiCambio(db, venta.Id, c.Id, m.UsuarioOperador,
+                                        "MontoDescuentosCuota", c.MontoDescuentos, R2(plan.MontoDescuentos),
+                                        "Cuota " + plan.NumeroCuota + ": descuentos del plan");
+                                }
+
+                                c.NumeroCuota = plan.NumeroCuota;
+                                c.FechaVencimiento = plan.FechaVencimiento.Date;
+                                if (c.MontoPagado <= 0)
+                                {
+                                    c.MontoOriginal = R2(plan.MontoOriginal);
+                                    c.MontoRecargos = R2(plan.MontoRecargos);
+                                    c.MontoDescuentos = R2(plan.MontoDescuentos);
+                                }
+                                c.MontoRestante = R2((c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado);
+                                c.Estado = c.MontoRestante > 0 ? "Pendiente" : "Pagada";
+                                c.UsuarioModificacion = m.UsuarioOperador;
+                                c.FechaModificacion = DateTime.Now;
+                            }
+                            else
+                            {
+                                var obsNueva = "Se agregó la cuota " + plan.NumeroCuota
+                                    + " de $" + AuditDecimal(totalPlan)
+                                    + " (vto " + plan.FechaVencimiento.ToString("dd/MM/yyyy") + ")";
+                                Audit(db, venta.Id, null, m.UsuarioOperador, "CuotaNueva",
+                                    null,
+                                    "Cuota " + plan.NumeroCuota + " $" + AuditDecimal(totalPlan),
+                                    obsNueva);
+                                resumenEdicion.Add("Se agregó la cuota " + plan.NumeroCuota);
+
+                                db.Ventas_Electrodomesticos_Cuotas.Add(new Ventas_Electrodomesticos_Cuotas
+                                {
+                                    IdVenta = venta.Id,
+                                    NumeroCuota = plan.NumeroCuota,
+                                    FechaVencimiento = plan.FechaVencimiento.Date,
+                                    FechaCobro = plan.FechaVencimiento.Date,
+                                    MontoOriginal = R2(plan.MontoOriginal),
+                                    MontoRecargos = R2(plan.MontoRecargos),
+                                    MontoDescuentos = R2(plan.MontoDescuentos),
+                                    MontoPagado = 0,
+                                    MontoRestante = totalPlan,
+                                    Estado = "Pendiente",
+                                    UsuarioCreacion = m.UsuarioOperador,
+                                    FechaCreacion = DateTime.Now,
+                                    CobroPendiente = 0,
+                                    TransferenciaPendiente = 0
+                                });
+                            }
+                        }
+
+                        decimal entrega = m.Entrega ?? venta.Entrega ?? 0;
+                        decimal totalRecargos = m.Cuotas.Sum(c => R2(c.MontoRecargos));
+                        decimal totalDescuentos = m.Cuotas.Sum(c => R2(c.MontoDescuentos));
+
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "Entrega", venta.Entrega, R2(entrega));
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "ImporteTotal", venta.ImporteTotal, R2(m.ImporteTotal));
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "CantidadCuotas", venta.CantidadCuotas, m.CantidadCuotas);
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "FormaCuotas", venta.FormaCuotas, m.FormaCuotas);
+
+                        venta.ImporteTotal = R2(m.ImporteTotal);
+                        venta.Entrega = R2(entrega);
+                        venta.ImporteRecargos = R2(totalRecargos);
+                        venta.ImporteDescuentos = R2(totalDescuentos);
+                        venta.FormaCuotas = m.FormaCuotas;
+                        venta.CantidadCuotas = m.CantidadCuotas;
+                        venta.FechaVencimiento = m.FechaVencimiento;
+                        venta.RecargoTipo = m.RecargoTipo;
+                        venta.RecargoValor = m.RecargoValor;
+                        venta.DescuentoTipo = m.DescuentoTipo;
+                        venta.DescuentoValor = m.DescuentoValor;
+
+                        db.SaveChanges();
+
+                        var cuotasNow = db.Ventas_Electrodomesticos_Cuotas.Where(c => c.IdVenta == venta.Id).ToList();
+                        var restanteNew = SaldoPendienteDesdeCuotas(cuotasNow);
+                        var deltaLimite = restanteNew - restanteOld;
+                        if (deltaLimite > 0)
+                        {
+                            var lim = ValidarLimiteClienteVenta(db, venta.IdCliente, deltaLimite);
+                            if (lim.Excedido)
+                            {
+                                tx.Rollback();
+                                return lim.Mensaje;
+                            }
+                        }
+
+                        RecalcularEstadoVenta(db, venta, m.UsuarioOperador);
+                        var obsEdicion = resumenEdicion.Count > 0
+                            ? string.Join(" · ", resumenEdicion.Take(10))
+                                + (resumenEdicion.Count > 10 ? " …" : "")
+                            : ("Edición de cabecera y plan | Items="
+                                + (m.Items == null ? 0 : m.Items.Count)
+                                + " | Cuotas=" + m.Cuotas.Count);
+                        Audit(db, venta.Id, null, m.UsuarioOperador, "EditarVenta", null, "OK", obsEdicion);
+                        }
+                        else if (resumenEdicion.Count > 0)
+                        {
+                            Audit(db, venta.Id, null, m.UsuarioOperador, "EditarVenta", null, "OK",
+                                string.Join(" · ", resumenEdicion.Take(10)));
+                        }
+                    }
+                    else
+                    {
+                        if (m.IdVendedor > 0)
+                            venta.IdVendedor = idVendedorDestino;
+                    }
 
                     venta.UsuarioModificacion = m.UsuarioOperador;
                     venta.FechaModificacion = DateTime.Now;
@@ -1974,7 +2628,10 @@ namespace Sistema_David.Models
 
                     foreach (var p in pagos)
                     {
+                        var waAnt = p.Whatssap;
                         p.Whatssap = 1;
+                        AuditSiCambio(db, p.IdVenta, null, usuario,
+                            "WhatsAppPago", waAnt, 1, "Pago #" + p.Id);
                     }
 
                     db.SaveChanges();
@@ -1990,7 +2647,7 @@ namespace Sistema_David.Models
             }
         }
 
-        public static string MarcarWhatssap(int id, string descripcion)
+        public static string MarcarWhatssap(int id, string descripcion, int usuario = 0)
         {
             using (var db = new Sistema_DavidEntities())
             using (var tx = db.Database.BeginTransaction())
@@ -2017,6 +2674,16 @@ namespace Sistema_David.Models
 
                         if (marcadoRecargo)
                         {
+                            int? idVentaRec = db.Ventas_Electrodomesticos_Cuotas_Recargos
+                                .Where(r => r.Id == id)
+                                .Select(r => (int?)r.Ventas_Electrodomesticos_Cuotas.IdVenta)
+                                .FirstOrDefault();
+                            int? idCuotaRec = db.Ventas_Electrodomesticos_Cuotas_Recargos
+                                .Where(r => r.Id == id)
+                                .Select(r => (int?)r.IdCuota)
+                                .FirstOrDefault();
+                            Audit(db, idVentaRec, idCuotaRec, usuario,
+                                "WhatsAppRecargo", "0", "1", "Recargo #" + id + " | " + (descripcion ?? ""));
                             db.SaveChanges();
                             tx.Commit();
                             return "OK";
@@ -2040,6 +2707,8 @@ namespace Sistema_David.Models
                             return "Venta electro no encontrada";
 
                         ventaElectro.Whatssap = 1;
+                        Audit(db, ventaElectro.Id, null, usuario,
+                            "WhatsAppVenta", "0", "1", descripcion);
                     }
                     else if (desc.Contains("reprogram") || desc.Contains("cobropendiente") || desc.Contains("aceptarcobro"))
                     {
@@ -2056,6 +2725,8 @@ namespace Sistema_David.Models
                             return "Venta no encontrada";
 
                         venta.Whatssap = 1;
+                        Audit(db, venta.IdVenta, null, usuario,
+                            "WhatsAppPago", "0", "1", "Pago #" + id);
                     }
                     else
                     {
@@ -2066,6 +2737,8 @@ namespace Sistema_David.Models
                             return "Venta no encontrada";
 
                         venta.Whatssap = 1;
+                        Audit(db, venta.Id, null, usuario,
+                            "WhatsAppVenta", "0", "1", descripcion);
                     }
                     db.SaveChanges();
                     tx.Commit();
@@ -2080,7 +2753,7 @@ namespace Sistema_David.Models
         }
 
 
-        public static string MarcarComprobante(int idVenta)
+        public static string MarcarComprobante(int idVenta, int usuario = 0)
         {
             using (var db = new Sistema_DavidEntities())
             using (var tx = db.Database.BeginTransaction())
@@ -2093,7 +2766,9 @@ namespace Sistema_David.Models
                     if (venta == null)
                         return "Venta no encontrada";
 
+                    var ant = venta.Comprobante;
                     venta.Comprobante = 1;
+                    AuditSiCambio(db, venta.Id, null, usuario, "Comprobante", ant, 1);
 
                     db.SaveChanges();
                     tx.Commit();
@@ -2445,6 +3120,7 @@ namespace Sistema_David.Models
                         return "Cuota no encontrada";
 
                     var fechaAnterior = cuota.FechaCobro;
+                    var cobroPendAnt = cuota.CobroPendiente;
 
                     cuota.FechaCobro = nuevaFecha.Date;
                     // Admin (1) y Comprobantes (4): solo cambian la fecha agendada, sin pasar a "Cobros pendientes".
@@ -2489,6 +3165,10 @@ namespace Sistema_David.Models
                              ? obsDefault
                              : observacion
                      );
+
+                    AuditSiCambio(db, cuota.IdVenta, cuota.Id, usuario,
+                        "CobroPendiente", cobroPendAnt ?? 0, cuota.CobroPendiente ?? 0,
+                        esAdminOComprobantes ? "Reprogramación admin" : "Pasa a cobros pendientes");
 
                     db.SaveChanges();
                     tx.Commit();
@@ -3004,6 +3684,8 @@ namespace Sistema_David.Models
                     if (venta == null) return "Venta no encontrada";
 
                     var obsNueva = (observacion ?? "").Trim();
+                    var obsAnt = venta.ObservacionCobro;
+                    var estadoCobroAnt = venta.EstadoCobro;
 
                     // setear
                     venta.EstadoCobro = 1;
@@ -3011,9 +3693,8 @@ namespace Sistema_David.Models
                     venta.UsuarioModificacion = usuario;
                     venta.FechaModificacion = DateTime.Now;
 
-                    // si querés auditar (si tenés Audit accesible acá)
-                    Audit(db, venta.Id, null, usuario, "EstadoCobro", null, "1", "ObsCobro");
-                    Audit(db, venta.Id, null, usuario, "ObservacionCobro", null, obsNueva);
+                    AuditSiCambio(db, venta.Id, null, usuario, "EstadoCobro", estadoCobroAnt, 1, "ObsCobro");
+                    AuditSiCambio(db, venta.Id, null, usuario, "ObservacionCobro", obsAnt, obsNueva);
 
                     db.SaveChanges();
                     tx.Commit();

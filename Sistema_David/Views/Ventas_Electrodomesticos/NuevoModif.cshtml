@@ -5,14 +5,14 @@
 
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-<link href="~/Estilos/Ventas_Electrodomesticos.css?v=1.0" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.32" rel="stylesheet" />
 
 <body class="ve-dark">
 
-    <div class="container py-4">
+    <div class="container-xxl py-3">
 
         <!-- ====================== TÍTULO ====================== -->
-        <header class="d-flex align-items-start gap-3 mb-4">
+        <header class="d-flex align-items-center gap-3 mb-3">
             <i class="fa fa-bolt text-info fs-2"></i>
             <div>
                 <h1 class="m-0 fw-bold text-white">Nueva Venta</h1>
@@ -24,7 +24,7 @@
         <!-- =====================================================
          DATOS DEL CLIENTE
     ====================================================== -->
-        <section class="ve-card">
+        <section class="ve-card ve-card-cliente">
             <div class="ve-card-header justify-content-between">
 
                 <div class="d-flex align-items-center gap-2">
@@ -45,40 +45,35 @@
 
             <div class="ve-card-body">
 
-                <div class="row g-3 align-items-end">
+                <div class="ve-cliente-block">
+                    <label class="form-label fw-semibold">DNI <span class="text-danger">*</span></label>
 
-                    <div class="col-12 col-lg-5">
-                        <label class="form-label fw-semibold">DNI <span class="text-danger">*</span></label>
-
-                        <div class="input-group">
-                            <input id="dni" type="text" class="form-control ve-input" placeholder="Nro" autocomplete="off" />
-                            <button id="btnBuscarDni" class="btn btn-primary">
-                                <i class="fa fa-search"></i>
-                            </button>
-                        </div>
-
-                        <div id="msgCliente" class="form-text text-danger mt-1 d-none">
-                            No se encontró el cliente.
-                            <a id="crearClienteLink" href="#" class="ms-1">Crear ahora</a>
-                        </div>
+                    <div class="input-group ve-dni-search">
+                        <input id="dni" type="text" class="form-control ve-input" placeholder="Nro" autocomplete="off" />
+                        <button id="btnBuscarDni" type="button" class="btn btn-primary" aria-label="Buscar DNI">
+                            <i class="fa fa-search"></i>
+                        </button>
                     </div>
 
-                    <!-- BADGES -->
-                    <div class="col-12">
-                        <div id="wrapBadges" class="d-flex flex-wrap gap-2 d-none">
-                            <span id="bNombre" class="chip chip-muted">
-                                <i class="fa fa-user"></i> —
-                            </span>
-                            <span id="bEstado" class="chip"><i class="fa fa-circle"></i> —</span>
-                            <span id="bDireccion" class="chip chip-muted">
-                                <i class="fa fa-map-marker"></i> —
-                            </span>
-                            <span id="bTelefono" class="chip chip-muted">
-                                <i class="fa fa-phone"></i> —
-                            </span>
-                        </div>
+                    <div id="msgCliente" class="form-text text-danger mt-1 d-none">
+                        No se encontró el cliente.
+                        <a id="crearClienteLink" href="#" class="ms-1">Crear ahora</a>
                     </div>
 
+                    <div id="wrapBadges" class="ve-cliente-chips d-none">
+                        <span id="bNombre" class="chip chip-muted">
+                            <i class="fa fa-user"></i><span>—</span>
+                        </span>
+                        <span id="bEstado" class="chip">
+                            <i class="fa fa-circle"></i><span>—</span>
+                        </span>
+                        <span id="bDireccion" class="chip chip-muted">
+                            <i class="fa fa-map-marker"></i><span>—</span>
+                        </span>
+                        <span id="bTelefono" class="chip chip-muted">
+                            <i class="fa fa-phone"></i><span>—</span>
+                        </span>
+                    </div>
                 </div>
 
             </div>
@@ -103,7 +98,7 @@
 
             <div class="ve-card-body">
 
-                <div class="table-responsive">
+                <div class="table-responsive ve-m-table-wrap">
                     <table id="tblProductos" class="table ve-table align-middle">
                         <thead>
                             <tr>
@@ -117,28 +112,29 @@
                         <tbody></tbody>
                     </table>
                 </div>
+                <div id="productosCards" class="ve-m-cards" aria-live="polite"></div>
 
                 <!-- KPIs -->
-                <div class="row g-3 mt-2">
-                    <div class="col-12 col-md-3">
+                <div class="row g-3 g-md-4 mt-3">
+                    <div class="col-6 col-md-3">
                         <div class="kpi kpi-total">
                             <span>Total</span>
                             <h3 id="kpiTotal">$ 0,00</h3>
                         </div>
                     </div>
-                    <div class="col-12 col-md-3">
+                    <div class="col-6 col-md-3">
                         <div class="kpi kpi-entrega">
                             <span>Entrega</span>
                             <h3 id="kpiEntrega">$ 0,00</h3>
                         </div>
                     </div>
-                    <div class="col-12 col-md-3">
+                    <div class="col-6 col-md-3">
                         <div class="kpi kpi-entrega">
                             <span>Entrega Cuotas</span>
                             <h3 id="kpiEntregaCuotas">$ 0,00</h3>
                         </div>
                     </div>
-                    <div class="col-12 col-md-3">
+                    <div class="col-6 col-md-3">
                         <div class="kpi kpi-restante">
                             <span>Restante</span>
                             <h3 id="kpiRestante">$ 0,00</h3>
@@ -173,6 +169,9 @@
                     <button id="btnExportarPdf" onclick="exportarPdfDesdeNuevoModif()" class="btn btn-primary btn-sm" hidden>
                         <i class="fa fa-file-pdf-o"></i> Exportar PDF
                     </button>
+                    <button id="btnMovimientosVenta" type="button" class="btn btn-outline-info btn-sm" hidden>
+                        <i class="fa fa-clock-o"></i> Movimientos
+                    </button>
 
                     <span id="contadorPagadas" class="chip ms-2">
                         <i class="fa fa-check"></i>
@@ -184,8 +183,8 @@
 
             <div class="ve-card-body">
 
-                <div class="row g-3 mb-3">
-                    <div class="col-12 col-md-3">
+                <div class="row g-3 g-md-4 mb-4">
+                    <div class="col-6 col-md-3">
                         <label class="form-label fw-semibold">Forma</label>
                         <select id="forma" class="form-select ve-input">
                             <option value="diaria">Diaria</option>
@@ -195,17 +194,17 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-3">
+                    <div class="col-6 col-md-3">
                         <label class="form-label fw-semibold">Cantidad (0 = auto)</label>
                         <input id="cantCuotas" type="number" min="0" class="form-control ve-input " value="0" />
                     </div>
 
-                    <!-- Recargo -->
+                    <!-- Recargo: % sobre el restante a financiar; $ = total del plan (prorrateado, no por cuota) -->
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Recargo</label>
-                        <div class="input-group">
+                        <label class="form-label fw-semibold">Recargo <small class="text-muted fw-normal">(% sobre restante / $ total del plan)</small></label>
+                        <div class="input-group ve-amount-group">
                             <input id="recargo" type="text" class="form-control ve-input text-end miles" placeholder="Ej: 10" />
-                            <div id="recargoTipoWrap" class="btn-group ve-type-toggle">
+                            <div id="recargoTipoWrap" class="btn-group ve-type-toggle" role="group">
                                 <button type="button" class="btn btn-outline-light active" data-value="%">%</button>
                                 <button type="button" class="btn btn-outline-light" data-value="$">$</button>
                             </div>
@@ -216,12 +215,12 @@
                         </div>
                     </div>
 
-                    <!-- Descuento -->
+                    <!-- Descuento: misma regla que recargo (el $ no se multiplica por cuota) -->
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Descuento</label>
-                        <div class="input-group">
+                        <label class="form-label fw-semibold">Descuento <small class="text-muted fw-normal">(% sobre restante / $ total del plan)</small></label>
+                        <div class="input-group ve-amount-group">
                             <input id="descuento" type="text" class="form-control ve-input text-end" placeholder="Ej: 5" />
-                            <div id="descuentoTipoWrap" class="btn-group ve-type-toggle">
+                            <div id="descuentoTipoWrap" class="btn-group ve-type-toggle" role="group">
                                 <button type="button" class="btn btn-outline-light active" data-value="%">%</button>
                                 <button type="button" class="btn btn-outline-light" data-value="$">$</button>
                             </div>
@@ -235,7 +234,7 @@
 
 
                 <!-- LISTADO DE CUOTAS -->
-                <div class="table-responsive">
+                <div class="table-responsive ve-m-table-wrap">
                     <table id="tblCuotas" class="table ve-table align-middle">
                         <thead>
                             <tr>
@@ -253,6 +252,7 @@
                         <tbody></tbody>
                     </table>
                 </div>
+                <div id="cuotasCards" class="ve-m-cards" aria-live="polite"></div>
 
 
                 <!-- ACORDEÓN FINALIZADAS -->
@@ -276,7 +276,7 @@
                              style="display:none">
 
                             <div class="accordion-body p-0">
-                                <div class="table-responsive">
+                                <div class="table-responsive ve-m-table-wrap">
                                     <table id="tblFinalizadas" class="table ve-table align-middle">
                                         <thead>
                                             <tr>
@@ -294,6 +294,7 @@
                                         <tbody></tbody>
                                     </table>
                                 </div>
+                                <div id="finalizadasCards" class="ve-m-cards px-2 pb-2" aria-live="polite"></div>
                             </div>
 
                         </div>
@@ -317,10 +318,10 @@
             </div>
 
             <div class="ve-card-body">
-                <div class="row g-3 justify-content-start">
+                <div class="row g-3 g-md-4 justify-content-start">
 
                     <!-- ===== FILA 1 ===== -->
-                    <div class="col-12 col-md-3" hidden>
+                    <div class="col-12 col-md-3" id="wrapFechaVenta">
                         <label class="form-label fw-semibold">Fecha Venta</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-calendar"></i></span>
@@ -336,7 +337,7 @@
                         <div class="form-text">Se descuenta del total de la venta.</div>
                     </div>
 
-                    <div class="col-12 col-md-3">
+                    <div class="col-6 col-md-3">
                         <label class="form-label fw-semibold">Primer Cobro</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-calendar-o"></i></span>
@@ -344,7 +345,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-3">
+                    <div class="col-6 col-md-3">
                         <label class="form-label fw-semibold">Fecha Límite</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-calendar-check-o"></i></span>
@@ -360,7 +361,7 @@
                                placeholder="Notas internas de la venta..." />
                     </div>
 
-                    <div class="col-12 col-md-3">
+                    <div class="col-6 col-md-3">
                         <label class="form-label fw-semibold">Turno</label>
                         <select id="turno" class="form-select ve-input">
                             <option value="">Seleccionar</option>
@@ -369,7 +370,7 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-3">
+                    <div class="col-6 col-md-3">
                         <label class="form-label fw-semibold">Franja horaria</label>
                         <select id="franja" class="form-select ve-input">
                             <option value="">Seleccionar</option>
@@ -392,7 +393,7 @@
         <!-- =====================================================
          BOTONES FINALES
     ====================================================== -->
-        <div class="d-flex justify-content-end gap-2 mt-3">
+        <div class="ve-actions-bar d-flex justify-content-end gap-2 mt-3">
             <a href="../Historial" class="btn btn-outline-light">
                 <i class="fa fa-chevron-left"></i> Volver
             </a>
@@ -434,10 +435,10 @@
 
                             <div class="mt-3">
                                 <label class="form-label fw-semibold">Cantidad</label>
-                                <div class="input-group">
-                                    <button class="btn btn-outline-light" id="btnMenos"><i class="fa fa-minus"></i></button>
-                                    <input id="cantidadProducto" class="form-control ve-input text-center " type="number" min="1" value="1" />
-                                    <button class="btn btn-outline-light" id="btnMas"><i class="fa fa-plus"></i></button>
+                                <div class="input-group ve-qty-stepper">
+                                    <button type="button" class="btn" id="btnMenos" aria-label="Restar"><i class="fa fa-minus"></i></button>
+                                    <input id="cantidadProducto" class="form-control ve-input text-center" type="number" min="1" value="1" inputmode="numeric" />
+                                    <button type="button" class="btn" id="btnMas" aria-label="Sumar"><i class="fa fa-plus"></i></button>
                                 </div>
                             </div>
 
@@ -495,7 +496,7 @@
     
 
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_NuevoModif.js?v=2.10"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_NuevoModif.js?v=2.18"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

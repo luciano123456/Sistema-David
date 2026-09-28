@@ -91,7 +91,8 @@ const columnConfigTransferenciasPendientes = [
 let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
 let cobrosPendientesCache = [];
 let transferenciasPendientesCache = [];
-const VC_VISTA_KEY = "vc_cobros_vista";
+const VC_VISTA_KEY = "ve_cobros_view";
+const VC_VISTA_KEY_LEGACY = "vc_cobros_vista";
 let vcCardChip = "todas";
 let vcCardQuery = "";
 let vcSheetCtx = null;
@@ -459,14 +460,18 @@ VC.esAdminSel = function () {
 
 VC.leerVista = function () {
     try {
-        const v = localStorage.getItem(VC_VISTA_KEY);
+        let v = localStorage.getItem(VC_VISTA_KEY);
+        if (v !== "cards" && v !== "tabla") v = localStorage.getItem(VC_VISTA_KEY_LEGACY);
         if (v === "cards" || v === "tabla") return v;
     } catch (_) { }
     return window.matchMedia("(max-width: 992px)").matches ? "cards" : "tabla";
 };
 
 VC.guardarVista = function (v) {
-    try { localStorage.setItem(VC_VISTA_KEY, v); } catch (_) { }
+    try {
+        localStorage.setItem(VC_VISTA_KEY, v);
+        localStorage.setItem(VC_VISTA_KEY_LEGACY, v);
+    } catch (_) { }
 };
 
 VC.cerrarAcordeonesTabla = function () {
@@ -763,6 +768,7 @@ VC.abrirSheet = function (d) {
       <button type="button" class="vc-sheet-act" data-vc-act="info" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-info-circle"></i> Información de la venta</button>
       <button type="button" class="vc-sheet-act" data-vc-act="ajuste" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-bolt"></i> Ajuste</button>
       <button type="button" class="vc-sheet-act" data-vc-act="hist" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-eye"></i> Historial</button>
+      ${Number(userSession?.IdRol) === 1 ? `<button type="button" class="vc-sheet-act" data-vc-act="histventa" data-idventa="${d.IdVenta}"><i class="fa fa-clock-o"></i> Todos los movimientos</button>` : ""}
       ${puede ? `<button type="button" class="vc-sheet-act" data-vc-act="editcli" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-pencil"></i> Editar cliente</button>` : ""}
       <button type="button" class="vc-sheet-act" data-vc-act="transf" data-estado="${nuevoEstado}" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-exclamation-circle"></i> ${pendiente ? "Revertir transferencia pend." : "Transferencia pendiente"}</button>
       <button type="button" class="vc-sheet-act" data-vc-sheet-close="1"><i class="fa fa-times"></i> Cerrar</button>
@@ -817,6 +823,13 @@ VC.onCardAction = function (btn) {
     if (act === "hist") {
         VC.cerrarSheet();
         VC.abrirHistorialPartial(idVenta, idCuota);
+        return;
+    }
+    if (act === "histventa") {
+        VC.cerrarSheet();
+        if (typeof window.abrirHistorialVentaCompleto === "function") {
+            window.abrirHistorialVentaCompleto(idVenta);
+        }
         return;
     }
     if (act === "editcli") {

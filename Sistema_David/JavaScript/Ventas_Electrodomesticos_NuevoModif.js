@@ -21,6 +21,8 @@
     let userSession = JSON.parse(localStorage.getItem('usuario') || '{}');
     const esVendedor = (userSession && Number(userSession.IdRol) === 2);
     const esCobrador = (userSession && Number(userSession.IdRol) === 3);
+    const esAdmin = Number(userSession?.IdRol) === 1;
+    const puedeEditarVentaCompleta = () => esAdmin;
     let limiteDiasPrimerCuota = null; // 🔒 límite desde tabla Limites
 
 
@@ -46,8 +48,14 @@
             }
         });
 
+        let extraEnStock = 0;
+        if (modoEdicion && idxProductoEditando !== null && productos[idxProductoEditando]
+            && Number(productos[idxProductoEditando].id) === Number(idProducto)) {
+            extraEnStock = Number(productos[idxProductoEditando].cant || 0);
+        }
+
         // Máximo que puedo poner en el modal
-        const max = Math.max(0, stockTotal - usadoEnVenta);
+        const max = Math.max(0, stockTotal + extraEnStock - usadoEnVenta);
         return { stockTotal, usadoEnVenta, max };
     }
 
@@ -123,17 +131,23 @@
         });
     };
 
+    // 2 decimales. No usar Math.ceil: inflaba 150/100 → $2 × 100 = $200.
+    const round2 = n => {
+        const x = Number(n || 0);
+        return Math.round((x + Number.EPSILON) * 100) / 100;
+    };
+
     const fmt = n => {
         try {
-            const v = Math.ceil(Number(n || 0));
+            const v = round2(n);
             return v.toLocaleString('es-AR', {
                 style: 'currency',
                 currency: 'ARS',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             });
         } catch {
-            return '$ 0';
+            return '$ 0,00';
         }
     };
     const parseMoney = s => {
@@ -144,11 +158,8 @@
             .replace(/\./g, '')
             .replace(',', '.')) || 0;
 
-        return Math.ceil(num); // 🔥 sin decimales y hacia arriba
+        return round2(num);
     };
-
-    // 🔥 Redondeo SIEMPRE hacia arriba y sin decimales
-    const round2 = n => Math.ceil(Number(n || 0));
 
     function showTip(el, msg, type = 'info') {
         if (!el) return;
@@ -242,11 +253,174 @@
     let idxCuotaSel = -1;
 
     let idVenta = 0;
+    let idVendedorVenta = 0;
     let modoEdicion = false; // true = venta existente
+
+    /* ====================== SELECT OSCURO (custom) ====================== */
+
+    const VE_DD_SEL = '#turno, #franja, #forma, #selProducto';
+    const origJqVal = $.fn.val;
+    const origJqProp = $.fn.prop;
+    let veDdHooksInstalled = false;
+
+    function closeAllVeDd(except) {
+        $(document).find('.ve-dd.is-open').each(function () {
+            if (except && this === except) return;
+            const api = $(this).find('select.ve-dd-native').data('veDd');
+            if (api) api.close();
+        });
+    }
+
+    function enhanceVeSelect(sel) {
+        const $sel = $(sel);
+        if (!$sel.length || $sel.data('veDd')) return;
+
+        $sel.addClass('ve-dd-native');
+
+        const $wrap = $('<div class="ve-dd"></div>');
+        $sel.after($wrap);
+        $wrap.append($sel);
+
+        const $btn = $(
+            '<button type="button" class="ve-dd-btn" aria-haspopup="listbox" aria-expanded="false">' +
+            '<span class="ve-dd-label"></span><i class="fa fa-chevron-down"></i></button>'
+        );
+        const $list = $('<div class="ve-dd-list" role="listbox" hidden></div>');
+        const $label = $btn.find('.ve-dd-label');
+        $wrap.append($btn).append($list);
+
+        const ns = '.vedd' + (sel.id || Math.random().toString(36).slice(2));
+
+        function selectedText() {
+            const t = ($sel.find('option:selected').first().text() || '').trim();
+            return t || 'Seleccionar';
+        }
+
+        function syncDisabled() {
+            const off = !!$sel.prop('disabled');
+            $wrap.toggleClass('is-disabled', off);
+            $btn.prop('disabled', off);
+        }
+
+        function close() {
+            $wrap.removeClass('is-open');
+            $btn.attr('aria-expanded', 'false');
+            $list.attr('hidden', true);
+            $(document).off('mousedown' + ns);
+            $(window).off('resize' + ns);
+            document.removeEventListener('scroll', placeList, true);
+        }
+
+        function placeList() {
+            const r = $btn[0].getBoundingClientRect();
+            const spaceBelow = window.innerHeight - r.bottom;
+            const openUp = spaceBelow < 140 && r.top > spaceBelow;
+            const maxH = Math.min(280, Math.max(120, (openUp ? r.top : spaceBelow) - 8));
+            $list.css({
+                position: 'fixed',
+                left: r.left + 'px',
+                width: Math.max(r.width, 140) + 'px',
+                maxHeight: maxH + 'px',
+                top: openUp ? 'auto' : (r.bottom + 4) + 'px',
+                bottom: openUp ? (window.innerHeight - r.top + 4) + 'px' : 'auto'
+            });
+        }
+
+        function rebuildList() {
+            const cur = String($sel.val() ?? '');
+            $list.empty();
+            $sel.find('option').each(function () {
+                const val = this.value;
+                const text = (this.textContent || '').trim() || 'Seleccionar';
+                const $item = $('<button type="button" class="ve-dd-item" role="option"></button>')
+                    .text(text)
+                    .attr('data-value', val)
+                    .toggleClass('is-selected', val === cur);
+                $item.on('click', function (e) {
+                    e.preventDefault();
+                    origJqVal.call($sel, val);
+                    $sel.trigger('change');
+                    refresh();
+                    close();
+                });
+                $list.append($item);
+            });
+        }
+
+        function refresh() {
+            $label.text(selectedText());
+            syncDisabled();
+            if ($wrap.hasClass('is-open')) {
+                rebuildList();
+                placeList();
+            }
+        }
+
+        function open() {
+            if ($sel.prop('disabled')) return;
+            closeAllVeDd($wrap[0]);
+            rebuildList();
+            $wrap.addClass('is-open');
+            $btn.attr('aria-expanded', 'true');
+            $list.removeAttr('hidden');
+            placeList();
+            setTimeout(function () {
+                $(document).on('mousedown' + ns, function (e) {
+                    if (!$(e.target).closest($wrap).length && !$(e.target).closest($list).length) {
+                        close();
+                    }
+                });
+            }, 0);
+            $(window).on('resize' + ns, placeList);
+            document.addEventListener('scroll', placeList, true);
+        }
+
+        $btn.on('click', function (e) {
+            e.preventDefault();
+            if ($wrap.hasClass('is-open')) close();
+            else open();
+        });
+
+        const mo = new MutationObserver(function () { refresh(); });
+        mo.observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] });
+
+        $sel.data('veDd', { refresh: refresh, close: close });
+        refresh();
+    }
+
+    function initVeDarkSelects() {
+        $(VE_DD_SEL).each(function () { enhanceVeSelect(this); });
+
+        if (veDdHooksInstalled) return;
+        veDdHooksInstalled = true;
+
+        $.fn.val = function () {
+            const ret = origJqVal.apply(this, arguments);
+            if (arguments.length) {
+                this.filter('select.ve-dd-native').each(function () {
+                    const api = $(this).data('veDd');
+                    if (api) api.refresh();
+                });
+            }
+            return ret;
+        };
+
+        $.fn.prop = function (name) {
+            const ret = origJqProp.apply(this, arguments);
+            if (arguments.length > 1 && (name === 'disabled' || name === 'selected')) {
+                this.filter('select.ve-dd-native').each(function () {
+                    const api = $(this).data('veDd');
+                    if (api) api.refresh();
+                });
+            }
+            return ret;
+        };
+    }
 
     /* ====================== INIT ====================== */
 
     $(document).ready(() => {
+        initVeDarkSelects();
 
         cargarLimitePrimerCuota();
 
@@ -255,13 +429,25 @@
         }
 
 
-        if (esVendedor || esCobrador) {
+        if ((esVendedor || esCobrador) && !esAdmin) {
             $('#fechaVenta').prop('disabled', true);
         }
 
 
         if (userSession.IdRol == 1 || userSession.IdRol == 4) {
             document.getElementById("btnExportarPdf").removeAttribute("hidden");
+        }
+
+        if (Number(userSession.IdRol) === 1) {
+            $("#btnMovimientosVenta").on("click", function () {
+                if (!idVenta) {
+                    showToast("Guardá o cargá la venta para ver movimientos", "warning");
+                    return;
+                }
+                if (typeof window.abrirHistorialVentaCompleto === "function") {
+                    window.abrirHistorialVentaCompleto(idVenta);
+                }
+            });
         }
 
 
@@ -353,7 +539,7 @@
                 if (sel) sel.value = b.dataset.value;
 
                 // solo para generación de plan (NUEVA venta)
-                if ((wrapperSel === '#recargoTipoWrap' || wrapperSel === '#descuentoTipoWrap') && !modoEdicion) {
+                if ((wrapperSel === '#recargoTipoWrap' || wrapperSel === '#descuentoTipoWrap') && (!modoEdicion || puedeEditarVentaCompleta())) {
                     generarPlanCuotas();
                 }
             });
@@ -416,16 +602,16 @@
             }
 
             $('#wrapBadges').removeClass('d-none');
-            $('#bNombre').html(`<i class="fa fa-user"></i> ${c.Nombre} ${c.Apellido}`);
+            $('#bNombre').html(`<i class="fa fa-user"></i><span>${c.Nombre} ${c.Apellido}</span>`);
 
             const $b = $('#bEstado');
             $b.removeClass('ok warn danger');
-            if (estado.includes('muy')) $b.addClass('ok').html(`<i class="fa fa-circle"></i> Muy Bueno`);
-            else if (estado.includes('regular')) $b.addClass('warn').html(`<i class="fa fa-circle"></i> Regular`);
-            else $b.addClass('danger').html(`<i class="fa fa-circle"></i> Inhabilitado`);
+            if (estado.includes('muy')) $b.addClass('ok').html(`<i class="fa fa-circle"></i><span>Muy Bueno</span>`);
+            else if (estado.includes('regular')) $b.addClass('warn').html(`<i class="fa fa-circle"></i><span>Regular</span>`);
+            else $b.addClass('danger').html(`<i class="fa fa-circle"></i><span>Inhabilitado</span>`);
 
-            $('#bDireccion').html(`<i class="fa fa-map-marker"></i> ${c.Direccion || '—'}`);
-            $('#bTelefono').html(`<i class="fa fa-phone"></i> ${c.Telefono || '—'}`);
+            $('#bDireccion').html(`<i class="fa fa-map-marker"></i><span>${c.Direccion || '—'}</span>`);
+            $('#bTelefono').html(`<i class="fa fa-phone"></i><span>${c.Telefono || '—'}</span>`);
 
         } catch {
             const confirmacion2 = await confirmarModal("El cliente ingresado no existe ¿Desea registrarlo?");
@@ -448,7 +634,7 @@
 
     function wireProductos() {
         $('#btnAbrirProducto').on('click', () => {
-            if (modoEdicion) {
+            if (modoEdicion && !puedeEditarVentaCompleta()) {
                 showToast('No podés modificar productos en una venta ya registrada.', 'warn');
                 return;
             }
@@ -488,7 +674,7 @@
             const res = await $.ajax({
                 type: 'POST',
                 url: '/Stock/BuscarStockElectrodomesticos',
-                data: JSON.stringify({ Id: userSession?.Id || 0 }),
+                data: JSON.stringify({ Id: (modoEdicion && idVendedorVenta) ? idVendedorVenta : (userSession?.Id || 0) }),
                 contentType: 'application/json',
                 dataType: 'json'
             });
@@ -695,16 +881,39 @@
 
         renderProductos();
 
-        if (!modoEdicion) generarPlanCuotas();
+        if (!modoEdicion || puedeEditarVentaCompleta()) generarPlanCuotas();
 
         showToast("Producto guardado correctamente.", "success");
     }
 
 
 
+    function accionesProductoHtml(idx, puedeProd) {
+        return puedeProd
+            ? `
+                <button type="button" class="btn btn-sm btn-danger ve-prod-btn"
+                        onclick="eliminarProducto(${idx})" title="Eliminar">
+                    <i class="fa fa-trash"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-warning ve-prod-btn"
+                        onclick="editarProducto(${idx})" title="Editar">
+                    <i class="fa fa-pencil"></i>
+                </button>
+              `
+            : `
+                <button type="button" class="btn btn-sm btn-danger ve-prod-btn" disabled>
+                    <i class="fa fa-trash"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-warning ve-prod-btn" disabled>
+                    <i class="fa fa-pencil"></i>
+                </button>
+              `;
+    }
+
     function renderProductos() {
 
         const $tb = $('#tblProductos tbody').empty();
+        const $cards = $('#productosCards').empty();
 
         if (!productos.length) {
             $tb.append(`
@@ -714,6 +923,7 @@
                 </td>
             </tr>
         `);
+            $cards.append(`<div class="ve-m-empty">No hay productos cargados</div>`);
             actualizarKpis();
             return;
         }
@@ -724,29 +934,12 @@
                 ? `/Productos/ObtenerImagen/${p.id}?v=${Date.now()}`
                 : `/Content/imagenes/default-image.jpg`;
 
-            const acciones = !modoEdicion
-                ? `
-                <button class="btn btn-sm btn-danger me-1"
-                        onclick="eliminarProducto(${idx})">
-                    <i class="fa fa-trash"></i>
-                </button>
-                <button class="btn btn-sm btn-warning"
-                        onclick="editarProducto(${idx})">
-                    <i class="fa fa-pencil"></i>
-                </button>
-              `
-                : `
-                <button class="btn btn-sm btn-danger" disabled>
-                    <i class="fa fa-trash"></i>
-                </button>
-                <button class="btn btn-sm btn-warning" disabled>
-                    <i class="fa fa-pencil"></i>
-                </button>
-              `;
+            const puedeProd = !modoEdicion || puedeEditarVentaCompleta();
+            const acciones = accionesProductoHtml(idx, puedeProd);
 
             $tb.append(`
             <tr>
-                <td class="text-center">
+                <td class="text-center" data-label="Imagen">
                     <img src="${imgUrl}"
                          height="45"
                          width="45"
@@ -756,14 +949,32 @@
                          onclick="openModal('${imgUrl}')">
                 </td>
 
-                <td>${p.nombre}</td>
-                <td class="text-end">${p.cant}</td>
-                <td class="text-end">${fmt(p.total)}</td>
+                <td data-label="Producto">${p.nombre}</td>
+                <td class="text-end" data-label="Cantidad">${p.cant}</td>
+                <td class="text-end" data-label="Precio">${fmt(p.total)}</td>
 
-                <td class="text-center">
+                <td class="text-center" data-label="Acciones">
                     ${acciones}
                 </td>
             </tr>
+        `);
+
+            $cards.append(`
+            <article class="ve-prod-card">
+                <img src="${imgUrl}"
+                     class="ve-prod-card-img"
+                     alt=""
+                     onerror="this.src='/Content/imagenes/default-image.jpg'"
+                     onclick="openModal('${imgUrl}')">
+                <div class="ve-prod-card-main">
+                    <div class="ve-prod-card-name">${p.nombre}</div>
+                    <div class="ve-prod-card-meta">
+                        <span>Cant. ${p.cant}</span>
+                        <span class="ve-prod-card-price">${fmt(p.total)}</span>
+                    </div>
+                </div>
+                <div class="ve-prod-card-actions">${acciones}</div>
+            </article>
         `);
         });
 
@@ -772,7 +983,7 @@
 
     window.eliminarProducto = async function (idx) {
 
-        if (modoEdicion) {
+        if (modoEdicion && !puedeEditarVentaCompleta()) {
             showToast("No se pueden eliminar productos en una venta ya registrada.", "warn");
             return;
         }
@@ -802,7 +1013,7 @@
 
     window.editarProducto = function (idx) {
 
-        if (modoEdicion) {
+        if (modoEdicion && !puedeEditarVentaCompleta()) {
             showToast("No se pueden editar productos en una venta ya registrada.", "warn");
             return;
         }
@@ -827,22 +1038,25 @@
 
     function actualizarKpis() {
 
-        const totalProductos = productos.reduce(
+        const totalProductos = round2(productos.reduce(
             (acc, p) => acc + (p.total || 0), 0
-        );
+        ));
 
         const entrega = parseMoney($("#entrega").val());
         const pagadoCuotas = calcularPagadoEnCuotas();
+        const { recargoPlan, descuentoPlan } = montosAjustePlan(Math.max(0, totalProductos - entrega));
 
-        const restante = Math.max(
-            0,
-            totalProductos - entrega - pagadoCuotas
-        );
+        let restante;
+        if (Array.isArray(cuotas) && cuotas.length) {
+            restante = round2(cuotas.reduce((a, c) => a + Number(c.restante || 0), 0));
+        } else {
+            restante = Math.max(0, round2(totalProductos - entrega + recargoPlan - descuentoPlan - pagadoCuotas));
+        }
 
         $("#kpiTotal").text(fmt(totalProductos));
         $("#kpiEntrega").text(fmt(entrega));
         $("#kpiEntregaCuotas").text(fmt(pagadoCuotas));
-        $("#kpiRestante").text(fmt(restante));
+        $("#kpiRestante").text(fmt(Math.max(0, restante)));
     }
 
 
@@ -854,28 +1068,19 @@
             const v = parseMoney($('#entrega').val());
             $('#entrega').val(fmt(v));
 
-            const total = productos.reduce((a, b) => a + (b.total || 0), 0);
-            $('#kpiEntrega').text(fmt(v));
-            $('#kpiRestante').text(fmt(Math.max(0, total - v)));
+            actualizarKpis();
 
-            if (!modoEdicion && cuotas.length > 0) {
+            if ((!modoEdicion || puedeEditarVentaCompleta()) && cuotas.length > 0) {
                 generarPlanCuotas();
             }
         });
 
         $('#turno').on('change', () => {
-            const t = $('#turno').val();
-            const franjas = (t === 'mañana')
-                ? rangeHours(8, 15)
-                : (t === 'tarde')
-                    ? rangeHours(15, 21)
-                    : [];
-            const $f = $('#franja').empty().append(`<option value="">Seleccionar</option>`);
-            franjas.forEach(h => $f.append(`<option value="${h}">${h}</option>`));
+            aplicarTurnoFranja($('#turno').val(), null);
         });
 
-        // NUEVA venta → se puede generar / limpiar / tocar forma
-        if (!modoEdicion) {
+        // NUEVA venta o admin en edición → se puede generar / limpiar / tocar forma
+        if (!modoEdicion || puedeEditarVentaCompleta()) {
             $('#btnGenerarCuotas').on('click', generarPlanCuotas);
             $('#btnLimpiarCuotas').on('click', () => { cuotas = []; renderCuotas(); });
             $('#btnExportarPdf').on('click', exportarPDF);
@@ -883,7 +1088,7 @@
             $('#forma, #cantCuotas, #fechaPrimerCobro, #fechaLimite, #recargo, #descuento')
                 .on('change blur', () => generarPlanCuotas());
         } else {
-            // EDICIÓN → bloquear generación
+            // EDICIÓN sin admin → bloquear generación
             $('#btnGenerarCuotas').prop('disabled', true);
             $('#btnLimpiarCuotas').prop('disabled', true);
 
@@ -905,6 +1110,25 @@
         return out;
     }
 
+    function aplicarTurnoFranja(turno, franja) {
+        const t = (turno || '').toLowerCase().trim();
+        const $turno = $('#turno');
+        if (t && $turno.find(`option[value="${t}"]`).length)
+            $turno.val(t);
+        else if (t)
+            $turno.val(t);
+
+        const franjas = (t === 'mañana' || t === 'manana')
+            ? rangeHours(8, 15)
+            : (t === 'tarde')
+                ? rangeHours(15, 21)
+                : [];
+        const $f = $('#franja').empty().append(`<option value="">Seleccionar</option>`);
+        franjas.forEach(h => $f.append(`<option value="${h}">${h}</option>`));
+        if (franja)
+            $f.val(franja);
+    }
+
     function nextPeriod(d, forma) {
         switch ((forma || '').toLowerCase()) {
             case 'diaria': return d.add(1, 'day');
@@ -914,14 +1138,101 @@
         }
     }
 
+    // Recargo/descuento $ = TOTAL del plan (prorrateado). % = sobre el capital a financiar.
+    function calcularAjustePlan(baseCapital, valor, tipo) {
+        const v = round2(valor);
+        if (v <= 0) return 0;
+        if ((tipo || '').trim() === '%') return round2(baseCapital * v / 100);
+        return v;
+    }
+
+    function montosAjustePlan(baseCapital) {
+        const r = parseMoney($('#recargo').val());
+        const rt = getTipoFromUI('#recargoTipoWrap', '#recargoTipo');
+        const d = parseMoney($('#descuento').val());
+        const dt = getTipoFromUI('#descuentoTipoWrap', '#descuentoTipo');
+        return {
+            recargoPlan: calcularAjustePlan(baseCapital, r, rt),
+            descuentoPlan: calcularAjustePlan(baseCapital, d, dt),
+            r, rt, d, dt
+        };
+    }
+
+    function distribuirMonto(total, n) {
+        const t = round2(total);
+        if (n <= 0) return [];
+        if (n === 1) return [t];
+        const base = round2(t / n);
+        const out = [];
+        for (let i = 0; i < n - 1; i++) out.push(base);
+        out.push(round2(t - round2(base * (n - 1))));
+        return out;
+    }
+
+    function mensajeCuadrePlan() {
+        const totalProductos = round2(productos.reduce((a, b) => a + Number(b?.total || 0), 0));
+        const entrega = parseMoney($('#entrega').val());
+        if (entrega < 0) return "La entrega no puede ser negativa.";
+        if (entrega > totalProductos + 0.05) return "La entrega no puede ser mayor al total de productos.";
+
+        const baseFin = round2(Math.max(0, totalProductos - entrega));
+        const fijas = (Array.isArray(cuotas) ? cuotas : []).filter(c => Number(c.pagado || 0) > 0.009);
+        const origFijas = round2(fijas.reduce((a, c) => a + Number(c.original || 0), 0));
+        const basePend = round2(baseFin - origFijas);
+        if (basePend < -0.05) return "El nuevo total (menos entrega) queda por debajo de lo ya cobrado en cuotas.";
+
+        const { recargoPlan, descuentoPlan } = montosAjustePlan(Math.max(0, basePend));
+        const aFinanciarPend = round2(Math.max(0, basePend) + recargoPlan - descuentoPlan);
+        if (aFinanciarPend < -0.05) return "El descuento del plan supera el restante más el recargo.";
+
+        const pendientes = (Array.isArray(cuotas) ? cuotas : []).filter(c => Number(c.pagado || 0) <= 0.009);
+
+        if (!cuotas || !cuotas.length) {
+            if (baseFin > 0.05 || aFinanciarPend > 0.05)
+                return "Generá el plan de cuotas.";
+            return null;
+        }
+
+        for (const c of cuotas) {
+            const tot = round2(Number(c.original || 0) + Number(c.recargo || 0) - Number(c.desc || 0));
+            if (tot <= 0) return "Hay cuotas con importe inválido. Revisá el plan.";
+            if (round2(Number(c.pagado || 0)) > tot + 0.05)
+                return "Hay una cuota por debajo de lo ya cobrado.";
+        }
+
+        const sumOrig = round2(cuotas.reduce((a, c) => a + Number(c.original || 0), 0));
+        if (Math.abs(sumOrig - baseFin) > 0.05) {
+            return `El plan no cierra: la suma de originales (${fmt(sumOrig)}) debe ser productos − entrega (${fmt(baseFin)}).`;
+        }
+
+        if (pendientes.length) {
+            const todasNuevas = pendientes.every(c => !Number(c.idCuota || 0));
+            if (todasNuevas) {
+                const sumRec = round2(pendientes.reduce((a, c) => a + Number(c.recargo || 0), 0));
+                const sumDesc = round2(pendientes.reduce((a, c) => a + Number(c.desc || 0), 0));
+                const sumTot = round2(pendientes.reduce((a, c) =>
+                    a + Number(c.original || 0) + Number(c.recargo || 0) - Number(c.desc || 0), 0));
+
+                if (Math.abs(sumRec - recargoPlan) > 0.05)
+                    return `El recargo del plan no cierra (el $ es el total del plan, no por cuota). Recargos ${fmt(sumRec)} / esperado ${fmt(recargoPlan)}.`;
+                if (Math.abs(sumDesc - descuentoPlan) > 0.05)
+                    return `El descuento del plan no cierra (el $ es el total del plan, no por cuota). Descuentos ${fmt(sumDesc)} / esperado ${fmt(descuentoPlan)}.`;
+                if (Math.abs(sumTot - aFinanciarPend) > 0.05)
+                    return `La suma de cuotas pendientes (${fmt(sumTot)}) no coincide con el restante + recargo − descuento (${fmt(aFinanciarPend)}).`;
+            }
+        }
+
+        return null;
+    }
+
     function generarPlanCuotas() {
 
-        if (modoEdicion) {
+        if (modoEdicion && !puedeEditarVentaCompleta()) {
             showToast("No se puede regenerar cuotas en una venta existente.", "danger");
             return;
         }
 
-        const total = productos.reduce((a, b) => a + (b.total || 0), 0);
+        const total = round2(productos.reduce((a, b) => a + (b.total || 0), 0));
         if (total <= 0) {
             cuotas = [];
             renderCuotas();
@@ -929,7 +1240,7 @@
         }
 
         const entrega = parseMoney($('#entrega').val());
-        const restante = Math.max(0, total - entrega);
+        const restante = round2(Math.max(0, total - entrega));
 
         const forma = $('#forma').val();
         const cant = parseInt($('#cantCuotas').val() || 0, 10);
@@ -951,9 +1262,6 @@
             return;
         }
 
-        // ===============================
-        // 🔢 FECHAS DE CUOTAS
-        // ===============================
         let fechas = [];
         let cur = fIni.clone();
 
@@ -969,50 +1277,113 @@
             }
         }
 
-        if (!fechas.length) {
-            cuotas = [];
-            renderCuotas();
+        const fijas = (modoEdicion && puedeEditarVentaCompleta())
+            ? cuotas.filter(c => Number(c.pagado || 0) > 0.009)
+            : [];
+        const origFijas = round2(fijas.reduce((a, c) => a + Number(c.original || 0), 0));
+        const restantePendiente = round2(restante - origFijas);
+        if (restantePendiente < -0.05) {
+            showToast("El nuevo plan queda por debajo de lo ya cobrado en cuotas.", "danger");
             return;
         }
 
-        // ===============================
-        // 🔥 RECARGO / DESCUENTO GLOBAL
-        // ===============================
-        const r = parseMoney($('#recargo').val());
-        const rt = getTipoFromUI('#recargoTipoWrap', '#recargoTipo');
+        const { recargoPlan, descuentoPlan } = montosAjustePlan(Math.max(0, restantePendiente));
+        const netoPendiente = round2(Math.max(0, restantePendiente) + recargoPlan - descuentoPlan);
+        if (netoPendiente < -0.05) {
+            showToast("El descuento del plan supera el restante más el recargo.", "danger");
+            return;
+        }
 
-        const d = parseMoney($('#descuento').val());
-        const dt = getTipoFromUI('#descuentoTipoWrap', '#descuentoTipo');
+        const aplicarSoloFijas = () => {
+            if (!fijas.length) {
+                cuotas = [];
+                renderCuotas();
+                return;
+            }
+            fijas.forEach((c, i) => { c.n = i + 1; });
+            cuotas = fijas.slice();
+            const errVacio = mensajeCuadrePlan();
+            if (errVacio) {
+                showToast(errVacio, "danger");
+                return;
+            }
+            renderCuotas();
+        };
 
-        const basePorCuota = round2(restante / fechas.length);
+        if (netoPendiente <= 0.009 && restantePendiente <= 0.009) {
+            aplicarSoloFijas();
+            return;
+        }
 
-        let recargoGlobal = rt === '%' ? basePorCuota * r / 100 : r;
-        let descuentoGlobal = dt === '%' ? basePorCuota * d / 100 : d;
+        if (!fechas.length) {
+            showToast("No hay fechas para armar el plan. Revisá primer cobro y fecha límite.", "danger");
+            return;
+        }
 
-        recargoGlobal = round2(recargoGlobal);
-        descuentoGlobal = round2(descuentoGlobal);
+        // Cantidad = total del plan (pagadas + pendientes). Auto (0) usa las fechas del rango.
+        let cantPend = cant > 0
+            ? Math.max(0, cant - fijas.length)
+            : Math.max(0, fechas.length - fijas.length);
 
-        // ===============================
-        // 📦 ARMAR CUOTAS
-        // ===============================
-        cuotas = fechas.map((f, i) => {
-            const totalCuota = round2(
-                basePorCuota + recargoGlobal - descuentoGlobal
-            );
+        if (netoPendiente > 0.009 && cantPend < 1) {
+            cantPend = 1;
+            showToast("Hay restante por cobrar: se genera 1 cuota pendiente. Cantidad es el total del plan (incluye las ya pagadas).", "warn");
+        }
 
-            return {
+        if (cantPend < 1) {
+            aplicarSoloFijas();
+            return;
+        }
+
+        const origs = distribuirMonto(Math.max(0, restantePendiente), cantPend);
+        const recs = distribuirMonto(recargoPlan, cantPend);
+        const descs = distribuirMonto(descuentoPlan, cantPend);
+
+        const nuevas = [];
+        const fechasPend = fechas.slice(0, cantPend);
+        fechasPend.forEach((f, i) => {
+            const original = origs[i] || 0;
+            const recargo = recs[i] || 0;
+            const desc = descs[i] || 0;
+            const totalCuota = round2(original + recargo - desc);
+            nuevas.push({
                 idCuota: 0,
-                n: i + 1,
+                n: fijas.length + i + 1,
                 venc: f.format("DD/MM/YYYY"),
-                original: basePorCuota,
-                recargo: recargoGlobal,
-                desc: descuentoGlobal,
+                original,
+                recargo,
+                desc,
                 total: totalCuota,
                 restante: totalCuota,
+                pagado: 0,
                 estado: "Pendiente",
                 hist: []
-            };
+            });
         });
+
+        const sumaNuevas = round2(nuevas.reduce((a, c) => a + Number(c.total || 0), 0));
+        const diff = round2(netoPendiente - sumaNuevas);
+        if (nuevas.length && Math.abs(diff) >= 0.01) {
+            const last = nuevas[nuevas.length - 1];
+            last.original = round2(last.original + diff);
+            if (last.original < 0) {
+                last.recargo = round2(last.recargo + last.original);
+                last.original = 0;
+            }
+            last.total = round2(last.original + last.recargo - last.desc);
+            last.restante = last.total;
+        }
+
+        const prev = cuotas.slice();
+        fijas.forEach((c, i) => { c.n = i + 1; });
+        cuotas = fijas.concat(nuevas);
+
+        const err = mensajeCuadrePlan();
+        if (err) {
+            cuotas = prev;
+            showToast(err, "danger");
+            return;
+        }
 
         renderCuotas();
     }
@@ -1032,14 +1403,9 @@
         return `<span class="badge bg-warning text-dark">Pendiente</span>`;
     }
 
-    function renderCuotas() {
-        const $tb = $('#tblCuotas tbody').empty();
-
-        const pendientes = cuotas.filter(c => c.estado !== 'Pagada');
-
-        for (const c of pendientes) {
-            const acciones = modoEdicion
-                ? `
+    function accionesCuotaHtml(c) {
+        return modoEdicion
+            ? `
                     <div class="btn-group">
 
     <button class="btn btn-accion btn-cobrar me-1"
@@ -1062,7 +1428,7 @@
 
 </div>
                   `
-                : `
+            : `
                     <button class="btn btn-warning btn-cobrar me-2" disabled>
                         <i class="fa fa-money"></i>
                     </button>
@@ -1073,23 +1439,57 @@
                         <i class="fa fa-clock-o"></i>
                     </button>
                   `;
+    }
+
+    function renderCuotas() {
+        const $tb = $('#tblCuotas tbody').empty();
+        const $cards = $('#cuotasCards').empty();
+
+        const pendientes = cuotas.filter(c => c.estado !== 'Pagada');
+
+        if (!pendientes.length) {
+            $cards.append(`<div class="ve-m-empty">No hay cuotas pendientes</div>`);
+        }
+
+        for (const c of pendientes) {
+            const acciones = accionesCuotaHtml(c);
 
             $tb.append(`
                 <tr data-n="${c.n}">
-                    <td class="text-center">${c.n}</td>
-                    <td>${c.venc}</td>
-                    <td class="text-end">${fmt(c.original)}</td>
-                    <td class="text-end">${fmt(c.recargo)}</td>
-                    <td class="text-end">${fmt(c.desc)}</td>
-                    <td class="text-end">${fmt(c.total)}</td>
-                    <td class="text-end fw-bold">${fmt(c.restante)}</td>
-                    <td class="text-center">${badgeEstado(c)}</td>
-                    <td class="text-center">
+                    <td class="text-center" data-label="#">${c.n}</td>
+                    <td data-label="Vencimiento">${c.venc}</td>
+                    <td class="text-end" data-label="Original">${fmt(c.original)}</td>
+                    <td class="text-end" data-label="Recargo">${fmt(c.recargo)}</td>
+                    <td class="text-end" data-label="Descuento">${fmt(c.desc)}</td>
+                    <td class="text-end" data-label="Total">${fmt(c.total)}</td>
+                    <td class="text-end fw-bold" data-label="Restante">${fmt(c.restante)}</td>
+                    <td class="text-center" data-label="Estado">${badgeEstado(c)}</td>
+                    <td class="text-center" data-label="Acciones">
                         <div class="btn-group btn-group-sm">
                             ${acciones}
                         </div>
                     </td>
                 </tr>
+            `);
+
+            $cards.append(`
+                <article class="ve-cuota-card">
+                    <div class="ve-cuota-card-top">
+                        <div class="ve-cuota-card-id">
+                            <span class="ve-cuota-n">#${c.n}</span>
+                            <span class="ve-cuota-venc">${c.venc}</span>
+                        </div>
+                        ${badgeEstado(c)}
+                    </div>
+                    <div class="ve-cuota-card-grid">
+                        <div><small>Original</small><b>${fmt(c.original)}</b></div>
+                        <div><small>Recargo</small><b>${fmt(c.recargo)}</b></div>
+                        <div><small>Desc.</small><b>${fmt(c.desc)}</b></div>
+                        <div><small>Total</small><b>${fmt(c.total)}</b></div>
+                        <div class="ve-cuota-restante"><small>Restante</small><b>${fmt(c.restante)}</b></div>
+                    </div>
+                    <div class="ve-cuota-card-actions">${acciones}</div>
+                </article>
             `);
         }
 
@@ -1097,6 +1497,7 @@
         $('#qPagadas').text(cuotas.filter(x => x.estado === 'Pagada').length);
 
         renderFinalizadas();
+        actualizarKpis();
     }
 
 
@@ -1110,6 +1511,7 @@
             $('#qFinalizadas').text('0');
 
             const $tbf = $('#tblFinalizadas tbody').empty();
+            const $fc = $('#finalizadasCards').empty();
             $tbf.append(`
             <tr>
                 <td colspan="9" class="text-center text-muted py-3">
@@ -1117,6 +1519,7 @@
                 </td>
             </tr>
         `);
+            $fc.append(`<div class="ve-m-empty">No hay cuotas finalizadas.</div>`);
 
             // 🔁 Restaurar estado del acordeón
             if (estabaAbierto && col) {
@@ -1134,6 +1537,7 @@
         $('#qFinalizadas').text(finalizadas.length);
 
         const $tbf = $('#tblFinalizadas tbody').empty();
+        const $fc = $('#finalizadasCards').empty();
 
         if (!finalizadas.length) {
             $tbf.append(`
@@ -1143,6 +1547,7 @@
                 </td>
             </tr>
         `);
+            $fc.append(`<div class="ve-m-empty">No hay cuotas finalizadas.</div>`);
 
             // 🔁 Restaurar estado del acordeón
             if (estabaAbierto && col) {
@@ -1162,29 +1567,50 @@
                     .reduce((a, b) => a + (b.importe || 0), 0)
                 : (c.total - c.restante);
 
-            $tbf.append(`
-            <tr>
-                <td class="text-center">${c.n}</td>
-                <td>${c.venc}</td>
-                <td class="text-end">${fmt(c.original)}</td>
-                <td class="text-end">${fmt(c.recargo)}</td>
-                <td class="text-end">${fmt(c.desc)}</td>
-                <td class="text-end">${fmt(c.total)}</td>
-                <td class="text-end">${fmt(pagado)}</td>
-                <td class="text-center">
-                    <span class="badge bg-success">Pagada</span>
-                </td>
-                <td class="text-center">
+            const histBtn = `
 <button class="btn btn-accion btn-historial btn-sm"
     onclick="abrirHistorialDesdeNuevoModif(${idVenta}, ${c.idCuota})"
     title="Historial">
     <i class="fa fa-eye"></i>
-</button>
+</button>`;
 
-
+            $tbf.append(`
+            <tr>
+                <td class="text-center" data-label="#">${c.n}</td>
+                <td data-label="Vencimiento">${c.venc}</td>
+                <td class="text-end" data-label="Original">${fmt(c.original)}</td>
+                <td class="text-end" data-label="Recargo">${fmt(c.recargo)}</td>
+                <td class="text-end" data-label="Descuento">${fmt(c.desc)}</td>
+                <td class="text-end" data-label="Total">${fmt(c.total)}</td>
+                <td class="text-end" data-label="Pagado">${fmt(pagado)}</td>
+                <td class="text-center" data-label="Estado">
+                    <span class="badge bg-success">Pagada</span>
+                </td>
+                <td class="text-center" data-label="Historial">
+                    ${histBtn}
                 </td>
             </tr>
         `);
+
+            $fc.append(`
+                <article class="ve-cuota-card">
+                    <div class="ve-cuota-card-top">
+                        <div class="ve-cuota-card-id">
+                            <span class="ve-cuota-n">#${c.n}</span>
+                            <span class="ve-cuota-venc">${c.venc}</span>
+                        </div>
+                        <span class="badge bg-success">Pagada</span>
+                    </div>
+                    <div class="ve-cuota-card-grid">
+                        <div><small>Original</small><b>${fmt(c.original)}</b></div>
+                        <div><small>Recargo</small><b>${fmt(c.recargo)}</b></div>
+                        <div><small>Desc.</small><b>${fmt(c.desc)}</b></div>
+                        <div><small>Total</small><b>${fmt(c.total)}</b></div>
+                        <div class="ve-cuota-restante"><small>Pagado</small><b>${fmt(pagado)}</b></div>
+                    </div>
+                    <div class="ve-cuota-card-actions">${histBtn}</div>
+                </article>
+            `);
         });
 
         // 🔁 Restaurar estado del acordeón si estaba abierto
@@ -1613,25 +2039,21 @@
             }
         }
 
-        // 8) Validación de cuotas (re-generar si hace falta)
-        //    Si no hay cuotas o no coincide cantidad/fechas, no dejamos pasar.
-        const forma = ($('#forma').val() || '').trim();
-        const cantCuotas = parseInt($('#cantCuotas').val() || '0', 10) || 0;
+        const totalProductos = round2(productos.reduce((a, b) => a + Number(b?.total || 0), 0));
+        const entrega = parseMoney($('#entrega').val());
 
-        if (!Array.isArray(cuotas) || cuotas.length === 0) {
-            showToast("Generá el plan de cuotas.", "danger");
+        if (totalProductos <= 0) {
+            showToast("El total de la venta es inválido.", "danger");
             return false;
         }
 
-        // 9) Chequeo básico: ninguna cuota puede tener total <= 0
-        //    y vencimientos deben estar dentro de [primerCobro..limite] (no estricto, pero coherente)
-        for (const c of cuotas) {
-            const totalCuota = Number(c?.total ?? (Number(c?.original || 0) + Number(c?.recargo || 0) - Number(c?.desc || 0)));
-            if (!totalCuota || totalCuota <= 0) {
-                showToast("Hay cuotas con importe inválido. Revisá el plan.", "danger");
-                return false;
-            }
+        const errPlan = mensajeCuadrePlan();
+        if (errPlan) {
+            showToast(errPlan, "danger");
+            return false;
+        }
 
+        for (const c of (cuotas || [])) {
             const venc = moment(c?.venc, "DD/MM/YYYY", true);
             if (!venc.isValid()) {
                 showToast("Hay cuotas con vencimiento inválido. Revisá el plan.", "danger");
@@ -1644,27 +2066,7 @@
             }
         }
 
-        // 10) Entrega / Totales
-        const totalProductos = productos.reduce((a, b) => a + Number(b?.total || 0), 0);
-        const entrega = parseMoney($('#entrega').val());
-
-        if (totalProductos <= 0) {
-            showToast("El total de la venta es inválido.", "danger");
-            return false;
-        }
-
-        if (entrega < 0) {
-            showToast("La entrega no puede ser negativa.", "danger");
-            return false;
-        }
-
-        if (entrega > totalProductos) {
-            showToast("La entrega no puede ser mayor al total de la venta.", "danger");
-            return false;
-        }
-
-        let total = productos.reduce((a, b) => a + b.total, 0);
-     
+        let total = round2(productos.reduce((a, b) => a + b.total, 0));
 
         let payload = {
             FechaVenta: $('#fechaVenta').val(),
@@ -1763,30 +2165,60 @@
         if (!productos.length)
             return showTip($('#btnAbrirProducto')[0], "No se encontraron productos en la venta.", "danger");
 
-        if (!$('#turno').val())
+        if (!$('#turno').val() && !modoEdicion)
             return showToast("Seleccioná un turno.", "warn");
 
-        if (!$('#franja').val())
+        if (!$('#franja').val() && !modoEdicion)
             return showToast("Seleccioná una franja horaria.", "warn");
 
 
-        let total = productos.reduce((a, b) => a + b.total, 0);
+        if (puedeEditarVentaCompleta()) {
+            const errPlan = mensajeCuadrePlan();
+            if (errPlan)
+                return showToast(errPlan, "danger");
+        }
+
+        let total = round2(productos.reduce((a, b) => a + b.total, 0));
         let entrega = parseMoney($('#entrega').val());
 
         let payload = {
             IdVenta: id,
             FechaVenta: $('#fechaVenta').val(),
             IdCliente: cliente.Id,
-            IdVendedor: userSession.Id,
+            IdVendedor: idVendedorVenta || userSession.Id,
             ImporteTotal: total,
             Entrega: entrega,
             Restante: total - entrega,
             Observacion: $('#observacion').val(),
             Turno: $('#turno').val(),
             FranjaHoraria: $('#franja').val(),
+            FormaCuotas: $('#forma').val(),
+            CantidadCuotas: parseInt($('#cantCuotas').val() || 0),
+            FechaVencimiento: $('#fechaLimite').val(),
+            RecargoTipo: getTipoFromUI('#recargoTipoWrap', '#recargoTipo'),
+            RecargoValor: parseMoney($('#recargo').val()) || null,
+            DescuentoTipo: getTipoFromUI('#descuentoTipoWrap', '#descuentoTipo'),
+            DescuentoValor: parseMoney($('#descuento').val()) || null,
             UsuarioOperador: userSession.Id
-            // NO mandamos Items/Cuotas para no romper lo existente
         };
+
+        if (puedeEditarVentaCompleta()) {
+            payload.Items = productos.map(p => ({
+                IdProducto: p.id,
+                Producto: p.nombre,
+                Cantidad: p.cant,
+                PrecioUnitario: p.cant ? (p.total / p.cant) : 0,
+                Subtotal: p.total
+            }));
+            payload.Cuotas = cuotas.map(c => ({
+                Id: c.idCuota || 0,
+                NumeroCuota: c.n,
+                FechaVencimiento: moment(c.venc, "DD/MM/YYYY").format("YYYY-MM-DD"),
+                MontoOriginal: c.original,
+                MontoRecargos: c.recargo,
+                MontoDescuentos: c.desc
+            }));
+        }
 
         try {
             const res = await $.ajax({
@@ -1828,6 +2260,7 @@
             }
 
             const v = json.data;
+            idVendedorVenta = Number(v.IdVendedor || 0);
 
             cliente = {
                 Id: v.IdCliente,
@@ -1841,19 +2274,19 @@
 
             $("#dni").val(cliente.Dni);
             $("#wrapBadges").removeClass("d-none");
-            $("#bNombre").html(`<i class="fa fa-user"></i> ${cliente.Nombre}`);
-            $("#bDireccion").html(`<i class="fa fa-map-marker"></i> ${cliente.Direccion || "—"}`);
-            $("#bTelefono").html(`<i class="fa fa-phone"></i> ${cliente.Telefono || "—"}`);
+            $("#bNombre").html(`<i class="fa fa-user"></i><span>${cliente.Nombre}</span>`);
+            $("#bDireccion").html(`<i class="fa fa-map-marker"></i><span>${cliente.Direccion || "—"}</span>`);
+            $("#bTelefono").html(`<i class="fa fa-phone"></i><span>${cliente.Telefono || "—"}</span>`);
 
             const estadoCli = (cliente.Estado || "").toLowerCase();
             const $bEstado = $("#bEstado").removeClass("ok warn danger");
 
             if (estadoCli.includes("muy")) {
-                $bEstado.addClass("ok").html(`<i class="fa fa-circle"></i> Muy Bueno`);
+                $bEstado.addClass("ok").html(`<i class="fa fa-circle"></i><span>Muy Bueno</span>`);
             } else if (estadoCli.includes("regular")) {
-                $bEstado.addClass("warn").html(`<i class="fa fa-circle"></i> Regular`);
+                $bEstado.addClass("warn").html(`<i class="fa fa-circle"></i><span>Regular</span>`);
             } else {
-                $bEstado.addClass("danger").html(`<i class="fa fa-circle"></i> Inhabilitado`);
+                $bEstado.addClass("danger").html(`<i class="fa fa-circle"></i><span>Inhabilitado</span>`);
             }
 
             /* =====================================================
@@ -1865,6 +2298,8 @@
 
             $("#forma").val(v.FormaCuotas || "diaria");
             $("#cantCuotas").val(v.CantidadCuotas || 0);
+
+            aplicarTurnoFranja(v.Turno, v.FranjaHoraria);
 
             if (Array.isArray(v.Cuotas) && v.Cuotas.length > 0) {
                 $("#fechaPrimerCobro").val(
@@ -1904,10 +2339,24 @@
 
          
 
-            // 🔒 BLOQUEAR
-            setRecargoDescuentoReadonlyDesdeVenta(v)
+            if (!puedeEditarVentaCompleta()) {
+                setRecargoDescuentoReadonlyDesdeVenta(v);
+                $("#wrapFechaVenta").attr("hidden", true);
+            } else {
+                setRecargoDescuentoReadonlyDesdeVenta(v);
+                $('#recargo, #descuento').prop('readonly', false).removeClass('readonly');
+                $('#recargoTipoWrap button, #descuentoTipoWrap button').prop('disabled', false);
+                $('#recargoTipo, #descuentoTipo').prop('disabled', false);
+                $('#entrega, #forma, #cantCuotas, #fechaPrimerCobro, #fechaLimite, #fechaVenta').prop('disabled', false);
+                $('#btnGenerarCuotas, #btnLimpiarCuotas').prop('disabled', false);
+                $("#wrapFechaVenta").removeAttr("hidden");
+            }
 
             $("#btnRegistrarVenta").html(`<i class="fa fa-save"></i> Guardar cambios`);
+
+            if (Number(userSession.IdRol) === 1) {
+                $("#btnMovimientosVenta").removeAttr("hidden");
+            }
 
             showToast("Venta cargada correctamente.", "success");
 
@@ -1920,20 +2369,7 @@
 
     function calcularPagadoEnCuotas() {
         if (!Array.isArray(cuotas)) return 0;
-
-        let totalPagado = 0;
-
-        cuotas.forEach(c => {
-            if (Array.isArray(c.hist)) {
-                c.hist.forEach(h => {
-                    if (h.tipo === 'pago') {
-                        totalPagado += Number(h.importe || 0);
-                    }
-                });
-            }
-        });
-
-        return totalPagado;
+        return round2(cuotas.reduce((a, c) => a + Number(c.pagado || 0), 0));
     }
 
 
@@ -1994,6 +2430,7 @@
                 desc: Number(c.MontoDescuentos),
                 total: total,
                 restante: restante,
+                pagado: Number(c.MontoPagado || 0),
                 estado: c.Estado,
                 hist: movimientos
             });
@@ -2035,8 +2472,6 @@
                 'warn'
             );
         }
-
-        if (!modoEdicion) generarPlanCuotas();
     });
 
 
@@ -2211,9 +2646,10 @@ async function cargarLimitePrimerCuota() {
         }
 
         /* ===============================
-           🔒 BLOQUEAR UI
+           🔒 BLOQUEAR UI (no admin)
         =============================== */
-        bloquearRecargoDescuentoUI();
+        if (!puedeEditarVentaCompleta())
+            bloquearRecargoDescuentoUI();
     }
 
 
