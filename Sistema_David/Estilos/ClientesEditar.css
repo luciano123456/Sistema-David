@@ -1,59 +1,154 @@
 ﻿/* =========================================================
-   Clientes — Editar / Nuevo (skin oscuro alineado a Index)
+   Clientes — Editar / Nuevo
+   Una sola ficha: datos, comerciales, ubicación, adjuntos y mapa
    ========================================================= */
 
 .clientes-editar-root.ve-dark {
     min-height: 100vh;
 }
 
+.clientes-editar-root .ce-page {
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.clientes-editar-root .ce-top {
+    padding: 0.8rem 0.95rem;
+    margin-bottom: 0.75rem;
+}
+
+.clientes-editar-root .ce-top-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.clientes-editar-root .ce-top-id {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.clientes-editar-root .ce-top-titles {
+    min-width: 0;
+}
+
+.clientes-editar-root .ce-top-titles h2 {
+    font-size: 1.35rem;
+    line-height: 1.15;
+}
+
+.clientes-editar-root #cePageSubtitle {
+    font-size: 0.84rem;
+    line-height: 1.3;
+}
+
 .clientes-editar-root .ce-badge-edit {
+    flex: 0 0 auto;
     background: linear-gradient(135deg, #3d8bfd 0%, #1e6fd9 100%);
     color: #fff;
     box-shadow: 0 8px 22px rgba(30, 111, 217, 0.35);
 }
 
-.clientes-editar-root .ce-section {
+.clientes-editar-root .ce-btn-back {
+    min-height: 40px;
+    white-space: nowrap;
+}
+
+/* ---------- Ficha única ---------- */
+.clientes-editar-root .ce-ficha {
     border: 1px solid rgba(91, 140, 255, 0.22);
+    min-width: 0;
+}
+
+.clientes-editar-root .ce-ficha-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.15fr);
+    align-items: stretch;
+    min-width: 0;
+}
+
+.clientes-editar-root .ce-ficha-form,
+.clientes-editar-root .ce-ficha-map {
+    min-width: 0;
+}
+
+.clientes-editar-root .ce-ficha-map {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(6, 12, 28, 0.28);
+}
+
+.clientes-editar-root .ce-block {
+    padding: 0.85rem 1rem 0.95rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.clientes-editar-root .ce-block--adj {
+    border-bottom: 0;
 }
 
 .clientes-editar-root .ce-section-head {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 0.5rem;
+    margin-bottom: 0.7rem;
+    padding-bottom: 0;
+    border-bottom: 0;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     color: #eef4ff;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
 }
 
-.clientes-editar-root .ce-section-head .fa {
-    color: #6ea8fe;
-    font-size: 1rem;
+.clientes-editar-root .ce-section-head > .fa {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(78, 160, 255, 0.14);
+    color: #8eb7ff;
+    font-size: 0.9rem;
 }
 
 .clientes-editar-root .ce-section-head--map {
-    border-bottom: none;
-    padding-bottom: 0;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.15rem;
 }
 
 .clientes-editar-root .form-label {
-    color: #d9e3f5;
+    color: #c9d7f0;
     font-weight: 600;
-    font-size: 0.82rem;
-    margin-bottom: 0.35rem;
+    font-size: 0.78rem;
+    margin-bottom: 0.28rem;
+    letter-spacing: 0.01em;
 }
 
-.clientes-editar-root .ce-input,
-.clientes-editar-root .ce-input-group .input-group-text {
-    min-height: 42px;
-    border-radius: 11px !important;
-    background: #0c1731 !important;
+/* ---------- Inputs sueltos ---------- */
+.clientes-editar-root .ce-input {
+    min-height: 40px;
+    border-radius: 10px !important;
+    background-color: #0c1731 !important;
     color: #f0f5ff !important;
     border: 1px solid rgba(118, 158, 255, 0.35) !important;
+    box-shadow: none;
+}
+
+.clientes-editar-root select.ce-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%239ec5ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.7rem center !important;
+    background-size: 14px 10px !important;
+    padding-right: 2rem;
 }
 
 .clientes-editar-root .ce-input::placeholder {
@@ -61,11 +156,11 @@
     opacity: 0.85;
 }
 
-.clientes-editar-root .ce-input:focus,
-.clientes-editar-root .ce-input-group .ce-input:focus {
+.clientes-editar-root .ce-input:focus {
     border-color: #4ea0ff !important;
-    box-shadow: 0 0 0 0.2rem rgba(78, 160, 255, 0.18) !important;
+    box-shadow: 0 0 0 3px rgba(78, 160, 255, 0.18) !important;
     color: #fff !important;
+    outline: none;
 }
 
 .clientes-editar-root .ce-input:disabled,
@@ -74,141 +169,296 @@
     cursor: not-allowed;
 }
 
-.clientes-editar-root .ce-input-group .input-group-text {
-    min-width: 42px;
-    justify-content: center;
-    color: #9ec5ff !important;
-    font-weight: 700;
+/* ---------- Grupo $ + número: una sola pieza ---------- */
+.clientes-editar-root .ce-input-group {
+    flex-wrap: nowrap !important;
+    align-items: stretch;
+    gap: 0 !important;
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid rgba(118, 158, 255, 0.4);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #0c1731;
 }
 
+.clientes-editar-root .ce-input-group > .input-group-text,
+.clientes-editar-root .ce-input-group > .ce-input,
+.clientes-editar-root .ce-input-group > .form-control {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    min-height: 40px;
+    height: auto;
+    margin: 0 !important;
+    background-color: transparent !important;
+}
+
+.clientes-editar-root .ce-input-group > .input-group-text {
+    flex: 0 0 40px;
+    width: 40px;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: #b7d4ff !important;
+    font-weight: 800;
+    font-size: 0.95rem;
+    background: rgba(78, 160, 255, 0.16) !important;
+    border-right: 1px solid rgba(118, 158, 255, 0.32) !important;
+}
+
+.clientes-editar-root .ce-input-group > .ce-input,
+.clientes-editar-root .ce-input-group > .form-control {
+    flex: 1 1 auto;
+    width: 1% !important;
+    min-width: 0;
+    padding-left: 0.7rem;
+}
+
+.clientes-editar-root .ce-input-group:focus-within {
+    border-color: #4ea0ff;
+    box-shadow: 0 0 0 3px rgba(78, 160, 255, 0.18);
+}
+
+.clientes-editar-root .ce-input-group > .ce-input:focus,
+.clientes-editar-root .ce-input-group > .form-control:focus {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* ---------- Lat / Long, mismo lenguaje visual ---------- */
 .clientes-editar-root .ce-coords {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.65rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem;
 }
 
-.clientes-editar-root .ce-coord-chip {
-    background: rgba(12, 23, 49, 0.85);
-    border: 1px solid rgba(118, 158, 255, 0.28);
-    border-radius: 12px;
-    padding: 0.55rem 0.75rem;
+.clientes-editar-root .ce-coord-group {
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    min-height: 40px;
+    border: 1px solid rgba(118, 158, 255, 0.4);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #0c1731;
 }
 
-.clientes-editar-root .ce-coord-label {
-    display: block;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: rgba(170, 190, 230, 0.72);
-    margin-bottom: 0.2rem;
+.clientes-editar-root .ce-coord-prefix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    padding: 0 0.55rem;
+    background: rgba(78, 160, 255, 0.16);
+    color: #b7d4ff;
+    font-weight: 800;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    border-right: 1px solid rgba(118, 158, 255, 0.32);
 }
 
 .clientes-editar-root .ce-coord-value {
-    display: block;
-    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 0 0.55rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #eaf1ff;
-    word-break: break-all;
-}
-
-.clientes-editar-root .ce-map-section {
+    font-variant-numeric: tabular-nums;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.clientes-editar-root .ce-map-toolbar {
-    padding: 1rem 1.1rem 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+/* ---------- Mapa: buscador pegado al borde ---------- */
+.clientes-editar-root .ce-map-head {
+    padding: 0.85rem 1rem 0.65rem;
 }
 
 .clientes-editar-root .ce-map-hint {
-    font-size: 0.8rem;
-    color: rgba(180, 198, 230, 0.7);
-    padding-left: 1.55rem;
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: rgba(180, 198, 230, 0.78);
+    padding-left: 2.25rem;
 }
 
-.clientes-editar-root .ce-map-wrap {
-    position: relative;
-    min-height: 420px;
+.clientes-editar-root .ce-map-frame {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0 0.85rem 0.85rem;
+    border: 1px solid rgba(118, 158, 255, 0.4);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0c1731;
 }
 
-.clientes-editar-root #map {
-    width: 100%;
-    height: min(58vh, 520px);
-    min-height: 380px;
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+.clientes-editar-root .ce-map-frame:focus-within {
+    border-color: #4ea0ff;
+    box-shadow: 0 0 0 3px rgba(78, 160, 255, 0.18);
+}
+
+.clientes-editar-root .ce-map-search {
+    display: flex;
+    align-items: stretch;
+    flex: 0 0 auto;
+    min-height: 40px;
+    background: #0c1731;
+    border-bottom: 1px solid rgba(118, 158, 255, 0.32);
+}
+
+.clientes-editar-root .ce-map-search[hidden] {
+    display: none !important;
+}
+
+.clientes-editar-root .ce-map-search-ico {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    color: #b7d4ff;
+    background: rgba(78, 160, 255, 0.16);
+    border-right: 1px solid rgba(118, 158, 255, 0.32);
 }
 
 .clientes-editar-root .ce-pac-input {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    z-index: 2;
-    width: auto !important;
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    flex: 1 1 auto;
+    width: 100% !important;
     max-width: 100%;
+    min-width: 0;
+    height: 40px;
     margin: 0 !important;
-    height: 42px;
-    padding: 0 0.85rem;
-    border-radius: 11px !important;
-    border: 1px solid rgba(118, 158, 255, 0.45) !important;
-    background: rgba(12, 23, 49, 0.94) !important;
+    padding: 0 0.75rem;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
     color: #f0f5ff !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: none !important;
     font-size: 0.9rem;
+    outline: none;
 }
 
 .clientes-editar-root .ce-pac-input::placeholder {
     color: #9cb0d8 !important;
 }
 
-.clientes-editar-root .ce-pac-input:focus {
-    outline: none;
-    border-color: #4ea0ff !important;
-    box-shadow: 0 0 0 0.2rem rgba(78, 160, 255, 0.2), 0 8px 24px rgba(0, 0, 0, 0.35);
+.clientes-editar-root .ce-map-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 440px;
+    height: 440px;
+}
+
+.clientes-editar-root #map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    border: 0;
 }
 
 .clientes-editar-root .ce-location-list {
     list-style: none;
     margin: 0;
-    padding: 0.5rem 1rem 0.75rem;
+    padding: 0 0.85rem 0.35rem;
+}
+
+.clientes-editar-root .ce-location-list:empty {
+    display: none;
 }
 
 .clientes-editar-root .ce-map-tools {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    padding: 0.65rem 1rem 0.85rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0 0.85rem 0.85rem;
 }
 
+/* Sugerencias de Google Places, alineadas al buscador oscuro */
+.pac-container {
+    z-index: 4000 !important;
+    margin-top: 2px;
+    border-radius: 12px;
+    border: 1px solid rgba(118, 158, 255, 0.4);
+    background: #101b36;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+    font-family: inherit;
+    overflow: hidden;
+}
+
+.pac-container .pac-item {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0.4rem 0.55rem;
+    cursor: pointer;
+}
+
+.pac-container .pac-item,
+.pac-container .pac-item-query,
+.pac-container .pac-item span {
+    color: #e7eefc !important;
+    font-size: 0.86rem;
+}
+
+.pac-container .pac-item:hover,
+.pac-container .pac-item-selected {
+    background: rgba(78, 160, 255, 0.18);
+}
+
+.pac-container .pac-matched {
+    color: #9ec5ff !important;
+    font-weight: 700;
+}
+
+/* ---------- Acciones ---------- */
 .clientes-editar-root .ce-actions-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    padding-bottom: calc(0.7rem + env(safe-area-inset-bottom, 0px));
     border: 1px solid rgba(91, 140, 255, 0.22);
-    position: sticky;
-    bottom: 0.75rem;
-    z-index: 5;
+    position: relative;
+    z-index: 2;
+    background: linear-gradient(180deg, rgba(16, 26, 48, 0.96), rgba(10, 16, 32, 0.98));
+}
+
+.clientes-editar-root .ce-actions-bar-text {
+    font-size: 0.8rem;
+    min-width: 0;
 }
 
 .clientes-editar-root .ce-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.65rem;
+    flex-wrap: nowrap;
+    gap: 0.55rem;
     margin-left: auto;
+    min-width: 0;
 }
 
-.clientes-editar-root .ce-actions--inline {
-    margin-bottom: 1rem;
+.clientes-editar-root .ce-btn-cancel,
+.clientes-editar-root .ce-btn-save {
+    min-height: 44px;
+    min-width: 132px;
+    font-weight: 700;
 }
 
 .clientes-editar-root .ce-btn-save {
-    min-width: 140px;
-    font-weight: 700;
     box-shadow: 0 8px 20px rgba(61, 139, 253, 0.28);
 }
 
@@ -216,33 +466,338 @@
     margin-left: 0;
 }
 
-@media (max-width: 1199px) {
-    .clientes-editar-root .ce-map-wrap {
-        min-height: 360px;
+/* ---------- Adjuntos ---------- */
+.clientes-editar-root .ce-adj-count {
+    margin-left: auto;
+    min-width: 1.6rem;
+    height: 1.6rem;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    background: rgba(78, 160, 255, 0.18);
+    color: #d7e8ff;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clientes-editar-root .ce-adj-lead {
+    margin: -0.2rem 0 0.7rem;
+    color: rgba(180, 198, 230, 0.78);
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+.clientes-editar-root .ce-adj-drop {
+    border: 1.5px dashed rgba(110, 168, 254, 0.55);
+    border-radius: 12px;
+    background:
+        radial-gradient(120% 80% at 50% 0%, rgba(78, 160, 255, 0.16), transparent 55%),
+        rgba(8, 16, 36, 0.55);
+    padding: 0.85rem 0.75rem 0.75rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.clientes-editar-root .ce-adj-drop:hover,
+.clientes-editar-root .ce-adj-drop:focus,
+.clientes-editar-root .ce-adj-drop.is-over {
+    border-color: #7eb6ff;
+    background:
+        radial-gradient(120% 80% at 50% 0%, rgba(78, 160, 255, 0.28), transparent 60%),
+        rgba(12, 28, 58, 0.75);
+    outline: none;
+}
+
+.clientes-editar-root .ce-adj-drop-icon {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 0.35rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3d8bfd, #1e6fd9);
+    color: #fff;
+    font-size: 1.05rem;
+    box-shadow: 0 8px 18px rgba(30, 111, 217, 0.35);
+}
+
+.clientes-editar-root .ce-adj-drop-title {
+    color: #eef4ff;
+    font-weight: 700;
+    font-size: 0.88rem;
+}
+
+.clientes-editar-root .ce-adj-drop-sub {
+    margin-top: 0.15rem;
+    color: rgba(170, 190, 230, 0.72);
+    font-size: 0.74rem;
+}
+
+.clientes-editar-root .ce-adj-estado {
+    margin-top: 0.6rem;
+    font-size: 0.8rem;
+    color: #b9d4ff;
+}
+
+.clientes-editar-root .ce-adj-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 0.55rem;
+    margin-top: 0.7rem;
+}
+
+.clientes-editar-root .ce-adj-grid:empty {
+    display: none;
+}
+
+.clientes-editar-root .ce-adj-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(118, 158, 255, 0.28);
+    background: #0c1731;
+    min-height: 108px;
+}
+
+.clientes-editar-root .ce-adj-thumb {
+    width: 100%;
+    height: 84px;
+    object-fit: cover;
+    display: block;
+    background: #101c36;
+    cursor: zoom-in;
+}
+
+.clientes-editar-root .ce-adj-pdf {
+    height: 84px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    color: #ffb4b4;
+    background: linear-gradient(180deg, #1a2748, #10192f);
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.clientes-editar-root .ce-adj-pdf .fa {
+    font-size: 1.35rem;
+    width: auto;
+    height: auto;
+    background: none;
+    border-radius: 0;
+}
+
+.clientes-editar-root .ce-adj-meta {
+    padding: 0.3rem 0.4rem 0.4rem;
+}
+
+.clientes-editar-root .ce-adj-name {
+    color: #e7eefc;
+    font-size: 0.68rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.clientes-editar-root .ce-adj-size {
+    color: rgba(170, 190, 230, 0.65);
+    font-size: 0.64rem;
+}
+
+.clientes-editar-root .ce-adj-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(8, 12, 24, 0.78);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.clientes-editar-root .ce-adj-remove:hover {
+    background: #c0392b;
+}
+
+.clientes-editar-root .ce-adj-badge {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    padding: 0.1rem 0.35rem;
+    border-radius: 999px;
+    background: rgba(241, 196, 15, 0.92);
+    color: #2c2200;
+    font-size: 0.6rem;
+    font-weight: 800;
+}
+
+.ce-adj-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(4, 8, 18, 0.88);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.ce-adj-lightbox[hidden] {
+    display: none !important;
+}
+
+.ce-adj-lightbox img {
+    max-width: min(960px, 94vw);
+    max-height: 82vh;
+    border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.ce-adj-lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ce-adj-lightbox-caption {
+    margin-top: 0.75rem;
+    color: #d7e4ff;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* ---------- Tablet y teléfono ---------- */
+@media (max-width: 1199.98px) {
+    .clientes-editar-root .ce-ficha-grid {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    .clientes-editar-root #map {
+    .clientes-editar-root .ce-ficha-map {
+        border-left: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .clientes-editar-root .ce-map-wrap {
         min-height: 320px;
-        height: 48vh;
+        height: 320px;
     }
 }
 
-@media (max-width: 767px) {
-    .clientes-editar-root .ce-coords {
-        grid-template-columns: 1fr;
+@media (max-width: 767.98px) {
+    .clientes-editar-root .ce-page {
+        padding-left: 0.65rem !important;
+        padding-right: 0.65rem !important;
+        padding-top: 0.55rem;
+        padding-bottom: 0.35rem;
     }
 
-    .clientes-editar-root .ce-actions--inline .btn {
-        flex: 1 1 auto;
+    .clientes-editar-root .ce-top {
+        padding: 0.7rem 0.75rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .clientes-editar-root .ce-block,
+    .clientes-editar-root .ce-map-head {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    .clientes-editar-root .ce-map-frame {
+        margin-left: 0.65rem;
+        margin-right: 0.65rem;
     }
 
     .clientes-editar-root .ce-map-hint {
         padding-left: 0;
     }
+
+    .clientes-editar-root .ce-map-wrap {
+        min-height: 280px;
+        height: min(42vh, 300px);
+    }
+
+    .clientes-editar-root .ce-input,
+    .clientes-editar-root .ce-pac-input {
+        font-size: 16px !important;
+    }
+
+    .clientes-editar-root .ce-actions-bar-text {
+        display: none;
+    }
+
+    .clientes-editar-root .ce-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .clientes-editar-root .ce-btn-cancel,
+    .clientes-editar-root .ce-btn-save {
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+    }
 }
 
-@media (max-width: 500px) {
-    .clientes-editar-root .ce-pac-input {
-        font-size: 0.82rem;
+@media (max-width: 575.98px) {
+    .clientes-editar-root .ce-top-row {
+        align-items: stretch;
+    }
+
+    .clientes-editar-root .ce-btn-back {
+        width: 100%;
+    }
+
+    .clientes-editar-root .ce-top-titles h2 {
+        font-size: 1.15rem;
+    }
+
+    .clientes-editar-root .ce-coord-prefix {
+        padding: 0 0.4rem;
+        font-size: 0.68rem;
+    }
+
+    .clientes-editar-root .ce-map-wrap {
+        min-height: 250px;
+        height: 250px;
+    }
+
+    .clientes-editar-root .ce-adj-drop-title {
+        font-size: 0.84rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .clientes-editar-root .ce-actions {
+        gap: 0.4rem;
+    }
+
+    .clientes-editar-root .ce-btn-cancel,
+    .clientes-editar-root .ce-btn-save {
+        padding-left: 0.45rem;
+        padding-right: 0.45rem;
+        font-size: 0.9rem;
     }
 }

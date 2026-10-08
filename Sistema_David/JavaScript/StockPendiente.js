@@ -494,7 +494,7 @@ function desmarcarCheckBoxes(resetSelectAll) {
 
 const eliminarStock = async id => {
     try {
-        if (confirm('¿Está seguro que desea eliminar este stock?')) {
+        if (await confirmarModal('¿Está seguro que desea eliminar este stock?')) {
             const options = {
                 type: 'POST',
                 url: '/StockPendiente/EliminarStock',

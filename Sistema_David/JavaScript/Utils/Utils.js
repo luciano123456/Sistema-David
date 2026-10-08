@@ -121,25 +121,73 @@ function aplicarSeparadorMilesAlEscribir(selector) {
 
 
 
-function mostrarModalConContador(modal, texto, tiempo) {
-    $(`#${modal}Text`).text(texto);
-    $(`#${modal}`).modal('show');
+function tipoToastDesdeTexto(texto) {
+    var t = String(texto || "").toLowerCase();
+    if (/error|no se pudo|no pud|ha ocurrido|inválid|invalido|incorrect|fall[oó]|inhabilit/.test(t))
+        return "error";
+    if (/correctamente|éxito|exito|agregad|modificad|eliminad|guardad|realizad|enviad|registrad|actualizad/.test(t))
+        return "success";
+    if (/permiso|deb[eé]s|debe |advert|atenci[oó]n|no tienes|no ten[eé]s|seleccion|eleg[ií]|complet/.test(t))
+        return "warning";
+    return "info";
+}
 
+function recordarToastSiNavega(texto, tipo) {
+    var marca = { texto: String(texto == null ? "" : texto), tipo: tipo, ts: Date.now() };
+    window.__sdToastPendiente = marca;
     setTimeout(function () {
-        $(`#${modal}`).modal('hide');
-    }, tiempo);
+        if (window.__sdToastPendiente === marca)
+            window.__sdToastPendiente = null;
+    }, 2500);
+}
+
+function mostrarToastPendiente() {
+    try {
+        var raw = sessionStorage.getItem("sd-toast-pendiente");
+        if (!raw) return;
+        sessionStorage.removeItem("sd-toast-pendiente");
+        var data = JSON.parse(raw);
+        if (!data || !data.texto) return;
+        if (Date.now() - (data.ts || 0) > 8000) return;
+        setTimeout(function () { mostrarToast(data.texto, data.tipo || "info"); }, 280);
+    } catch (e) { }
 }
 
 function exitoModal(texto) {
-    mostrarModalConContador('exitoModal', texto, 1000);
+    recordarToastSiNavega(texto, "success");
+    mostrarToast(texto, "success");
 }
 
 function errorModal(texto) {
-    mostrarModalConContador('ErrorModal', texto, 3000);
+    recordarToastSiNavega(texto, "error");
+    mostrarToast(texto, "error", 5200);
 }
 
 function advertenciaModal(texto) {
-    mostrarModalConContador('AdvertenciaModal', texto, 3000);
+    recordarToastSiNavega(texto, "warning");
+    mostrarToast(texto, "warning", 4800);
+}
+
+window.alert = function (texto) {
+    if (texto == null || String(texto).trim() === "") return;
+    var tipo = tipoToastDesdeTexto(texto);
+    recordarToastSiNavega(texto, tipo);
+    mostrarToast(texto, tipo, tipo === "error" ? 5200 : 4200);
+};
+
+if (!window.__sdToastNavListo) {
+    window.__sdToastNavListo = true;
+    window.addEventListener("pagehide", function () {
+        var p = window.__sdToastPendiente;
+        if (!p) return;
+        try { sessionStorage.setItem("sd-toast-pendiente", JSON.stringify(p)); } catch (e) { }
+    });
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mostrarToastPendiente);
+} else {
+    mostrarToastPendiente();
 }
 
 function mostrarToast(texto, tipo, duracionMs) {
@@ -161,7 +209,7 @@ function mostrarToast(texto, tipo, duracionMs) {
         ".sd-toast-error{border-left:4px solid #ef4444}" +
         ".sd-toast-warning{border-left:4px solid #f59e0b}" +
         ".sd-toast-info{border-left:4px solid #60a5fa}" +
-        ".sd-toast-msg{flex:1;word-break:break-word}" +
+        ".sd-toast-msg{flex:1;word-break:break-word;white-space:pre-wrap}" +
         ".sd-toast-close{background:transparent;border:0;color:#9ec5ff;font-size:20px;line-height:1;cursor:pointer;padding:0 2px;opacity:.8}" +
         ".sd-toast-close:hover{opacity:1;color:#fff}" +
         ".sd-toast-out{opacity:0;transform:translateY(8px);transition:opacity .2s ease,transform .2s ease}" +
@@ -256,6 +304,30 @@ function mostrarToast(texto, tipo, duracionMs) {
     scheduleHide(ms);
 }
 
+function sdConfirmEsRico(html) {
+    return /<(div|ul|ol|table|pre|label|form)\b/i.test(String(html || ""));
+}
+
+function sdConfirmTono(mensaje, options) {
+    var clase = String((options && options.claseAceptar) || "").toLowerCase();
+    if (clase.indexOf("danger") >= 0) return "danger";
+    if (clase.indexOf("success") >= 0) return "success";
+    if (clase.indexOf("warning") >= 0) return "warning";
+    var t = String(mensaje || "").replace(/<[^>]+>/g, " ").toLowerCase();
+    if (/eliminar|borrar|sacar|quitar|revertir|anular/.test(t)) return "danger";
+    if (/desactivar|advert|metros de distancia|informado a un administrador/.test(t)) return "warning";
+    if (/\bactivar\b|whatsapp|éxito|exito/.test(t)) return "success";
+    return "ask";
+}
+
+function sdConfirmTitulo(mensaje, options, tono) {
+    if (options && options.titulo) return String(options.titulo);
+    var t = String(mensaje || "").replace(/<[^>]+>/g, " ").toLowerCase();
+    if (tono === "danger" && /eliminar|borrar/.test(t)) return "Eliminar";
+    if (tono === "warning") return "Atención";
+    return "Confirmación";
+}
+
 function confirmarModal(mensaje, options) {
     options = options || {};
     return new Promise((resolve) => {
@@ -273,20 +345,34 @@ function confirmarModal(mensaje, options) {
         const nuevoBtnAceptar = document.getElementById("btnModalConfirmarAceptar");
         const nuevoBtnCancelar = nuevoModalEl.querySelector(".modal-footer [data-bs-dismiss='modal']");
         const nuevoTitulo = document.getElementById("modalConfirmarLabel");
+        const tono = sdConfirmTono(mensaje, options);
+        const rico = sdConfirmEsRico(mensaje);
+        const card = nuevoModalEl.querySelector(".sd-confirm");
+        const dialog = nuevoModalEl.querySelector(".sd-confirm-dialog");
 
-        if (nuevoTitulo) nuevoTitulo.textContent = options.titulo || "Confirmación";
+        if (card) {
+            card.className = "modal-content sd-confirm is-" + tono
+                + (rico ? " is-rich" : "")
+                + (options.titulo ? " has-custom-title" : "");
+        }
+        if (dialog) dialog.classList.toggle("is-rich", rico);
+
+        if (nuevoTitulo) nuevoTitulo.textContent = sdConfirmTitulo(mensaje, options, tono);
         if (nuevoBtnCancelar) nuevoBtnCancelar.textContent = options.textoCancelar || "Cancelar";
         if (nuevoBtnAceptar) {
             nuevoBtnAceptar.textContent = options.textoAceptar || "Sí, continuar";
-            if (options.claseAceptar) {
-                nuevoBtnAceptar.className = "btn px-4 " + options.claseAceptar;
-            }
+            nuevoBtnAceptar.className = "sd-confirm-btn sd-confirm-btn-go";
         }
 
         const nuevoModal = new bootstrap.Modal(nuevoModalEl, {
             backdrop: "static",
             keyboard: false
         });
+
+        nuevoModalEl.addEventListener("shown.bs.modal", function () {
+            var backs = document.querySelectorAll(".modal-backdrop");
+            if (backs.length) backs[backs.length - 1].classList.add("sd-confirm-backdrop");
+        }, { once: true });
 
         let resuelto = false;
 

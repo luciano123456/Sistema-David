@@ -514,8 +514,8 @@ const editarVenta = async id => {
 const eliminarVenta = async id => {
     var devolverStock = 0;
     try {
-        if (confirm("¿Está seguro que desea eliminar esta venta?")) {
-            if (confirm("¿Devolver stock?")) {
+        if (await confirmarModal("¿Está seguro que desea eliminar esta venta?")) {
+            if (await confirmarModal("¿Devolver stock?")) {
                 devolverStock = 1;
             } else {
                 devolverStock = 0;

@@ -55,7 +55,7 @@ const eliminarUsuario = async id => {
          return false;
      }
     try {
-        if (confirm("¿Está seguro que desea eliminar este registro?")) {
+        if (await confirmarModal("¿Está seguro que desea eliminar este registro?")) {
         var url = "/Usuarios/Eliminar";
 
         let value = JSON.stringify({

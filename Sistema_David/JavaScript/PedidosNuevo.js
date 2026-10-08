@@ -80,7 +80,7 @@ async function cargarCliente() {
         let result = await MakeAjax(options);
 
             if (result.data != null) {
-                    if (confirm("Se ha encontrado un cliente con esos datos, ¿ Desea autocompletar?")) {
+                    if (await confirmarModal("Se ha encontrado un cliente con esos datos, ¿ Desea autocompletar?")) {
                         $("#estadocliente").css("color", "white");
                         $("#estadocliente").text("");
                         $("#nombrecliente").text("");

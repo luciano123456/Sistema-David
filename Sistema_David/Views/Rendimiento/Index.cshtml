@@ -6,7 +6,7 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
-<link href="~/Estilos/rendimiento.css?v=4.3" rel="stylesheet" />
+<link href="~/Estilos/rendimiento.css?v=4.6" rel="stylesheet" />
 <link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.0" rel="stylesheet" />
 
 <body class="ve-dark">
@@ -303,30 +303,54 @@
 
                 <div id="dashboardRendimiento" class="dashboard-rendimiento mt-4" hidden>
 
-                    <div class="dashboard-card">
-                        <div class="title">Ventas vs Cobros</div>
-                        <canvas id="chartVentasCobros"></canvas>
+                    <div class="dashboard-card" data-dash-card="ventas-cobros">
+                        <button type="button" class="dashboard-card-head" data-dash-collapse aria-expanded="true" title="Plegar" aria-label="Plegar">
+                            <span class="title">Ventas vs Cobros</span>
+                            <i class="fa fa-chevron-up" aria-hidden="true"></i>
+                        </button>
+                        <div class="dashboard-card-body">
+                            <canvas id="chartVentasCobros"></canvas>
+                        </div>
                     </div>
 
-                    <div class="dashboard-card">
-                        <div class="title">Distribución de Cobros</div>
-                        <canvas id="chartMetodosPago"></canvas>
+                    <div class="dashboard-card" data-dash-card="metodos">
+                        <button type="button" class="dashboard-card-head" data-dash-collapse aria-expanded="true" title="Plegar" aria-label="Plegar">
+                            <span class="title">Distribución de Cobros</span>
+                            <i class="fa fa-chevron-up" aria-hidden="true"></i>
+                        </button>
+                        <div class="dashboard-card-body">
+                            <canvas id="chartMetodosPago"></canvas>
+                        </div>
                     </div>
 
-                    <div class="dashboard-card full">
-                        <div class="title">Capital</div>
-                        <canvas id="chartCapital"></canvas>
+                    <div class="dashboard-card full" data-dash-card="capital">
+                        <button type="button" class="dashboard-card-head" data-dash-collapse aria-expanded="true" title="Plegar" aria-label="Plegar">
+                            <span class="title">Capital</span>
+                            <i class="fa fa-chevron-up" aria-hidden="true"></i>
+                        </button>
+                        <div class="dashboard-card-body">
+                            <canvas id="chartCapital"></canvas>
+                        </div>
                     </div>
 
-                    <!-- 🔥 NUEVOS -->
-                    <div class="dashboard-card full">
-                        <div class="title">Evolución mensual - Ventas</div>
-                        <canvas id="chartVentasMensual"></canvas>
+                    <div class="dashboard-card full" data-dash-card="ventas-mensual">
+                        <button type="button" class="dashboard-card-head" data-dash-collapse aria-expanded="true" title="Plegar" aria-label="Plegar">
+                            <span class="title">Evolución mensual - Ventas</span>
+                            <i class="fa fa-chevron-up" aria-hidden="true"></i>
+                        </button>
+                        <div class="dashboard-card-body">
+                            <canvas id="chartVentasMensual"></canvas>
+                        </div>
                     </div>
 
-                    <div class="dashboard-card full">
-                        <div class="title">Evolución mensual - Cobros</div>
-                        <canvas id="chartCobrosMensual"></canvas>
+                    <div class="dashboard-card full" data-dash-card="cobros-mensual">
+                        <button type="button" class="dashboard-card-head" data-dash-collapse aria-expanded="true" title="Plegar" aria-label="Plegar">
+                            <span class="title">Evolución mensual - Cobros</span>
+                            <i class="fa fa-chevron-up" aria-hidden="true"></i>
+                        </button>
+                        <div class="dashboard-card-body">
+                            <canvas id="chartCobrosMensual"></canvas>
+                        </div>
                     </div>
 
                 </div>
@@ -426,6 +450,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="~/JavaScript/Utils/Utils.js?v=3.17"></script>
-    <script src="~/JavaScript/Rendimiento.js?v=5.15"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.19"></script>
+    <script src="~/JavaScript/Rendimiento.js?v=5.19"></script>
 }

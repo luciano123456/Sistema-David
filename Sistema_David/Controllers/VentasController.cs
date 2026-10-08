@@ -261,7 +261,9 @@ namespace Sistema_David.Controllers
         {
             try
             {
-
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (usuarioSesion == null || usuarioSesion.IdRol != 1)
+                    return Json(new { success = false, message = "No autorizado" });
 
                 //ANTES DE BORRAR LA VENTA, LE SUMAMOS EL STOCK AL USUARIO
                 var productosVenta = VentasModel.ListaProductosVenta(id);
@@ -356,6 +358,9 @@ namespace Sistema_David.Controllers
         {
             try
             {
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (usuarioSesion == null || usuarioSesion.IdRol != 1)
+                    return Json(new { success = false, message = "No autorizado" }, JsonRequestBehavior.AllowGet);
 
                 var result = VentasModel.EliminarInformacionVenta(id);
                 return Json(new { data = result }, JsonRequestBehavior.AllowGet);

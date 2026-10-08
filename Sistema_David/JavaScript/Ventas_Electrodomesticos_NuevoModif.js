@@ -189,6 +189,10 @@
 
     // Toast global abajo a la derecha
     function showToast(msg, type = 'info') {
+        if (typeof mostrarToast === "function") {
+            mostrarToast(msg, type);
+            return;
+        }
         let cont = document.getElementById('toastContainerBR');
         if (!cont) {
             cont = document.createElement('div');
@@ -1837,12 +1841,11 @@
     }
 
 
-    function eliminarPagoDeCuota(cuota, idxHist) {
+    async function eliminarPagoDeCuota(cuota, idxHist) {
         const pago = cuota.hist[idxHist];
         if (!pago) return;
 
-        // Confirmación amistosa
-        if (!confirm("¿Eliminar este pago? Esta acción restablecerá el estado de la cuota."))
+        if (!(await confirmarModal("¿Eliminar este pago? Esta acción restablecerá el estado de la cuota.")))
             return;
 
         // 1) Remover pago

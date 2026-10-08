@@ -228,7 +228,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona, id
 const eliminarCliente = async id => {
 
     try {
-        if (confirm("¿Está seguro que desea eliminar este registro?")) {
+        if (await confirmarModal("¿Está seguro que desea eliminar este registro?")) {
             var url = "/Clientes/Eliminar";
 
             let value = JSON.stringify({

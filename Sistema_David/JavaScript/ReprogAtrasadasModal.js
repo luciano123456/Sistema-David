@@ -35,6 +35,10 @@
     }
 
     function toast(msg, tipo) {
+        if (typeof mostrarToast === "function") {
+            mostrarToast(msg, tipo || "success");
+            return;
+        }
         if (global.VC && typeof global.VC.toast === "function") {
             global.VC.toast(msg, tipo || "success");
             return;

@@ -26,7 +26,8 @@
 
 <body>
 
-    <link href="~/Estilos/NavBarLogin.css" rel="" />
+    <link href="~/Estilos/NavBarLogin.css?v=2.2" rel="stylesheet" />
+    <link href="~/Estilos/ClienteImagenesModal.css?v=1.2" rel="stylesheet" />
 
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -66,6 +67,7 @@
 
 
     @Scripts.Render("~/bundles/jquery")
+    <script src="~/JavaScript/ClienteImagenes.js?v=1.0"></script>
     @Scripts.Render("~/Scripts/bootstrap.bundle.js")
     @Scripts.Render("~/Content/Plugin/js")
     @RenderSection("scripts", required: false)

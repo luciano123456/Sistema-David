@@ -257,7 +257,7 @@ function abrirHistorialDireccionClienteDesdeEdicion() {
 }
 
 async function eliminarHistorialDireccion(id) {
-    if (!confirm("\u00bfEliminar este registro del historial de direcci\u00f3n?")) return;
+    if (!(await confirmarModal("¿Eliminar este registro del historial de dirección?"))) return;
 
     try {
         var options = {

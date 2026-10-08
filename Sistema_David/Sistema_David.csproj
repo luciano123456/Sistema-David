@@ -506,6 +506,7 @@
     <Compile Include="Models\Modelo\VMVentaUnificada.cs" />
     <Compile Include="Models\Modelo\VMVentasElectrodomesticos.cs" />
     <Compile Include="Models\Modelo\VMTiposNegocio.cs" />
+    <Compile Include="Models\Modelo\VMClienteAdjunto.cs" />
     <Compile Include="Models\Modelo\VMClienteNuevaDireccion.cs" />
     <Compile Include="Models\Modelo\VMClienteHistorialDireccion.cs" />
     <Compile Include="Models\Modelo\VMInformacionClienteAsignado.cs" />
@@ -525,6 +526,7 @@
     <Compile Include="Models\Modelo\VMCategoria.cs" />
     <Compile Include="Models\Modelo\VMRol.cs" />
     <Compile Include="Models\Modelo\VMCliente.cs" />
+    <Compile Include="Models\ClientesAdjuntosModel.cs" />
     <Compile Include="Models\ClientesModel.cs" />
     <Compile Include="Models\Modelo\VMProducto.cs" />
     <Compile Include="Models\Modelo\VMProductoCambio.cs" />
@@ -594,6 +596,8 @@
     <Content Include="Estilos\DireccionModal.css" />
     <Content Include="Estilos\ReprogAtrasadasModal.css" />
     <Content Include="Estilos\Clientes.css" />
+    <Content Include="Estilos\ClienteImagenesModal.css" />
+    <Content Include="Estilos\ConfirmModal.css" />
     <Content Include="Estilos\Rendimiento.css" />
     <Content Include="Estilos\RendimientoAnalisis.css" />
     <Content Include="Estilos\Pedidos.css" />
@@ -618,6 +622,8 @@
     <Content Include="JavaScript\bundle.js" />
     <Content Include="JavaScript\ClientesCero.js" />
     <Content Include="JavaScript\_CobroModal_Partial.js" />
+    <Content Include="JavaScript\ClientesAdjuntos.js" />
+    <Content Include="JavaScript\ClienteImagenes.js" />
     <Content Include="JavaScript\ClientesEditar.js" />
     <Content Include="JavaScript\Ventas_Electrodomesticos_Cobros.js" />
     <Content Include="JavaScript\Ventas_Electrodomesticos_Historial.js" />

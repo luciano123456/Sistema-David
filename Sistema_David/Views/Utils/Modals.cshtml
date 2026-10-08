@@ -57,23 +57,50 @@
 </div>
 
 
+<link href="~/Estilos/ConfirmModal.css?v=1" rel="stylesheet" />
+
 <!-- Modal Confirmar -->
-<div class="modal fade w-100" id="modalConfirmar" tabindex="-1" aria-labelledby="modalConfirmarLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content text-white" style="background: #323844">
-            <div class="modal-header border-0 bg-warning bg-opacity-10 colorEncabezado">
-                <i class="fa fa-question-circle text-warning fs-2 me-2"></i>
-                <h5 class="modal-title text-white fw-bold" id="modalConfirmarLabel">Confirmación</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div id="modalConfirmarMensaje" class="fs-5 fw-semibold m-0 text-white text-wrap">
-                    ¿Estás seguro que deseas continuar?
+<div class="modal fade" id="modalConfirmar" tabindex="-1" aria-labelledby="modalConfirmarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered sd-confirm-dialog">
+        <div class="modal-content sd-confirm is-ask">
+            <button type="button" class="sd-confirm-x" data-bs-dismiss="modal" aria-label="Cerrar">&times;</button>
+            <div class="sd-confirm-hero">
+                <div class="sd-confirm-badge" aria-hidden="true">
+                    <svg class="sd-ico sd-ico-ask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.6 2.6 0 1 1 3.4 2.5c-.8.3-1.3 1-1.3 1.8V14.2"/><path d="M12 17.2h.01"/></svg>
+                    <svg class="sd-ico sd-ico-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/><path d="M7.2 7l.8 12.2a1.2 1.2 0 0 0 1.2 1.1h5.6a1.2 1.2 0 0 0 1.2-1.1L17.8 7"/><path d="M10 11.2v5.2M14 11.2v5.2"/></svg>
+                    <svg class="sd-ico sd-ico-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6 2.9 19.1A1.3 1.3 0 0 0 4 21h16a1.3 1.3 0 0 0 1.1-1.9L12 3.6z"/><path d="M12 9.2v5"/><path d="M12 17.2h.01"/></svg>
+                    <svg class="sd-ico sd-ico-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.4 10.6 15 16 9.4"/></svg>
                 </div>
+                <h2 class="sd-confirm-title" id="modalConfirmarLabel">Confirmación</h2>
             </div>
-            <div class="modal-footer border-0 justify-content-center">
-                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary px-4" id="btnModalConfirmarAceptar">Sí, continuar</button>
+            <div class="sd-confirm-msg" id="modalConfirmarMensaje">¿Estás seguro que deseas continuar?</div>
+            <div class="modal-footer sd-confirm-actions">
+                <button type="button" class="sd-confirm-btn sd-confirm-btn-no" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="sd-confirm-btn sd-confirm-btn-go" id="btnModalConfirmarAceptar">Sí, continuar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cliAdjModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered cli-adj-dialog">
+        <div class="modal-content cli-adj-modal">
+            <div class="cli-adj-head">
+                <div class="cli-adj-head-text">
+                    <div class="cli-adj-kicker">Imágenes del cliente</div>
+                    <div class="cli-adj-title" id="cliAdjTitulo"></div>
+                </div>
+                <button type="button" class="cli-adj-x" data-bs-dismiss="modal" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="cli-adj-stage" id="cliAdjStage">
+                <button type="button" class="cli-adj-nav is-prev" id="cliAdjPrev" aria-label="Anterior"><i class="fa fa-chevron-left"></i></button>
+                <img id="cliAdjMain" alt="" />
+                <div class="cli-adj-empty" id="cliAdjEmpty" hidden>No hay imágenes para mostrar.</div>
+                <button type="button" class="cli-adj-nav is-next" id="cliAdjNext" aria-label="Siguiente"><i class="fa fa-chevron-right"></i></button>
+            </div>
+            <div class="cli-adj-foot">
+                <div class="cli-adj-count" id="cliAdjCount"></div>
+                <div class="cli-adj-strip" id="cliAdjStrip"></div>
             </div>
         </div>
     </div>

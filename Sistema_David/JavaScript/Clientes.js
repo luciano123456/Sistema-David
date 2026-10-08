@@ -39,16 +39,39 @@ function clientesAjaxDataSrc(json) {
     return [];
 }
 
+let cargaClientesToken = null;
+
 function showGlobalLoadingClientes(text) {
-    const loading = document.getElementById("globalLoading");
-    if (!loading) return;
-    loading.classList.remove("hidden");
-    const lt = loading.querySelector(".loading-text");
-    if (lt) lt.textContent = text || "Cargando tablas...";
-    document.body.classList.add("loading");
+    if (typeof mostrarCargaTablas !== "function") {
+        const loading = document.getElementById("globalLoading");
+        if (!loading) return;
+        loading.classList.remove("hidden");
+        const lt = loading.querySelector(".loading-text");
+        if (lt) lt.textContent = text || "Cargando tablas...";
+        document.body.classList.add("loading");
+        return;
+    }
+
+    cargaClientesToken = mostrarCargaTablas(text || "Cargando tablas...", {
+        abort: function () {
+            if (typeof abortarAjaxDataTable === "function")
+                abortarAjaxDataTable("#grdClientes");
+        },
+        onReiniciarFiltros: function () {
+            $("#btnLimpiarFiltrosClientes").trigger("click");
+            if (typeof aplicarFiltros === "function")
+                aplicarFiltros();
+        }
+    });
 }
 
 function hideGlobalLoadingClientes() {
+    if (typeof ocultarCargaTablas === "function") {
+        ocultarCargaTablas(cargaClientesToken);
+        cargaClientesToken = null;
+        return;
+    }
+
     const loading = document.getElementById("globalLoading");
     if (!loading) return;
     loading.classList.add("hidden");
@@ -384,12 +407,15 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona, es
                     const iconoEliminar = `<button class="btn btn-sm btnacciones" type="button" onclick='eliminarCliente(${data})' title="Eliminar"><i class="fa fa-trash-o fa-lg text-white" aria-hidden="true"></i></button>`;
 
                     let iconos = "";
+                    const adj = (typeof htmlAdjuntosCliente === "function")
+                        ? htmlAdjuntosCliente(full.Id, full.TieneImagenes, ((full.Nombre || "") + " " + (full.Apellido || "")).trim(), "lista")
+                        : "";
 
                     if (userSession.IdRol == 1) {
-                        iconos = `${botonInfoVenta}${iconoTelefono}${iconoWhatsapp}${iconoEliminar}`;
+                        iconos = `${adj}${botonInfoVenta}${iconoTelefono}${iconoWhatsapp}${iconoEliminar}`;
                     }
                     else if (userSession.IdRol == 4) {
-                        iconos = `${botonInfoVenta}`;
+                        iconos = `${adj}${botonInfoVenta}`;
                     }
                     return iconos;
                 },
@@ -455,7 +481,7 @@ const configurarDataTable = async (idVendedor, Nombre, Apellido, Dni, idZona, es
 const eliminarCliente = async id => {
 
     try {
-        if (confirm("¿Está seguro que desea eliminar este registro?")) {
+        if (await confirmarModal("¿Está seguro que desea eliminar este registro?")) {
             var url = "/Clientes/Eliminar";
 
             let value = JSON.stringify({

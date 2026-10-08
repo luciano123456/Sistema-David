@@ -59,6 +59,9 @@ $(document).ready(function () {
     } else {
         document.getElementById("LimiteVentas").removeAttribute("disabled");
     }
+
+    if (typeof iniciarAdjuntosCliente === "function")
+        iniciarAdjuntosCliente();
   
 });
 
@@ -286,6 +289,26 @@ async function registrarCliente() {
                 alert("Ya existe un cliente con ese DNI registrado");
                 return
             } else {
+                var idNuevo = result.Id || 0;
+                if (typeof subirAdjuntosPendientes === "function" && adjuntosPendientes.length > 0) {
+                    if (!idNuevo) {
+                        alert("El cliente se registró, pero no se pudieron adjuntar las imágenes.");
+                    } else {
+                        var subida = await subirAdjuntosPendientes(idNuevo);
+                        if (!subida || !subida.ok) {
+                            alert("El cliente quedó registrado, pero las imágenes no se subieron.\n" + ((subida && subida.mensaje) ? subida.mensaje : "Volvé a adjuntarlas desde la ficha."));
+                            localStorage.setItem("EdicionCliente", idNuevo);
+                            adjuntosClienteId = idNuevo;
+                            setBotonGuardarTexto("Modificar");
+                            setEncabezadoCliente("Editar cliente", document.getElementById("Nombre").value + " " + document.getElementById("Apellido").value);
+                            var idSpan = document.getElementById("IdCliente");
+                            if (idSpan) idSpan.value = idNuevo;
+                            await cargarAdjuntosCliente();
+                            return;
+                        }
+                    }
+                }
+
                 alert('Cliente agregado correctamente.');
                 $('.datos-error').removeClass('d-none');
 
@@ -458,11 +481,14 @@ function initializeMap(location) {
     }
 
     var input = document.getElementById('pac-input');
+    var searchWrap = document.getElementById('ceMapSearch');
 
-    if (permisos) {
-        map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-
+    if (permisos && input) {
         searchBox = new google.maps.places.SearchBox(input);
+
+        map.addListener('bounds_changed', function () {
+            searchBox.setBounds(map.getBounds());
+        });
 
         searchBox.addListener('places_changed', function () {
             var places = searchBox.getPlaces();
@@ -481,8 +507,9 @@ function initializeMap(location) {
             marker.setPosition(bounds.getCenter());
             updateCoordinates(bounds.getCenter().lat(), bounds.getCenter().lng());
         });
-    } else {
-        // Si no tiene permisos, ocultar input
+    } else if (searchWrap) {
+        searchWrap.hidden = true;
+    } else if (input) {
         input.style.display = "none";
     }
 

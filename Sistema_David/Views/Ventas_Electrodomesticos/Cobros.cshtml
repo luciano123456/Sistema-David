@@ -7,7 +7,7 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.32" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.37" rel="stylesheet" />
 <link href="~/Estilos/Ventas_Electrodomesticos_Cobros_Cards.css?v=1.4" rel="stylesheet" />
 <link href="~/Estilos/CuentasBancarias.css?v=1.0" rel="stylesheet" />
 
@@ -202,14 +202,14 @@
 
         </div>
 
-        <!-- ===== CARD PRINCIPAL ===== -->
-        <section class="ve-card">
+        <!-- ===== CUOTAS A COBRAR ===== -->
+        <section class="ve-card vc-sec" data-vc-sec="cuotas">
 
-            <div class="ve-card-header justify-content-between">
-                <div class="d-flex align-items-center gap-2">
+            <div class="ve-card-header justify-content-between vc-sec-head">
+                <button type="button" class="vc-sec-toggle" data-vc-collapse aria-expanded="true" title="Plegar">
                     <i class="fa fa-list-alt text-info"></i>
                     <span class="ve-card-title">Cuotas a cobrar</span>
-                </div>
+                </button>
 
                 <div class="d-flex flex-wrap gap-2 align-items-center" id="divFiltros">
                     <button type="button"
@@ -223,9 +223,12 @@
                         <i id="iconFiltros" class="fa fa-chevron-down"></i> Mas Filtros
                     </button>
                 </div>
+                <button type="button" class="vc-sec-chevron-btn" data-vc-collapse aria-expanded="true" title="Plegar" aria-label="Plegar">
+                    <i class="fa fa-chevron-up vc-sec-chevron" aria-hidden="true"></i>
+                </button>
             </div>
 
-            <div class="ve-card-body">
+            <div class="vc-sec-body">
 
                 <!-- ===== CLIENTE SMART BAR ===== -->
                 <div class="vc-smart-filter-bar mb-3">
@@ -258,9 +261,6 @@
                  
 
                 </div>
-
-
-            </div>
 
                 <!-- ===== FILTROS ===== -->
                 <form id="formFiltros" class="d-none mb-3" hidden>
@@ -402,13 +402,18 @@
                     <div id="vc_cards_main" class="vc-cobro-cards"></div>
                 </div>
 
-                <hr class="my-4">
+            </div>
+        </section>
 
-                <div id="divCobrosPendientes" hidden>
-                    <h4 class="text-warning fw-bold mb-3">
-                        <i class="fa fa-clock-o me-2"></i> Cobros pendientes
-                    </h4>
-
+        <section class="ve-card vc-sec" id="divCobrosPendientes" data-vc-sec="pendientes" hidden>
+            <button type="button" class="ve-card-header vc-sec-head" data-vc-collapse aria-expanded="true" title="Plegar">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="fa fa-clock-o text-warning"></i>
+                    <span class="ve-card-title text-warning">Cobros pendientes</span>
+                </span>
+                <i class="fa fa-chevron-up vc-sec-chevron" aria-hidden="true"></i>
+            </button>
+            <div class="vc-sec-body">
                     <div class="vc-vista-tabla">
                     <div class="table-responsive vc-cobros-dt">
                         <table id="vc_tabla_pendientes" class="table ve-table ve-table-cobros align-middle nowrap w-100">
@@ -443,15 +448,18 @@
                     <div class="vc-vista-cards">
                         <div id="vc_cards_pend" class="vc-cobro-cards"></div>
                     </div>
+            </div>
+        </section>
 
-
-                </div>
-
-                <div id="divTransferenciasPendientes" class="mt-5" hidden>
-                    <h4 class="text-danger fw-bold mb-3">
-                        <i class="fa fa-exclamation-circle me-2"></i> Transferencias pendientes
-                    </h4>
-
+        <section class="ve-card vc-sec" id="divTransferenciasPendientes" data-vc-sec="transferencias" hidden>
+            <button type="button" class="ve-card-header vc-sec-head" data-vc-collapse aria-expanded="true" title="Plegar">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="fa fa-exclamation-circle text-danger"></i>
+                    <span class="ve-card-title text-danger">Transferencias pendientes</span>
+                </span>
+                <i class="fa fa-chevron-up vc-sec-chevron" aria-hidden="true"></i>
+            </button>
+            <div class="vc-sec-body">
                     <div class="vc-vista-tabla">
                     <div class="table-responsive vc-cobros-dt">
                         <table id="vc_tabla_transferencias_pendientes" class="table ve-table ve-table-cobros align-middle nowrap w-100">
@@ -486,14 +494,7 @@
                     <div class="vc-vista-cards">
                         <div id="vc_cards_transf" class="vc-cobro-cards"></div>
                     </div>
-
-
-                </div>
-
-
             </div>
-
-
         </section>
 
         <div class="modal fade cb-modal-shell cb-bank-modal" id="bankAccountsModal" tabindex="-1" aria-labelledby="bankAccountsModalLabel" aria-hidden="true">
@@ -1031,8 +1032,8 @@
     <!-- JS de Select2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
-    <script src="~/JavaScript/Utils/Utils.js?v=3.17"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.19"></script>
     <script src="~/JavaScript/ReprogAtrasadasModal.js?v=1.4"></script>
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=4.23"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=4.29"></script>
 }

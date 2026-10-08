@@ -1,1121 +1,497 @@
-﻿
-:root {
-    --bg: #0b0f1a;
-    --bg-2: #0e1424;
-    --card: #121a2c;
-    --card2: #0f1627;
-    --stroke: #23304d;
-    --ring: #6ca2ff;
-    --txt: #eaf2ff;
-    --muted: #a9b6d5;
-    --accent: #6ca2ff;
-    --accent-2: #22c55e;
-    --warning: #ffb020;
-    --danger: #f87171;
-    --r-xs: 10px;
-    --r-sm: 12px;
-    --r-md: 16px;
-    --r-lg: 18px;
-    --r-xl: 22px;
- 
-    --blur: saturate(120%) blur(2px);
+﻿/* =========================================================
+   Pago de sueldo — alta / edición (mismo lenguaje que el listado)
+   ========================================================= */
+
+.pagos-nm.ve-dark {
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    color: #eaf1ff;
+    color-scheme: dark;
 }
 
-/* ===========================
-   PAGE
-   =========================== */
-
-
-h1, h2, h3, h4, h5 {
-    color: white;
+.pagos-nm .page-99 {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
-.card-body, .card-header {
-    background: linear-gradient(180deg, #0f1a33, #0c1427) !important;
-    color: white;
-    padding: 10px;
+.pagos-nm-badge {
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 55%, #b45309 100%);
+    color: #1a1205 !important;
+    box-shadow: 0 8px 22px rgba(217, 119, 6, 0.35);
 }
 
-
-.page-grid {
-    position: absolute;
-    inset: -2px;
-    z-index: -1;
-    opacity: .07;
-   
-}
-
-.topbar {
-    margin-bottom: 14px;
-}
-
-.title {
-    margin: 0;
-    font-weight: 900;
-    letter-spacing: .2px;
-    line-height: 1.1;
-}
-
-.subtitle {
-    color: var(--muted);
-    font-size: .94rem;
-    margin-top: .15rem;
-}
-
-.badge-chip {
-    display: inline-flex;
-    gap: .5rem;
-    align-items: center;
-    background: linear-gradient(180deg,#122243,#0f1a33);
-    border: 1px solid var(--stroke);
-    color: #cfe3ff;
-    padding: 6px 10px;
-    border-radius: 999px;
+.pagos-nm-btn {
+    min-height: 44px;
     font-weight: 700;
+    border-radius: 12px;
 }
 
-
-.pay-nm {
-    margin-top: 30px;
-    padding: 30px;
-    background: transparent; /* o 'unset' / 'none' */
-    border-radius: 18px;
-    box-shadow: 0 3px 20px rgba(0, 0, 0, 1), /* sombra principal */
-    0 2px 0 rgba(255, 255, 255, 0.03) inset; /* sutileza interior */
+.pagos-label {
+    display: block;
+    color: #d9e3f5;
+    font-weight: 600;
+    font-size: 0.82rem;
+    margin-bottom: 0.35rem;
 }
 
-/* ===========================
-   BUTTONS
-   =========================== */
-.btn {
-    border-radius: var(--r-sm);
-    transition: transform .08s ease, box-shadow .2s ease, background-color .2s;
+.pagos-section-title {
+    font-weight: 700;
+    color: #fff;
 }
 
-    .btn:active {
-        transform: translateY(1px) scale(.99);
-    }
-
-.btn-primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #0a1224;
-    font-weight: 800;
+.pagos-hint {
+    color: rgba(180, 198, 230, 0.78);
+    font-size: 0.86rem;
 }
 
-    .btn-primary:hover {
-        background: #4d7ed6;
-        border-color: #4d7ed6;
-    }
-
-.btn-info {
-    background: #2c7be5;
-    border-color: #2c7be5;
+.pagos-nm .pagos-input,
+.pagos-modal .pagos-input {
+    min-height: 42px;
+    border-radius: 11px !important;
+    background: #0c1731 !important;
+    color: #f0f5ff !important;
+    border: 1px solid rgba(118, 158, 255, 0.35) !important;
 }
 
-.btn-success-soft {
-    background: #153b27;
-    border: 1px solid #1f5a39;
-    color: #bff2cb;
+.pagos-nm .pagos-input:focus,
+.pagos-modal .pagos-input:focus {
+    border-color: rgba(88, 166, 255, 0.75) !important;
+    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2) !important;
+    outline: none;
 }
 
-    .btn-success-soft:hover {
-        background: #1a5a35;
-        color: #e9fff0;
-    }
-
-.btn-slate {
-    background: #1c2744;
-    border: 1px solid #33476d;
-    color: #e3ecff;
+.pagos-nm .pagos-input::placeholder,
+.pagos-modal .pagos-input::placeholder {
+    color: rgba(159, 176, 214, 0.7);
 }
 
-    .btn-slate:hover {
-        background: #233258;
-    }
-
-.btn-ghost {
-    background: transparent;
-    border: 1px solid #2a3756;
-    color: #d6e4ff;
+.pagos-kpi {
+    flex: 1 1 180px;
 }
 
-    .btn-ghost:hover {
-        background: #17223c;
-    }
-
-/* ===========================
-   CARDS
-   =========================== */
-.card.glass {
-    background: linear-gradient(180deg,rgba(24,32,58,.92),rgba(16,22,38,.92));
-    border: 1px solid var(--stroke);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow);
-    padding: 15px;
+.pagos-kpi .value {
+    font-variant-numeric: tabular-nums;
 }
 
-    .card.glass .card-header {
-        background: linear-gradient(180deg,#17284b,#121d36);
-        border-bottom: 1px solid var(--stroke);
-        font-weight: 800;
-        border-radius: var(--r-lg) var(--r-lg) 0 0;
-    }
-
-.card .sticky {
-    position: sticky;
-    top: 0;
-    z-index: 2;
+.pagos-kpi.info-ok .value {
+    color: #6ee7b7 !important;
 }
 
-/* ===========================
-   FORMS
-   =========================== */
-.form-control, .form-select {
-    background: #0f1726;
-    border: 1px solid #2a3756;
-    color: #eaf2ff;
-    border-radius: var(--r-sm);
+.pagos-kpi.info-warn .value {
+    color: #fcd34d !important;
 }
-
-  
-
-    .form-control:focus, .form-select:focus {
-        border-color: #4b6cb7;
-        box-shadow: 0 0 0 .2rem rgba(108,162,255,.15);
-        background: #0f1726 !important;
-    }
 
 .input-icon {
     position: relative;
 }
 
-    .input-icon > i {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #9fb2da;
-    }
+.input-icon > i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9fb2da;
+    pointer-events: none;
+    z-index: 2;
+}
 
-    .input-icon > input {
-        padding-left: 36px;
-    }
+.input-icon > input {
+    padding-left: 36px !important;
+}
 
 .money-input {
     text-align: right;
 }
 
-/* ===========================
-   SEGMENTED
-   =========================== */
 .segmented {
     display: flex;
-    gap: 8px;
     flex-wrap: wrap;
-    background: #0d1730;
-    border: 1px solid var(--stroke);
+    gap: 8px;
+    background: rgba(8, 14, 32, 0.55);
+    border: 1px solid rgba(88, 166, 255, 0.22);
     padding: 6px;
-    border-radius: var(--r-sm);
+    border-radius: 14px;
 }
 
 .segment {
+    flex: 1 1 auto;
     background: transparent;
-    border: 1px solid #2b3a5b;
-    color: #cfe3ff;
-    padding: 6px 12px;
+    border: 1px solid rgba(118, 158, 255, 0.28);
+    color: #dbe7ff;
+    padding: 8px 12px;
     border-radius: 10px;
+    font: inherit;
     font-weight: 700;
+    min-height: 42px;
+    cursor: pointer;
 }
 
-    .segment:hover {
-        border-color: #3e5790;
-    }
+.segment:hover {
+    border-color: rgba(88, 166, 255, 0.6);
+    color: #fff;
+}
 
-    .segment.active {
-        background: linear-gradient(180deg,#1d2c51,#162444);
-        border-color: #4b6cb7;
-        color: #fff;
-        box-shadow: 0 0 0 .18rem rgba(108,162,255,.12) inset;
-    }
+.segment.active {
+    background: linear-gradient(180deg, rgba(88, 166, 255, 0.28), rgba(88, 166, 255, 0.12));
+    border-color: rgba(88, 166, 255, 0.75);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(88, 166, 255, 0.25);
+}
 
-/* ===========================
-   TABLES
-   =========================== */
 .table-wrap {
     max-height: 55vh;
     overflow: auto;
-    border-top: 1px solid var(--stroke);
 }
 
-    .table-wrap.small-wrap {
-        max-height: 40vh;
-    }
-
-.table-dark {
-    --bs-table-bg: #111a29;
-    --bs-table-border-color: #27324c;
-    color: #e7eeff;
+.table-wrap.small-wrap {
+    max-height: 36vh;
 }
 
-    .table-dark thead th {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        background: linear-gradient(180deg,#151f38,#111a2a);
-        border-bottom: 1px solid var(--stroke);
-        color: #d7e6ff;
-        font-weight: 800;
-    }
-
-    .table-dark td, .table-dark th {
-        border-color: #22304a;
-    }
-
-.table-hover > tbody > tr:hover > * {
-    background-color: #17223c;
+.pagos-nm .table-wrap,
+.pagos-modal .table-wrap {
+    background: #0e1224;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.money {
-    text-align: right;
-    font-feature-settings: "tnum" 1;
+.pagos-table {
+    --bs-table-bg: transparent;
+    --bs-table-accent-bg: transparent;
+    --bs-table-striped-bg: transparent;
+    --bs-table-hover-bg: transparent;
+    --bs-table-color: #eaf1ff;
+    --bs-table-border-color: rgba(255, 255, 255, 0.08);
+    color: #eaf1ff;
+    margin-bottom: 0;
 }
 
-/* Empty state */
-.empty {
-    display: grid;
-    place-items: center;
-    gap: .35rem;
-    padding: 10px 0;
-    opacity: .9;
+.pagos-nm .pagos-table th,
+.pagos-nm .pagos-table td,
+.pagos-modal .pagos-table th,
+.pagos-modal .pagos-table td {
+    text-align: left !important;
 }
 
-    .empty i {
-        font-size: 1.5rem;
-        color: #7fb0ff;
-    }
-
-.empty-title {
-    font-weight: 800;
-    color: #dbe6ff;
+.pagos-nm .pagos-table .text-end,
+.pagos-modal .pagos-table .text-end {
+    text-align: right !important;
 }
 
-.empty-sub {
-    color: var(--muted);
-    font-size: .9rem;
+.pagos-nm .pagos-table .text-center,
+.pagos-modal .pagos-table .text-center {
+    text-align: center !important;
 }
 
-/* ===========================
-   KPI / PILLS
-   =========================== */
-.info-box {
-    background: linear-gradient(180deg,#0f1a33,#0c1427);
-    border: 1px solid var(--stroke);
-    border-radius: var(--r-md);
-    padding: 16px 18px;
-    box-shadow: var(--shadow);
+.pagos-table thead th {
+    background: #0e1224 !important;
+    color: rgba(213, 228, 255, 0.78);
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
-.info-label {
-    color: var(--muted);
-    font-size: .9rem;
-    margin-bottom: 6px;
+.pagos-nm .pagos-table tbody tr,
+.pagos-nm .pagos-table tbody tr:nth-child(odd),
+.pagos-nm .pagos-table tbody tr:nth-child(even),
+.pagos-modal .pagos-table tbody tr,
+.pagos-modal .pagos-table tbody tr:nth-child(odd),
+.pagos-modal .pagos-table tbody tr:nth-child(even) {
+    background-color: transparent !important;
+    background-image: none !important;
 }
 
-.info-value {
-    font-weight: 900;
-    font-size: 1.6rem;
-    letter-spacing: .3px;
+.pagos-nm .pagos-table > tbody > tr > td,
+.pagos-modal .pagos-table > tbody > tr > td,
+.pagos-nm .pagos-table > tfoot > tr > th,
+.pagos-modal .pagos-table > tfoot > tr > th {
+    background-color: #0e1224 !important;
+    background-image: none !important;
+    color: #eaf1ff;
+    border-color: rgba(255, 255, 255, 0.06);
+    vertical-align: middle;
+    box-shadow: none !important;
 }
 
-.info-ok .info-value {
-    color: var(--accent-2)
+.pagos-nm .pagos-table > tbody > tr:nth-child(even) > td,
+.pagos-modal .pagos-table > tbody > tr:nth-child(even) > td {
+    background-color: #12162c !important;
 }
 
-.info-warn .info-value {
-    color: var(--warning)
+.pagos-nm .pagos-table > tbody > tr:hover > td,
+.pagos-modal .pagos-table > tbody > tr:hover > td {
+    background-color: #161b34 !important;
+}
+
+.pagos-nm .pagos-table > tbody > tr.empty-row > td,
+.pagos-nm .pagos-table > tbody > tr.empty-row:hover > td,
+.pagos-modal .pagos-table > tbody > tr.empty-row > td,
+.pagos-modal .pagos-table > tbody > tr.empty-row:hover > td {
+    background-color: #0e1224 !important;
+    background-image: none !important;
+    padding-top: 0.85rem !important;
+    padding-bottom: 0.85rem !important;
+}
+
+.pagos-table tfoot th {
+    background: rgba(8, 14, 32, 0.72) !important;
+}
+
+.pagos-nm .empty,
+.pagos-modal .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    width: calc(100% - 1.25rem);
+    margin: 0.15rem auto;
+    padding: 1.15rem 1rem;
+    border-radius: 12px;
+    background: rgba(8, 12, 24, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(180, 198, 230, 0.72);
+    box-shadow: none;
+}
+
+.pagos-nm .empty i,
+.pagos-modal .empty i {
+    font-size: 1.35rem;
+    display: block;
+    margin-bottom: 0.2rem;
+    color: rgba(180, 198, 230, 0.5);
+    opacity: 1;
+}
+
+.pagos-nm .empty-title,
+.pagos-modal .empty-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: rgba(226, 234, 255, 0.78);
+}
+
+.pagos-nm .empty-sub,
+.pagos-modal .empty-sub {
+    font-size: 0.82rem;
+    color: rgba(159, 176, 214, 0.68);
 }
 
 .pill {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    background: #0d1830;
-    border: 1px solid var(--stroke);
-    padding: 10px 12px;
-    border-radius: 999px;
-    font-weight: 600;
-}
-
-    .pill i {
-        color: #7fb0ff;
-    }
-
-    .pill strong {
-        margin-left: auto;
-    }
-
-/* Divider */
-.divider {
-    border-color: #22304a;
-    opacity: .7;
-}
-
-/* ===========================
-   MODALS
-   =========================== */
-.modal-glass {
-    background: linear-gradient(180deg,rgba(16,24,40,.98),rgba(17,25,43,.98));
-    border: 1px solid #2a3756;
-    color: #eaf2ff;
-    border-radius: var(--r-lg);
-}
-
-    .modal-glass .modal-header, .modal-glass .modal-footer {
-        border-color: #26324c;
-    }
-
-/* Preview */
-.preview {
-    border: 1px dashed #3a4b74;
-    border-radius: 12px;
-    padding: 8px;
-    display: inline-block;
-    background: #0e1a33;
-}
-
-    .preview img {
-        max-height: 160px;
-        border-radius: 8px;
-        display: block;
-    }
-
-/* Rule editor */
-.rule-editor {
-    background: #0d162b;
-    border: 1px dashed #3b558a;
-    padding: 14px;
+    height: 100%;
     border-radius: 14px;
-    margin-top: 10px
+    padding: 0.85rem 0.9rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
-/* Utilities / micro-interactions */
-.hint {
-    color: var(--muted);
-    font-size: .85rem;
+.pill i {
+    color: #fbbf24;
+    font-size: 1.05rem;
 }
 
-.tiny {
-    font-size: .85rem;
+.pill span {
+    color: rgba(180, 198, 230, 0.85);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
-.text-muted {
-    color: var(--muted) !important;
+.pill strong {
+    color: #fff;
+    font-size: 1.05rem;
 }
 
-.empty-row {
-    opacity: .85;
-}
-
-.actions .btn {
-    box-shadow: 0 0 0 1px rgba(255,255,255,.02) inset;
-}
-
-/* Scrollbar */
-.table-wrap::-webkit-scrollbar {
-    height: 10px;
-    width: 10px;
-}
-
-.table-wrap::-webkit-scrollbar-thumb {
-    background: #2a3756;
-    border-radius: 10px;
-}
-
-    .table-wrap::-webkit-scrollbar-thumb:hover {
-        background: #3b4f7a;
-    }
-
-/* Focus visible */
-:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-    border-radius: 8px;
-}
-
-/* ===========================
-   PRINT (PDF)
-   =========================== */
-@media print {
-    .page-bg, .page-grid, .topbar .actions, .divider {
-        display: none !important;
-    }
-
-    body {
-        background: #fff;
-        color: #000;
-    }
-
-    .card.glass {
-        background: #fff;
-        border: 1px solid #ddd;
-        box-shadow: none;
-    }
-
-        .card.glass .card-header {
-            background: #f6f7fb;
-            color: #000;
-        }
-
-    .table-dark {
-        --bs-table-bg: #fff;
-        color: #000;
-    }
-
-    .info-box {
-        border: 1px solid #ddd;
-    }
-}
-
-
-.container {
-    max-width: 95%;
-}
-
-.form-control,
-.form-select {
-    min-height: var(--tap);
-    font-size: 1rem;
-}
-
-.btn {
-    min-height: var(--tap);
-    padding: 10px 14px;
-}
-
-/* Íconos dentro del input: más aire en mobile */
-.input-icon > input {
-    padding-left: 40px;
-}
-
-/* Evitar que el decor moleste en mobile */
-@media (max-width: 576px) {
-    .page-bg, .page-grid {
-        display: none !important;
-    }
-}
-
-/* Contenedor: 100% en <992px, 95% sólo en desktop */
-@media (min-width: 992px) {
-    .container {
-        max-width: 95% !important;
-    }
-}
-
-@media (max-width: 991.98px) {
-    .container {
-        max-width: 100% !important;
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-}
-
-/* Wrapper principal: menos padding + sombra más suave en mobile */
-@media (max-width: 576px) {
-    .pay-nm {
-        margin-top: 12px;
-        padding: 16px 12px;
-        border-radius: 14px;
-        box-shadow: 0 16px 40px rgba(0,0,0,.6);
-    }
-}
-
-/* Topbar: stack claro en móvil */
-@media (max-width: 576px) {
-    .topbar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    .title {
-        font-size: clamp(1.25rem, 5.2vw, 1.6rem);
-    }
-
-    .subtitle {
-        font-size: .9rem;
-    }
-}
-
-/* Acciones: grid en 2 columnas, primaria a ancho completo */
-@media (max-width: 576px) {
-    .actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        width: 100%;
-    }
-
-        .actions .btn {
-            width: 100%;
-        }
-    /* que el botón principal ocupe toda la fila */
-    #btnOpenPago {
-        grid-column: 1 / -1;
-    }
-}
-
-/* Tarjetas y cabeceras “sticky” desactivadas en móvil para evitar saltos */
-@media (max-width: 576px) {
-    .card .sticky {
-        position: static;
-    }
-
-    .card.glass {
-        padding: 12px;
-    }
-
-        .card.glass .card-header {
-            border-radius: 12px;
-        }
-}
-
-/* Grid de filtros abajo del header: columnas fluidas */
-@media (max-width: 576px) {
-    /* Botón Calcular y campos -> 100% */
-    .col-12.d-flex.flex-wrap.gap-2 > .btn {
-        width: 100%;
-    }
-
-    .col-12.d-flex.flex-wrap.gap-2 > .form-control {
-        min-width: 100%;
-    }
-}
-
-/* Segmented: cómodos y con fill en móvil */
-.segmented .segment {
-    min-height: 40px;
-}
-
-@media (max-width: 576px) {
-    .segmented {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-        padding: 6px;
-    }
-
-        .segmented .segment {
-            width: 100%;
-            text-align: center;
-            padding: 10px 12px;
-        }
-}
-
-/* Tablas: tipografía y paddings más amables + scroll táctil */
-@media (max-width: 576px) {
-    .table-wrap {
-        max-height: none;
-        overflow: visible;
-    }
-    /* evitar scroll anidado */
-    .table-dark {
-        font-size: .95rem;
-    }
-
-        .table-dark th, .table-dark td {
-            padding: .55rem .6rem;
-        }
-
-    .table-wrap, .table-responsive {
-        -webkit-overflow-scrolling: touch;
-        overflow-x: auto;
-    }
-    /* Si preferís scroll horizontal clásico, con esto basta.
-     Si querés “tarjetas” (stacked rows), activá el JS de más abajo. */
-}
-
-/* Celdas con textos largos no rompen layout */
-.table-dark td {
-    word-break: break-word;
-}
-
-
-/* ==== SOLO AJUSTES DE TAMAÑOS / RESPONSIVE (pegar al final) ==== */
-
-/* Tamaño táctil base (no cambia colores) */
-:root {
-    --tap: 44px;
-}
-
-/* Tipografías y targets más cómodos */
-.title {
-    font-size: clamp(1.25rem, 5.2vw, 1.8rem);
-}
-
-h1 {
-    font-size: clamp(1.4rem, 5.6vw, 2rem);
-}
-
-h2 {
-    font-size: clamp(1.2rem, 5vw, 1.6rem);
-}
-
-h3 {
-    font-size: clamp(1.05rem, 4.6vw, 1.4rem);
-}
-
-.form-control,
-.form-select {
-    min-height: var(--tap);
-    font-size: 1rem;
-    line-height: 1.2;
-}
-
-.input-icon > input {
-    padding-left: 40px;
-}
-
-.btn {
-    min-height: var(--tap);
-    padding: 10px 14px;
-    font-size: 1rem;
-}
-
-/* Contenedor: 100% en pantallas chicas, 95% en desktop */
-.container {
-    max-width: 95%;
-}
-
-@media (max-width: 991.98px) {
-    .container {
-        max-width: 100% !important;
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-}
-
-/* Wrapper principal: reducir padding en móvil */
-@media (max-width: 576px) {
-    .pay-nm {
-        margin-top: 12px;
-        padding: 16px 12px;
-        border-radius: 14px; /* solo radio, no colores */
-    }
-}
-
-/* Topbar apilada en móvil */
-@media (max-width: 576px) {
-    .topbar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    .subtitle {
-        font-size: .9rem;
-    }
-}
-
-/* Acciones: grilla 2 columnas y botones a 100% en móvil */
-@media (max-width: 576px) {
-    .actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        width: 100%;
-    }
-
-        .actions .btn {
-            width: 100%;
-        }
-    /* Principal a ancho completo */
-    #btnOpenPago {
-        grid-column: 1 / -1;
-    }
-}
-
-/* Cards: menos padding y sin sticky en móvil (solo tamaño/posicionamiento) */
-@media (max-width: 576px) {
-    .card .sticky {
-        position: static;
-    }
-
-    .card.glass {
-        padding: 12px;
-        border-radius: 14px;
-    }
-}
-
-/* Filas de acciones bajo filtros: ocupar 100% en móvil */
-@media (max-width: 576px) {
-    .col-12.d-flex.flex-wrap.gap-2 > .btn {
-        width: 100%;
-    }
-
-    .col-12.d-flex.flex-wrap.gap-2 > .form-control {
-        min-width: 100%;
-    }
-}
-
-/* Segmented: mayor alto y layout en grilla en móvil */
-.segmented .segment {
-    min-height: 40px;
-    padding: 10px 12px;
-}
-
-@media (max-width: 576px) {
-    .segmented {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-        padding: 6px;
-    }
-
-        .segmented .segment {
-            width: 100%;
-            text-align: center;
-        }
-}
-
-/* Tablas: tipografía y paddings; permitir scroll horizontal en móvil */
-@media (max-width: 576px) {
-    .table-wrap {
-        max-height: none; /* evita scroll anidado */
-        overflow: visible; /* el contenedor no recorta */
-    }
-
-    .table-responsive,
-    .table-wrap {
-        -webkit-overflow-scrolling: touch;
-        overflow-x: auto; /* si hay muchas columnas, hacer swipe horizontal */
-    }
-
-    .table-dark {
-        font-size: .98rem;
-    }
-
-        .table-dark th,
-        .table-dark td {
-            padding: .55rem .6rem;
-            white-space: normal;
-        }
-}
-
-/* Celdas con textos largos no rompen layout (solo tamaño/comportamiento) */
-.table-dark td {
-    word-break: break-word;
-}
-
-/* Modales: mejor aprovechamiento en móviles pequeños */
-@media (max-width: 576px) {
-    .modal-dialog {
-        margin: .5rem; /* reduce márgenes laterales */
-    }
-
-    .modal-content {
-        border-radius: 14px; /* solo radio */
-    }
-}
-
-/* === PATCH: placeholders grandes + select/fecha al 100% (sin cambiar colores) === */
-
-/* Tamaño táctil base */
-:root {
-    --tap: 44px;
-}
-
-/* 1) Placeholders del mismo tamaño que el texto */
-.form-control::placeholder {
-    font-size: 1rem; /* igual que el input */
-    line-height: 1.2;
-}
-
-@media (max-width: 576px) {
-    .form-control,
-    .form-select {
-        font-size: 1.02rem;
-    }
-
-        .form-control::placeholder {
-            font-size: 1.02rem;
-        }
-}
-
-/* 2) El wrapper con ícono ocupa todo el ancho */
-.input-icon {
-    width: 100%;
-    display: block;
-}
-
-    .input-icon > input {
-        width: 100%;
-        padding-left: 40px;
-    }
-/* ya lo tenías, refuerzo ancho */
-
-/* 3) Selects e inputs de fecha a 100% de ancho */
-.form-select,
-input[type="date"],
-input[type="datetime-local"],
-input[type="month"],
-input[type="time"] {
-    width: 100%;
-    min-height: var(--tap);
-    height: var(--tap); /* fuerza alto uniforme */
-  
-    padding-top: 10px;
-    padding-bottom: 10px;
-    font-size: 1rem;
-}
-
-    /* 4) Ajustes finos para navegadores WebKit (Chrome, Edge, Safari) */
-    input[type="date"]::-webkit-datetime-edit,
-    input[type="datetime-local"]::-webkit-datetime-edit,
-    input[type="month"]::-webkit-datetime-edit,
-    input[type="time"]::-webkit-datetime-edit {
-        padding: 0 2px;
-        font-size: 1rem; /* evita que se vea chico */
-        line-height: 1.2;
-    }
-
-    input[type="date"]::-webkit-calendar-picker-indicator,
-    input[type="datetime-local"]::-webkit-calendar-picker-indicator,
-    input[type="month"]::-webkit-calendar-picker-indicator,
-    input[type="time"]::-webkit-calendar-picker-indicator {
-        margin-right: 6px; /* que no corte el borde derecho */
-    }
-
-/* 5) Firefox: alto consistente y sin recortes */
-@-moz-document url-prefix() {
-    input[type="date"],
-    input[type="datetime-local"],
-    input[type="month"],
-    input[type="time"] {
-        padding-top: 8px;
-        padding-bottom: 8px;
-        font-size: 1rem;
-    }
-}
-
-/* 6) Móvil: controles 100% y más cómodos */
-@media (max-width: 576px) {
-    .col-12.d-flex.flex-wrap.gap-2 > .btn {
-        width: 100%;
-    }
-
-    .col-12.d-flex.flex-wrap.gap-2 > .form-control {
-        min-width: 100%;
-    }
-
-    .form-control,
-    .form-select,
-    input[type="date"],
-    input[type="datetime-local"],
-    input[type="month"],
-    input[type="time"] {
-        height: 48px; /* un toque más alto en pantallas chicas */
-        min-height: 48px;
-        font-size: 1.04rem;
-    }
-}
-
-/* 7) Evitar que textos largos deformen el campo */
-.form-control,
-.form-select {
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
-
-
-/* ====== FIX: inputs/select/fecha ocupen 100% en pantallas chicas ====== */
-
-/* 1) Columnas md->xs deben ocupar toda la fila */
-@media (max-width: 576px) {
-    .row.g-3 > .col-md-3,
-    .row.g-3 > .col-md-4,
-    .row.g-3 > .col-md-6,
-    .row.g-3 > .col-md-8,
-    .row.g-3 > .col-md-12 {
-        flex: 0 0 100% !important;
-        max-width: 100% !important;
-    }
-}
-
-/* 2) Garantizar ancho real 100% de los controles */
-.input-icon,
-.input-icon > input,
-.form-control,
-.form-select,
-input[type="date"],
-input[type="datetime-local"],
-input[type="time"],
-input[type="month"] {
-    box-sizing: border-box;
-    width: 100% !important;
-    max-width: 100%;
-    min-height: var(--tap, 44px);
-    font-size: 1rem;
-}
-
-/* 3) Safari/iOS: usar fill-available para “estirar” el control */
-@supports (-webkit-touch-callout: none) {
-    .form-control,
-    .form-select,
-    input[type="date"],
-    input[type="datetime-local"],
-    input[type="time"],
-    input[type="month"] {
-        width: -webkit-fill-available;
-    }
-}
-
-/* 4) Placeholder mismo tamaño del texto (evita que se vea chico) */
-.form-control::placeholder {
-    font-size: 1rem;
-    line-height: 1.2;
-}
-
-@media (max-width: 576px) {
-    .form-control, .form-select {
-        font-size: 1.02rem;
-    }
-
-        .form-control::placeholder {
-            font-size: 1.02rem;
-        }
-}
-
-/* 5) Evitar que el nowrap recorte ancho visible del control */
-.form-control,
-.form-select {
-    white-space: normal; /* antes estaba en nowrap */
-    overflow: visible;
-    text-overflow: initial;
-}
-
-/* 6) Ajuste fino de los inputs con ícono para que no “encojan” */
-.input-icon {
-    width: 100%;
-    display: block;
-}
-
-    .input-icon > input {
-        padding-left: 40px;
-    }
-
-/* 7) Indicador del datepicker: margen para que no tape el borde */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="datetime-local"]::-webkit-calendar-picker-indicator,
-input[type="month"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-    margin-right: 8px;
-}
-
-/* 8) En móvil, controles un poco más altos para tacto cómodo */
-@media (max-width: 576px) {
-    .form-control,
-    .form-select,
-    input[type="date"],
-    input[type="datetime-local"],
-    input[type="time"],
-    input[type="month"] {
-        height: 48px;
-        min-height: 48px;
-    }
+.pagos-firma {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 1rem;
 }
 
 .file-input {
     position: relative;
-    display: inline-block
+    display: block;
 }
 
-    .file-input input[type=file] {
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        cursor: pointer;
+.file-input input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.file-input .fake {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #0e1224;
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    color: #eaf1ff;
+    border-radius: 12px;
+    padding: 10px 12px;
+    min-height: 48px;
+}
+
+.file-input .fake i {
+    color: rgba(180, 198, 230, 0.65);
+}
+
+.file-input .fake .txt {
+    font-weight: 700;
+}
+
+.file-input .fake .name {
+    margin-left: auto;
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 46%;
+}
+
+.file-input:hover .fake {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(14, 18, 36, 0.92);
+}
+
+.preview img,
+#firmaPreviewImg {
+    max-width: 100%;
+    max-height: 220px;
+    border-radius: 12px;
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    cursor: zoom-in;
+}
+
+.btn-ghost {
+    background: rgba(13, 202, 240, 0.12);
+    border: 1px solid rgba(13, 202, 240, 0.4);
+    color: #9be7ff;
+    border-radius: 8px;
+}
+
+.btn-ghost:hover {
+    background: rgba(13, 202, 240, 0.22);
+    color: #fff;
+}
+
+.pagos-save-bar .pagos-hint {
+    max-width: 36rem;
+}
+
+.rule-toolbar,
+.rule-editor {
+    background: rgba(8, 14, 32, 0.45);
+    border: 1px solid rgba(88, 166, 255, 0.22);
+    border-radius: 14px;
+    padding: 1rem;
+}
+
+.rule-editor {
+    margin-top: 1rem;
+}
+
+.pagos-nm .form-check-label,
+.pagos-modal .form-check-label {
+    color: #eaf1ff;
+}
+
+.pagos-modal.cc-modal-shell .modal-dialog.pagos-modal-dialog {
+    max-width: min(760px, calc(100vw - 1.5rem));
+    width: calc(100% - 1.5rem);
+    margin: 4vh auto 1rem;
+}
+
+.pagos-modal--xl.cc-modal-shell .modal-dialog.pagos-modal-dialog {
+    max-width: min(1140px, calc(100vw - 1.5rem));
+}
+
+.pagos-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    padding: 0.75rem 1.1rem 1rem !important;
+}
+
+#imgLightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.82);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1085;
+}
+
+#imgLightbox img {
+    max-width: 92vw;
+    max-height: 92vh;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    border-radius: 12px;
+}
+
+#imgLightbox .close {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+@media (min-width: 992px) {
+    .w-lg-auto {
+        width: auto !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .pagos-nm .cc-header > .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .pagos-nm-actions {
         width: 100%;
-        height: 100%
+        margin-left: 0 !important;
+    }
+
+    .pagos-nm-actions .pagos-nm-btn,
+    .pagos-save-bar .btn,
+    .pagos-modal-footer .btn {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    .pagos-kpi {
+        min-width: 100%;
     }
 
     .file-input .fake {
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        background: #0f1726;
-        border: 1px solid var(--stroke);
-        color: var(--txt);
-        border-radius: var(--r-sm);
-        padding: 10px 12px;
-        min-height: var(--tap)
+        flex-wrap: wrap;
     }
 
-        .file-input .fake i {
-            color: #9fb2da
-        }
-
-        .file-input .fake .txt {
-            font-weight: 700
-        }
-
-        .file-input .fake .name {
-            margin-left: auto;
-            opacity: .75;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis
-        }
-
-    .file-input:hover .fake {
-        box-shadow: 0 0 0 .18rem rgba(108,162,255,.12) inset
+    .file-input .fake .name {
+        margin-left: 0;
+        max-width: 100%;
     }
 
-
-
-/* Evita solapes y mejora responsivo de los botones del editor */
-.rule-actions {
-    min-width: 0;
-}
-
-    .rule-actions .btn {
-        white-space: nowrap;
+    .pagos-modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
     }
 
-    .rule-actions .btn-ghost {
-        border-style: dashed;
-    }
-
-/* Si el ancho es chico, que los botones se apilen y ocupen el ancho */
-@media (max-width: 576px) {
-    .rule-actions {
-        justify-content: stretch;
-    }
-
-        .rule-actions .btn {
-            flex: 1 1 auto;
-        }
-}
-
-/* Si usás el efecto .btn-lift, bajá la “levantada” para que no se superponga */
-.btn-lift {
-    transition: transform .08s ease, box-shadow .2s ease;
-}
-
-    .btn-lift:hover {
-        transform: translateY(-0.5px);
-    }
-
-/* Evita que el recorte del contenedor tape sombras de los botones */
-.rule-editor {
-    overflow: visible;
-}
-
-
-@media (max-width: 800px) {
-    .pay-nm .card.glass .card-body > .row.g-3 > .col-6 {
-        flex: 0 0 100% !important;
-        max-width: 100% !important; /* anula el width:50% de .col-6 */
+    .pagos-save-bar .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
     }
 }

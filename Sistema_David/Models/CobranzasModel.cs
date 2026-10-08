@@ -83,6 +83,7 @@ namespace Sistema_David.Models.Modelo
                                    .ThenBy(v => v.Importante)
                                    .ToList();
 
+                    MarcarImagenes(result);
                     return result;
                 }
             }
@@ -203,6 +204,7 @@ namespace Sistema_David.Models.Modelo
                                .ThenBy(v => v.Importante)
                                .ToList();
 
+                MarcarImagenes(result);
                 return result;
             }
         }
@@ -299,7 +301,24 @@ namespace Sistema_David.Models.Modelo
                         item.SaldoCliente = saldo;
                 }
 
+                MarcarImagenes(result);
                 return result;
+            }
+        }
+
+        private static void MarcarImagenes(List<VMVenta> lista)
+        {
+            if (lista == null || lista.Count == 0)
+                return;
+
+            try
+            {
+                var con = Sistema_David.Models.ClientesAdjuntosModel.IdsConImagenes(lista.Select(v => v.idCliente));
+                foreach (var item in lista)
+                    item.TieneImagenes = con.Contains(item.idCliente);
+            }
+            catch
+            {
             }
         }
 

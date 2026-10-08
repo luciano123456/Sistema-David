@@ -88,6 +88,7 @@ $(document).ready(async function () {
     inicializarCompatibilidadHtmlNuevo();
     registrarEventosHtmlNuevo();
     initRendimientoDropdownColumnas();
+    initDashboardCollapse();
 
     if (userSession.IdRol == 1) { // ROL ADMINISTRADOR
         $("#exportacionExcel").removeAttr("hidden");
@@ -2122,9 +2123,10 @@ async function CantidadClientesAusentes() {
 
     let result = await MakeAjax(options);
 
-    if (result != null) {
-        document.getElementById("notificationHome").style.display = "inline";
-        document.getElementById("notificationHome").textContent = ` (${result.cantidad})`;
+    if (result != null && typeof pintarAlerta === "function") {
+        pintarAlerta("notificationHome", result.cantidad);
+    } else if (result != null) {
+        document.getElementById("notificationHome").textContent = String(result.cantidad || 0);
     } else {
         document.getElementById("notificationIcon").style.display = "block";
     }
@@ -2460,7 +2462,7 @@ async function eliminarRendimientoCobranza(btn) {
         const msgConfirm = esInteres
             ? "¿Está seguro que desea eliminar este interés? Se revertirá el impacto en la venta."
             : "¿Está seguro que desea eliminar esta cobranza?";
-        if (!confirm(msgConfirm)) return;
+        if (!(await confirmarModal(msgConfirm))) return;
 
         if (esElectro && esInteres) {
             const result = await $.ajax({
@@ -2857,14 +2859,47 @@ async function buildDashboardData(rows) {
     return resumen;
 }
 
+function rendDashHayValores(valores) {
+    return (valores || []).some(function (v) { return safeNumber(v) !== 0; });
+}
+
+function setDashCardState(canvasId, hasData) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const card = canvas.closest("[data-dash-card]");
+    if (!card) return;
+
+    let msg = card.querySelector(".dashboard-empty");
+    if (!msg) {
+        msg = document.createElement("div");
+        msg.className = "dashboard-empty";
+        msg.textContent = "No hay información para mostrar";
+        const body = card.querySelector(".dashboard-card-body") || card;
+        body.appendChild(msg);
+    }
+
+    card.classList.toggle("is-empty", !hasData);
+}
+
+function marcarDashboardSinDatos() {
+    ["chartVentasCobros", "chartMetodosPago", "chartCapital", "chartVentasMensual", "chartCobrosMensual"]
+        .forEach(function (id) { setDashCardState(id, false); });
+}
+
 // =========================
 // RENDER CHARTS
 // =========================
 function renderVentasCobrosChart(resumen) {
     const canvasId = "chartVentasCobros";
+    const valores = [safeNumber(resumen.totalVentas), safeNumber(resumen.totalCobros)];
 
     try {
         destroyChart("chartVentasCobros", canvasId);
+        if (!rendDashHayValores(valores)) {
+            setDashCardState(canvasId, false);
+            return;
+        }
+        setDashCardState(canvasId, true);
 
         const canvas = document.getElementById(canvasId);
         if (!canvas) throw new Error("Canvas no encontrado");
@@ -2875,10 +2910,7 @@ function renderVentasCobrosChart(resumen) {
                 labels: ["Ventas", "Cobros"],
                 datasets: [{
                     label: "Totales",
-                    data: [
-                        safeNumber(resumen.totalVentas),
-                        safeNumber(resumen.totalCobros)
-                    ],
+                    data: valores,
                     borderRadius: 10,
                     barThickness: 46,
                     backgroundColor: (context) => {
@@ -2902,9 +2934,15 @@ function renderVentasCobrosChart(resumen) {
 
 function renderMetodosPagoChart(resumen) {
     const canvasId = "chartMetodosPago";
+    const valores = [safeNumber(resumen.efectivo), safeNumber(resumen.transferencia)];
 
     try {
         destroyChart("chartMetodosPago", canvasId);
+        if (!rendDashHayValores(valores)) {
+            setDashCardState(canvasId, false);
+            return;
+        }
+        setDashCardState(canvasId, true);
 
         const canvas = document.getElementById(canvasId);
         if (!canvas) throw new Error("Canvas no encontrado");
@@ -2914,10 +2952,7 @@ function renderMetodosPagoChart(resumen) {
             data: {
                 labels: ["Efectivo", "Transferencia"],
                 datasets: [{
-                    data: [
-                        safeNumber(resumen.efectivo),
-                        safeNumber(resumen.transferencia)
-                    ],
+                    data: valores,
                     backgroundColor: ["#f59e0b", "#06b6d4"],
                     borderWidth: 0,
                     hoverOffset: 6
@@ -2938,9 +2973,19 @@ function renderMetodosPagoChart(resumen) {
 
 function renderCapitalChart(resumen) {
     const canvasId = "chartCapital";
+    const valores = [
+        safeNumber(resumen.capital),
+        safeNumber(resumen.capitalRojo),
+        safeNumber(resumen.totalInteres)
+    ];
 
     try {
         destroyChart("chartCapital", canvasId);
+        if (!rendDashHayValores(valores)) {
+            setDashCardState(canvasId, false);
+            return;
+        }
+        setDashCardState(canvasId, true);
 
         const canvas = document.getElementById(canvasId);
         if (!canvas) throw new Error("Canvas no encontrado");
@@ -2951,11 +2996,7 @@ function renderCapitalChart(resumen) {
                 labels: ["Capital", "Capital en rojo", "Interés"],
                 datasets: [{
                     label: "Totales",
-                    data: [
-                        safeNumber(resumen.capital),
-                        safeNumber(resumen.capitalRojo),
-                        safeNumber(resumen.totalInteres)
-                    ],
+                    data: valores,
                     borderRadius: 10,
                     barThickness: 42,
                     backgroundColor: (context) => {
@@ -2980,9 +3021,15 @@ function renderCapitalChart(resumen) {
 
 function renderVentasMensualChart(resumen) {
     const canvasId = "chartVentasMensual";
+    const valores = Array.isArray(resumen.monthVentas) ? resumen.monthVentas.map(safeNumber) : [];
 
     try {
         destroyChart("chartVentasMensual", canvasId);
+        if (!rendDashHayValores(valores)) {
+            setDashCardState(canvasId, false);
+            return;
+        }
+        setDashCardState(canvasId, true);
 
         const canvas = document.getElementById(canvasId);
         if (!canvas) throw new Error("Canvas no encontrado");
@@ -2993,7 +3040,7 @@ function renderVentasMensualChart(resumen) {
                 labels: Array.isArray(resumen.monthLabels) ? resumen.monthLabels : [],
                 datasets: [{
                     label: "Ventas",
-                    data: Array.isArray(resumen.monthVentas) ? resumen.monthVentas.map(safeNumber) : [],
+                    data: valores,
                     backgroundColor: "#3b82f6",
                     borderRadius: 6,
                     maxBarThickness: 46
@@ -3011,9 +3058,15 @@ function renderVentasMensualChart(resumen) {
 
 function renderCobrosMensualChart(resumen) {
     const canvasId = "chartCobrosMensual";
+    const valores = Array.isArray(resumen.monthCobros) ? resumen.monthCobros.map(safeNumber) : [];
 
     try {
         destroyChart("chartCobrosMensual", canvasId);
+        if (!rendDashHayValores(valores)) {
+            setDashCardState(canvasId, false);
+            return;
+        }
+        setDashCardState(canvasId, true);
 
         const canvas = document.getElementById(canvasId);
         if (!canvas) throw new Error("Canvas no encontrado");
@@ -3024,7 +3077,7 @@ function renderCobrosMensualChart(resumen) {
                 labels: Array.isArray(resumen.monthLabels) ? resumen.monthLabels : [],
                 datasets: [{
                     label: "Cobros",
-                    data: Array.isArray(resumen.monthCobros) ? resumen.monthCobros.map(safeNumber) : [],
+                    data: valores,
                     backgroundColor: "#22c55e",
                     borderRadius: 6,
                     maxBarThickness: 46
@@ -3055,6 +3108,7 @@ async function renderDashboard() {
 
         if (!table) {
             destroyAllCharts();
+            marcarDashboardSinDatos();
             return;
         }
 
@@ -3062,6 +3116,7 @@ async function renderDashboard() {
 
         if (!data || data.length === 0) {
             destroyAllCharts();
+            marcarDashboardSinDatos();
             clearChartLoading("chartVentasCobros");
             clearChartLoading("chartMetodosPago");
             clearChartLoading("chartCapital");
@@ -3095,6 +3150,7 @@ async function renderDashboard() {
     } catch (e) {
         console.error("Error renderDashboard:", e);
         destroyAllCharts();
+        marcarDashboardSinDatos();
     } finally {
         clearChartLoading("chartVentasCobros");
         clearChartLoading("chartMetodosPago");
@@ -3103,7 +3159,84 @@ async function renderDashboard() {
         clearChartLoading("chartCobrosMensual");
 
         isRenderingDashboard = false;
+        rendDashResizeVisibles();
     }
+}
+
+const REND_DASH_COLLAPSE_KEY = "rendimiento_dashboard_collapse_v1";
+
+function rendDashReadCollapsed() {
+    try {
+        const raw = localStorage.getItem(REND_DASH_COLLAPSE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function rendDashSaveCollapsed() {
+    const state = {};
+    document.querySelectorAll("#dashboardRendimiento [data-dash-card]").forEach(function (card) {
+        if (card.classList.contains("is-collapsed"))
+            state[card.getAttribute("data-dash-card")] = true;
+    });
+    try {
+        localStorage.setItem(REND_DASH_COLLAPSE_KEY, JSON.stringify(state));
+    } catch (e) { }
+}
+
+function rendDashSyncBtn(card) {
+    const btn = card.querySelector("[data-dash-collapse]");
+    if (!btn) return;
+    const collapsed = card.classList.contains("is-collapsed");
+    btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    btn.title = collapsed ? "Desplegar" : "Plegar";
+    btn.setAttribute("aria-label", btn.title);
+    const icon = btn.querySelector("i");
+    if (icon) icon.className = "fa " + (collapsed ? "fa-chevron-down" : "fa-chevron-up");
+}
+
+function rendDashResizeCard(card) {
+    if (!card || !window.Chart) return;
+    card.querySelectorAll("canvas").forEach(function (canvas) {
+        const chart = (typeof Chart.getChart === "function" ? Chart.getChart(canvas) : null) || dashboardCharts[canvas.id];
+        if (!chart || typeof chart.resize !== "function") return;
+        try {
+            chart.resize();
+            if (typeof chart.update === "function") chart.update("none");
+        } catch (e) { }
+    });
+}
+
+function rendDashResizeVisibles() {
+    document.querySelectorAll("#dashboardRendimiento [data-dash-card]:not(.is-collapsed)").forEach(rendDashResizeCard);
+}
+
+function initDashboardCollapse() {
+    const root = document.getElementById("dashboardRendimiento");
+    if (!root || root.dataset.collapseReady === "1") return;
+    root.dataset.collapseReady = "1";
+
+    const saved = rendDashReadCollapsed();
+    root.querySelectorAll("[data-dash-card]").forEach(function (card) {
+        const id = card.getAttribute("data-dash-card");
+        card.classList.toggle("is-collapsed", !!saved[id]);
+        rendDashSyncBtn(card);
+    });
+
+    root.addEventListener("click", function (e) {
+        const btn = e.target.closest("[data-dash-collapse]");
+        if (!btn || !root.contains(btn)) return;
+        const card = btn.closest("[data-dash-card]");
+        if (!card) return;
+        card.classList.toggle("is-collapsed");
+        rendDashSyncBtn(card);
+        rendDashSaveCollapsed();
+        if (!card.classList.contains("is-collapsed")) {
+            requestAnimationFrame(function () { rendDashResizeCard(card); });
+        }
+    });
 }
 
 // =========================

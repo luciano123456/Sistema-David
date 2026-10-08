@@ -5,7 +5,7 @@
     <title>My favorite book</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link href="~/Estilos/NavBarLogin.css?v=1.0" rel="stylesheet" />
+    <link href="~/Estilos/NavBarLogin.css?v=2.2" rel="stylesheet" />
     <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
     <style>
@@ -26,93 +26,114 @@
     var navVeProductos = navRol == 1 || navRol == 4;
 }
 
-    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: rgba(112,112,112,0.1);">
-        <div class="container-fluid">
+    <nav class="navbar navbar-expand-xl dg-navbar">
+        <div class="container-fluid dg-nav-bar">
 
-            <div class="d-flex align-items-center me-2">
-                <div id="divNotificacionComprobante" hidden>
-                    <i class="fa fa-print text-danger"></i>
-                    <span id="notificacionComprobante" class="badge bg-danger ms-1"></span>
+            <a class="navbar-brand dg-brand">
+                <span class="dg-mark" aria-hidden="true">DG</span>
+                <span class="dg-brand-copy">
+                    <span class="dg-brand-title">Indumentaria DG</span>
+                    <span class="dg-brand-sub" id="dgMarcaModo">Indumentaria</span>
+                </span>
+            </a>
+
+            <div class="dg-nav-tools">
+                <div class="dg-alerts">
+                    <div id="divNotificacionComprobante" class="dg-alert" hidden title="Comprobantes">
+                        <i class="fa fa-print" aria-hidden="true"></i>
+                        <span id="notificacionComprobante" class="dg-alert-count is-zero">0</span>
+                    </div>
+                    <div id="divNotificacionHome" class="dg-alert" hidden title="Clientes ausentes">
+                        <i class="fa fa-home" aria-hidden="true"></i>
+                        <span id="notificationHome" class="dg-alert-count is-zero">0</span>
+                    </div>
                 </div>
 
-                <div id="divNotificacionHome" hidden>
-                    <i class="fa fa-home text-danger ms-2"></i>
-                    <span id="notificationHome" class="badge bg-danger ms-1"></span>
-                </div>
+                <button class="navbar-toggler dg-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Abrir menú">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
             </div>
-
-            <a class="navbar-brand">Indumentaria DG</a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent">
-                <span class="navbar-toggler-icon"></span>
-            </button>
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
-                <ul class="navbar-nav me-auto mt-2 mb-2 mb-lg-0">
-
-                    <!-- ❌ ELIMINADO EL MENÚ COMPLETO DE VENTAS ELECTRODOMÉSTICOS -->
+                <ul class="navbar-nav dg-nav-links me-auto">
 
                     <li class="nav-item" id="seccionUsuarios" hidden>
                         <a class="nav-link" id="btnUsuarios" onclick="document.location.href='@Url.Content("~/Usuarios/Index/")'">
-                            Usuarios <i id="notificationStock" class="fa fa-check text-danger" style="display:none;"></i>
+                            <span class="dg-ico"><i class="fa fa-users"></i></span>
+                            <span class="dg-label">Usuarios</span>
+                            <span id="notificationStock" class="dg-pill" hidden></span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionSueldos" hidden>
                         <a class="nav-link" id="btnSueldos" onclick="document.location.href='@Url.Content("~/Pagos/Index/")'">
-                            Pagos de Sueldos
+                            <span class="dg-ico"><i class="fa fa-money"></i></span>
+                            <span class="dg-label">Pagos de Sueldos</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionRendimiento" hidden>
                         <a class="nav-link" id="btnRendimiento" onclick="document.location.href='@Url.Content("~/Rendimiento/Index/")'">
-                            Rendimiento
+                            <span class="dg-ico"><i class="fa fa-line-chart"></i></span>
+                            <span class="dg-label">Rendimiento</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionProductos" @Html.Raw(navVeProductos ? "" : "hidden")>
                         <a class="nav-link" id="btnProductos" onclick="document.location.href='@Url.Content("~/Productos/Index/")'">
-                            Productos <span id="badgeProdPendientes" class="badge bg-warning text-dark ms-1" hidden></span>
+                            <span class="dg-ico"><i class="fa fa-cube"></i></span>
+                            <span class="dg-label">Productos</span>
+                            <span id="badgeProdPendientes" class="dg-pill dg-pill-warn" hidden></span>
                         </a>
                     </li>
 
-                    <!-- 🔥 NUEVOS BOTONES GENERALES -->
-
                     <li class="nav-item" id="seccionVentas">
-                        <a class="nav-link pointer" id="btnVentasGeneral">Ventas</a>
+                        <a class="nav-link pointer" id="btnVentasGeneral">
+                            <span class="dg-ico"><i class="fa fa-shopping-cart"></i></span>
+                            <span class="dg-label">Ventas</span>
+                        </a>
                     </li>
 
                     <li class="nav-item" id="seccionCobranzas">
-                        <a class="nav-link pointer" id="btnCobranzasGeneral">Cobranzas</a>
+                        <a class="nav-link pointer" id="btnCobranzasGeneral">
+                            <span class="dg-ico"><i class="fa fa-credit-card"></i></span>
+                            <span class="dg-label">Cobranzas</span>
+                        </a>
                     </li>
 
                     <li class="nav-item" id="seccionStock" hidden>
-                        <a class="nav-link" id="btnProductos"
+                        <a class="nav-link" id="btnStock"
                            onclick="document.location.href='@Url.Content("~/Stock/Index/")'">
-                            Stock
+                            <span class="dg-ico"><i class="fa fa-archive"></i></span>
+                            <span class="dg-label">Stock</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionClientes" hidden>
                         <a class="nav-link" id="btnClientes" onclick="document.location.href='@Url.Content("~/Clientes/Index/")'">
-                            Clientes
+                            <span class="dg-ico"><i class="fa fa-address-book"></i></span>
+                            <span class="dg-label">Clientes</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionClientesCero" hidden>
                         <a class="nav-link" id="btnClientesCero" onclick="document.location.href='@Url.Content("~/ClientesCero/Index/")'">
-                            Clientes <i id="notificationIcon" class="fa fa-bell text-danger" style="display:none;"></i>
+                            <span class="dg-ico"><i class="fa fa-bell"></i></span>
+                            <span class="dg-label">Clientes</span>
+                            <i id="notificationIcon" class="fa fa-bell dg-bell" style="display:none;"></i>
                         </a>
                     </li>
 
                     <li class="nav-item dropdown" id="seccionSoporte" hidden>
                         <a class="nav-link dropdown-toggle" href="#" id="configDropdownLink" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
-                            Soporte
+                            <span class="dg-ico"><i class="fa fa-life-ring"></i></span>
+                            <span class="dg-label">Soporte</span>
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="configDropdownLink">
+                        <ul class="dropdown-menu dg-menu" aria-labelledby="configDropdownLink">
                             <li>
                                 <a class="dropdown-item" href="https://wa.me/5493777710884">
                                     <i class="fa fa-whatsapp text-success"></i> Contactar via WhatsApp
@@ -126,31 +147,32 @@
                         </ul>
                     </li>
 
-                    <li class="nav-item" id="divbtnCambiarTipoVentas">
-                        <a class="nav-link pointer d-flex align-items-center gap-2" id="btnCambiarTipoVentas">
-                            <i class="fa fa-exchange"></i>
-
-                            <span id="txtModoVenta" class="flex-grow-1">
-                            
+                    <li class="nav-item dg-mode-item" id="divbtnCambiarTipoVentas">
+                        <a class="nav-link pointer dg-mode-btn" id="btnCambiarTipoVentas">
+                            <span class="dg-ico"><i class="fa fa-exchange"></i></span>
+                            <span class="dg-mode-copy">
+                                <span class="dg-mode-kicker">Sistema</span>
+                                <span id="txtModoVenta">Indumentaria</span>
                             </span>
-
-                   
+                            <i class="fa fa-angle-down dg-mode-caret"></i>
                         </a>
                     </li>
 
-
-
                 </ul>
 
-                <!-- Usuario -->
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav dg-user-nav">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
+                        <a class="nav-link dropdown-toggle dg-user-btn" href="#" id="userDropdown"
                            role="button" data-bs-toggle="dropdown">
-                            <span id="userName"></span>
+                            <span class="dg-avatar" id="dgAvatarLetra" aria-hidden="true">U</span>
+                            <span id="userName" class="dg-user-name"></span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" onclick="cerrarSession();">Cerrar Sesión</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end dg-menu">
+                            <li>
+                                <a class="dropdown-item" onclick="cerrarSession();">
+                                    <i class="fa fa-sign-out"></i> Cerrar sesión
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -210,8 +232,8 @@
             </div>
         </div>
     </div>
-    <script src="~/JavaScript/Utils/Utils.js?v=3.17"></script>
-    <script src="~/JavaScript/NavBarLogin.js?v=2.9"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.19"></script>
+    <script src="~/JavaScript/NavBarLogin.js?v=3.1"></script>
 
 </body>
 </html>

@@ -4,212 +4,240 @@
 
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
+<link href="~/Estilos/Clientes.css?v=1.6" rel="stylesheet" />
+<link href="~/Estilos/Pagos.css?v=2.0" rel="stylesheet" />
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
-<link href="~/Estilos/Ventas.css?v=1.2" rel="stylesheet" />
-<link href="~/Estilos/Productos.css?v=1.2" rel="stylesheet" />
-<link href="~/Estilos/Pagos.css?v=1.0" rel="stylesheet" /> @* << CSS opcional de abajo *@
+<div class="ve-dark pagos-root">
+    <div class="container-fluid page-99 py-3">
 
-<div class="vw-75 d-flex float-lg-end mt-2"></div>
-
-<!-- ===== Filtros ===== -->
-<div id="Filtros" class="divFiltros">
-    <label class="lblcliente">Vendedor</label>
-    <select id="Vendedores" class="input-nuevo">
-        <option value="" selected>Seleccionar</option>
-    </select>
-
-    <label class="m-lg-2 lblcliente">Fecha Desde:</label>
-    <input type="date" id="FechaDesde" class="input-nuevo" />
-
-    <label class="m-lg-2 lblcliente">Fecha Hasta:</label>
-    <input type="date" id="FechaHasta" class="input-nuevo" />
-
-    <br />
-
-    <label class="m-lg-2 lblcliente">Estado:</label>
-    <select id="Estado" class="input-nuevo">
-        <option value="" selected>Todos</option>
-        <option value="0">Pendiente</option>
-        <option value="1">Parcial</option>
-        <option value="2">Pagado</option>
-    </select>
-
-
-    <div class="vw-75 d-flex float-lg-end mt-2">
-        <a class="btn btn-success" id="aplicarFiltros" onclick="aplicarFiltros()">Aplicar</a>
-    </div>
-</div>
-
-<!-- ===== Tabla principal ===== -->
-<div class="container-fluid2">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card cardTablePersonalizado">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    Historial de Sueldos
-                    <div class="d-flex align-items-center ms-auto gap-2">
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa fa-cog me-2"></i> Config. Columnas
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu"></ul>
-                        </div>
-
-                        <!-- NUEVO: botón Pagos Parciales -->
-                        <button id="btnPagosParciales" class="btn btn-outline-info">
-                            <i class="fa fa-wallet me-1"></i> Pagos parciales
-                        </button>
+        <section class="cc-header mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="cc-badge pagos-badge">
+                        <i class="fa fa-money"></i>
+                    </div>
+                    <div>
+                        <h2 class="m-0 fw-800">Historial de sueldos</h2>
+                        <div class="text-muted-cc">Liquidaciones, saldos y pagos parciales</div>
                     </div>
                 </div>
-
-                <div class="card-body">
-                    <table class="display nowrap w-100" id="grdSueldos">
-                        <thead>
-                            <tr>
-                                <th class="text-center">Fecha</th>
-                                <th class="text-center">Vendedor</th>
-                                <th class="text-center">Período</th>
-                                <th class="text-center">Concepto</th>
-                                <th class="text-center">Importe</th>
-                                <th class="text-center">Abonado</th>
-                                <th class="text-center">Saldo</th>
-                                <th class="text-center">Estado</th>
-                                <th class="text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-
-                <div class="vw-75 d-flex justify-content-end mt-2 mb-4">
-                    <a id="exportacionExcel" class="btn btn-success btnnuevo btn-uniformv me-2" onclick="exportarExcel()">Exportar Datos</a>
-                    <a class="btn btn-success btnnuevo btn-uniformv" href="/Pagos/NuevoModif">Nuevo</a>
+                <div class="pagos-header-actions d-flex flex-wrap gap-2 ms-auto">
+                    <button type="button" class="btn btn-outline-info pagos-header-btn" id="btnPagosParciales">
+                        <i class="fa fa-credit-card me-1"></i>
+                        <span class="d-none d-sm-inline">Pagos parciales</span>
+                        <span class="d-inline d-sm-none">Parciales</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-success pagos-header-btn" id="exportacionExcel" onclick="exportarExcel()">
+                        <i class="fa fa-file-excel-o me-1"></i> Exportar
+                    </button>
+                    <a class="btn btn-primary pagos-header-btn" href="/Pagos/NuevoModif">
+                        <i class="fa fa-plus me-1"></i> Nuevo
+                    </a>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+        </section>
 
-<!-- ===== Modal Pagos Parciales ===== -->
-<!-- ===== Modal Pagos Parciales (responsive + dark) ===== -->
-<div class="modal fade" id="modalPagosParciales" tabindex="-1" aria-labelledby="ppLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-sm-down">
-        <div class="modal-content pp-modal">
-            <div class="modal-header pp-modal-header">
-                <h5 class="modal-title" id="ppLabel">
-                    <i class="fa fa-wallet me-2"></i>Pagos parciales
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <section id="Filtros" class="card-glass p-3 mb-4 pagos-filters-card">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="pagos-filter-label" for="Vendedores">Vendedor</label>
+                    <select id="Vendedores" class="form-select pagos-filter-input">
+                        <option value="" selected>Seleccionar</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-6 col-lg-2">
+                    <label class="pagos-filter-label" for="FechaDesde">Fecha desde</label>
+                    <input type="date" id="FechaDesde" class="form-control pagos-filter-input" />
+                </div>
+                <div class="col-6 col-md-6 col-lg-2">
+                    <label class="pagos-filter-label" for="FechaHasta">Fecha hasta</label>
+                    <input type="date" id="FechaHasta" class="form-control pagos-filter-input" />
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label class="pagos-filter-label" for="Estado">Estado</label>
+                    <select id="Estado" class="form-select pagos-filter-input">
+                        <option value="" selected>Todos</option>
+                        <option value="0">Pendiente</option>
+                        <option value="1">Parcial</option>
+                        <option value="2">Pagado</option>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-3 d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-primary flex-fill" id="aplicarFiltros" onclick="aplicarFiltros()">
+                        <i class="fa fa-search me-1"></i> Aplicar
+                    </button>
+                    <button type="button" class="btn btn-outline-light flex-fill" onclick="limpiarFiltrosPagos()">
+                        <i class="fa fa-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
             </div>
+        </section>
 
-            <div class="modal-body">
-                <!-- Filtros -->
-                <div class="row g-2 align-items-end">
-                    <div class="col-12 col-md-4">
-                        <label class="form-label small mb-1">Vendedor</label>
-                        <select id="ppVendedor" class="form-select pp-control">
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <label class="form-label small mb-1">Pago desde</label>
-                        <input type="date" id="ppDesde" class="form-control pp-control" />
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <label class="form-label small mb-1">Pago hasta</label>
-                        <input type="date" id="ppHasta" class="form-control pp-control" />
-                    </div>
-                    <div class="col-12 col-md-2 d-grid">
-                        <button id="ppBtnFiltrar" class="btn btn-primary">
-                            <i class="fa fa-search me-1"></i>Buscar
+        <section class="card-glass p-3 mb-4 pagos-table-card">
+            <div class="pagos-table-toolbar d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="fw-bold text-white">
+                    <i class="fa fa-list-alt me-2"></i> Liquidaciones
+                </div>
+                <div class="d-flex flex-wrap gap-2 ms-auto pagos-toolbar-actions">
+                    <div class="dropdown pagos-toolbar-dropdown">
+                        <button class="btn btn-outline-light btn-sm dropdown-toggle pagos-columns-toggle d-flex align-items-center" type="button" id="dropdownColumnas" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-cog me-2"></i> Config. columnas
                         </button>
+                        <ul class="dropdown-menu dropdown-menu-end cc-dropdown-menu" aria-labelledby="dropdownColumnas" id="configColumnasMenu"></ul>
                     </div>
                 </div>
+            </div>
 
-                <!-- Alta rápida -->
-                <div class="pp-add p-3 mt-3">
-                    <div class="pp-add-title mb-2">
-                        <i class="fa fa-plus-circle me-1"></i>Nuevo pago parcial
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-6 col-sm-4 col-lg-2">
-                            <label class="form-label small mb-1">Fecha</label>
-                            <input type="date" id="ppNuevaFecha" class="form-control form-control-sm pp-control">
+            <p class="pagos-dt-hint d-lg-none text-muted small mb-2">
+                <i class="fa fa-arrows-h me-1"></i> Desliz&aacute; horizontalmente para ver todas las columnas.
+            </p>
+
+            <div class="table-responsive dt-dark-wrap pagos-dt-wrap vc-cobros-dt">
+                <table class="display nowrap w-100 dt-dark" id="grdSueldos">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Fecha</th>
+                            <th class="text-center">Vendedor</th>
+                            <th class="text-center">Per&iacute;odo</th>
+                            <th class="text-center">Concepto</th>
+                            <th class="text-center">Importe</th>
+                            <th class="text-center">Abonado</th>
+                            <th class="text-center">Saldo</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal fade cc-modal-shell pagos-modal pagos-modal--xl" id="modalPagosParciales" tabindex="-1" aria-labelledby="ppLabel" aria-hidden="true">
+        <div class="modal-dialog cc-modal-dialog pagos-modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content cc-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="cc-modal-head">
+                        <div class="cc-modal-icon pagos-modal-icon">
+                            <i class="fa fa-credit-card"></i>
                         </div>
-                        <div class="col-6 col-sm-4 col-lg-2">
-                            <label class="form-label small mb-1">Método</label>
-                            <select id="ppNuevoMetodo" class="form-select form-select-sm pp-control">
-                                <option value="EFECTIVO">Efectivo</option>
-                                <option value="TRANSFERENCIA">Transferencia</option>
-                                <option value="OTRO">Otro</option>
+                        <div>
+                            <h5 class="modal-title mb-0" id="ppLabel">Pagos parciales</h5>
+                            <div class="cc-modal-subtitle">Adelantos que todav&iacute;a no pertenecen a un sueldo</div>
+                        </div>
+                    </div>
+                    <button type="button" class="hd-modal-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body pt-3">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-4">
+                            <label class="pagos-filter-label" for="ppVendedor">Vendedor</label>
+                            <select id="ppVendedor" class="form-select pagos-filter-input">
+                                <option value="">Todos</option>
                             </select>
                         </div>
-                        <div class="col-12 col-sm-4 col-lg-2">
-                            <label class="form-label small mb-1">Importe</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text pp-addon">$</span>
-                                <input type="text" id="ppNuevoImporte" class="form-control pp-control" placeholder="0,00">
+                        <div class="col-6 col-md-3">
+                            <label class="pagos-filter-label" for="ppDesde">Pago desde</label>
+                            <input type="date" id="ppDesde" class="form-control pagos-filter-input" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="pagos-filter-label" for="ppHasta">Pago hasta</label>
+                            <input type="date" id="ppHasta" class="form-control pagos-filter-input" />
+                        </div>
+                        <div class="col-12 col-md-2 d-grid">
+                            <button type="button" id="ppBtnFiltrar" class="btn btn-primary">
+                                <i class="fa fa-search me-1"></i> Buscar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="pagos-add-panel mt-3">
+                        <div class="pagos-add-title mb-2">
+                            <i class="fa fa-plus-circle me-1"></i> Nuevo pago parcial
+                        </div>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-6 col-lg-2">
+                                <label class="pagos-filter-label" for="ppNuevaFecha">Fecha</label>
+                                <input type="date" id="ppNuevaFecha" class="form-control pagos-filter-input">
+                            </div>
+                            <div class="col-6 col-lg-2">
+                                <label class="pagos-filter-label" for="ppNuevoMetodo">M&eacute;todo</label>
+                                <select id="ppNuevoMetodo" class="form-select pagos-filter-input">
+                                    <option value="EFECTIVO">Efectivo</option>
+                                    <option value="TRANSFERENCIA">Transferencia</option>
+                                    <option value="OTRO">Otro</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-4 col-lg-2">
+                                <label class="pagos-filter-label" for="ppNuevoImporte">Importe</label>
+                                <div class="input-group">
+                                    <span class="input-group-text pagos-addon">$</span>
+                                    <input type="text" id="ppNuevoImporte" class="form-control pagos-filter-input" placeholder="0,00">
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-8 col-lg-3">
+                                <label class="pagos-filter-label" for="ppVendedorNuevo">Vendedor</label>
+                                <select id="ppVendedorNuevo" class="form-select pagos-filter-input">
+                                    <option value="">Seleccionar…</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-lg-3">
+                                <label class="pagos-filter-label" for="ppNuevaNota">Detalle</label>
+                                <input type="text" id="ppNuevaNota" class="form-control pagos-filter-input" placeholder="Opcional">
+                            </div>
+                            <div class="col-12 d-flex justify-content-end">
+                                <button type="button" id="ppBtnAgregar" class="btn btn-success">
+                                    <i class="fa fa-plus me-1"></i> Agregar
+                                </button>
                             </div>
                         </div>
-                        <div class="col-12 col-lg-3">
-                            <label class="form-label small mb-1">Vendedor</label>
-                            <select id="ppVendedorNuevo" class="form-select form-select-sm pp-control">
-                                <option value="">Seleccionar…</option>
-                            </select>
-                        </div>
-                        <div class="col-12 col-lg-3">
-                            <label class="form-label small mb-1">Detalle (opcional)</label>
-                            <input type="text" id="ppNuevaNota" class="form-control form-control-sm pp-control" placeholder="Detalle…">
-                        </div>
-                        <div class="col-12 d-grid d-sm-flex justify-content-sm-end">
-                            <button id="ppBtnAgregar" class="btn btn-success btn-sm mt-1 mt-sm-0">
-                                <i class="fa fa-plus me-1"></i>Agregar
-                            </button>
-                        </div>
                     </div>
+
+                    <div class="table-responsive dt-dark-wrap pagos-dt-wrap mt-3">
+                        <table id="ppGrid" class="display nowrap w-100 dt-dark">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Fecha</th>
+                                    <th class="text-center">Vendedor</th>
+                                    <th class="text-center">M&eacute;todo</th>
+                                    <th class="text-center">Nota</th>
+                                    <th class="text-end">Importe</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="4" class="text-end">Total</th>
+                                    <th id="ppTotal" class="text-end">$ 0,00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <p class="pagos-hint mb-0 mt-3">
+                        Estos pagos no pertenecen a ning&uacute;n sueldo. Cuando gener&aacute;s una liquidaci&oacute;n del per&iacute;odo que los contiene, se descuentan del total.
+                    </p>
                 </div>
 
-                <!-- Tabla -->
-                <div class="table-responsive mt-3">
-                    <table id="ppGrid" class="table table-sm table-striped align-middle w-100">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:110px;">Fecha</th>
-                                <th>Vendedor</th>
-                                <th style="width:140px;">Método</th>
-                                <th>Nota</th>
-                                <th class="text-end" style="width:140px;">Importe</th>
-                                <th class="text-center" style="width:100px;">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tfoot>
-                            <tr>
-                                <th colspan="4" class="text-end">Total</th>
-                                <th id="ppTotal" class="text-end">$ 0,00</th>
-                                <th></th>
-                            </tr>
-                        </tfoot>
-                    </table>
+                <div class="modal-footer border-0 pagos-modal-footer">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
                 </div>
-
-                <div class="small text-muted mt-2">
-                    * Estos pagos no pertenecen a ningún sueldo. Cuando generes un sueldo de un período que los contenga, se descuentan automáticamente del total.
-                </div>
-            </div>
-
-            <div class="modal-footer pp-modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
 
-<script src="~/Content/Datatable/js/jquery-3.5.1.js"></script>
-<script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
-<script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<script src="~/Scripts/xlsx.full.min.js"></script>
-<script src="~/Scripts/bootstrap.bundle.min.js"></script>
-
-<script src="~/JavaScript/Pagos.js?v=1.2"></script>
+@section scripts {
+    <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="~/Scripts/xlsx.full.min.js"></script>
+    <script src="~/JavaScript/Pagos.js?v=1.4"></script>
+}

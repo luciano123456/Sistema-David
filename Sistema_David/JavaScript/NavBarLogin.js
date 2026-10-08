@@ -30,8 +30,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     if (userSession) {
-        var userFullName = userSession.Nombre + ' ' + userSession.Apellido;
-        $("#userName").html('<i class="fa fa-user"></i> ' + userFullName);
+        var userFullName = ((userSession.Nombre || "") + " " + (userSession.Apellido || "")).trim();
+        $("#userName").text(userFullName);
+        var avatar = document.getElementById("dgAvatarLetra");
+        if (avatar) avatar.textContent = (userFullName.charAt(0) || "U").toUpperCase();
     }
 
     await verificarRoles(userSession.IdRol);
@@ -133,11 +135,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             let tipo = this.dataset.tipo; // "electro" o "normal"
             localStorage.setItem("tipoSistemaVentas", tipo);
 
-            const a = document.getElementById("btnCambiarTipoVentas");
-            const label = (tipo === "electro") ? "Electrodomésticos" : "Indumentaria";
-
-            const textNode = [...a.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
-            if (textNode) textNode.nodeValue = ` ${label}`;
+            aplicarEtiquetaModo(tipo);
 
 
             // ✅ Redirige si estás dentro de ventas
@@ -194,6 +192,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 window.location.href = "/Cobranzas/Index/";
         });
     }
+
+    aplicarEtiquetaModo(tipoVentas);
+    marcarSeccionActual();
 
 });
 
@@ -266,11 +267,7 @@ async function CantidadComprobantes() {
 
     let result = await MakeAjax(options);
 
-    if (result != null) {
-        document.getElementById("notificacionComprobante").textContent = ` (${result.cantidad})`;
-    } else {
-        document.getElementById("notificacionComprobante").textContent = ` (0)`;
-    }
+    pintarAlerta("notificacionComprobante", result != null ? result.cantidad : 0);
 }
 
 
@@ -291,11 +288,7 @@ async function CantidadClientesAusentes() {
 
     let result = await MakeAjax(options);
 
-    if (result != null) {
-        document.getElementById("notificationHome").textContent = ` (${result.cantidad})`;
-    } else {
-        document.getElementById("notificationHome").textContent = ` (0)`;
-    }
+    pintarAlerta("notificationHome", result != null ? result.cantidad : 0);
 
 }
 
@@ -316,19 +309,22 @@ async function CantidadStocksPendientes() {
 
     let result = await MakeAjax(options);
 
-    if (result > 0) {
-        document.getElementById("notificationStock").style.display = "inline";
-        document.getElementById("notificationStock").textContent = ` (${result})`;
+    var stock = document.getElementById("notificationStock");
+    if (!stock) return;
+    var nStock = Number(result) || 0;
+    if (nStock > 0) {
+        stock.hidden = false;
+        stock.textContent = String(nStock);
     } else {
-        document.getElementById("notificationStock").style.display = "inline";
-        document.getElementById("notificationStock").textContent = ` (${result})`;
+        stock.hidden = true;
+        stock.textContent = "";
     }
 
 }
 
 async function cerrarSession() {
     try {
-        if (confirm("¿Está seguro que desea salir?")) {
+        if (await confirmarModal("¿Está seguro que desea salir?")) {
             var url = "/Login/CerrarSesion";
 
             let value = JSON.stringify({});
@@ -386,11 +382,48 @@ function verificarRoles(idRol) {
 }
 
 
-const a = document.getElementById("btnCambiarTipoVentas");
-const label = (tipoVentas === "electro") ? "Electrodomésticos" : "Indumentaria";
+function aplicarEtiquetaModo(tipo) {
+    var label = (tipo === "electro") ? "Electrodomésticos" : "Indumentaria";
+    var span = document.getElementById("txtModoVenta");
+    if (span) span.textContent = label;
+    var sub = document.getElementById("dgMarcaModo");
+    if (sub) sub.textContent = label;
+    var nav = document.querySelector(".dg-navbar");
+    if (nav) nav.classList.toggle("is-electro", tipo === "electro");
+}
 
-const textNode = [...a.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
-if (textNode) textNode.nodeValue = ` ${label}`;
+function pintarAlerta(id, cantidad) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var n = Number(cantidad);
+    if (!isFinite(n) || n < 0) n = 0;
+    el.textContent = String(n);
+    el.classList.toggle("is-zero", n <= 0);
+    el.classList.toggle("is-hot", n > 0);
+}
+
+function marcarSeccionActual() {
+    var path = (window.location.pathname || "").toLowerCase();
+    var reglas = [
+        ["/usuarios", "btnUsuarios"],
+        ["/pagos", "btnSueldos"],
+        ["/rendimiento", "btnRendimiento"],
+        ["/productos", "btnProductos"],
+        ["/stock", "btnStock"],
+        ["/clientescero", "btnClientesCero"],
+        ["/clientes", "btnClientes"],
+        ["/ventas_electrodomesticos/cobros", "btnCobranzasGeneral"],
+        ["/cobranzas", "btnCobranzasGeneral"],
+        ["/ventas", "btnVentasGeneral"]
+    ];
+    var i;
+    for (i = 0; i < reglas.length; i++) {
+        if (path.indexOf(reglas[i][0]) === -1) continue;
+        var el = document.getElementById(reglas[i][1]);
+        if (el) el.classList.add("is-current");
+        break;
+    }
+}
 
 
 function RetornarVentaNuevoModif() {

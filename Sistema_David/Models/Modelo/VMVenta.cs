@@ -1,4 +1,4 @@
-﻿using Sistema_David.Models.DB;
+using Sistema_David.Models.DB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,6 +56,7 @@ namespace Sistema_David.Models.Modelo
         public decimal ValorCuota { get; set; }
         public decimal SaldoCliente { get; set; }
         public decimal LimiteVentas { get; set; }
+        public bool TieneImagenes { get; set; }
         public decimal Interes { get; set; }
         public int CobroPendiente { get; set; }
         public int ActualizoUbicacion { get; set; }

@@ -50,7 +50,7 @@ namespace Sistema_David.Models.Modelo
                       ) se ON se.idCliente = c.Id";
 
                 var result = db.Database.SqlQuery<VMCliente>(query).ToList();
-
+                MarcarImagenes(result);
                 return result;
             }
         }
@@ -89,7 +89,7 @@ namespace Sistema_David.Models.Modelo
                       ) se ON se.idCliente = c.Id";
 
                 var result = db.Database.SqlQuery<VMCliente>(query).ToList();
-
+                MarcarImagenes(result);
                 return result;
             }
         }
@@ -113,6 +113,10 @@ namespace Sistema_David.Models.Modelo
 
         public static List<VMCliente> ListaClientes(int idVendedor, string Nombre, string Apellido, string Dni, int idZona)
         {
+            Nombre = Nombre ?? "";
+            Apellido = Apellido ?? "";
+            Dni = Dni ?? "";
+
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
                 var query = @"SELECT c.Id, c.Nombre, c.Fecha, c.Apellido, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.LimiteVentas, c.Latitud, c.FechaEncero, c.IdVendedorAsignado, z.Nombre as Zona, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
@@ -152,6 +156,7 @@ namespace Sistema_David.Models.Modelo
                                 (x.Dni != null && x.Dni.ToUpper().Contains(Dni.ToUpper()) || string.IsNullOrEmpty(Dni)))
                     .ToList();
 
+                MarcarImagenes(result);
                 return result;
             }
         }
@@ -193,10 +198,26 @@ namespace Sistema_David.Models.Modelo
                      .Where(x => (x.IdVendedor == idVendedor || idVendedor == -1))
                      .ToList();
 
+                MarcarImagenes(result);
                 return result;
             }
         }
 
+        private static void MarcarImagenes(List<VMCliente> lista)
+        {
+            if (lista == null || lista.Count == 0)
+                return;
+
+            try
+            {
+                var con = Sistema_David.Models.ClientesAdjuntosModel.IdsConImagenes(lista.Select(x => x.Id));
+                foreach (var item in lista)
+                    item.TieneImagenes = con.Contains(item.Id);
+            }
+            catch
+            {
+            }
+        }
 
         public static VMCliente InformacionCliente(int idCliente)
         {
@@ -349,6 +370,7 @@ namespace Sistema_David.Models.Modelo
 
                         db.Clientes.Add(result);
                         db.SaveChanges();
+                        model.Id = result.Id;
 
                         return 0;
                     }
@@ -703,6 +725,7 @@ namespace Sistema_David.Models.Modelo
                         if (ventas.Count > 0)
                             return "No podes eliminar al cliente ya que tiene " + ventas.Count + " ventas asignadas.";
 
+                        ClientesAdjuntosModel.EliminarDeCliente(db, id);
                         db.Clientes.Remove(result);
                         db.SaveChanges();
 

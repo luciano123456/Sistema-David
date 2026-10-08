@@ -373,6 +373,7 @@ namespace Sistema_David.Models
                             Cliente = v.Clientes != null
                                 ? ((v.Clientes.Nombre ?? "") + " " + (v.Clientes.Apellido ?? "")).Trim()
                                 : null,
+                            IdCliente = v.IdCliente,
                             ClienteDni = v.Clientes?.Dni,
                             ClienteDireccion = v.Clientes?.Direccion,
                             ClienteLongitud = v.Clientes?.Longitud,
@@ -403,6 +404,7 @@ namespace Sistema_David.Models
                         rows.Add(row);
                     }
 
+                    MarcarImagenesHistorial(rows);
                     return new VM_HistorialVentasResp
                     {
                         Filas = rows,
@@ -488,6 +490,7 @@ namespace Sistema_David.Models
                             Cliente = v.Clientes != null
                                 ? ((v.Clientes.Nombre ?? "") + " " + (v.Clientes.Apellido ?? "")).Trim()
                                 : null,
+                            IdCliente = v.IdCliente,
                             ClienteDni = v.Clientes?.Dni,
                             ClienteDireccion = v.Clientes?.Direccion,
                             ClienteTelefono = v.Clientes?.Telefono,
@@ -507,6 +510,7 @@ namespace Sistema_David.Models
                         });
                     }
 
+                    MarcarImagenesHistorial(rows);
                     return new VM_HistorialVentasResp
                     {
                         Filas = rows,
@@ -820,6 +824,12 @@ namespace Sistema_David.Models
                 .ToList();
 
             var saldo = SaldoPendienteDesdeCuotas(cuotas);
+            venta.Restante = saldo;
+
+            // Pendiente de confirmación: no promover a Activa/Cancelada.
+            // Solo pasa al listado común cuando se acepta desde ventas pendientes.
+            if (string.Equals(venta.Estado, "Pendiente", StringComparison.OrdinalIgnoreCase))
+                return;
 
             var nuevo = saldo <= 0 ? "Cancelada" : "Activa";
 
@@ -832,8 +842,6 @@ namespace Sistema_David.Models
 
                 Audit(db, venta.Id, null, usuario, "EstadoVenta", ant, nuevo);
             }
-
-            venta.Restante = saldo;
         }
 
         /* ===========================================================
@@ -2497,6 +2505,7 @@ namespace Sistema_David.Models
                     .ThenBy(r => r.NumeroCuota)
                     .ToList();
 
+                MarcarImagenesCobros(rows);
                 return rows;
             }
         }
@@ -2594,6 +2603,7 @@ namespace Sistema_David.Models
                     .ThenBy(r => r.NumeroCuota)
                     .ToList();
 
+                MarcarImagenesCobros(rows);
                 return rows;
             }
         }
@@ -3099,6 +3109,7 @@ namespace Sistema_David.Models
                     }
                 }
 
+                MarcarImagenesCobros(rows);
                 return rows;
             }
         }
@@ -3755,6 +3766,7 @@ namespace Sistema_David.Models
                         Cliente = v.Clientes != null
                             ? ((v.Clientes.Nombre ?? "") + " " + (v.Clientes.Apellido ?? "")).Trim()
                             : null,
+                        IdCliente = v.IdCliente,
                         ClienteDni = v.Clientes?.Dni,
                         ClienteDireccion = v.Clientes?.Direccion,
                         ClienteTelefono = v.Clientes?.Telefono,
@@ -3773,7 +3785,40 @@ namespace Sistema_David.Models
                     });
                 }
 
+                MarcarImagenesHistorial(rows);
                 return rows;
+            }
+        }
+
+        private static void MarcarImagenesCobros(List<VM_Ventas_Electrodomesticos_CuotaCobroRow> rows)
+        {
+            if (rows == null || rows.Count == 0)
+                return;
+
+            try
+            {
+                var con = ClientesAdjuntosModel.IdsConImagenes(rows.Select(r => r.IdCliente));
+                foreach (var row in rows)
+                    row.TieneImagenes = con.Contains(row.IdCliente);
+            }
+            catch
+            {
+            }
+        }
+
+        private static void MarcarImagenesHistorial(List<VM_HistorialVentasRow> rows)
+        {
+            if (rows == null || rows.Count == 0)
+                return;
+
+            try
+            {
+                var con = ClientesAdjuntosModel.IdsConImagenes(rows.Select(r => r.IdCliente));
+                foreach (var row in rows)
+                    row.TieneImagenes = con.Contains(row.IdCliente);
+            }
+            catch
+            {
             }
         }
 

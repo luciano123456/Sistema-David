@@ -167,7 +167,7 @@ async function cargarCliente() {
                 alert("El cliente esta inhabilitado");
             } else if (result.data.Estado == "Regular") {
                 $("#estadocliente").css("color", "yellow");
-                if (confirm("¿El cliente esta en estado Regular, desea continuar igual?")) {
+                if (await confirmarModal("¿El cliente esta en estado Regular, desea continuar igual?")) {
                     $("#idcliente").text(result.data.Id)
                     $("#nombrecliente").text("Nombre: " + result.data.Nombre)
                     $("#estadocliente").text("Estado: " + result.data.Estado)
@@ -185,7 +185,7 @@ async function cargarCliente() {
 
         } else {
             
-            if (confirm("No se ha encontrado ningun cliente tuyo con ese Dni, ¿deseas ir a agregar uno?")) {
+            if (await confirmarModal("No se ha encontrado ningun cliente tuyo con ese Dni, ¿deseas ir a agregar uno?")) {
 
 
                 abrirNuevoCliente();
@@ -670,7 +670,7 @@ async function registrarVenta() {
                 return false;
             }
 
-            if (confirm(`El numero de telefono es ${numeroTelefono}, ¿desea modificarlo?`)) {
+            if (await confirmarModal(`El numero de telefono es ${numeroTelefono}, ¿desea modificarlo?`)) {
                 abrirmodalTelefono();
             } else {
                 registrarVentaAjax();

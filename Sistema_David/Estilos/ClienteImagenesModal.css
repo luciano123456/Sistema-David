@@ -1,0 +1,219 @@
+.cli-adj-btn {
+    flex: 0 0 auto;
+}
+
+/* En un btn-group Bootstrap pega los botones. El resto usa me-1; este va primero y se veía pegado al siguiente. */
+.btn-group > button.cli-adj-btn,
+.btn-group-acciones-pend > button.cli-adj-btn {
+    margin-right: 4px !important;
+}
+
+button.cli-adj-btn.cli-adj-ok i {
+    color: #7dd3fc !important;
+}
+
+button.cli-adj-btn.cli-adj-warn i {
+    color: #fbbf24 !important;
+}
+
+button.btn-accion.cli-adj-ok {
+    background: rgba(56, 189, 248, .18);
+}
+
+button.btn-accion.cli-adj-warn {
+    background: rgba(251, 191, 36, .16);
+}
+
+.acciones-pendientes,
+.acciones-fila,
+.btn-group-acciones-pend,
+table .btn-group:has(.btn-accion) {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    max-width: none;
+    white-space: nowrap;
+}
+
+.acciones-fila {
+    gap: 6px;
+}
+
+td.acciones-celda,
+table td:has(> .btn-group > .btn-accion),
+table td:has(> .acciones-pendientes),
+table td:has(> .acciones-fila) {
+    white-space: nowrap !important;
+    min-width: max-content;
+}
+
+.cli-adj-dialog {
+    width: min(640px, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
+    margin: 10px auto;
+}
+
+.cli-adj-modal {
+    border: 1px solid rgba(130, 168, 255, .28);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .05), transparent 28%), #0e1730;
+    color: #f4f7ff;
+    overflow: hidden;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+}
+
+.cli-adj-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 14px 10px;
+}
+
+.cli-adj-head-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.cli-adj-kicker {
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #93c5fd;
+    font-weight: 700;
+}
+
+.cli-adj-title {
+    font-size: 1.05rem;
+    font-weight: 650;
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.cli-adj-x {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 10px;
+    background: rgba(15, 23, 42, .55);
+    color: #e8eef8;
+    font-size: 22px;
+    line-height: 1;
+}
+
+.cli-adj-stage {
+    position: relative;
+    margin: 0 14px;
+    min-height: 180px;
+    height: min(62vh, 520px);
+    border-radius: 14px;
+    background: #070d1c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+.cli-adj-stage img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.cli-adj-empty {
+    color: #9fb0c9;
+    padding: 24px;
+    text-align: center;
+}
+
+.cli-adj-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(8, 14, 32, .72);
+    color: #fff;
+    z-index: 2;
+}
+
+.cli-adj-nav.is-prev { left: 8px; }
+.cli-adj-nav.is-next { right: 8px; }
+
+.cli-adj-nav[hidden] { display: none; }
+
+.cli-adj-foot {
+    padding: 10px 14px 14px;
+}
+
+.cli-adj-count {
+    text-align: center;
+    font-size: .82rem;
+    color: #9fb0c9;
+    margin-bottom: 8px;
+    min-height: 1.1em;
+}
+
+.cli-adj-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cli-adj-strip:empty { display: none; }
+
+.cli-adj-thumb {
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
+    padding: 0;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    overflow: hidden;
+    background: #10182e;
+    scroll-snap-align: start;
+}
+
+.cli-adj-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.cli-adj-thumb.is-on {
+    border-color: #38bdf8;
+}
+
+@media (max-width: 576px) {
+    .cli-adj-dialog {
+        width: calc(100vw - 16px);
+        margin: 8px auto;
+    }
+
+    .cli-adj-stage {
+        height: min(58vh, 460px);
+        margin: 0 10px;
+    }
+
+    .cli-adj-thumb {
+        flex-basis: 64px;
+        width: 64px;
+        height: 64px;
+    }
+
+    .cli-adj-nav {
+        width: 38px;
+        height: 38px;
+    }
+}

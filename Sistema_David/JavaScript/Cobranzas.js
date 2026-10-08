@@ -1632,9 +1632,9 @@ const configurarDataTableCobrosPendientes = async () => {
 
 
                     if (userSession.IdRol == 1 || userSession.IdRol == 4) {
-                        return iconoCobrador + iconosAdmin
+                        return htmlAdjuntosCliente(row.idCliente, row.TieneImagenes, row.Cliente, "lista") + iconoCobrador + iconosAdmin
                     } else if (userSession.IdRol == 3) {
-                        return iconoCobrador
+                        return htmlAdjuntosCliente(row.idCliente, row.TieneImagenes, row.Cliente, "lista") + iconoCobrador
                     }
 
                 },
@@ -1978,9 +1978,9 @@ const configurarDataTable = async (idVendedor, idCobrador, fechaCobroDesde, fech
 
 
                     if (userSession.IdRol == 1 || userSession.IdRol == 4) {
-                        return iconoCobrador + iconosAdmin
+                        return htmlAdjuntosCliente(row.idCliente, row.TieneImagenes, row.Cliente, "lista") + iconoCobrador + iconosAdmin
                     } else if (userSession.IdRol == 3) {
-                        return iconoCobrador
+                        return htmlAdjuntosCliente(row.idCliente, row.TieneImagenes, row.Cliente, "lista") + iconoCobrador
                     }
 
                 },
@@ -3696,8 +3696,8 @@ function editarCuenta() {
 
 
 // Función para eliminar una cuenta
-function deleteAccount(id) {
-    if (confirm("¿Estás seguro de que quieres eliminar esta cuenta?")) {
+async function deleteAccount(id) {
+    if (await confirmarModal("¿Estás seguro de que quieres eliminar esta cuenta?")) {
         fetch('/Cobranzas/EliminarCuentaBancaria', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

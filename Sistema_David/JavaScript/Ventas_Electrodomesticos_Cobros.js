@@ -221,6 +221,56 @@ VC.hideGlobalLoading = function () {
     document.body.classList.remove("loading");
 };
 
+VC.initSecciones = function () {
+    const root = document.querySelector("body.ve-page-cobros");
+    if (!root || root.dataset.vcSecReady === "1") return;
+    root.dataset.vcSecReady = "1";
+
+    let saved = {};
+    try {
+        saved = JSON.parse(localStorage.getItem("vc_cobros_secciones_v1") || "{}") || {};
+    } catch (e) {
+        saved = {};
+    }
+
+    root.querySelectorAll("[data-vc-sec]").forEach(function (sec) {
+        const id = sec.getAttribute("data-vc-sec");
+        sec.classList.toggle("is-collapsed", !!saved[id]);
+        VC.syncSeccion(sec);
+    });
+
+    root.addEventListener("click", function (e) {
+        if (e.target.closest("#divFiltros")) return;
+        const btn = e.target.closest("[data-vc-collapse]");
+        if (!btn || !root.contains(btn)) return;
+        const sec = btn.closest("[data-vc-sec]");
+        if (!sec) return;
+        e.preventDefault();
+        sec.classList.toggle("is-collapsed");
+        VC.syncSeccion(sec);
+        const state = {};
+        root.querySelectorAll("[data-vc-sec]").forEach(function (el) {
+            if (el.classList.contains("is-collapsed"))
+                state[el.getAttribute("data-vc-sec")] = true;
+        });
+        try { localStorage.setItem("vc_cobros_secciones_v1", JSON.stringify(state)); } catch (err) { }
+        if (!sec.classList.contains("is-collapsed")) {
+            setTimeout(function () { VC.ajustarTablasPostCarga(); }, 40);
+        }
+    });
+};
+
+VC.syncSeccion = function (sec) {
+    if (!sec) return;
+    const collapsed = sec.classList.contains("is-collapsed");
+    sec.querySelectorAll("[data-vc-collapse]").forEach(function (btn) {
+        btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        btn.title = collapsed ? "Desplegar" : "Plegar";
+    });
+    const icon = sec.querySelector(".vc-sec-chevron");
+    if (icon) icon.className = "fa vc-sec-chevron " + (collapsed ? "fa-chevron-down" : "fa-chevron-up");
+};
+
 VC.ajustarTablasPostCarga = function () {
     if (document.body.classList.contains("vc-mode-cards")) return;
     const ajustar = (dt) => {
@@ -458,6 +508,11 @@ VC.esAdminSel = function () {
     return rol === 1 || rol === 4;
 };
 
+VC.puedeEditarCliente = function () {
+    const rol = Number(userSession?.IdRol);
+    return rol === 1 || rol === 2 || rol === 3 || rol === 4;
+};
+
 VC.leerVista = function () {
     try {
         let v = localStorage.getItem(VC_VISTA_KEY);
@@ -650,6 +705,7 @@ VC.htmlCobroCard = function (d, kind) {
         </div>
         <div class="vc-card-dir">${d.ClienteDireccion ? VC.escHtml(d.ClienteDireccion) : "Sin dirección"}</div>
         <div class="vc-card-actions">
+          ${(typeof htmlAdjuntosCliente === "function") ? htmlAdjuntosCliente(d.IdCliente, d.TieneImagenes, d.ClienteNombre, "venta") : ""}
           <button type="button" class="vc-card-pay" data-vc-act="cobrar" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}">Cobrar</button>
           <button type="button" class="vc-ico-btn detalle" data-vc-act="detalle" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" title="Ver cuotas / productos"><i class="fa fa-chevron-down"></i></button>
           ${wa}
@@ -762,14 +818,15 @@ VC.abrirSheet = function (d) {
     const pendiente = (d.TransferenciaPendiente === 1 || d.TransferenciaPendiente === true);
     const nuevoEstado = pendiente ? 0 : 1;
     const estadoCobro = Number(d.EstadoCobro || 0) === 1;
-    const puede = VC.esAdminSel();
+    const puedeEditarCliente = VC.puedeEditarCliente();
     acts.innerHTML = `
+      ${(typeof htmlAdjuntosCliente === "function") ? htmlAdjuntosCliente(d.IdCliente, d.TieneImagenes, d.ClienteNombre, "lista") : ""}
       <button type="button" class="vc-sheet-act" data-vc-act="obs" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-home"></i> ${estadoCobro ? "Obs. cobro (marcada)" : "Observación de cobro"}</button>
       <button type="button" class="vc-sheet-act" data-vc-act="info" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-info-circle"></i> Información de la venta</button>
       <button type="button" class="vc-sheet-act" data-vc-act="ajuste" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-bolt"></i> Ajuste</button>
       <button type="button" class="vc-sheet-act" data-vc-act="hist" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-eye"></i> Historial</button>
       ${Number(userSession?.IdRol) === 1 ? `<button type="button" class="vc-sheet-act" data-vc-act="histventa" data-idventa="${d.IdVenta}"><i class="fa fa-clock-o"></i> Todos los movimientos</button>` : ""}
-      ${puede ? `<button type="button" class="vc-sheet-act" data-vc-act="editcli" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-pencil"></i> Editar cliente</button>` : ""}
+      ${puedeEditarCliente ? `<button type="button" class="vc-sheet-act" data-vc-act="editcli" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-pencil"></i> Editar cliente</button>` : ""}
       <button type="button" class="vc-sheet-act" data-vc-act="transf" data-estado="${nuevoEstado}" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}"><i class="fa fa-exclamation-circle"></i> ${pendiente ? "Revertir transferencia pend." : "Transferencia pendiente"}</button>
       <button type="button" class="vc-sheet-act" data-vc-sheet-close="1"><i class="fa fa-times"></i> Cerrar</button>
     `;
@@ -881,6 +938,7 @@ $(document).ready(async function () {
     VC.initEventos();
     VC.initVista();
     await VC.cargarTabla();
+    VC.initSecciones();
 
     habilitarSeleccionFilasCuotasCobros();
 });
@@ -1612,7 +1670,7 @@ VC.cargarTabla = async function () {
                     if (type !== "display") return data || "";
 
                     const idCliente = row.IdCliente || row.idCliente || 0;
-                    const puedeEditar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+                    const puedeEditar = VC.puedeEditarCliente();
                     const nombre = data || "";
 
                     return `
@@ -1749,6 +1807,8 @@ VC.cargarTabla = async function () {
 
                     return `
       <div class="btn-group">
+
+        ${(typeof htmlAdjuntosCliente === "function") ? htmlAdjuntosCliente(d.IdCliente, d.TieneImagenes, d.ClienteNombre, "venta") : ""}
 
         <!-- 🏠 OBS COBRO -->
         <button class="btn btn-accion ${btnCasaCls} me-1"
@@ -2713,6 +2773,8 @@ VC.cargarCobrosPendientes = async function () {
         paging: false,
         searching: true,
         info: false,
+        responsive: false,
+        scrollX: true,
 
         rowCallback: function (row, d) {
 
@@ -2834,6 +2896,8 @@ VC.cargarCobrosPendientes = async function () {
                 className: "text-center",
                 render: d => `
                     <div class="btn-group btn-group-acciones-pend">
+
+                        ${(typeof htmlAdjuntosCliente === "function") ? htmlAdjuntosCliente(d.IdCliente, d.TieneImagenes, d.ClienteNombre, "venta") : ""}
 
                         <button type="button" class="btn btn-accion btn-cobrar"
                             title="Cobrar"
@@ -2987,6 +3051,8 @@ VC.cargarTransferenciasPendientes = async function () {
         paging: false,
         searching: true,
         info: false,
+        responsive: false,
+        scrollX: true,
 
         rowCallback: function (row, d) {
 
@@ -3048,7 +3114,7 @@ VC.cargarTransferenciasPendientes = async function () {
                     if (type !== "display") return data || "";
 
                     const idCliente = row.IdCliente || row.idCliente || 0;
-                    const puedeEditar = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
+                    const puedeEditar = VC.puedeEditarCliente();
                     const nombre = data || "";
 
                     return `
@@ -3166,6 +3232,8 @@ VC.cargarTransferenciasPendientes = async function () {
 
                     return `
         <div class="btn-group">
+
+            ${(typeof htmlAdjuntosCliente === "function") ? htmlAdjuntosCliente(d.IdCliente, d.TieneImagenes, d.ClienteNombre, "venta") : ""}
 
             <!-- 💰 COBRAR -->
             <button class="btn btn-accion btn-cobrar me-1"
@@ -3725,8 +3793,8 @@ function editarCuenta() {
 
 
 // Función para eliminar una cuenta
-function deleteAccount(id) {
-    if (confirm("¿Estás seguro de que quieres eliminar esta cuenta?")) {
+async function deleteAccount(id) {
+    if (await confirmarModal("¿Estás seguro de que quieres eliminar esta cuenta?")) {
         fetch('/Cobranzas/EliminarCuentaBancaria', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

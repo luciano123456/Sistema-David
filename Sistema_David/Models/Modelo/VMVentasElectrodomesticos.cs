@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Sistema_David.Models.ViewModels
@@ -13,6 +13,8 @@ namespace Sistema_David.Models.ViewModels
         public string Cliente { get; set; }
         public string ClienteTelefono { get; set; }
         public string ClienteDni { get; set; }
+        public int IdCliente { get; set; }
+        public bool TieneImagenes { get; set; }
         public string Vendedor { get; set; }
         public string ClienteDireccion{ get; set; }
         public string ClienteLatitud{ get; set; }
@@ -284,6 +286,7 @@ namespace Sistema_David.Models.ViewModels
 
         public int IdCliente { get; set; }
         public string ClienteNombre { get; set; }  // ★ NUEVO
+        public bool TieneImagenes { get; set; }
         public int? CobroPendiente { get; set; }
         public int? TransferenciaPendiente { get; set; }
 

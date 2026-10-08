@@ -1,4 +1,4 @@
-﻿using Sistema_David.Models.DB;
+using Sistema_David.Models.DB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +34,7 @@ namespace Sistema_David.Models.Modelo
         public string Longitud { get; set; }
         public string Latitud { get; set; }
         public DateTime? FechaenCero { get; set; }
+        public bool TieneImagenes { get; set; }
 
         public virtual EstadosClientes EstadosClientes { get; set; }
 

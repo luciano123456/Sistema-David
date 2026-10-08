@@ -260,7 +260,7 @@ const informacionVenta = async id => {
 const eliminarVenta = async id => {
 
     try {
-        if (confirm("¿Está seguro que desea eliminar este pedido?")) {
+        if (await confirmarModal("¿Está seguro que desea eliminar este pedido?")) {
             var url = "/Pedidos/Eliminar";
 
             let value = JSON.stringify({

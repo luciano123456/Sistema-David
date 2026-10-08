@@ -377,7 +377,7 @@
             <tr class="empty-row">
               <td colspan="5" class="text-center text-muted py-4">
                 <div class="empty"><i class="bi bi-wallet2"></i>
-                  <div class="empty-title">Sin pagos…</div>
+                  <div class="empty-title">Sin pagos</div>
                   <div class="empty-sub">Registrá un pago para verlo aquí</div>
                 </div>
               </td>
@@ -632,7 +632,7 @@
         });
 
         $tblReglas.off('click', '.btn-del').on('click', '.btn-del', async function () {
-            if (!confirm('¿Eliminar regla?')) return;
+            if (!(await confirmarModal('¿Eliminar regla?'))) return;
             const id = +$(this).data('id');
             const ok = await $.ajax({ url: '/Pagos/EliminarRegla', method: 'POST', data: { id } });
             if (ok === true || ok?.ok === true) { toast('Regla eliminada.'); loadReglas(); } else toast('No se pudo eliminar.', 'danger');
@@ -873,6 +873,10 @@
     function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
     function sanitize(s) { return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(/[^\w\-]/g, ''); }
     function toast(msg, type = 'success') {
+        if (typeof mostrarToast === "function") {
+            mostrarToast(msg, type);
+            return;
+        }
         const cls = (type === 'danger' ? 'bg-danger' : type === 'warning' ? 'bg-warning text-dark' : 'bg-success');
         const $t = $(`<div class="position-fixed top-0 end-0 p-3" style="z-index:1080">
           <div class="toast align-items-center text-white ${cls}" role="alert" aria-live="assertive" aria-atomic="true">
@@ -927,7 +931,7 @@
             const tnSel = document.getElementById('slcTipoNegocio')?.value ?? '-1';
             const hay = await tieneReglas(tnSel);
             if (!hay) {
-                const ir = confirm('Para calcular un sueldo, primero debés crear reglas.\n¿Deseás crear una ahora?');
+                const ir = await confirmarModal('Para calcular un sueldo, primero debés crear reglas.<br>¿Deseás crear una ahora?');
                 if (ir) {
                     const $rg = $('#rgTipoNegocio');
                     if ($rg.length) {

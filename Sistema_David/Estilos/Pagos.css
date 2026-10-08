@@ -1,273 +1,220 @@
-﻿/* Estilos/pagos.css */
-/* Contraste alegre sobre fondo oscuro global */
+﻿/* =========================================================
+   Pagos de sueldos — skin oscuro (mismo lenguaje que Cobranzas / Usuarios)
+   ========================================================= */
 
-.cardTablePersonalizado {
-    background: #121418;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-    overflow: hidden;
+.pagos-root.ve-dark {
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    color-scheme: dark;
 }
 
-    .cardTablePersonalizado .card-header {
-        background: linear-gradient(90deg, #1E5799, #7DB9E8);
-        color: #fff;
-        font-weight: 600;
-        border-bottom: none;
-    }
-
-.divFiltros .lblcliente {
-    color: #cfd8dc;
-    margin-right: 8px;
+.pagos-root .page-99 {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
-.input-nuevo {
-    background: #1b1f26;
-    border: 1px solid #2a2f38;
-    color: #e3f2fd;
-    border-radius: 10px;
-    padding: 8px 10px;
-    margin-right: 10px;
+.pagos-root .pagos-badge,
+.pagos-modal-icon {
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 55%, #b45309 100%);
+    color: #1a1205;
+    box-shadow: 0 8px 22px rgba(217, 119, 6, 0.35);
 }
 
-    .input-nuevo:focus {
-        outline: none;
-        border-color: #7db9e8;
-        box-shadow: 0 0 0 2px rgba(125,185,232,0.2);
-    }
-
-.btnaccion,
-.btnnuevo,
-.btn-uniformv {
-    border-radius: 10px;
-    font-weight: 600;
-}
-
-.table.dataTable tbody tr {
-    background: #161a20;
-    color: #e0e6ed;
-}
-
-.table.dataTable thead th {
-    background: #0f1217;
-    color: #9cc0ff;
-}
-
-.table.dataTable tbody tr:hover {
-    background: #1b2028;
-}
-
-.dropdown-menu {
-    background: #1b1f26;
-    border: 1px solid #2a2f38;
-}
-
-.dropdown-item {
-    color: #dfe7ef;
-}
-
-    .dropdown-item:hover {
-        background: #2a3442;
-        color: #fff;
-    }
-
-
-
-/* PagosParciales – ajustes de layout */
-#modalPagosParciales .table td,
-#modalPagosParciales .table th {
-    vertical-align: middle;
-}
-
-/* Disposición más cómoda en pantallas pequeñas */
-@media (max-width: 576px) {
-    #modalPagosParciales .modal-body .form-label {
-        font-size: .85rem;
-    }
-
-    #modalPagosParciales .table {
-        font-size: .92rem;
-    }
-
-    #modalPagosParciales .card .form-control,
-    #modalPagosParciales .card .form-select {
-        font-size: .9rem;
-    }
-
-    #modalPagosParciales .card .row > [class^="col-"] {
-        margin-bottom: .25rem;
-    }
-}
-
-/* Mediano: que no se amontone */
-@media (min-width: 577px) and (max-width: 992px) {
-    #modalPagosParciales .table {
-        font-size: .95rem;
-    }
-}
-
-
-/* ===== Modal Pagos Parciales – dark pulido ===== */
-.pp-modal {
-    background: #121418;
-    color: #e3f2fd;
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-.pp-modal-header {
-    background: linear-gradient(90deg, #1E5799, #7DB9E8);
-    color: #fff;
-    border: 0;
-}
-
-.pp-modal-footer {
-    border-top: 1px solid rgba(255,255,255,.08);
-}
-
-/* Controles oscuros acordes */
-.pp-control {
-    background: #1b1f26 !important;
-    border: 1px solid #2a2f38 !important;
-    color: #e3f2fd !important;
-}
-
-    .pp-control::placeholder {
-        color: #8aa2c0;
-    }
-
-    .pp-control:focus {
-        outline: none;
-        border-color: #7db9e8 !important;
-        box-shadow: 0 0 0 2px rgba(125,185,232,.2) !important;
-    }
-
-.pp-addon {
-    background: #1b2330;
-    border: 1px solid #2a2f38;
-    color: #9cc0ff;
-}
-
-/* Bloque alta rápida */
-.pp-add {
-    background: #161a20;
-    border: 1px solid #2a2f38;
+.pagos-root .pagos-header-btn {
+    min-height: 44px;
+    font-weight: 700;
     border-radius: 12px;
 }
 
-.pp-add-title {
+.pagos-filter-label {
+    color: #d9e3f5;
     font-weight: 600;
-    color: #cfd8dc;
+    font-size: 0.82rem;
+    margin-bottom: 0.35rem;
+    display: block;
 }
 
-/* Tabla dentro del modal coherente con tu tema */
-#modalPagosParciales .table thead th {
-    background: #0f1217;
-    color: #9cc0ff;
-    border-color: #2a2f38;
+.pagos-root .pagos-filter-input,
+.pagos-modal .pagos-filter-input {
+    min-height: 42px;
+    border-radius: 11px !important;
+    background: #0c1731 !important;
+    color: #f0f5ff !important;
+    border: 1px solid rgba(118, 158, 255, 0.35) !important;
 }
 
-#modalPagosParciales .table tbody tr {
-    background: #161a20;
-    color: #e0e6ed;
+.pagos-root .pagos-filter-input:focus,
+.pagos-modal .pagos-filter-input:focus {
+    border-color: rgba(88, 166, 255, 0.75) !important;
+    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2) !important;
+    outline: none;
 }
 
-    #modalPagosParciales .table tbody tr:hover {
-        background: #1b2028;
+.pagos-addon {
+    background: #121c34;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    color: #8ab4ff;
+    font-weight: 700;
+    border-radius: 11px 0 0 11px !important;
+}
+
+.pagos-root .input-group .pagos-filter-input,
+.pagos-modal .input-group .pagos-filter-input {
+    border-radius: 0 11px 11px 0 !important;
+}
+
+.pagos-root .pagos-table-card,
+.pagos-root .pagos-table-toolbar,
+.pagos-root .pagos-filters-card {
+    overflow: visible;
+}
+
+.pagos-root .pagos-toolbar-dropdown {
+    position: relative;
+}
+
+.pagos-root .pagos-toolbar-dropdown .dropdown-menu.show {
+    display: block;
+    z-index: 1090;
+}
+
+.pagos-dt-hint,
+.pagos-hint {
+    color: rgba(180, 198, 230, 0.78) !important;
+}
+
+.pagos-dt-wrap {
+    border-radius: 12px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.pagos-root .pagos-dt-wrap .dataTables_scrollBody,
+.pagos-modal .pagos-dt-wrap .dataTables_scrollBody {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto !important;
+}
+
+#grdSueldos tbody tr:not(.child) {
+    cursor: pointer;
+}
+
+#grdSueldos tbody tr.seleccionada td,
+#ppGrid tbody tr.seleccionada td {
+    background-color: rgba(88, 166, 255, 0.22) !important;
+    color: #eaf1ff !important;
+}
+
+#grdSueldos tbody tr.seleccionada td:first-child {
+    box-shadow: inset 3px 0 0 rgba(251, 191, 36, 0.95);
+}
+
+#grdSueldos .btnacciones:has(.fa-eye),
+#ppGrid .btnacciones:has(.fa-eye) {
+    background: rgba(13, 202, 240, 0.16);
+    border-color: rgba(13, 202, 240, 0.45);
+    color: #7ee7ff;
+}
+
+#grdSueldos .btnacciones:has(.fa-trash),
+#ppGrid .btnacciones:has(.fa-trash) {
+    background: rgba(220, 53, 69, 0.16);
+    border-color: rgba(220, 53, 69, 0.5);
+    color: #ff8f9a;
+}
+
+.pagos-add-panel {
+    background: rgba(8, 14, 32, 0.45);
+    border: 1px solid rgba(88, 166, 255, 0.22);
+    border-radius: 14px;
+    padding: 1rem;
+}
+
+.pagos-add-title {
+    font-weight: 700;
+    color: #eaf1ff;
+}
+
+.pagos-modal.cc-modal-shell .modal-dialog.pagos-modal-dialog {
+    max-width: min(720px, calc(100vw - 1.5rem));
+    width: calc(100% - 1.5rem);
+    margin: 4vh auto 1rem;
+}
+
+.pagos-modal--xl.cc-modal-shell .modal-dialog.pagos-modal-dialog {
+    max-width: min(1140px, calc(100vw - 1.5rem));
+}
+
+.pagos-modal .modal-content {
+    overflow: hidden;
+}
+
+.pagos-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    padding: 0.75rem 1.1rem 1rem !important;
+}
+
+#ppGrid tfoot th {
+    background: #0e1024 !important;
+    color: #eaf1ff !important;
+    border-top: 1px solid rgba(88, 166, 255, 0.25) !important;
+}
+
+#modalPagosParciales .dataTables_wrapper .dataTables_length,
+#modalPagosParciales .dataTables_wrapper .dataTables_filter,
+#modalPagosParciales .dataTables_wrapper .dataTables_info,
+#modalPagosParciales .dataTables_wrapper .dataTables_paginate {
+    color: #d5e2ff;
+}
+
+@media (max-width: 767.98px) {
+    .pagos-root .cc-header > .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
     }
 
-#modalPagosParciales .table tfoot th {
-    background: #0f1217;
-    color: #e3f2fd;
-    border-top: 1px solid #2a2f38;
-}
-
-/* Compactación en móviles */
-@media (max-width: 576px) {
-    #modalPagosParciales .modal-body .form-label {
-        font-size: .85rem;
+    .pagos-root .pagos-header-actions {
+        width: 100%;
+        margin-left: 0 !important;
     }
 
-    #modalPagosParciales .table {
-        font-size: .92rem;
+    .pagos-root .pagos-header-actions .pagos-header-btn {
+        flex: 1 1 auto;
     }
 
-    .pp-control {
-        font-size: .92rem !important;
-    }
-}
-
-
-
-/* ================= Unificar alto en "Nuevo pago parcial" ================= */
-#modalPagosParciales {
-  --pp-field-height: 38px;           /* cambiá este valor si querés más/menos alto */
-}
-
-/* Campos del bloque de alta rápida */
-#modalPagosParciales .pp-add .form-control,
-#modalPagosParciales .pp-add .form-select,
-#modalPagosParciales .pp-add .input-group-text {
-  height: var(--pp-field-height) !important;
-  min-height: var(--pp-field-height) !important;
-  line-height: calc(var(--pp-field-height) - 0.75rem) !important; /* texto centrado */
-  padding-top: .375rem !important;
-  padding-bottom: .375rem !important;
-}
-
-/* Input-group: que el símbolo $ quede centrado igual que el input */
-#modalPagosParciales .pp-add .input-group-text {
-  display: flex;
-  align-items: center;
-}
-
-/* Date inputs suelen venir más “bajos” en algunos navegadores */
-#modalPagosParciales .pp-add input[type="date"].form-control {
-  padding-top: .375rem !important;
-  padding-bottom: .375rem !important;
-}
-
-/* Cuando usás variantes -sm en el HTML, forzamos el mismo alto */
-#modalPagosParciales .pp-add .form-control.form-control-sm,
-#modalPagosParciales .pp-add .form-select.form-select-sm,
-#modalPagosParciales .pp-add .input-group.input-group-sm .form-control,
-#modalPagosParciales .pp-add .input-group.input-group-sm .input-group-text {
-  height: var(--pp-field-height) !important;
-  min-height: var(--pp-field-height) !important;
-  line-height: calc(var(--pp-field-height) - 0.75rem) !important;
-}
-
-/* (Opcional) Que todos los campos se vean consistentes en móviles */
-@media (max-width: 576px) {
-  #modalPagosParciales { --pp-field-height: 42px; }
-}
-
-
-/* ===== Tipografía uniforme en "Nuevo pago parcial" ===== */
-#modalPagosParciales .pp-add {
-    --pp-font-size: 1rem; /* mismo tamaño que form-select de Bootstrap */
-    --pp-font-weight: 400;
-    --pp-line-height: 1.5;
-}
-
-    #modalPagosParciales .pp-add .form-control,
-    #modalPagosParciales .pp-add .form-select,
-    #modalPagosParciales .pp-add .input-group-text {
-        font-size: var(--pp-font-size) !important;
-        font-weight: var(--pp-font-weight) !important;
-        line-height: var(--pp-line-height) !important;
+    .pagos-root .pagos-table-toolbar {
+        flex-direction: column;
+        align-items: stretch !important;
     }
 
-        /* Placeholders con el mismo tamaño (importe, detalle, etc.) */
-        #modalPagosParciales .pp-add .form-control::placeholder {
-            font-size: var(--pp-font-size) !important;
-            line-height: var(--pp-line-height) !important;
-            opacity: .65; /* similar a Bootstrap */
-        }
-
-    /* El símbolo $ del input-group a la misma tipografía */
-    #modalPagosParciales .pp-add .input-group-text {
-        display: flex;
-        align-items: center;
+    .pagos-root .pagos-toolbar-actions,
+    .pagos-root .pagos-toolbar-dropdown,
+    .pagos-root .pagos-columns-toggle {
+        width: 100%;
     }
+
+    .pagos-root .pagos-columns-toggle {
+        justify-content: center;
+    }
+
+    .pagos-modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .pagos-modal-footer .btn,
+    #ppBtnAgregar {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    #grdSueldos .btnacciones,
+    #ppGrid .btnacciones {
+        min-width: 40px;
+        min-height: 40px;
+    }
+}

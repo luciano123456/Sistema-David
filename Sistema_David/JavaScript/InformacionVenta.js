@@ -1296,7 +1296,7 @@ $(document).on("click", ".btn-del-info", async function (e) {
 async function eliminarInformacion(idInfo, ventaUniqueId) {
     if (!idInfo) return;
 
-    const ok = confirm("¿Eliminar este registro de la información de la venta?");
+    const ok = await confirmarModal("¿Eliminar este registro de la información de la venta?");
     if (!ok) return;
 
     try {

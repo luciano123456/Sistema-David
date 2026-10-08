@@ -1986,6 +1986,115 @@ input {
     padding: 1.5px !important;
 }
 
+.ve-page-cobros .ve-card.vc-sec {
+    margin: 0 0 18px !important;
+    padding: 0 !important;
+    border: 1px solid rgba(130, 168, 255, .28) !important;
+    border-radius: 18px !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .045), transparent 32%), #0e1730;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .32);
+}
+
+.ve-page-cobros .ve-card.vc-sec[data-vc-sec="cuotas"] {
+    border-top: 3px solid #38bdf8 !important;
+}
+
+.ve-page-cobros .ve-card.vc-sec[data-vc-sec="pendientes"] {
+    border-top: 3px solid #fbbf24 !important;
+}
+
+.ve-page-cobros .ve-card.vc-sec[data-vc-sec="transferencias"] {
+    border-top: 3px solid #f87171 !important;
+}
+
+.ve-page-cobros .vc-sec-body {
+    padding: 14px 14px 16px;
+}
+
+.ve-page-cobros .vc-sec.is-collapsed .vc-sec-body {
+    display: none;
+}
+
+.ve-page-cobros .vc-sec.is-collapsed .ve-card-header {
+    border-bottom: 0 !important;
+}
+
+.ve-page-cobros .vc-sec-toggle,
+.ve-page-cobros button.ve-card-header.vc-sec-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: #f4f7ff;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.ve-page-cobros .vc-sec-toggle {
+    flex: 1 1 auto;
+    padding: 0;
+}
+
+.ve-page-cobros button.ve-card-header.vc-sec-head {
+    width: 100%;
+    justify-content: space-between;
+}
+
+.ve-page-cobros .vc-sec-chevron-btn {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    background: rgba(15, 23, 42, .55);
+    color: #e8eef8;
+    cursor: pointer;
+}
+
+.ve-page-cobros .vc-sec-chevron {
+    color: #9fb0c9;
+    font-size: 12px;
+}
+
+.ve-page-cobros .vc-sec.is-collapsed .vc-sec-chevron {
+    color: #7dd3fc;
+}
+
+/* En celular el chevron no entra en la fila de los botones y cae abajo a la izquierda.
+   Título + plegar quedan en la primera fila; los filtros pasan abajo. */
+@media (max-width: 767.98px) {
+    .ve-page-cobros .vc-sec[data-vc-sec="cuotas"] > .ve-card-header.vc-sec-head {
+        align-items: center;
+    }
+
+    .ve-page-cobros .vc-sec[data-vc-sec="cuotas"] > .ve-card-header.vc-sec-head .vc-sec-toggle {
+        order: 1;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .ve-page-cobros .vc-sec[data-vc-sec="cuotas"] > .ve-card-header.vc-sec-head .vc-sec-chevron-btn {
+        order: 2;
+    }
+
+    .ve-page-cobros .vc-sec[data-vc-sec="cuotas"] > .ve-card-header.vc-sec-head #divFiltros {
+        order: 3;
+        flex: 1 1 100%;
+        width: 100% !important;
+        justify-content: flex-start;
+    }
+}
+
 /* Select2 dark-ish */
 .select2-container--default .select2-selection--single {
     background-color: var(--panel2);
@@ -2072,10 +2181,14 @@ input {
 
 /* contenedor */
 .acciones-pendientes {
-    display: flex;
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
+    width: max-content;
+    white-space: nowrap;
 }
 
 /* botón base */
@@ -2711,6 +2824,12 @@ input {
     background: #2f80ed;
     color: white;
     font-size: 18px;
+    flex-shrink: 0;
+}
+
+.vc-info-content {
+    min-width: 0;
+    flex: 1;
 }
 
     .vc-info-icon.success {
@@ -3582,6 +3701,21 @@ body.vc-dir-modal-open .modal-backdrop.show {
         overflow: visible;
     }
 
+    /* Cobros y transferencias pendientes: el overflow visible de arriba recorta la tabla sin scroll.
+       El scroll real lo arma DataTables (scrollX) en .dataTables_scrollBody. */
+    .ve-page-cobros #divCobrosPendientes .vc-vista-tabla .dataTables_scroll,
+    .ve-page-cobros #divTransferenciasPendientes .vc-vista-tabla .dataTables_scroll {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .ve-page-cobros #divCobrosPendientes .vc-vista-tabla .dataTables_scrollBody,
+    .ve-page-cobros #divTransferenciasPendientes .vc-vista-tabla .dataTables_scrollBody {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+    }
+
     .vc-smart-filter-control {
         min-width: 0 !important;
         max-width: none !important;
@@ -3594,10 +3728,29 @@ body.vc-dir-modal-open .modal-backdrop.show {
         gap: 8px;
     }
 
+    .vc-info-cliente {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
     .vc-info-card {
         min-width: 0 !important;
+        width: 100%;
+        flex: none;
         border-radius: 16px;
         padding: 12px;
+        overflow: hidden;
+    }
+
+    .vc-info-title,
+    .vc-info-value {
+        overflow-wrap: anywhere;
+    }
+
+    .vc-info-value {
+        font-size: 16px;
+        line-height: 1.25;
     }
 
     .modal-dialog {

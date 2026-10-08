@@ -370,8 +370,11 @@ namespace Sistema_David.Controllers
         {
             try
             {
-                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
-                var msg = Ventas_ElectrodomesticosModel.EliminarRecargoCuota(idRecargo, usuario);
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (usuarioSesion == null || usuarioSesion.IdRol != 1)
+                    return Json(new { success = false, message = "No autorizado" });
+
+                var msg = Ventas_ElectrodomesticosModel.EliminarRecargoCuota(idRecargo, usuarioSesion.Id);
 
                 return Json(new
                 {
@@ -391,8 +394,11 @@ namespace Sistema_David.Controllers
         {
             try
             {
-                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
-                var msg = Ventas_ElectrodomesticosModel.EliminarPago(idPago, usuario);
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (usuarioSesion == null || usuarioSesion.IdRol != 1)
+                    return Json(new { success = false, message = "No autorizado" });
+
+                var msg = Ventas_ElectrodomesticosModel.EliminarPago(idPago, usuarioSesion.Id);
 
                 return Json(new
                 {
@@ -545,9 +551,12 @@ namespace Sistema_David.Controllers
         {
             try
             {
-                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (usuarioSesion == null || usuarioSesion.IdRol != 1)
+                    return Json(new { success = false, message = "No autorizado" });
+
                 var devolver = EsDevolverStockSi(devolverStock);
-                var msg = Ventas_ElectrodomesticosModel.ArchivarVenta(id, usuario, motivo, forzar, devolver);
+                var msg = Ventas_ElectrodomesticosModel.ArchivarVenta(id, usuarioSesion.Id, motivo, forzar, devolver);
 
                 if (msg == "TIENE_PAGOS")
                 {
@@ -720,7 +729,11 @@ namespace Sistema_David.Controllers
         {
             try
             {
-                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (estado == "Cancelada" && (usuarioSesion == null || usuarioSesion.IdRol != 1))
+                    return Json(new { success = false, message = "No autorizado" });
+
+                var usuario = usuarioSesion?.Id ?? 0;
                 var devolver = EsDevolverStockSi(devolverStock);
 
                 var msg = Ventas_ElectrodomesticosModel

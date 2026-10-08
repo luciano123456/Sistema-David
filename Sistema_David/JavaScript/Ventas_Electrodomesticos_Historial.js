@@ -77,6 +77,10 @@ const parseMoney = s => {
 };
 
 function showToast(msg, type = "info") {
+    if (typeof mostrarToast === "function") {
+        mostrarToast(msg, type);
+        return;
+    }
     let cont = document.getElementById("toastContainerBR");
     if (!cont) {
         cont = document.createElement("div");
@@ -333,6 +337,8 @@ function vhHtmlVentaCard(d, kind) {
         }
         acciones += `<button type="button" class="btn-accion btn-historial" data-vh-act="detalle" data-idventa="${id}" title="Ver detalle"><i class="fa fa-chevron-down"></i></button>`;
     }
+
+    acciones = htmlAdjuntosCliente(d.IdCliente, d.TieneImagenes, d.Cliente, "venta") + acciones;
 
     const sub = kind === "elim"
         ? `Venta #${id} · Eliminada ${fechaElim || "—"}`
@@ -768,7 +774,7 @@ function renderTablaBase(selector, data, tipo) {
             },
             {
                 data: null,
-                className: "text-center",
+                className: "text-center acciones-celda",
                 render: (row) => {
 
                     if (tipo === "pendiente") {
@@ -844,11 +850,12 @@ function renderTablaBase(selector, data, tipo) {
                             `;
                         }
 
-                        return `<div class="acciones-pendientes">${botones}</div>`;
+                        return `<div class="acciones-pendientes">${htmlAdjuntosCliente(row.IdCliente, row.TieneImagenes, row.Cliente, "venta")}${botones}</div>`;
                     }
 
                     return `
-                        <div class="d-flex justify-content-center gap-2">
+                        <div class="acciones-fila">
+                            ${htmlAdjuntosCliente(row.IdCliente, row.TieneImagenes, row.Cliente, "venta")}
                             <button class="btn-accion btn-editar"
                                 onclick="editarVenta(${row.IdVenta})">
                                 <i class="fa fa-pencil"></i>
@@ -1045,7 +1052,7 @@ function renderTabla(data) {
                 data: null,
                 name: "acciones",
                 orderable: false,
-                className: "text-center",
+                className: "text-center acciones-celda",
                 render: (row) => {
 
                     const id = row.IdVenta;
@@ -1075,7 +1082,9 @@ function renderTabla(data) {
         ` : "";
 
                     return `
-        <div class="d-flex justify-content-center gap-2">
+        <div class="acciones-fila">
+
+        ${htmlAdjuntosCliente(row.IdCliente, row.TieneImagenes, row.Cliente, "venta")}
 
         ${userSession.IdRol == 1 || userSession.IdRol == 4  ? `
             <button class="btn-accion btn-editar"
@@ -1827,11 +1836,12 @@ async function cargarVentasEliminadas() {
             {
                 data: null,
                 orderable: false,
-                className: "text-center",
+                className: "text-center acciones-celda",
                 render: (row) => {
                     const id = row.IdVenta;
                     return `
-                        <div class="d-flex justify-content-center gap-2">
+                        <div class="acciones-fila">
+                            ${htmlAdjuntosCliente(row.IdCliente, row.TieneImagenes, row.Cliente, "venta")}
                             <button class="btn-accion btn-aprobar"
                                     title="Restaurar venta"
                                     onclick="restaurarVentaEliminada(${id}, ${row.StockDevueltoAlArchivar ? 1 : 0})">

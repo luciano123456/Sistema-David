@@ -5,7 +5,7 @@
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
 <link href="~/Estilos/Clientes.css?v=1.6" rel="stylesheet" />
-<link href="~/Estilos/ClientesEditar.css?v=3.0" rel="stylesheet" />
+<link href="~/Estilos/ClientesEditar.css?v=4.0" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
@@ -13,138 +13,149 @@
 
     @if (@ViewData["ErrorPermisos"] == null)
     {
-        <div class="container-fluid page-99 py-3">
+        <div class="container-fluid page-99 ce-page">
 
-            <section class="cc-header mb-4">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                    <div class="d-flex align-items-center gap-3">
+            <section class="cc-header ce-top">
+                <div class="ce-top-row">
+                    <div class="ce-top-id">
                         <div class="cc-badge ce-badge-edit">
                             <i class="fa fa-user-circle"></i>
                         </div>
-                        <div>
+                        <div class="ce-top-titles">
                             <h2 class="m-0 fw-800" id="cePageTitle">Cliente</h2>
                             <div class="text-muted-cc" id="cePageSubtitle">Datos, ubicaci&oacute;n y l&iacute;mite de ventas</div>
                         </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-outline-light" onclick="volverListadoClientes()">
-                            <i class="fa fa-arrow-left me-1"></i> Volver
-                        </button>
-                    </div>
+                    <button type="button" class="btn btn-outline-light ce-btn-back" onclick="volverListadoClientes()">
+                        <i class="fa fa-arrow-left me-1"></i> Volver
+                    </button>
                 </div>
             </section>
 
-            <div class="row g-4 align-items-start">
-                <div class="col-12 col-xl-5">
-                    <section class="card-glass ce-section p-3 mb-4">
-                        <div class="ce-section-head">
-                            <i class="fa fa-id-card-o"></i>
-                            <span>Datos personales</span>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <label class="form-label" for="Nombre">Nombre</label>
-                                <input id="Nombre" type="text" class="form-control ce-input" placeholder="Nombre" autocomplete="off" />
+            <div class="ce-ficha card-glass">
+                <div class="ce-ficha-grid">
+                    <div class="ce-ficha-form">
+                        <section class="ce-block">
+                            <div class="ce-section-head">
+                                <i class="fa fa-id-card-o"></i>
+                                <span>Datos personales</span>
                             </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label" for="Apellido">Apellido</label>
-                                <input id="Apellido" type="text" class="form-control ce-input" placeholder="Apellido" autocomplete="off" />
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label" for="Dni">DNI</label>
-                                <input id="Dni" type="text" class="form-control ce-input" placeholder="Documento" autocomplete="off" />
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label" for="Telefono">Tel&eacute;fono</label>
-                                <input id="Telefono" type="text" class="form-control ce-input" placeholder="Tel&eacute;fono" autocomplete="off" />
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="card-glass ce-section p-3 mb-4">
-                        <div class="ce-section-head">
-                            <i class="fa fa-briefcase"></i>
-                            <span>Datos comerciales</span>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <label class="form-label" for="Usuarios">Vendedor</label>
-                                <select id="Usuarios" name="select" class="form-select ce-input">
-                                    <option value="" selected>Seleccione vendedor</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label" for="Zonas">Zona</label>
-                                <select id="Zonas" name="select" class="form-select ce-input">
-                                    <option value="" selected>Seleccione zona</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label" for="Estados">Estado</label>
-                                <select id="Estados" name="select" class="form-select ce-input">
-                                    <option value="" selected>Seleccione estado</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label" for="LimiteVentas">L&iacute;mite de ventas</label>
-                                <div class="input-group ce-input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input id="LimiteVentas" type="text" class="form-control ce-input" placeholder="0" autocomplete="off" />
+                            <div class="row g-2">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="Nombre">Nombre</label>
+                                    <input id="Nombre" type="text" class="form-control ce-input" placeholder="Nombre" autocomplete="off" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="Apellido">Apellido</label>
+                                    <input id="Apellido" type="text" class="form-control ce-input" placeholder="Apellido" autocomplete="off" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="Dni">DNI</label>
+                                    <input id="Dni" type="text" class="form-control ce-input" placeholder="Documento" autocomplete="off" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="Telefono">Tel&eacute;fono</label>
+                                    <input id="Telefono" type="text" class="form-control ce-input" placeholder="Tel&eacute;fono" autocomplete="off" />
                                 </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
 
-                    <section class="card-glass ce-section p-3 mb-4">
-                        <div class="ce-section-head">
-                            <i class="fa fa-map-marker"></i>
-                            <span>Ubicaci&oacute;n</span>
-                            <button type="button" id="btnHistorialDireccionEdicion" class="hd-trigger-eye hd-trigger-eye--label ms-auto" title="Ver historial de direcci&oacute;n" onclick="abrirHistorialDireccionClienteDesdeEdicion()" hidden>
-                                <i class="fa fa-eye"></i>
-                            </button>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label" for="Direccion">Direcci&oacute;n</label>
-                                <input id="Direccion" type="text" class="form-control ce-input" placeholder="Calle, n&uacute;mero, localidad" autocomplete="off" />
+                        <section class="ce-block">
+                            <div class="ce-section-head">
+                                <i class="fa fa-briefcase"></i>
+                                <span>Datos comerciales</span>
                             </div>
-                            <div class="col-12">
-                                <div class="ce-coords">
-                                    <div class="ce-coord-chip">
-                                        <span class="ce-coord-label">Latitud</span>
-                                        <span id="lbllatitud" class="ce-coord-value">—</span>
-                                    </div>
-                                    <div class="ce-coord-chip">
-                                        <span class="ce-coord-label">Longitud</span>
-                                        <span id="lbllongitud" class="ce-coord-value">—</span>
+                            <div class="row g-2">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="Usuarios">Vendedor</label>
+                                    <select id="Usuarios" name="select" class="form-select ce-input">
+                                        <option value="" selected>Seleccione vendedor</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="Zonas">Zona</label>
+                                    <select id="Zonas" name="select" class="form-select ce-input">
+                                        <option value="" selected>Seleccione zona</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="Estados">Estado</label>
+                                    <select id="Estados" name="select" class="form-select ce-input">
+                                        <option value="" selected>Seleccione estado</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="LimiteVentas">L&iacute;mite de ventas</label>
+                                    <div class="input-group ce-input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input id="LimiteVentas" type="text" class="form-control ce-input" placeholder="0" autocomplete="off" />
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
 
-                    <div class="ce-actions ce-actions--inline d-xl-none">
-                        <button type="button" class="btn btn-outline-light" onclick="AccionBtnCancelar()">
-                            <i class="fa fa-times me-1"></i> Cancelar
-                        </button>
-                        <button type="button" class="btn btn-primary ce-btn-save" id="btnRegistrarModificarMobile" onclick="AccionBtn()">
-                            <i class="fa fa-check me-1"></i> Guardar
-                        </button>
+                        <section class="ce-block">
+                            <div class="ce-section-head">
+                                <i class="fa fa-map-marker"></i>
+                                <span>Ubicaci&oacute;n</span>
+                                <button type="button" id="btnHistorialDireccionEdicion" class="hd-trigger-eye hd-trigger-eye--label ms-auto" title="Ver historial de direcci&oacute;n" onclick="abrirHistorialDireccionClienteDesdeEdicion()" hidden>
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label" for="Direccion">Direcci&oacute;n</label>
+                                    <input id="Direccion" type="text" class="form-control ce-input" placeholder="Calle, n&uacute;mero, localidad" autocomplete="off" />
+                                </div>
+                                <div class="col-12">
+                                    <div class="ce-coords">
+                                        <div class="ce-coord-group">
+                                            <span class="ce-coord-prefix">Lat</span>
+                                            <span id="lbllatitud" class="ce-coord-value">—</span>
+                                        </div>
+                                        <div class="ce-coord-group">
+                                            <span class="ce-coord-prefix">Long</span>
+                                            <span id="lbllongitud" class="ce-coord-value">—</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="ce-block ce-block--adj">
+                            <div class="ce-section-head">
+                                <i class="fa fa-paperclip"></i>
+                                <span>Documentos e im&aacute;genes</span>
+                                <span id="ceAdjCount" class="ce-adj-count">0</span>
+                            </div>
+                            <p class="ce-adj-lead">DNI, comprobantes o lo que necesites. Pod&eacute;s adjuntar todas las que quieras: quedan en la ficha de este cliente.</p>
+                            <div id="ceAdjDrop" class="ce-adj-drop" tabindex="0">
+                                <input id="ceAdjInput" type="file" accept="image/*,.pdf,application/pdf" multiple hidden />
+                                <div class="ce-adj-drop-icon"><i class="fa fa-cloud-upload"></i></div>
+                                <div class="ce-adj-drop-title">Arrastr&aacute; las fotos ac&aacute; o toc&aacute; para elegirlas</div>
+                                <div class="ce-adj-drop-sub">JPG, PNG o PDF. Las fotos se comprimen al guardarlas.</div>
+                            </div>
+                            <div id="ceAdjEstado" class="ce-adj-estado" hidden></div>
+                            <div id="ceAdjGrid" class="ce-adj-grid"></div>
+                        </section>
                     </div>
-                </div>
 
-                <div class="col-12 col-xl-7">
-                    <section class="card-glass ce-section ce-map-section p-0 mb-4">
-                        <div class="ce-map-toolbar">
-                            <div class="ce-section-head ce-section-head--map mb-0">
+                    <div class="ce-ficha-map">
+                        <div class="ce-map-head">
+                            <div class="ce-section-head ce-section-head--map">
                                 <i class="fa fa-globe"></i>
                                 <span>Mapa de ubicaci&oacute;n</span>
                             </div>
-                            <p class="ce-map-hint mb-0">Busc&aacute; la direcci&oacute;n o arrastr&aacute; el pin para actualizar coordenadas.</p>
+                            <p class="ce-map-hint">Busc&aacute; la direcci&oacute;n o arrastr&aacute; el pin para actualizar coordenadas.</p>
                         </div>
-                        <div class="ce-map-wrap">
-                            <input id="pac-input" class="ce-pac-input controls" type="text" placeholder="Buscar en Google Maps" autocomplete="off" />
-                            <div id="map"></div>
+                        <div class="ce-map-frame">
+                            <div class="ce-map-search" id="ceMapSearch">
+                                <span class="ce-map-search-ico" aria-hidden="true"><i class="fa fa-search"></i></span>
+                                <input id="pac-input" class="ce-pac-input" type="text" placeholder="Buscar en Google Maps" autocomplete="off" />
+                            </div>
+                            <div class="ce-map-wrap">
+                                <div id="map"></div>
+                            </div>
                         </div>
                         <ul id="location-list" class="ce-location-list"></ul>
                         <div class="ce-map-tools d-none">
@@ -153,16 +164,16 @@
                             <button type="button" class="btn btn-sm btn-outline-light" id="siguiente" onclick="siguienteUbicacion()" hidden>Siguiente</button>
                             <button type="button" class="btn btn-sm btn-outline-light" id="finalizar-recorrido" onclick="finalizarRecorrido()" hidden>Finalizar recorrido</button>
                         </div>
-                    </section>
+                    </div>
                 </div>
             </div>
 
-            <div class="ce-actions-bar card-glass p-3 d-none d-xl-flex">
+            <div class="ce-actions-bar card-glass">
                 <div class="ce-actions-bar-text text-muted-cc">
                     <i class="fa fa-info-circle me-1"></i> Los cambios de direcci&oacute;n o coordenadas quedan en el historial.
                 </div>
                 <div class="ce-actions">
-                    <button type="button" class="btn btn-outline-light" onclick="AccionBtnCancelar()">
+                    <button type="button" class="btn btn-outline-light ce-btn-cancel" onclick="AccionBtnCancelar()">
                         <i class="fa fa-times me-1"></i> Cancelar
                     </button>
                     <button type="button" class="btn btn-primary ce-btn-save" id="btnRegistrarModificar" onclick="AccionBtn()">
@@ -176,6 +187,12 @@
             <span id="IdCliente" hidden></span>
 
             @Html.Partial("_HistorialDireccionModal")
+
+            <div id="ceAdjLightbox" class="ce-adj-lightbox" hidden>
+                <button type="button" class="ce-adj-lightbox-close" id="ceAdjLightboxClose" aria-label="Cerrar">&times;</button>
+                <img id="ceAdjLightboxImg" alt="" />
+                <div id="ceAdjLightboxCaption" class="ce-adj-lightbox-caption"></div>
+            </div>
         </div>
     }
     else
@@ -193,8 +210,9 @@
     <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
     <script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
     <script src="~/Scripts/xlsx.full.min.js.js"></script>
-    <script src="~/JavaScript/Utils/Utils.js?v=3.17"></script>
-    <script src="~/JavaScript/ClientesHistorialDireccion.js?v=1.3" charset="utf-8"></script>
-    <script src="~/JavaScript/ClientesEditar.js?v=2.6"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.19"></script>
+    <script src="~/JavaScript/ClientesHistorialDireccion.js?v=1.4" charset="utf-8"></script>
+    <script src="~/JavaScript/ClientesAdjuntos.js?v=1.2" charset="utf-8"></script>
+    <script src="~/JavaScript/ClientesEditar.js?v=2.8"></script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAddgDLrXa7JLbrOCGrCIBqkEDEBh6YtOQ&libraries=places&callback=initMap"></script>
 }

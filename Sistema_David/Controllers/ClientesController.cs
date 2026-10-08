@@ -134,7 +134,9 @@ namespace Sistema_David.Controllers
 
             }
 
-            return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+            var json = Json(new { data = result ?? new List<VMCliente>() }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = int.MaxValue;
+            return json;
         }
 
         /// <summary>Totales globales de cartera (solo admin). No cambian con filtros del listado.</summary>
@@ -243,13 +245,76 @@ namespace Sistema_David.Controllers
 
                 var result = ClientesModel.Nuevo(model);
 
-                    return Json(new { Status = result });
+                    return Json(new { Status = result, Id = model != null ? model.Id : 0 });
             }
             catch (Exception ex)
             {
                 return Json(new { Status = 1 });
             }
 
+        }
+
+        [HttpGet]
+        public ActionResult ListarAdjuntos(int idCliente)
+        {
+            try
+            {
+                var data = ClientesAdjuntosModel.Listar(idCliente);
+                return Json(new { data = data }, JsonRequestBehavior.AllowGet);
+            }
+            catch
+            {
+                return Json(new { data = new List<VMClienteAdjunto>() }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult SubirAdjuntos(int idCliente)
+        {
+            try
+            {
+                var idUsuario = SessionHelper.GetUsuarioSesion() != null ? SessionHelper.GetUsuarioSesion().Id : 0;
+                var resultado = ClientesAdjuntosModel.Guardar(idCliente, Request.Files, idUsuario);
+                return Json(new
+                {
+                    ok = resultado.Ok,
+                    mensaje = resultado.Mensaje,
+                    data = resultado.Items
+                });
+            }
+            catch
+            {
+                return Json(new { ok = false, mensaje = "No se pudieron guardar las imágenes." });
+            }
+        }
+
+        [HttpPost]
+        public ActionResult EliminarAdjunto(int id)
+        {
+            try
+            {
+                var ok = ClientesAdjuntosModel.Eliminar(id);
+                return Json(new { ok = ok });
+            }
+            catch
+            {
+                return Json(new { ok = false });
+            }
+        }
+
+        [HttpGet]
+        public ActionResult VerAdjunto(int id)
+        {
+            string ruta;
+            string contentType;
+            string nombre;
+            if (!ClientesAdjuntosModel.TryAbrir(id, out ruta, out contentType, out nombre))
+                return HttpNotFound();
+
+            if ((contentType ?? "").StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                return File(ruta, contentType);
+
+            return File(ruta, contentType, nombre);
         }
 
         [HttpPost]

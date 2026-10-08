@@ -464,6 +464,34 @@ body.ve-dark {
     border-radius: 12px !important;
 }
 
+#formFiltrosRendimiento input[type="date"] {
+    color: #f4f7ff !important;
+    -webkit-text-fill-color: #f4f7ff !important;
+    caret-color: #f4f7ff;
+    color-scheme: dark;
+    forced-color-adjust: none;
+}
+
+#formFiltrosRendimiento input[type="date"]:focus {
+    color: #f4f7ff !important;
+    -webkit-text-fill-color: #f4f7ff !important;
+}
+
+#formFiltrosRendimiento input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: .85;
+}
+
+#formFiltrosRendimiento input[type="date"]::-webkit-datetime-edit,
+#formFiltrosRendimiento input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+#formFiltrosRendimiento input[type="date"]::-webkit-datetime-edit-text,
+#formFiltrosRendimiento input[type="date"]::-webkit-datetime-edit-month-field,
+#formFiltrosRendimiento input[type="date"]::-webkit-datetime-edit-day-field,
+#formFiltrosRendimiento input[type="date"]::-webkit-datetime-edit-year-field {
+    color: #f4f7ff !important;
+    -webkit-text-fill-color: #f4f7ff !important;
+}
+
 #formFiltrosRendimiento .btn {
     min-height: 42px;
     border-radius: 12px !important;
@@ -1055,6 +1083,82 @@ select option {
         color: #ccc;
         text-align: center;
     }
+}
+
+.dashboard-rendimiento {
+    align-items: start;
+}
+
+.dashboard-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    margin: 0 0 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.dashboard-card-head .title {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.dashboard-card-head .fa {
+    color: #9fb0c9;
+    font-size: 12px;
+    flex: 0 0 auto;
+}
+
+.dashboard-card-body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+}
+
+.dashboard-card.is-collapsed {
+    height: auto !important;
+}
+
+.dashboard-card.is-collapsed .dashboard-card-head {
+    margin-bottom: 0;
+}
+
+.dashboard-card.is-collapsed .dashboard-card-body {
+    display: none;
+}
+
+.dashboard-empty {
+    display: none;
+}
+
+.dashboard-card.is-empty {
+    height: auto !important;
+}
+
+.dashboard-card.is-empty .dashboard-card-body {
+    flex: 0 0 auto;
+}
+
+.dashboard-card.is-empty canvas,
+.dashboard-card.is-empty .chart-loading-overlay {
+    display: none !important;
+}
+
+.dashboard-card.is-empty .dashboard-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 64px;
+    padding: 8px 4px 2px;
+    color: #9fb0c9;
+    font-size: .9rem;
+    text-align: center;
 }
 
 

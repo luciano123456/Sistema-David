@@ -62,6 +62,16 @@ function getNombreUsuario(id) {
 }
 
 /* ===== Filtros generales ===== */
+function limpiarFiltrosPagos() {
+    const hoy = moment();
+    const inicio = moment().add(-6, 'days');
+    $('#Vendedores').val('');
+    $('#FechaDesde').val(inicio.format('YYYY-MM-DD'));
+    $('#FechaHasta').val(hoy.format('YYYY-MM-DD'));
+    $('#Estado').val('');
+    aplicarFiltros();
+}
+
 function aplicarFiltros() {
     const idVendedor = $('#Vendedores').val() || '';
     const fDesde = $('#FechaDesde').val() || '';
@@ -357,7 +367,7 @@ function recargarPagosParciales() {
 
 
 async function eliminarPagoParcial(id) {
-    if (!confirm('¿Eliminar el pago parcial?')) return;
+    if (!(await confirmarModal('¿Eliminar el pago parcial?'))) return;
     try {
         const resp = await $.post(EP_PARCIALES_ELIMINAR, { id });
         if (resp === true || resp?.ok === true) {
@@ -371,7 +381,7 @@ async function eliminarPagoParcial(id) {
 /* ========== Acciones sueldos (opcional) ========== */
 async function eliminarSueldo(id) {
     if (!ENDPOINT_ELIMINAR_SUELDO) return;
-    if (!confirm('¿Eliminar el sueldo seleccionado?')) return;
+    if (!(await confirmarModal('¿Eliminar el sueldo seleccionado?'))) return;
     try {
         const resp = await $.post(ENDPOINT_ELIMINAR_SUELDO, { id });
         if (resp === true || resp?.ok === true) {
