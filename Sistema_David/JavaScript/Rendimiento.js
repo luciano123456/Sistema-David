@@ -3,6 +3,11 @@ let gridRendimiento = null;
 let usuarioSeleccionadoId = null;
 let isRenderingDashboard = false;
 let rendimientoRowSelectedId = null;
+let ausenteDeepLink = null;
+let _ausenteDeepLinkFilterInstalled = false;
+let _ausenteDestacadoScrolleado = false;
+let _ausenteRetryHoy = false;
+let _ausentesDataReady = false;
 
 const REND_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
 const REND_COL_FILTER_DIARIO_KEY = "rendimiento_diario_col_v1";
@@ -114,10 +119,224 @@ $(document).ready(async function () {
 
     await cargarCuentas();
     await cargarTiposDeNegocio();
+    ausenteDeepLink = leerDeepLinkAusente();
+    instalarFiltroDeepLinkAusente();
     configurarDataDiario();
 
     $("#btnRendimiento").css("background", "#2E4053");
+    aplicarVistaAusentesDesdeUrl();
 });
+
+function leerDeepLinkAusente() {
+    try {
+        const q = new URLSearchParams(window.location.search);
+        if ((q.get("vista") || "").toLowerCase() !== "ausentes") return null;
+        const id = Number(q.get("id") || 0);
+        const origen = String(q.get("origen") || "").toUpperCase();
+        return {
+            id: Number.isFinite(id) && id > 0 ? id : 0,
+            origen: origen.indexOf("ELECTRO") >= 0 ? "ELECTRO" : (origen ? "INDUMENTARIA" : ""),
+            soloEste: false
+        };
+    } catch (e) {
+        return null;
+    }
+}
+
+function origenFilaAusente(row) {
+    if (!row) return "INDUMENTARIA";
+    const o = String(row.Origen || row.origen || "").toUpperCase();
+    if (o.indexOf("ELECTRO") >= 0) return "ELECTRO";
+    const desc = String(row.Descripcion || row.descripcion || "").toLowerCase();
+    if (desc.indexOf("electro") >= 0) return "ELECTRO";
+    return "INDUMENTARIA";
+}
+
+function coincideAusenteDeepLink(row, link) {
+    if (!row || !link || !link.id) return false;
+    const id = Number(row.Id || row.id || 0);
+    if (id !== link.id) return false;
+    if (!link.origen) return true;
+    return origenFilaAusente(row) === link.origen;
+}
+
+function instalarFiltroDeepLinkAusente() {
+    if (_ausenteDeepLinkFilterInstalled) return;
+    _ausenteDeepLinkFilterInstalled = true;
+    $.fn.dataTable.ext.search.push(function (settings, _data, dataIndex) {
+        if (!settings || !settings.nTable || settings.nTable.id !== "grdClientesAusentes") return true;
+        if (!ausenteDeepLink || !ausenteDeepLink.id || !ausenteDeepLink.soloEste) return true;
+        const row = settings.aoData && settings.aoData[dataIndex] ? settings.aoData[dataIndex]._aData : null;
+        return coincideAusenteDeepLink(row, ausenteDeepLink);
+    });
+}
+
+function mostrarSeccionAusentes() {
+    const el = document.getElementById("RendimientoClientesAusentes");
+    if (!el) return el;
+    el.removeAttribute("hidden");
+    if (ausenteDeepLink) el.classList.add("ausente-deeplink-activo");
+    return el;
+}
+
+function mostrarBtnVerTodosAusentes(visible) {
+    const btn = document.getElementById("btnVerTodosAusentes");
+    if (!btn) return;
+    if (visible) btn.removeAttribute("hidden");
+    else btn.setAttribute("hidden", "hidden");
+}
+
+function esperarSinLoading(cb, intentos) {
+    intentos = intentos || 0;
+    if (document.body.classList.contains("loading") && intentos < 50) {
+        setTimeout(function () { esperarSinLoading(cb, intentos + 1); }, 150);
+        return;
+    }
+    cb();
+}
+
+function scrollASeccionAusentes(filaNode) {
+    esperarSinLoading(function () {
+        const seccion = mostrarSeccionAusentes();
+        if (filaNode && filaNode.scrollIntoView) {
+            filaNode.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+        }
+        if (seccion && seccion.scrollIntoView) {
+            seccion.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    });
+}
+
+function aplicarClaseSeleccionadaAusente(node) {
+    const $tbody = $("#grdClientesAusentes tbody");
+    $tbody.find("tr.seleccionada").removeClass("seleccionada");
+    $tbody.find("td.seleccionada").removeClass("seleccionada");
+    if (!node) return;
+    $(node).addClass("seleccionada");
+    $("td", node).addClass("seleccionada");
+}
+
+function recargarAusentesHoySiHaceFalta() {
+    if (_ausenteRetryHoy) return;
+    _ausenteRetryHoy = true;
+    const hoy = moment().format("YYYY-MM-DD");
+    if (!$.fn.DataTable.isDataTable("#grdClientesAusentes")) {
+        configurarDataTableClientesAusentes(hoy, hoy);
+        return;
+    }
+    const table = $("#grdClientesAusentes").DataTable();
+    table.ajax.url(`/Rendimiento/MostrarClientesAusentes?fechadesde=${hoy}&fechahasta=${hoy}`).load(function () {
+        destacarAusenteDeepLink();
+    });
+}
+
+function destacarAusenteDeepLink() {
+    const link = ausenteDeepLink;
+    if (!link) return;
+
+    const seccion = mostrarSeccionAusentes();
+    if (!seccion) return;
+
+    if (!link.id) {
+        if (!_ausenteDestacadoScrolleado) {
+            _ausenteDestacadoScrolleado = true;
+            scrollASeccionAusentes();
+        }
+        return;
+    }
+
+    if (!$.fn.DataTable.isDataTable("#grdClientesAusentes")) return;
+    const table = $("#grdClientesAusentes").DataTable();
+    if (!table.data().count()) {
+        if (_ausentesDataReady) recargarAusentesHoySiHaceFalta();
+        return;
+    }
+
+    let found = null;
+    table.rows().every(function () {
+        if (coincideAusenteDeepLink(this.data(), link)) found = this;
+    });
+
+    if (!found) {
+        if (_ausentesDataReady) recargarAusentesHoySiHaceFalta();
+        return;
+    }
+
+    if (!link.soloEste) {
+        link.soloEste = true;
+        table.search("");
+        table.columns().search("");
+        $(table.table().container()).find("thead tr.filters input, thead tr.filters select").val("");
+        setTimeout(function () {
+            if ($.fn.DataTable.isDataTable("#grdClientesAusentes")) {
+                $("#grdClientesAusentes").DataTable().draw(false);
+            }
+        }, 0);
+        return;
+    }
+
+    let node = found.node();
+    if (!node) {
+        table.rows({ search: "applied" }).every(function () {
+            if (coincideAusenteDeepLink(this.data(), link)) node = this.node();
+        });
+    }
+    aplicarClaseSeleccionadaAusente(node);
+    mostrarBtnVerTodosAusentes(true);
+
+    if (!_ausenteDestacadoScrolleado) {
+        _ausenteDestacadoScrolleado = true;
+        scrollASeccionAusentes(node);
+    }
+}
+
+function verTodosAusentes() {
+    if (ausenteDeepLink) {
+        ausenteDeepLink.soloEste = false;
+        ausenteDeepLink.id = 0;
+    }
+    mostrarBtnVerTodosAusentes(false);
+    const seccion = document.getElementById("RendimientoClientesAusentes");
+    if (seccion) seccion.classList.remove("ausente-deeplink-activo");
+    if ($.fn.DataTable.isDataTable("#grdClientesAusentes")) {
+        $("#grdClientesAusentes").DataTable().draw(false);
+    }
+    try {
+        const u = new URL(window.location.href);
+        u.searchParams.delete("id");
+        u.searchParams.delete("origen");
+        history.replaceState({}, "", u);
+    } catch (e) { }
+}
+
+function aplicarVistaAusentesDesdeUrl() {
+    try {
+        if (!ausenteDeepLink) ausenteDeepLink = leerDeepLinkAusente();
+        if (!ausenteDeepLink) return;
+        mostrarSeccionAusentes();
+        destacarAusenteDeepLink();
+        setTimeout(destacarAusenteDeepLink, 400);
+        setTimeout(destacarAusenteDeepLink, 1200);
+    } catch (e) { }
+}
+
+function asegurarFechasParaAusenteHoy(fechaDesde, fechaHasta) {
+    const hoy = moment().format("YYYY-MM-DD");
+    let fd = fechaDesde;
+    let fh = fechaHasta;
+    if (!fh || moment(fh).isBefore(hoy, "day")) {
+        fh = hoy;
+        const el = document.getElementById("FechaHasta");
+        if (el) el.value = hoy;
+    }
+    if (!fd || moment(fd).isAfter(hoy, "day")) {
+        fd = hoy;
+        const el = document.getElementById("FechaDesde");
+        if (el) el.value = hoy;
+    }
+    return { fechaDesde: fd, fechaHasta: fh };
+}
 
 function inicializarCompatibilidadHtmlNuevo() {
     if (document.getElementById("panelFiltrosRendimiento")) {
@@ -152,6 +371,10 @@ function registrarEventosHtmlNuevo() {
 
     $("#btnLimpiarFiltrosRendimiento").off("click").on("click", function () {
         limpiarFiltrosRendimiento();
+    });
+
+    $("#btnVerTodosAusentes").off("click").on("click", function () {
+        verTodosAusentes();
     });
 
     $("#btnFechaHoy").off("click").on("click", function () {
@@ -280,6 +503,12 @@ async function configurarDataDiario() {
 
     document.getElementById("FechaDesde").value = FechaDesde;
     document.getElementById("FechaHasta").value = FechaHasta;
+
+    if (ausenteDeepLink) {
+        const fechasAus = asegurarFechasParaAusenteHoy(FechaDesde, FechaHasta);
+        FechaDesde = fechasAus.fechaDesde;
+        FechaHasta = fechasAus.fechaHasta;
+    }
 
     var tiponegocio = document.getElementById("TipoNegocio").value;
     var idcuenta = document.getElementById("CuentaPago").value;
@@ -1131,8 +1360,14 @@ const configurarDataTableClientesAusentes = async (fechadesde, fechahasta, data 
                 {
                     "data": "Id",
                     "render": function (data, type, row) {
-                        let iconColorClass = row.whatssap === 1 ? 'text-success' : 'text-danger';
-                        return "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>";
+                        const iconColorClass = safeNumber(row.whatssap) === 1 ? 'text-success' : 'text-danger';
+                        const rowEncoded = encodeURIComponent(JSON.stringify({
+                            Id: row.Id,
+                            IdVenta: row.IdVenta,
+                            Descripcion: row.Descripcion || "",
+                            Origen: row.Origen || ""
+                        }));
+                        return "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='enviarWhatssapDesdeRow(\"" + rowEncoded + "\")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg " + iconColorClass + "' aria-hidden='true'></i></button>";
                     },
                 }
             ],
@@ -1149,6 +1384,11 @@ const configurarDataTableClientesAusentes = async (fechadesde, fechahasta, data 
                     REND_COL_FILTER_AUSENTES_KEY,
                     [4]
                 );
+                _ausentesDataReady = true;
+                destacarAusenteDeepLink();
+            },
+            "drawCallback": function () {
+                if (ausenteDeepLink && ausenteDeepLink.id) destacarAusenteDeepLink();
             }
         });
 
@@ -1157,19 +1397,19 @@ const configurarDataTableClientesAusentes = async (fechadesde, fechahasta, data 
 
         if (data !== null) {
             table.clear().rows.add(data).draw();
+            _ausentesDataReady = true;
+            _ausenteRetryHoy = false;
+            destacarAusenteDeepLink();
+        } else {
+            table.ajax.url(`/Rendimiento/MostrarClientesAusentes?fechadesde=${fechadesde}&fechahasta=${fechahasta}`).load(function () {
+                _ausentesDataReady = true;
+                destacarAusenteDeepLink();
+            });
         }
     }
 
-    let filaSeleccionada = null;
     $('#grdClientesAusentes tbody').off('click', 'tr').on('click', 'tr', function () {
-        if (filaSeleccionada) {
-            $(filaSeleccionada).removeClass('seleccionada');
-            $('td', filaSeleccionada).removeClass('seleccionada');
-        }
-
-        filaSeleccionada = $(this);
-        $(filaSeleccionada).addClass('seleccionada');
-        $('td', filaSeleccionada).addClass('seleccionada');
+        aplicarClaseSeleccionadaAusente(this);
     });
 };
 
@@ -1528,6 +1768,17 @@ async function enviarWhatssapElectro(idMovimiento, descripcion, nroCuota = null)
         contentType: "application/json",
         dataType: "json"
     });
+
+    const pagoMarcado = obtenerPagoActualElectro(base);
+    if (pagoMarcado && Number(pagoMarcado.ClienteAusente) === 1) {
+        const fd = document.getElementById("FechaDesde")?.value;
+        const fh = document.getElementById("FechaHasta")?.value;
+        if (fd && fh && typeof obtenerDatosRendimiento === "function") {
+            obtenerDatosRendimiento(fd, fh);
+        } else if ($.fn.DataTable.isDataTable('#grdClientesAusentes')) {
+            $('#grdClientesAusentes').DataTable().ajax.reload(null, false);
+        }
+    }
 }
 function obtenerTipoMensajeElectro(descripcion = "") {
     const d = String(descripcion || "").toLowerCase();
@@ -1596,6 +1847,15 @@ function armarMensajeWhatsappElectro(base, descripcion, nroCuota = null) {
 
     const saludo = obtenerSaludoWhatsapp();
 
+    const pagoAusente = obtenerPagoActualElectro(base);
+    if (pagoAusente && Number(pagoAusente.ClienteAusente) === 1) {
+        const fecha = pagoAusente.FechaPago ? moment(pagoAusente.FechaPago).format("DD/MM/YYYY") : "";
+        const fechaHora = pagoAusente.FechaPago ? moment(pagoAusente.FechaPago).format("HH:mm") : "";
+        return `Hola ${nombreCliente}, ${saludo}. ` +
+            `Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro ` +
+            `y el cobrador no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
+    }
+
     // ===============================
     // PRODUCTOS
     // ===============================
@@ -1622,15 +1882,7 @@ function armarMensajeWhatsappElectro(base, descripcion, nroCuota = null) {
     // ===============================
     // PRÓXIMA CUOTA
     // ===============================
-    const proximaCuota = obtenerProximaCuotaElectro(v);
-
-    let textoCuota = "—";
-    if (proximaCuota) {
-        textoCuota =
-            `Cuota ${proximaCuota.NumeroCuota} – ` +
-            `${moment(proximaCuota.FechaVencimiento).format("DD/MM/YYYY")} – ` +
-            `${formatNumber(proximaCuota.MontoRestante || 0)}`;
-    }
+    const textoCuota = textoProximaCuotaElectro(v);
 
     // ===============================
     // VENTA
@@ -1643,7 +1895,6 @@ Le informamos que el día ${fechaVenta} hemos registrado una nueva venta.
 ${bloqueProductosAdquiridos}
 💰 *Total:* ${total}
 💵 *Entrega:* ${entrega}
-📉 *Saldo pendiente:* ${saldoVenta}
 
 📆 *Próxima cuota a vencer:*
 ${textoCuota}
@@ -1682,37 +1933,25 @@ Ante cualquier consulta, quedamos a disposición.`;
             textoCuotaPagada = `Cuota ${cuotasDelPago[0].NumeroCuota}`;
         }
 
-        const saldoNumerico = cuotaObjetivo?.NumeroCuota
-            ? obtenerSaldoHastaCuota(base, cuotaObjetivo.NumeroCuota)
-            : obtenerSaldoPostPago(base, Number(base.IdPagoActual || 0));
-
-        const saldoVentaActual = Number(v.Restante != null ? v.Restante : saldoNumerico || 0);
-
-        let lineasRestanteCuota = "";
+        let lineasSaldoCuota = "";
         if (cuotasDelPago.length === 1) {
             const c0 = cuotasDelPago[0];
-            const restCuota = Number(c0.MontoRestante || 0);
-            lineasRestanteCuota = restCuota > 0.009
-                ? `💲 *Restante de la cuota:* ${formatNumber(restCuota)}\n`
-                : `✅ *Cuota ${c0.NumeroCuota} cancelada*\n`;
+            if (Number(c0.MontoRestante || 0) <= 0.009) {
+                lineasSaldoCuota = `✅ *Cuota ${c0.NumeroCuota} cancelada*\n`;
+            }
         } else if (cuotasDelPago.length > 1) {
-            lineasRestanteCuota = cuotasDelPago.map(c => {
-                const restCuota = Number(c.MontoRestante || 0);
-                return restCuota > 0.009
-                    ? `💲 *Restante cuota ${c.NumeroCuota}:* ${formatNumber(restCuota)}`
-                    : `✅ *Cuota ${c.NumeroCuota} cancelada*`;
-            }).join("\n") + "\n";
-        } else if (cuotaObjetivo) {
-            const restCuota = Number(cuotaObjetivo.MontoRestante || 0);
-            lineasRestanteCuota = restCuota > 0.009
-                ? `💲 *Restante de la cuota:* ${formatNumber(restCuota)}\n`
-                : (cuotaObjetivo.NumeroCuota
-                    ? `✅ *Cuota ${cuotaObjetivo.NumeroCuota} cancelada*\n`
-                    : "");
+            const canceladas = cuotasDelPago
+                .filter(c => Number(c.MontoRestante || 0) <= 0.009)
+                .map(c => `✅ *Cuota ${c.NumeroCuota} cancelada*`);
+            if (canceladas.length) {
+                lineasSaldoCuota = canceladas.join("\n") + "\n";
+            }
+        } else if (cuotaObjetivo && Number(cuotaObjetivo.MontoRestante || 0) <= 0.009 && cuotaObjetivo.NumeroCuota) {
+            lineasSaldoCuota = `✅ *Cuota ${cuotaObjetivo.NumeroCuota} cancelada*\n`;
         }
 
         const cuotasRestantes = Array.isArray(v.Cuotas)
-            ? v.Cuotas.filter(c => Number(c.MontoRestante || 0) > 0).length
+            ? v.Cuotas.filter(c => montoRestanteCuotaElectro(c) > 0).length
             : 0;
 
         return `${saludo} ${nombreCliente} 👋
@@ -1722,8 +1961,7 @@ Ante cualquier consulta, quedamos a disposición.`;
 Se ha registrado correctamente el pago de la *${textoCuotaPagada}*.
 ${bloqueProductos}
 💰 *Importe abonado:* ${formatNumber(importePagado)}
-${lineasRestanteCuota}📉 *Saldo pendiente de la venta:* ${formatNumber(saldoVentaActual)}
-📊 *Cuotas restantes:* ${cuotasRestantes}
+${lineasSaldoCuota}📊 *Cuotas restantes:* ${cuotasRestantes}
 
 📆 *Próxima cuota a vencer:*
 ${textoCuota}
@@ -1832,18 +2070,10 @@ function armarMensajeWhatsappElectroGrupal(base, pagosPendientes = []) {
     );
 
     const cuotasRestantes = Array.isArray(v.Cuotas)
-        ? v.Cuotas.filter(c => Number(c.MontoRestante || 0) > 0).length
+        ? v.Cuotas.filter(c => montoRestanteCuotaElectro(c) > 0).length
         : 0;
 
-    const proximaCuota = obtenerProximaCuotaElectro(v);
-
-    let textoCuota = "—";
-    if (proximaCuota) {
-        textoCuota =
-            `Cuota ${proximaCuota.NumeroCuota} – ` +
-            `${moment(proximaCuota.FechaVencimiento).format("DD/MM/YYYY")} – ` +
-            `${formatNumber(proximaCuota.MontoRestante || 0)}`;
-    }
+    const textoCuota = textoProximaCuotaElectro(v);
 
     let productos = "";
     if (Array.isArray(v.Items) && v.Items.length) {
@@ -1868,7 +2098,6 @@ function armarMensajeWhatsappElectroGrupal(base, pagosPendientes = []) {
 Se han registrado correctamente los siguientes pagos:
 ${bloqueProductos}
 ${detallePagos}💰 *Total abonado:* ${formatNumber(totalPagado)}
-📉 *Saldo pendiente de la venta:* ${formatNumber(saldoFinal > 0 ? saldoFinal : (v.Restante || 0))}
 📊 *Cuotas restantes:* ${cuotasRestantes}
 
 📆 *Próxima cuota a vencer:*
@@ -1961,7 +2190,7 @@ function enviarWhatssapNormal(result) {
             if (saldo > 0) {
                 mensaje += ` Saldo total de todas sus ventas es de ${formatNumber(saldo)} pesos.`;
             } else {
-                mensaje += ` No le queda saldo pendiente de sus ventas. `;
+                mensaje += ` No le queda saldo de sus ventas. `;
             }
 
             mensaje += " Muchas gracias por confiar en Indumentaria DG";
@@ -1975,10 +2204,6 @@ function enviarWhatssapNormal(result) {
         mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
             `Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro ` +
             `y el cobrador no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
-
-        if (userSession.IdRol != 2) {
-            CantidadClientesAusentes();
-        }
     }
 
     if (result.InformacionVenta.ClienteAusente == 1 &&
@@ -2003,7 +2228,6 @@ function enviarWhatssapNormal(result) {
             `El día ${fecha} el cobrador pasó por su domicilio. Al reprogramarse el pago, ` +
             `se aplicó un recargo de ${formatNumber(result.InformacionVenta.Interes)}. ` +
             `Su nueva fecha de cobro es ${fechaCobro}. ` +
-            `Saldo pendiente: ${formatNumber(result.InformacionVenta.Restante)}. ` +
             `Saldo total: ${formatNumber(result.Cliente.Saldo)}.`;
     }
 
@@ -2011,7 +2235,6 @@ function enviarWhatssapNormal(result) {
         mensaje = `${saludo}, ${result.Cliente.Nombre}. ` +
             `Se cumplieron 30 días desde la venta. ` +
             `Interés aplicado: ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
-            `• Saldo pendiente: ${formatNumber(result.InformacionVenta.Restante)}\n` +
             `• Próxima visita: ${fechaCobro}\n` +
             `• Total acumulado: ${formatNumber(result.Cliente.Saldo)}`;
     }
@@ -2020,7 +2243,6 @@ function enviarWhatssapNormal(result) {
         mensaje = `${saludo}, ${result.Cliente.Nombre}. ` +
             `Su cuenta superó los 60 días.\n\n` +
             `• Interés: ${formatNumber(result.InformacionVenta.Interes)}\n` +
-            `• Saldo pendiente: ${formatNumber(result.InformacionVenta.Restante)}\n` +
             `• Total acumulado: ${formatNumber(result.Cliente.Saldo)}\n` +
             `• Próxima visita: ${fechaCobro}`;
     }
@@ -2029,14 +2251,11 @@ function enviarWhatssapNormal(result) {
         mensaje = `${saludo}, ${result.Cliente.Nombre}. ` +
             `No se recibió el comprobante prometido.\n\n` +
             `• Interés aplicado: ${formatNumber(result.InformacionVenta.Interes)}\n` +
-            `• Saldo pendiente: ${formatNumber(result.InformacionVenta.Restante)}\n` +
             `• Total acumulado: ${formatNumber(result.Cliente.Saldo)}\n` +
             `• Nueva fecha: ${fechaCobro}`;
     }
 
-    const mensajeCodificado = encodeURIComponent(mensaje);
-    const urlwsp = `https://api.whatsapp.com/send?phone=+549${result.Cliente.Telefono}&text=${mensajeCodificado}`;
-    window.open(urlwsp, '_blank');
+    abrirWhatsAppAR(result.Cliente.Telefono, mensaje);
 }
 
 function obtenerSaludo() {
@@ -2047,9 +2266,7 @@ function obtenerSaludo() {
 }
 
 function abrirWhatsapp(telefono, mensaje) {
-    const msg = encodeURIComponent(mensaje);
-    const url = `https://api.whatsapp.com/send?phone=+549${telefono}&text=${msg}`;
-    window.open(url, '_blank');
+    abrirWhatsAppAR(telefono, mensaje);
 }
 
 async function mostrarRendimiento(rendimiento) {
@@ -2108,28 +2325,7 @@ async function mostrarRendimiento(rendimiento) {
 }
 
 async function CantidadClientesAusentes() {
-    var url = "/Rendimiento/MostrarCantidadClientesAusentes";
-
-    let value = JSON.stringify({});
-
-    let options = {
-        type: "POST",
-        url: url,
-        async: true,
-        data: value,
-        contentType: "application/json",
-        dataType: "json"
-    };
-
-    let result = await MakeAjax(options);
-
-    if (result != null && typeof pintarAlerta === "function") {
-        pintarAlerta("notificationHome", result.cantidad);
-    } else if (result != null) {
-        document.getElementById("notificationHome").textContent = String(result.cantidad || 0);
-    } else {
-        document.getElementById("notificationIcon").style.display = "block";
-    }
+    /* El badge de casitas de la navbar cuenta casitas en rojo, no ausentes. */
 }
 
 const cacheImagenes = {};
@@ -3362,12 +3558,58 @@ function obtenerSaludoWhatsapp() {
     return "Buenas noches";
 }
 
-function obtenerProximaCuotaElectro(venta) {
-    if (!venta || !Array.isArray(venta.Cuotas)) return null;
+function montoRestanteCuotaElectro(c) {
+    if (!c) return 0;
+    if (c.MontoRestante != null && c.MontoRestante !== "") {
+        const n = Number(c.MontoRestante);
+        if (Number.isFinite(n)) return n;
+    }
+    return Number(c.MontoOriginal || 0)
+        + Number(c.MontoRecargos || 0)
+        - Number(c.MontoDescuentos || 0)
+        - Number(c.MontoPagado || 0);
+}
 
-    return [...venta.Cuotas]
-        .filter(c => Number(c.MontoRestante || 0) > 0)
-        .sort((a, b) => new Date(a.FechaVencimiento || 0) - new Date(b.FechaVencimiento || 0))[0] || null;
+function fechaMostrarCuotaElectro(c) {
+    const fv = c?.FechaVencimiento ? moment(c.FechaVencimiento) : null;
+    if (fv && fv.isValid()) return fv;
+    const fc = c?.FechaCobro ? moment(c.FechaCobro) : null;
+    if (fc && fc.isValid()) return fc;
+    return null;
+}
+
+/** Siguiente cuota con saldo (incluye vencidas y la misma cuota si el cobro fue parcial). */
+function obtenerProximaCuotaElectro(venta) {
+    if (!venta || !Array.isArray(venta.Cuotas) || !venta.Cuotas.length) return null;
+
+    const pendientes = venta.Cuotas.filter(c => montoRestanteCuotaElectro(c) > 0);
+    if (!pendientes.length) return null;
+
+    pendientes.sort((a, b) => {
+        const na = Number(a.NumeroCuota || 0);
+        const nb = Number(b.NumeroCuota || 0);
+        if (na !== nb) return na - nb;
+
+        const da = fechaMostrarCuotaElectro(a);
+        const db = fechaMostrarCuotaElectro(b);
+        const ta = da ? da.valueOf() : Number.MAX_SAFE_INTEGER;
+        const tb = db ? db.valueOf() : Number.MAX_SAFE_INTEGER;
+        return ta - tb;
+    });
+
+    return pendientes[0];
+}
+
+function textoProximaCuotaElectro(venta) {
+    const proxima = obtenerProximaCuotaElectro(venta);
+    if (!proxima) return "—";
+
+    const fecha = fechaMostrarCuotaElectro(proxima);
+    const fechaTxt = fecha ? fecha.format("DD/MM/YYYY") : "—";
+    const nro = proxima.NumeroCuota != null ? proxima.NumeroCuota : "?";
+    const montoTxt = String(formatNumber(montoRestanteCuotaElectro(proxima)) || "").trim();
+    const monto = montoTxt.indexOf("$") === 0 ? montoTxt : ("$" + montoTxt);
+    return `Cuota ${nro} – ${fechaTxt} – ${monto}`;
 }
 
 function obtenerPagoActualElectro(base) {

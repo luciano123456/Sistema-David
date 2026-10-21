@@ -334,6 +334,11 @@ namespace Sistema_David.Models.Modelo
         }
 
 
+        private static bool TelefonoInformado(string telefono)
+        {
+            return !string.IsNullOrWhiteSpace(telefono);
+        }
+
         public static int Nuevo(VMCliente model)
         {
 
@@ -343,6 +348,14 @@ namespace Sistema_David.Models.Modelo
                 {
 
                     Clientes result = new Clientes();
+
+                    if (model == null)
+                        return 1;
+
+                    if (!TelefonoInformado(model.Telefono))
+                        return 3;
+                    if (!TelefonoInformado(model.Telefono2))
+                        return 4;
 
                     Clientes client = db.Clientes.Where(x=> x.Dni.Trim() == model.Dni.Trim()).FirstOrDefault();
 
@@ -358,6 +371,7 @@ namespace Sistema_David.Models.Modelo
                         result.Dni = model.Dni;
                         result.Direccion = model.Direccion;
                         result.Telefono = model.Telefono;
+                        result.Telefono2 = model.Telefono2;
                         result.IdVendedor = model.IdVendedor;
                         result.IdZona = model.IdZona;
                         result.Latitud = model.Latitud;
@@ -394,6 +408,9 @@ namespace Sistema_David.Models.Modelo
 
                     if (model != null)
                     {
+                        if (!TelefonoInformado(model.Telefono))
+                            return false;
+
                         var result = db.Clientes.Find(model.Id);
                         if (result == null)
                             return false;
@@ -407,6 +424,7 @@ namespace Sistema_David.Models.Modelo
                         result.Dni = model.Dni;
                         result.Direccion = model.Direccion;
                         result.Telefono = model.Telefono;
+                        result.Telefono2 = model.Telefono2;
                         result.IdVendedor = model.IdVendedor;
                         result.IdEstado = model.IdEstado;
                         result.IdZona = model.IdZona;
@@ -518,7 +536,7 @@ namespace Sistema_David.Models.Modelo
                 using (Sistema_DavidEntities db = new Sistema_DavidEntities())
                 {
 
-                    if (id > 0)
+                    if (id > 0 && TelefonoInformado(telefono))
                     {
                         var result = db.Clientes.Find(id);
                         result.Telefono = telefono;
@@ -605,7 +623,7 @@ namespace Sistema_David.Models.Modelo
         {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                var query = @"SELECT c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.LimiteVentas, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
+                var query = @"SELECT c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.Telefono2, c.IdEstado, c.IdZona, c.Longitud, c.Latitud, c.LimiteVentas, z.Nombre as Zona, c.FechaEncero, c.IdVendedorAsignado, ec.Nombre as Estado, c.IdVendedor, u.Nombre as Vendedor, COALESCE(si.SaldoIndumentaria, 0) AS SaldoIndumentaria, COALESCE(se.SaldoElectrodomestico, 0) AS SaldoElectrodomestico, COALESCE(s.Saldo, 0) AS SaldoTotal, COALESCE(s.Saldo, 0) AS Saldo 
                       FROM Clientes c 
                       INNER JOIN EstadosClientes ec ON c.IdEstado = ec.Id 
                       INNER JOIN Usuarios u ON c.IdVendedor = u.Id 
@@ -650,7 +668,7 @@ namespace Sistema_David.Models.Modelo
             {
 
                 var user = (from d in db.Clientes
-                         .SqlQuery("select c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.IdEstado,  c.IdZona, c.Longitud, c.Latitud, c.FechaEncero,  c.LimiteVentas, c.IdVendedorAsignado, ec.Nombre as Estado, ec.Nombre, c.IdVendedor, u.Nombre as Vendedor from Clientes c inner join EstadosClientes ec on c.IdEstado = ec.Id inner join Usuarios u on c.IdVendedor  = u.Id")
+                         .SqlQuery("select c.Id, c.Nombre, c.Apellido, c.Fecha, c.Dni, c.Direccion, c.Telefono, c.Telefono2, c.IdEstado,  c.IdZona, c.Longitud, c.Latitud, c.FechaEncero,  c.LimiteVentas, c.IdVendedorAsignado, ec.Nombre as Estado, ec.Nombre, c.IdVendedor, u.Nombre as Vendedor from Clientes c inner join EstadosClientes ec on c.IdEstado = ec.Id inner join Usuarios u on c.IdVendedor  = u.Id")
                             select new VMCliente
                             {
                                 Id = d.Id,
@@ -659,6 +677,7 @@ namespace Sistema_David.Models.Modelo
                                 Dni = d.Dni,
                                 Direccion = d.Direccion,
                                 Telefono = d.Telefono,
+                                Telefono2 = d.Telefono2,
                                 Vendedor = d.Usuarios.Nombre,
                                 Estado = d.EstadosClientes.Nombre,
                                 IdEstado = d.IdEstado,

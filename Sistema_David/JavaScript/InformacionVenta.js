@@ -72,6 +72,180 @@ function getTipoVentaClass(v) {
     return isElectroVenta(v) ? "tipo-electro" : "tipo-normal";
 }
 
+function esMovimientoVenta(h) {
+    const d = String(h?.Descripcion || h?.Observacion || "").toLowerCase();
+    const m = String(h?.MetodoPago || "").toLowerCase();
+    return m === "venta" || d.startsWith("venta");
+}
+
+function tsMovimiento(h) {
+    if (h?.Fecha) {
+        const t = new Date(h.Fecha).getTime();
+        if (Number.isFinite(t)) return t;
+    }
+    if (h?.P_FechaCobro) {
+        const t = new Date(h.P_FechaCobro).getTime();
+        if (Number.isFinite(t)) return t;
+    }
+    return 0;
+}
+
+function historialDeVenta(v, historial) {
+    if (Array.isArray(historial) && historial.length) return historial;
+    if (Array.isArray(v?.Historial) && v.Historial.length) return v.Historial;
+    if (Array.isArray(v?.Pagos) && v.Pagos.length) return v.Pagos;
+    if (Array.isArray(v?.Cobros) && v.Cobros.length) return v.Cobros;
+    return [];
+}
+
+function historialOrdenadoDesc(list) {
+    return (list || []).slice().sort((a, b) => {
+        const diff = tsMovimiento(b) - tsMovimiento(a);
+        if (diff !== 0) return diff;
+        const va = esMovimientoVenta(a) ? 0 : 1;
+        const vb = esMovimientoVenta(b) ? 0 : 1;
+        if (va !== vb) return vb - va;
+        return (Number(b.Id || 0) - Number(a.Id || 0));
+    });
+}
+
+function calcVentaTotales(v, historial) {
+    const hist = historialDeVenta(v, historial);
+    const headEntrega = Number(v?.Entrega || 0);
+    const headRestante = Number(v?.Restante || 0);
+    const headTotal = Number(v?.ImporteTotal || v?.TotalVenta || 0);
+    const fallbackTotal = headTotal > 0 ? headTotal : (headEntrega + headRestante);
+
+    if (!hist.length) {
+        const pct = fallbackTotal > 0
+            ? Math.max(0, Math.min(100, Math.round((headEntrega / fallbackTotal) * 100)))
+            : 0;
+        return { entrega: headEntrega, restante: headRestante, total: fallbackTotal, pct };
+    }
+
+    let cobrado = 0;
+    hist.forEach(h => { cobrado += Number(h.Entrega || 0); });
+
+    // En electro la entrega inicial del head no entra en pagos; si no hay cobros, usarla.
+    if (cobrado <= 0 && headEntrega > 0) cobrado = headEntrega;
+
+    const ultimo = historialOrdenadoDesc(hist)[0];
+    let restante = (ultimo && ultimo.Restante != null && ultimo.Restante !== "")
+        ? Number(ultimo.Restante)
+        : headRestante;
+    if (!Number.isFinite(restante) || restante < 0) restante = Math.max(0, fallbackTotal - cobrado);
+
+    let total = cobrado + restante;
+    if (total <= 0 && fallbackTotal > 0) total = fallbackTotal;
+
+    const pct = total > 0
+        ? Math.max(0, Math.min(100, Math.round((cobrado / total) * 100)))
+        : 0;
+
+    return { entrega: cobrado, restante, total, pct };
+}
+
+function aplicarTotalesEnDom(ventaUniqueId, tot) {
+    if (!tot) return;
+
+    const totalEl = q$(`#totalVenta_${ventaUniqueId}`);
+    if (totalEl) totalEl.textContent = money(tot.total);
+
+    const entEl = q$(`#entregaVenta_${ventaUniqueId}`);
+    if (entEl) entEl.textContent = money(tot.entrega);
+
+    const restEl = q$(`#restanteVenta_${ventaUniqueId}`) || q$(`#ventaItem_${ventaUniqueId} .mini-kpi-restante .mini-kpi-value`);
+    if (restEl) restEl.textContent = money(tot.restante);
+
+    const restBox = q$(`#ventaItem_${ventaUniqueId} .mini-kpi-restante`);
+    if (restBox) restBox.classList.toggle("is-ok", tot.restante <= 0);
+
+    const item = q$(`#ventaItem_${ventaUniqueId}`);
+    if (item) {
+        item.classList.toggle("is-saldada", tot.restante <= 0);
+        item.classList.toggle("is-pendiente", tot.restante > 0);
+    }
+
+    const bar = q$(`#progressVenta_${ventaUniqueId} span`);
+    if (bar) bar.style.width = tot.pct + "%";
+    const barLbl = q$(`#progressLbl_${ventaUniqueId}`);
+    if (barLbl) barLbl.textContent = tot.pct + "% cobrado";
+
+    const status = q$(`#statusVenta_${ventaUniqueId}`);
+    if (status) {
+        status.className = tot.restante <= 0 ? "iv-status iv-status-ok" : "iv-status iv-status-pend";
+        status.innerHTML = tot.restante <= 0
+            ? `<i class="bi bi-check-circle"></i> Saldada`
+            : `<i class="bi bi-clock"></i> Pendiente`;
+    }
+}
+
+function persistirTotalesEnCache(ventaUniqueId, tot, extra) {
+    const patch = {
+        ...(extra || {}),
+        Entrega: tot.entrega,
+        Restante: tot.restante,
+        ImporteTotal: tot.total
+    };
+
+    const idx = APP.ventasCache.findIndex(x => getVentaUniqueId(x) === ventaUniqueId);
+    if (idx >= 0) {
+        APP.ventasCache[idx] = normalizeVentaItem({
+            ...APP.ventasCache[idx],
+            ...patch
+        });
+    }
+
+    const fidx = APP.ventasFiltradas.findIndex(x => getVentaUniqueId(x) === ventaUniqueId);
+    if (fidx >= 0) {
+        APP.ventasFiltradas[fidx] = idx >= 0
+            ? APP.ventasCache[idx]
+            : normalizeVentaItem({ ...APP.ventasFiltradas[fidx], ...patch });
+    }
+}
+
+function emptyVentasHtml(icon, title, text) {
+    return `
+        <div class="empty-ventas-box">
+            <div class="empty-ventas-icon"><i class="bi ${icon}"></i></div>
+            <div class="empty-ventas-title">${title}</div>
+            <div class="empty-ventas-text">${text}</div>
+        </div>`;
+}
+
+function updateSummary(list) {
+    const kpis = q$("#ivKpis");
+    const rows = Array.isArray(list) ? list : [];
+    if (!kpis) return;
+
+    if (!rows.length) {
+        kpis.hidden = true;
+        return;
+    }
+
+    let cobrado = 0;
+    let restante = 0;
+    rows.forEach(v => {
+        const tot = calcVentaTotales(v);
+        cobrado += tot.entrega;
+        restante += tot.restante;
+    });
+
+    const countEl = q$("#kpiCount");
+    const cobradoEl = q$("#kpiCobrado");
+    const restanteEl = q$("#kpiRestante");
+    const totalEl = q$("#kpiTotal");
+    if (countEl) countEl.textContent = String(rows.length);
+    if (cobradoEl) cobradoEl.textContent = money(cobrado);
+    if (restanteEl) restanteEl.textContent = money(restante);
+    if (totalEl) totalEl.textContent = money(cobrado + restante);
+
+    const warn = restanteEl?.closest(".iv-kpi-warn");
+    if (warn) warn.classList.toggle("is-ok", restante <= 0);
+
+    kpis.hidden = false;
+}
+
 /* ===== FIX ids compuestos ===== */
 function getVentaUniqueId(v) {
     const tipo = normalizeTipoVenta(v?.TipoVenta || v?.tipoVenta || v?.Tipo || "INDUMENTARIA");
@@ -163,14 +337,16 @@ function normalizeDetalleResponse(raw, forcedTipo = null) {
 
     const productosRaw = raw.Productos || raw.Items || [];
     const historialRaw = raw.Historial || raw.Pagos || [];
+    const historial = Array.isArray(historialRaw) ? historialRaw.slice() : [];
 
-    return {
+    const base = {
         ...raw,
         Id: id,
         TipoVenta: tipo,
         Fecha: raw.Fecha ?? raw.FechaVenta ?? raw.FechaCobro ?? null,
         Entrega: Number(raw.Entrega || 0),
         Restante: Number(raw.Restante || 0),
+        ImporteTotal: Number(raw.ImporteTotal || raw.TotalVenta || 0),
         Eliminada: !!(raw.Eliminada || raw.eliminada),
         MotivoEliminacion: raw.MotivoEliminacion ?? raw.motivoEliminacion ?? null,
         FechaEliminacion: raw.FechaEliminacion ?? raw.fechaEliminacion ?? null,
@@ -183,8 +359,14 @@ function normalizeDetalleResponse(raw, forcedTipo = null) {
             raw.Cliente?.Nombre ??
             null,
         Productos: Array.isArray(productosRaw) ? productosRaw.map(normalizeProducto).filter(Boolean) : [],
-        Historial: Array.isArray(historialRaw) ? historialRaw.slice() : []
+        Historial: historial
     };
+
+    const tot = calcVentaTotales(base, historial);
+    base.Entrega = tot.entrega;
+    base.Restante = tot.restante;
+    base.ImporteTotal = tot.total;
+    return base;
 }
 
 /* ===== Requests ===== */
@@ -345,11 +527,15 @@ async function renderSoloUna(ventaId) {
     const head = await getVentaHead(uniqueId);
 
     if (!head) {
-        $("#emptyState").show();
+        updateSummary([]);
+        box.innerHTML = emptyVentasHtml("bi-receipt-cutoff", "Sin ventas", "No se encontraron ventas para este cliente");
         return;
     }
 
     APP.ventasCache = [head];
+    APP.ventasFiltradas = [head];
+    setTituloCliente(head);
+    updateSummary([head]);
 
     box.insertAdjacentHTML("beforeend", buildVentaItem(head));
     attachVentaHeaderEvents(getVentaUniqueId(head));
@@ -382,15 +568,8 @@ async function renderTodas(clienteId, ventaSeleccionada = null) {
             `;
         }
 
-        box.innerHTML = `
-            <div class="empty-ventas-box">
-                <div class="empty-ventas-icon">
-                    <i class="bi bi-receipt-cutoff"></i>
-                </div>
-                <div class="empty-ventas-title">Este cliente no tiene ventas</div>
-                <div class="empty-ventas-text">Cuando se registren ventas, aparecerán acá.</div>
-            </div>
-        `;
+        updateSummary([]);
+        box.innerHTML = emptyVentasHtml("bi-receipt-cutoff", "Este cliente no tiene ventas", "Cuando se registren ventas, aparecerán acá.");
 
         const t = q$("#clienteNombreTop");
         if (t) t.textContent = "—";
@@ -431,11 +610,11 @@ async function applyFilterAndRender(ventaSeleccionada = null) {
     const incluirSaldadas = q$("#swSaldadas")?.checked ?? false;
 
     const totales = APP.ventasCache.length;
-    const noSaldadas = APP.ventasCache.filter(v => Number(v.Restante || 0) > 0).length;
+    const noSaldadas = APP.ventasCache.filter(v => calcVentaTotales(v).restante > 0).length;
     const saldadas = totales - noSaldadas;
 
     APP.ventasFiltradas = APP.ventasCache.filter(v => {
-        const rest = Number(v.Restante || 0);
+        const rest = calcVentaTotales(v).restante;
         return incluirSaldadas ? true : rest > 0;
     });
 
@@ -446,16 +625,10 @@ async function applyFilterAndRender(ventaSeleccionada = null) {
             : `<span class="chip-pend">Pendientes ${noSaldadas}</span><span class="chip-ok">Saldadas ${saldadas}</span>`;
     }
 
+    updateSummary(APP.ventasFiltradas.length ? APP.ventasFiltradas : APP.ventasCache);
+
     if (!APP.ventasFiltradas.length) {
-        box.innerHTML = `
-        <div class="empty-ventas-box">
-            <div class="empty-ventas-icon">
-                <i class="bi bi-funnel"></i>
-            </div>
-            <div class="empty-ventas-title">No hay ventas para mostrar</div>
-            <div class="empty-ventas-text">Probá desactivando el filtro de pendientes/saldadas.</div>
-        </div>
-    `;
+        box.innerHTML = emptyVentasHtml("bi-funnel", "No hay ventas para mostrar", "Probá activando “Mostrar saldadas” para ver las que ya están pagas.");
         $("#emptyState").hide();
         return;
     }
@@ -496,19 +669,16 @@ function buildVentaItem(v) {
     const vv = normalizeVentaItem(v);
     const rawId = vv.Id || vv.id || vv.ID;
     const uniqueId = getVentaUniqueId(vv);
+    const tot = calcVentaTotales(vv);
 
     const fecha = vv.Fecha
         ? moment(vv.Fecha).format("DD/MM/YYYY")
         : (vv.FechaCobro ? moment(vv.FechaCobro).format("DD/MM/YYYY") : "-");
 
-    const totalNum = Number(vv.Entrega || 0) + Number(vv.Restante || 0);
-    const totalTxt = money(totalNum);
-    const restante = money(vv.Restante || 0);
-    const entrega = money(vv.Entrega || 0);
-
     const tipoClass = getTipoVentaClass(vv);
     const tipoLabel = getTipoVentaLabel(vv);
     const idVenta = rawId;
+    const saldada = tot.restante <= 0;
 
     const esElectro = isElectroVenta(vv);
     const esEliminada = !!(vv.Eliminada && esElectro);
@@ -521,6 +691,12 @@ function buildVentaItem(v) {
         ? `<span class="venta-eliminada-badge"><i class="bi bi-trash"></i> Eliminada</span>`
         : "";
 
+    const badgeEstado = esEliminada
+        ? ""
+        : (saldada
+            ? `<span class="iv-status iv-status-ok" id="statusVenta_${uniqueId}"><i class="bi bi-check-circle"></i> Saldada</span>`
+            : `<span class="iv-status iv-status-pend" id="statusVenta_${uniqueId}"><i class="bi bi-clock"></i> Pendiente</span>`);
+
     const bloqueMotivo = esEliminada
         ? `<div class="venta-motivo-eliminacion">
                 <span class="venta-motivo-label">Motivo de eliminación</span>
@@ -529,100 +705,87 @@ function buildVentaItem(v) {
            </div>`
         : "";
 
-    /* =========================
-       🔒 ACCIONES SEGÚN TIPO
-    ========================= */
     const accionesHtml = esElectro
         ? `
         <div class="venta-head-actions">
-            <button class="venta-toggle" data-venta="${uniqueId}" title="Abrir/cerrar">
+            <button class="venta-toggle" type="button" data-venta="${uniqueId}" title="Abrir/cerrar" aria-label="Abrir o cerrar venta">
                 <i class="bi bi-chevron-down"></i>
             </button>
-        </div>
-        `
+        </div>`
         : `
         <div class="venta-head-actions">
-            <button class="btn-icon" data-action="interes" title="Agregar interés" data-venta="${uniqueId}">
+            <button class="btn-icon iv-act" type="button" data-action="interes" title="Agregar interés" data-venta="${uniqueId}">
                 <i class="bi bi-percent"></i>
+                <span class="iv-act-label">Interés</span>
             </button>
-
-            <button class="btn-icon" data-action="pdf" title="Comprobante" data-venta="${uniqueId}">
+            <button class="btn-icon iv-act" type="button" data-action="pdf" title="Comprobante" data-venta="${uniqueId}">
                 <i class="bi bi-filetype-pdf"></i>
+                <span class="iv-act-label">PDF</span>
             </button>
-
-            <button class="venta-toggle" data-venta="${uniqueId}" title="Abrir/cerrar">
+            <button class="venta-toggle" type="button" data-venta="${uniqueId}" title="Abrir/cerrar" aria-label="Abrir o cerrar venta">
                 <i class="bi bi-chevron-down"></i>
             </button>
-        </div>
-        `;
+        </div>`;
 
     return `
-    <div class="venta-item ${tipoClass}${esEliminada ? " venta-item-eliminada" : ""}" id="ventaItem_${uniqueId}">
+    <article class="venta-item ${tipoClass}${saldada ? " is-saldada" : " is-pendiente"}${esEliminada ? " venta-item-eliminada" : ""}" id="ventaItem_${uniqueId}">
         <div class="venta-head" data-venta="${uniqueId}">
-            
             <div class="venta-head-main">
-
                 <div class="venta-title-row">
-                    <div class="venta-title">Fecha: ${fecha}</div>
-
+                    <div class="venta-title" id="fechaVenta_${uniqueId}">${fecha}</div>
                     <span class="venta-tipo-badge ${tipoClass}">
-                        <i class="bi ${esElectro ? 'bi-tv' : 'bi-bag'}"></i>
+                        <i class="bi ${esElectro ? "bi-tv" : "bi-bag"}"></i>
                         ${tipoLabel}
                         <span class="venta-id">#${idVenta}</span>
                     </span>
-
+                    ${badgeEstado}
                     ${badgeEliminada}
                 </div>
 
                 ${bloqueMotivo}
 
+                <div class="iv-progress-wrap">
+                    <div class="iv-progress" id="progressVenta_${uniqueId}">
+                        <span style="width:${tot.pct}%"></span>
+                    </div>
+                    <div class="iv-progress-label" id="progressLbl_${uniqueId}">${tot.pct}% cobrado</div>
+                </div>
+
                 <div class="venta-sub-grid">
                     <div class="mini-kpi">
                         <span class="mini-kpi-label">Total</span>
-                        <span class="mini-kpi-value" id="totalVenta_${uniqueId}">${totalTxt}</span>
+                        <span class="mini-kpi-value" id="totalVenta_${uniqueId}">${money(tot.total)}</span>
                     </div>
-
-                    <div class="mini-kpi">
+                    <div class="mini-kpi mini-kpi-ok">
                         <span class="mini-kpi-label">Entrega</span>
-                        <span class="mini-kpi-value">${entrega}</span>
+                        <span class="mini-kpi-value" id="entregaVenta_${uniqueId}">${money(tot.entrega)}</span>
                     </div>
-
-                    <div class="mini-kpi mini-kpi-restante">
+                    <div class="mini-kpi mini-kpi-restante${saldada ? " is-ok" : ""}">
                         <span class="mini-kpi-label">Restante</span>
-                        <span class="mini-kpi-value">${restante}</span>
+                        <span class="mini-kpi-value" id="restanteVenta_${uniqueId}">${money(tot.restante)}</span>
                     </div>
                 </div>
-
             </div>
-
             ${accionesHtml}
-
         </div>
 
         <div class="venta-body" id="ventaBody_${uniqueId}" style="display:none">
             <div class="venta-body-inner">
-
-                <div class="card glass mb-3">
-                    <div class="card-header sticky">
-                        <i class="bi bi-bag me-2"></i>Productos
-                    </div>
-                    <div class="card-body" id="prodWrap_${uniqueId}">
+                <section class="iv-panel">
+                    <div class="iv-panel-head"><i class="bi bi-bag"></i> Productos</div>
+                    <div class="iv-panel-body" id="prodWrap_${uniqueId}">
                         <div class="skel" style="height:64px"></div>
                     </div>
-                </div>
-
-                <div class="card glass">
-                    <div class="card-header sticky">
-                        <i class="bi bi-clock-history me-2"></i>Historial
-                    </div>
-                    <div class="card-body" id="histWrap_${uniqueId}">
+                </section>
+                <section class="iv-panel">
+                    <div class="iv-panel-head"><i class="bi bi-clock-history"></i> Historial</div>
+                    <div class="iv-panel-body" id="histWrap_${uniqueId}">
                         <div class="skel" style="height:64px"></div>
                     </div>
-                </div>
-
+                </section>
             </div>
         </div>
-    </div>`;
+    </article>`;
 }
 
 /* ===== Eventos ===== */
@@ -649,7 +812,7 @@ function attachVentaHeaderEvents(ventaUniqueId) {
     });
 
     $(`.venta-head[data-venta="${ventaUniqueId}"]`).off("click.body").on("click.body", async function (e) {
-        if (e.target.closest(".btn-icon") || e.target.closest(".venta-toggle")) return;
+        if (e.target.closest(".btn-icon") || e.target.closest(".venta-toggle") || e.target.closest(".iv-act")) return;
 
         const uniqueId = this.getAttribute("data-venta");
         const isOpen = q$(`#ventaItem_${uniqueId}`)?.classList.contains("open");
@@ -701,25 +864,30 @@ async function cargarDetalles(ventaUniqueId) {
         const historial = det?.Historial || [];
 
         historial.sort((a, b) => {
-            const fa = a.Fecha ? new Date(a.Fecha).getTime() : 0;
-            const fb = b.Fecha ? new Date(b.Fecha).getTime() : 0;
-            if (fa !== fb) return fb - fa; // más reciente arriba; venta (más vieja) abajo
-            const esVenta = (h) => {
-                const d = String(h.Descripcion || "").toLowerCase();
-                const m = String(h.MetodoPago || "").toLowerCase();
-                return m === "venta" || d.startsWith("venta");
-            };
-            const va = esVenta(a) ? 0 : 1;
-            const vb = esVenta(b) ? 0 : 1;
-            if (va !== vb) return vb - va; // si empatan fecha, venta más abajo
+            const fa = tsMovimiento(a);
+            const fb = tsMovimiento(b);
+            if (fa !== fb) return fb - fa;
+            const va = esMovimientoVenta(a) ? 0 : 1;
+            const vb = esMovimientoVenta(b) ? 0 : 1;
+            if (va !== vb) return vb - va;
             return (b.Id || 0) - (a.Id || 0);
         });
+
+        const tot = calcVentaTotales(det, historial);
+        det.Entrega = tot.entrega;
+        det.Restante = tot.restante;
+        det.ImporteTotal = tot.total;
+        det.Historial = historial;
 
         APP.detalleCache[ventaUniqueId] = {
             productos,
             historial,
             head: det
         };
+
+        persistirTotalesEnCache(ventaUniqueId, tot, det);
+        aplicarTotalesEnDom(ventaUniqueId, tot);
+        updateSummary(APP.ventasFiltradas.length ? APP.ventasFiltradas : APP.ventasCache);
 
         renderProductos(ventaUniqueId, productos);
         renderHistorial(ventaUniqueId, historial);
@@ -741,7 +909,7 @@ function renderProductos(ventaUniqueId, lista) {
     if (!wrap) return;
 
     if (!lista || !lista.length) {
-        wrap.innerHTML = `<div class="text-muted">Sin productos.</div>`;
+        wrap.innerHTML = `<div class="empty-sub">Sin productos.</div>`;
         return;
     }
 
@@ -761,10 +929,10 @@ function renderProductos(ventaUniqueId, lista) {
 
         html += `
         <div class="product-item">
-            <img id="${imgId}" class="product-img" src="/Imagenes/productosdefault.png" alt="img"/>
+            <img id="${imgId}" class="product-img" src="/Imagenes/productosdefault.png" alt=""/>
             <div class="product-center">
                 <div class="product-name">${escapeHtml(p.Producto || "-")}</div>
-                <div class="product-meta">Cantidad: ${cant} • Unitario: ${money(precio)}</div>
+                <div class="product-meta"><span class="product-qty">×${cant}</span> Unitario ${money(precio)}</div>
             </div>
             <div class="product-total">${money(linea)}</div>
         </div>`;
@@ -774,7 +942,7 @@ function renderProductos(ventaUniqueId, lista) {
 
     html += `
         <div class="productos-footer">
-            <b>Total productos:</b>
+            <span>Total productos</span>
             <span>${money(subtotal)}</span>
         </div>
     </div>`;
@@ -849,6 +1017,22 @@ function histRowTipoClass(h) {
     return "";
 }
 
+function histTipoLabel(h) {
+    const t = tipoInfo(h);
+    if (t === "interes") return "Interés";
+    if (t === "cobro") return "Cobro";
+    if (t === "venta") return "Venta";
+    return "Movimiento";
+}
+
+function histTipoItemClass(h) {
+    const t = tipoInfo(h);
+    if (t === "interes") return "is-interes";
+    if (t === "cobro") return "is-cobro";
+    if (t === "venta") return "is-venta";
+    return "is-obs";
+}
+
 function chipFecha(fecha, h) {
     const t = tipoInfo(h);
     const cls = t === "interes" ? "chip-interes"
@@ -864,7 +1048,7 @@ function renderHistorial(ventaUniqueId, list) {
     if (!wrap) return;
 
     if (!list || !list.length) {
-        wrap.innerHTML = `<div class="text-muted">Sin movimientos.</div>`;
+        wrap.innerHTML = `<div class="empty-sub">Sin movimientos.</div>`;
         return;
     }
 
@@ -893,7 +1077,6 @@ function renderHistorial(ventaUniqueId, list) {
     });
 
     let cardsHtml = "";
-    let rowsHtml = "";
 
     list.forEach(h => {
         const fecha = formatoFechaHistorial(h.Fecha);
@@ -905,77 +1088,44 @@ function renderHistorial(ventaUniqueId, list) {
         const esElectro = isElectroVenta(ventaObj);
 
         const btnDel = ((userSession?.IdRol === 1) && !esVenta && !esElectro)
-            ? `<button class="btn-icon btn-del-info" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
+            ? `<button class="btn-icon btn-del-info" type="button" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}" title="Eliminar">
                    <i class="bi bi-trash"></i>
                </button>`
             : "";
 
         cardsHtml += `
-            <div class="hist-card ${histRowTipoClass(h)}" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
-                <div class="hist-card-top">
-                    ${chipFecha(fecha, h)}
-                    ${btnDel}
+            <article class="iv-tl-item ${histTipoItemClass(h)}" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
+                <span class="iv-tl-dot" aria-hidden="true"></span>
+                <div class="iv-tl-card hist-card ${histRowTipoClass(h)}">
+                    <div class="iv-tl-top hist-card-top">
+                        ${chipFecha(fecha, h)}
+                        <span class="iv-tl-kind">${histTipoLabel(h)}</span>
+                        ${btnDel}
+                    </div>
+                    <p class="iv-tl-desc hist-desc">${escapeHtml(desc)}</p>
+                    <div class="iv-tl-grid hist-grid">
+                        <div>
+                            <span>Cobrador</span>
+                            <b>${escapeHtml(cobr)}</b>
+                        </div>
+                        <div>
+                            <span>Entrega</span>
+                            ${histMontoHtml(h.Entrega, "entrega")}
+                        </div>
+                        <div>
+                            <span>Interés</span>
+                            ${histMontoHtml(h.Interes, "interes")}
+                        </div>
+                        <div>
+                            <span>Restante</span>
+                            ${histMontoHtml(h.Restante, "restante")}
+                        </div>
+                    </div>
                 </div>
-                <div class="hist-desc">${escapeHtml(desc)}</div>
-                <div class="hist-grid">
-                    <div>
-                        <span>Cobrador</span>
-                        <b>${escapeHtml(cobr)}</b>
-                    </div>
-                    <div>
-                        <span>Entrega</span>
-                        ${histMontoHtml(h.Entrega, "entrega")}
-                    </div>
-                    <div>
-                        <span>Interés</span>
-                        ${histMontoHtml(h.Interes, "interes")}
-                    </div>
-                    <div>
-                        <span>Restante</span>
-                        ${histMontoHtml(h.Restante, "restante")}
-                    </div>
-                </div>
-            </div>`;
-
-        rowsHtml += `
-        <tr class="${histRowTipoClass(h)}" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}">
-            <td>${chipFecha(fecha, h)}</td>
-            <td class="hist-td-desc">${escapeHtml(desc)}</td>
-            <td class="hist-td-cobr">${escapeHtml(cobr)}</td>
-            <td class="hist-td-amt">${histMontoHtml(h.Entrega, "entrega")}</td>
-            <td class="hist-td-amt">${histMontoHtml(h.Interes, "interes")}</td>
-            <td class="hist-td-amt">${histMontoHtml(h.Restante, "restante")}</td>
-            <td class="text-center">${btnDel}</td>
-        </tr>`;
+            </article>`;
     });
 
-    wrap.innerHTML = `
-    <div class="hist-view-mobile hist-mobile">${cardsHtml}</div>
-    <div class="hist-view-desktop table-responsive">
-        <table class="table-mini">
-            <colgroup>
-                <col class="col-fecha">
-                <col class="col-desc">
-                <col class="col-cobr">
-                <col class="col-imp">
-                <col class="col-imp">
-                <col class="col-imp">
-                <col class="col-acc">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Descripción</th>
-                    <th>Cobrador</th>
-                    <th>Entrega</th>
-                    <th>Interés</th>
-                    <th>Restante</th>
-                    <th class="text-center">Acc.</th>
-                </tr>
-            </thead>
-            <tbody>${rowsHtml}</tbody>
-        </table>
-    </div>`;
+    wrap.innerHTML = `<div class="iv-timeline hist-view-mobile hist-mobile">${cardsHtml}</div>`;
 }
 
 /* ===== Venta head ===== */
@@ -992,24 +1142,20 @@ async function actualizarVistaVenta(ventaUniqueId) {
         const det = await fetchVentaDetalle(current.Id, current.TipoVenta);
         if (!det) return;
 
-        const title = q$(`#ventaItem_${ventaUniqueId} .venta-title`);
+        const title = q$(`#fechaVenta_${ventaUniqueId}`) || q$(`#ventaItem_${ventaUniqueId} .venta-title`);
         const fecha = det.Fecha
             ? moment(det.Fecha).format("DD/MM/YYYY")
             : "-";
 
-        if (title) title.textContent = `Fecha: ${fecha}`;
+        if (title) title.textContent = fecha;
 
-        const total = Number(det.Restante || 0) + Number(det.Entrega || 0);
-        const totalEl = q$(`#totalVenta_${ventaUniqueId}`);
-        if (totalEl) totalEl.textContent = money(total);
+        const tot = calcVentaTotales(det, det.Historial);
+        det.Entrega = tot.entrega;
+        det.Restante = tot.restante;
+        det.ImporteTotal = tot.total;
 
-        const restEl = q$(`#ventaItem_${ventaUniqueId} .mini-kpi-restante .mini-kpi-value`);
-        if (restEl) restEl.textContent = money(det.Restante || 0);
-
-        const idx = APP.ventasCache.findIndex(x => getVentaUniqueId(x) === ventaUniqueId);
-        if (idx >= 0) {
-            APP.ventasCache[idx] = normalizeVentaItem({ ...APP.ventasCache[idx], ...det });
-        }
+        aplicarTotalesEnDom(ventaUniqueId, tot);
+        persistirTotalesEnCache(ventaUniqueId, tot, det);
 
         APP.detalleCache[ventaUniqueId] = {
             ...(APP.detalleCache[ventaUniqueId] || {}),
@@ -1017,6 +1163,8 @@ async function actualizarVistaVenta(ventaUniqueId) {
             productos: det.Productos || APP.detalleCache[ventaUniqueId]?.productos || [],
             historial: det.Historial || APP.detalleCache[ventaUniqueId]?.historial || []
         };
+
+        updateSummary(APP.ventasFiltradas.length ? APP.ventasFiltradas : APP.ventasCache);
     } catch (e) {
         console.warn("No pude refrescar header de venta", e);
     }
@@ -1152,6 +1300,14 @@ async function exportarUnaVenta(ventaId) {
             .replace(/\s+/g, "_");
 
         doc.save(`comprobante_${nombre}_venta_${id}.pdf`);
+        try {
+            if (normalizeTipoVenta(tipo) === "ELECTRO") {
+                await fetch("/Ventas_Electrodomesticos/MarcarComprobante?idVenta=" + encodeURIComponent(id), { method: "POST" });
+            } else {
+                await ajaxPost("/Ventas/EnviarComprobante", { Id: id });
+            }
+        } catch (markErr) { }
+        if (typeof refrescarAlertasNavbar === "function") refrescarAlertasNavbar("comprobantes");
     } catch (e) {
         console.error(e);
         alert("Error generando el PDF.");

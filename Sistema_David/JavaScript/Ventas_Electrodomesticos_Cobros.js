@@ -150,9 +150,58 @@ VC.esCobradorSesion = function () {
     return Number(userSession?.IdRol) === 3;
 };
 
+VC.esVendedorSesion = function () {
+    return Number(userSession?.IdRol) === 2;
+};
+
 VC.esAdminOComprobantes = function () {
     const rol = Number(userSession?.IdRol);
     return rol === 1 || rol === 4;
+};
+
+VC.MSG_COBRO_INTRANSFERIBLE = "Esta cobranza es intransferible";
+
+/** Vendedor (2) y cobrador (3): no pueden cobrar si el candado está cerrado. Admin (1) y Comprobantes (4) sí. */
+VC.esRolBloqueadoCobroIntransferible = function () {
+    const rol = Number(userSession?.IdRol);
+    return rol === 2 || rol === 3;
+};
+
+VC.esCobroIntransferibleBloqueado = function (row) {
+    return VC.esRolBloqueadoCobroIntransferible() && Number(row?.Intransferible) === 1;
+};
+
+VC.avisarCobroIntransferible = function () {
+    VC.toast(VC.MSG_COBRO_INTRANSFERIBLE, "warn");
+};
+
+VC.htmlBtnCobrar = function (row, idCuota, opts) {
+    opts = opts || {};
+    const idVenta = Number(row?.IdVenta || 0);
+    const idC = Number(idCuota || row?.IdCuota || 0);
+    const locked = VC.esCobroIntransferibleBloqueado(row);
+    const tip = VC.escAttr(VC.MSG_COBRO_INTRANSFERIBLE);
+
+    if (opts.card) {
+        if (locked) {
+            return `<span class="vc-cobrar-wrap is-locked" data-vc-act="cobrar-locked" data-idventa="${idVenta}" data-idcuota="${idC}" title="${tip}">
+                <button type="button" class="vc-card-pay is-locked" disabled aria-disabled="true">Cobrar</button>
+            </span>`;
+        }
+        return `<button type="button" class="vc-card-pay" data-vc-act="cobrar" data-idventa="${idVenta}" data-idcuota="${idC}">Cobrar</button>`;
+    }
+
+    const extra = opts.className || "btn btn-accion btn-cobrar me-1";
+    if (locked) {
+        return `<span class="vc-cobrar-wrap is-locked" data-vc-act="cobrar-locked" data-idventa="${idVenta}" data-idcuota="${idC}" title="${tip}">
+            <button type="button" class="${extra} is-locked" disabled aria-disabled="true" title="${tip}">
+                <i class="fa fa-money"></i>
+            </button>
+        </span>`;
+    }
+    return `<button type="button" class="${extra}" onclick="VC.abrirCobro(${idC}, ${idVenta})" title="Cobrar">
+        <i class="fa fa-money"></i>
+    </button>`;
 };
 
 /** Fechas efectivas del listado (cobrador: siempre hoy; admin: inputs o hoy). */
@@ -406,11 +455,9 @@ VC.enviarWhatsApp = function () {
         return;
     }
 
-    telefono = telefono.replace(/\D/g, "");
-
-    const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
-
-    window.open(url, "_blank");
+    if (!abrirWhatsAppAR(telefono, mensaje)) {
+        alert("El cliente no tiene un teléfono válido");
+    }
 };
 
 
@@ -508,6 +555,78 @@ VC.esAdminSel = function () {
     return rol === 1 || rol === 4;
 };
 
+VC.tituloCandado = function (cerrado) {
+    return (cerrado === true || Number(cerrado) === 1) ? "Cobranza intransferible" : "Cobranza transferible";
+};
+
+VC.bindCandadoTooltips = function (root) {
+    if (typeof bootstrap === "undefined" || !bootstrap.Tooltip) return;
+    const scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll(".vc-candado").forEach(function (el) {
+        const previo = bootstrap.Tooltip.getInstance(el);
+        if (previo) previo.dispose();
+        const texto = el.getAttribute("data-vc-tip") || VC.tituloCandado(el.classList.contains("is-cerrado"));
+        el.setAttribute("title", texto);
+        el.setAttribute("aria-label", texto);
+        el.setAttribute("data-bs-original-title", texto);
+        new bootstrap.Tooltip(el, {
+            container: "body",
+            placement: "top",
+            trigger: "hover focus",
+            customClass: "vc-candado-tip",
+            title: texto,
+            delay: { show: 60, hide: 80 }
+        });
+    });
+};
+
+VC.mostrarTooltipCandado = function (el, ms) {
+    if (!el || typeof bootstrap === "undefined" || !bootstrap.Tooltip) return;
+    if (!bootstrap.Tooltip.getInstance(el)) VC.bindCandadoTooltips(el.parentElement || document);
+    const inst = bootstrap.Tooltip.getInstance(el);
+    if (!inst) return;
+    inst.show();
+    clearTimeout(el._vcTipTimer);
+    if (ms) {
+        el._vcTipTimer = setTimeout(function () {
+            const actual = bootstrap.Tooltip.getInstance(el);
+            if (actual) actual.hide();
+        }, ms);
+    }
+};
+
+VC.htmlCandadoVenta = function (row) {
+    const idVenta = Number(row?.IdVenta || 0);
+    const cerrado = Number(row?.Intransferible) === 1;
+    // Cobrador: solo ver candado cerrado (intransferible). Si está libre, no mostrar icono.
+    if (VC.esCobradorSesion() && !cerrado) return "";
+    const puede = VC.esAdminSel();
+    const titulo = VC.tituloCandado(cerrado);
+    return `<button type="button" class="vc-candado ${cerrado ? "is-cerrado" : "is-abierto"}${puede ? "" : " is-readonly"}" data-idventa="${idVenta}" data-bs-toggle="tooltip" data-bs-placement="top" data-vc-tip="${VC.escAttr(titulo)}" title="${VC.escAttr(titulo)}" aria-label="${VC.escAttr(titulo)}" aria-pressed="${cerrado ? "true" : "false"}"><i class="fa ${cerrado ? "fa-lock" : "fa-unlock"}" aria-hidden="true"></i></button>`;
+};
+
+VC.aplicarIntransferibleLocal = function (idVenta, valor) {
+    const id = Number(idVenta);
+    const apply = function (row) {
+        if (!row || Number(row.IdVenta) !== id) return;
+        row.Intransferible = valor;
+        if (Array.isArray(row.__TodasLasCuotas)) {
+            row.__TodasLasCuotas.forEach(function (c) { c.Intransferible = valor; });
+        }
+    };
+    (cuotasCache || []).forEach(apply);
+    if (tablaCobros) {
+        tablaCobros.rows().every(function () { apply(this.data()); });
+        tablaCobros.rows().invalidate().draw(false);
+    }
+    if (valor === 1) ventasSeleccionadas.delete(id);
+    VC.refrescarSeleccionUI();
+    if (typeof VC.refreshCardsViews === "function") VC.refreshCardsViews();
+    VC.bindCandadoTooltips();
+    const btn = document.querySelector('.vc-candado[data-idventa="' + id + '"]');
+    if (btn) VC.mostrarTooltipCandado(btn, 1400);
+};
+
 VC.puedeEditarCliente = function () {
     const rol = Number(userSession?.IdRol);
     return rol === 1 || rol === 2 || rol === 3 || rol === 4;
@@ -594,7 +713,10 @@ VC.initVista = function () {
         const on = this.checked;
         document.querySelectorAll("#vc_cards_main .vc-cobro-card:not(.is-hidden) .vc-card-check").forEach((chk) => {
             const idV = Number(chk.getAttribute("data-idventa") || 0);
-            if (!idV) return;
+            if (!idV || chk.disabled) {
+                if (idV && chk.disabled) ventasSeleccionadas.delete(idV);
+                return;
+            }
             if (on) ventasSeleccionadas.add(idV);
             else ventasSeleccionadas.delete(idV);
         });
@@ -622,6 +744,12 @@ VC.initVista = function () {
         e.stopPropagation();
         const idV = Number(this.getAttribute("data-idventa") || 0);
         if (!idV) return;
+        if (this.disabled) {
+            this.checked = false;
+            ventasSeleccionadas.delete(idV);
+            VC.refrescarSeleccionUI();
+            return;
+        }
         if (this.checked) ventasSeleccionadas.add(idV);
         else ventasSeleccionadas.delete(idV);
         VC.refrescarSeleccionUI();
@@ -667,9 +795,11 @@ VC.htmlCobroCard = function (d, kind) {
     const badge = dias > 0
         ? `<span class="vc-card-badge badge ${dias >= 15 ? "bg-danger" : dias >= 10 ? "bg-orange" : "bg-warning text-dark"}">Vencida · ${dias}d</span>`
         : `<span class="vc-card-badge badge bg-success">Al día</span>`;
+    const cerradoCard = Number(d.Intransferible) === 1;
     const chk = (kind === "main" && VC.esAdminSel())
-        ? `<input type="checkbox" class="vc-card-check" data-idventa="${d.IdVenta}" ${ventasSeleccionadas.has(Number(d.IdVenta)) ? "checked" : ""}>`
+        ? `<input type="checkbox" class="vc-card-check" data-idventa="${d.IdVenta}" ${cerradoCard ? "disabled" : ""} ${!cerradoCard && ventasSeleccionadas.has(Number(d.IdVenta)) ? "checked" : ""}>`
         : "";
+    const candadoCard = kind === "main" ? VC.htmlCandadoVenta(d) : "";
     const mapsBtn = (d.ClienteLatitud && d.ClienteLongitud)
         ? `<button type="button" class="vc-ico-btn maps" data-vc-act="maps" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" title="Maps"><i class="fa fa-map-marker"></i></button>`
         : `<button type="button" class="vc-ico-btn maps" data-vc-act="dir" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" title="Dirección"><i class="fa fa-map-marker"></i></button>`;
@@ -686,16 +816,16 @@ VC.htmlCobroCard = function (d, kind) {
     <article class="vc-cobro-card ${lateCls} ${kindCls}" data-kind="${kind}" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" data-idcliente="${d.IdCliente || 0}" data-late="${dias > 0 ? 1 : 0}" data-q="${VC.escAttr(q)}">
       <div class="vc-card-body">
         <div class="vc-card-head">
-          ${chk}
+          <span class="vc-check-wrap">${chk}${candadoCard}</span>
           <div class="vc-card-head-main">
             <div class="vc-card-name">${VC.escHtml(d.ClienteNombre || "Sin nombre")}</div>
-            <div class="vc-card-sub">Venta #${d.IdVenta} · Cuota ${d.NumeroCuota}${nCuotas > 1 ? ` · ${nCuotas} cuotas` : ""} · Cobro ${fechaCobro}</div>
+            <div class="vc-card-sub">Venta #${d.IdVenta}${nCuotas > 1 ? ` · ${nCuotas} cuotas` : ` · Cuota ${d.NumeroCuota}`} · Cobro ${fechaCobro}</div>
           </div>
           ${badge}
         </div>
         <div class="vc-card-money">
           <strong>${VC.fmt(restante)}</strong>
-          <small>Restante</small>
+          <small>${kind === "pend" ? "Deuda" : "Restante"}</small>
         </div>
         <div class="vc-card-meta">
           ${d.ZonaNombre ? `<span class="vc-pill">${VC.escHtml(d.ZonaNombre)}</span>` : ""}
@@ -706,7 +836,7 @@ VC.htmlCobroCard = function (d, kind) {
         <div class="vc-card-dir">${d.ClienteDireccion ? VC.escHtml(d.ClienteDireccion) : "Sin dirección"}</div>
         <div class="vc-card-actions">
           ${(typeof htmlAdjuntosCliente === "function") ? htmlAdjuntosCliente(d.IdCliente, d.TieneImagenes, d.ClienteNombre, "venta") : ""}
-          <button type="button" class="vc-card-pay" data-vc-act="cobrar" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}">Cobrar</button>
+          ${VC.htmlBtnCobrar(d, d.IdCuota, { card: true })}
           <button type="button" class="vc-ico-btn detalle" data-vc-act="detalle" data-idventa="${d.IdVenta}" data-idcuota="${d.IdCuota}" title="Ver cuotas / productos"><i class="fa fa-chevron-down"></i></button>
           ${wa}
           ${phone}
@@ -731,6 +861,7 @@ VC.pintarListaCards = function (containerId, rows, kind) {
     const parts = new Array(list.length);
     for (let i = 0; i < list.length; i++) parts[i] = VC.htmlCobroCard(list[i], kind);
     el.innerHTML = parts.join("");
+    if (kind === "main") VC.bindCandadoTooltips(el);
 };
 
 VC.refreshCardsViews = function () {
@@ -837,11 +968,21 @@ VC.onCardAction = function (btn) {
     const act = btn.getAttribute("data-vc-act");
     const idVenta = Number(btn.getAttribute("data-idventa") || 0);
     const idCuota = Number(btn.getAttribute("data-idcuota") || 0);
+
+    if (act === "cobrar-locked") {
+        VC.avisarCobroIntransferible();
+        return;
+    }
+
     const row = VC.findCardRow(idVenta, idCuota) || vcSheetCtx;
     if (!row && act !== "more") return;
 
     if (act === "cobrar") {
         VC.cerrarSheet();
+        if (VC.esCobroIntransferibleBloqueado(row)) {
+            VC.avisarCobroIntransferible();
+            return;
+        }
         VC.abrirCobro(idCuota, idVenta);
         return;
     }
@@ -934,11 +1075,13 @@ $(document).ready(async function () {
         }
     }
 
-   
+    const deepCasita = VC.aplicarDeepLinkCasita();
+
     VC.initEventos();
     VC.initVista();
     await VC.cargarTabla();
     VC.initSecciones();
+    if (deepCasita && deepCasita.ventaId) VC.focusCasitaFromQuery(deepCasita.ventaId);
 
     habilitarSeleccionFilasCuotasCobros();
 });
@@ -1008,6 +1151,27 @@ VC.initEventos = function () {
         VC.confirmarAsignarCobrador();
     });
 
+    $("#modalAsignarCobrador")
+        .off("click.acPick")
+        .on("click.acPick", ".ac-picker-item, .ac-picker-none", function () {
+            VC.setCobradorAsignar($(this).attr("data-id"));
+        })
+        .off("hidden.bs.modal.acPick")
+        .on("hidden.bs.modal.acPick", function () {
+            $("#acCobradorSearch").val("");
+            VC.filtrarCobradorPicker("");
+            VC.setCobradorAsignar("");
+        })
+        .off("shown.bs.modal.acPick")
+        .on("shown.bs.modal.acPick", function () {
+            const $s = $("#acCobradorSearch");
+            if ($s.length) $s.trigger("focus");
+        });
+
+    $("#acCobradorSearch").off("input.acPick").on("input.acPick", function () {
+        VC.filtrarCobradorPicker(this.value);
+    });
+
     $("#btnClienteSearchToggle").on("click", function () {
 
         const idCliente = document.getElementById("f_cliente").value;
@@ -1051,10 +1215,54 @@ VC.initEventos = function () {
         const idVenta = Number(this.dataset.idventa || 0);
         if (!idVenta) return;
 
+        if (this.disabled) {
+            this.checked = false;
+            ventasSeleccionadas.delete(idVenta);
+            VC.refrescarSeleccionUI();
+            return;
+        }
+
         if (this.checked) ventasSeleccionadas.add(idVenta);
         else ventasSeleccionadas.delete(idVenta);
 
         VC.refrescarSeleccionUI();
+    });
+
+    $(document).off("touchstart.vcCandadoTip pointerenter.vcCandadoTip", ".vc-candado")
+        .on("touchstart.vcCandadoTip", ".vc-candado", function () {
+            VC.mostrarTooltipCandado(this, 1600);
+        });
+
+    $(document).off("click.vcCandado").on("click.vcCandado", ".vc-candado", async function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!VC.esAdminSel() || this.classList.contains("is-readonly") || this.dataset.busy === "1") return;
+
+        const idVenta = Number(this.dataset.idventa || 0);
+        if (!idVenta) return;
+        const nuevo = this.classList.contains("is-cerrado") ? 0 : 1;
+        this.dataset.busy = "1";
+        try {
+            const resp = await $.ajax({
+                url: "/Ventas_Electrodomesticos/CambiarIntransferible",
+                type: "POST",
+                data: { idVenta: idVenta, intransferible: nuevo }
+            });
+            if (resp && resp.success) {
+                VC.aplicarIntransferibleLocal(idVenta, nuevo);
+                VC.toast(
+                    nuevo === 1 ? "Cobranza marcada como intransferible" : "Cobranza marcada como transferible",
+                    "success"
+                );
+            } else {
+                VC.toast((resp && resp.message) || "No se pudo cambiar el candado", "danger");
+            }
+        } catch (err) {
+            const msg = (err && err.responseJSON && err.responseJSON.message) || "No se pudo cambiar el candado";
+            VC.toast(msg, "danger");
+        } finally {
+            this.dataset.busy = "0";
+        }
     });
 
     // ✅ Seleccionar todos (checkbox header)
@@ -1064,8 +1272,13 @@ VC.initEventos = function () {
         if (!tablaCobros) return;
 
         tablaCobros.rows({ search: "applied" }).every(function () {
-            const idV = Number(this.data()?.IdVenta || 0);
+            const d = this.data();
+            const idV = Number(d?.IdVenta || 0);
             if (!idV) return;
+            if (Number(d?.Intransferible) === 1) {
+                ventasSeleccionadas.delete(idV);
+                return;
+            }
 
             if (sel) ventasSeleccionadas.add(idV);
             else ventasSeleccionadas.delete(idV);
@@ -1088,19 +1301,24 @@ VC.refrescarSeleccionUI = function () {
             const r = tablaCobros.row(this);
             const d = r.data();
             const idV = Number(d?.IdVenta || 0);
+            const locked = Number(d?.Intransferible) === 1;
+            if (locked) ventasSeleccionadas.delete(idV);
 
-            const checked = ventasSeleccionadas.has(idV);
+            const checked = !locked && ventasSeleccionadas.has(idV);
 
             $(this).toggleClass("venta-multi-sel", checked);
 
             // check DOM (fila)
-            $(this).find("input.vc-row-check").prop("checked", checked);
+            $(this).find("input.vc-row-check").prop("checked", checked).prop("disabled", locked);
         });
 
         document.querySelectorAll(".vc-card-check").forEach((chk) => {
             const idV = Number(chk.getAttribute("data-idventa") || 0);
-            const on = ventasSeleccionadas.has(idV);
-            chk.checked = on;
+            const row = (cuotasCache || []).find(function (x) { return Number(x.IdVenta) === idV; });
+            const locked = Number(row?.Intransferible) === 1;
+            if (locked) ventasSeleccionadas.delete(idV);
+            chk.disabled = locked;
+            chk.checked = !locked && ventasSeleccionadas.has(idV);
         });
 
         // 2) setear vc_chk_all según estado (solo visibles/filtradas)
@@ -1108,8 +1326,9 @@ VC.refrescarSeleccionUI = function () {
         let totalSel = 0;
 
         tablaCobros.rows({ search: "applied" }).every(function () {
-            const idV = Number(this.data()?.IdVenta || 0);
-            if (!idV) return;
+            const d = this.data();
+            const idV = Number(d?.IdVenta || 0);
+            if (!idV || Number(d?.Intransferible) === 1) return;
 
             totalVisibles++;
             if (ventasSeleccionadas.has(idV)) totalSel++;
@@ -1588,6 +1807,7 @@ VC.cargarTabla = async function () {
                 $(row).addClass("row-selected");
             }
 
+            if (Number(d?.Intransferible) === 1) ventasSeleccionadas.delete(Number(d?.IdVenta || 0));
             const sel = ventasSeleccionadas.has(Number(d?.IdVenta || 0));
             $(row).toggleClass("venta-multi-sel", sel);
         },
@@ -1621,25 +1841,19 @@ VC.cargarTabla = async function () {
 
                 orderable: false,
                 searchable: false,
-                className: "text-center",
-                width: "44px",
+                className: "text-center vc-col-sel",
+                width: "86px",
 
                 render: function (_, __, row) {
                     const esAdmin = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
-                    if (!esAdmin) return "";
-
                     const idVenta = Number(row?.IdVenta || 0);
-                    const checked = ventasSeleccionadas.has(idVenta) ? "checked" : "";
+                    const cerrado = Number(row?.Intransferible) === 1;
+                    const checked = !cerrado && ventasSeleccionadas.has(idVenta) ? "checked" : "";
+                    const chk = esAdmin
+                        ? `<input type="checkbox" class="vc-check vc-row-check" data-idventa="${idVenta}" ${checked} ${cerrado ? "disabled" : ""} title="Seleccionar venta ${idVenta}">`
+                        : "";
 
-                    return `
-      <div class="vc-check-wrap">
-        <input type="checkbox"
-               class="vc-check vc-row-check"
-               data-idventa="${idVenta}"
-               ${checked}
-               title="Seleccionar venta ${idVenta}">
-      </div>
-    `;
+                    return `<div class="vc-check-wrap">${chk}${VC.htmlCandadoVenta(row)}</div>`;
                 }
             },
 
@@ -1818,11 +2032,7 @@ VC.cargarTabla = async function () {
         </button>
 
         <!-- 💰 COBRAR -->
-        <button class="btn btn-accion btn-cobrar me-1"
-          onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})"
-          title="Cobrar">
-          <i class="fa fa-money"></i>
-        </button>
+        ${VC.htmlBtnCobrar(d, d.IdCuota)}
 
         ${botonInfoVenta}
 
@@ -1871,6 +2081,7 @@ VC.cargarTabla = async function () {
     // draw => sincronizar checks + header + FAB
     tablaCobros.on("draw", function () {
         VC.refrescarSeleccionUI();
+        VC.bindCandadoTooltips(document.getElementById("vc_tabla"));
     });
 
     VC.ajustarTablasPostCarga();
@@ -1993,28 +2204,86 @@ VC.reabrirAcordeon = function () {
 // COBRADORES (para asignar)
 // ===========================================================
 
+VC.cobradorIniciales = function (nombre) {
+    const parts = String(nombre || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
+
+VC.llenarSelectCobradorAsignar = function () {
+    const ddl = $("#ddlCobradorAsignar");
+    if (!ddl.length) return;
+
+    if (ddl.hasClass("select2-hidden-accessible")) {
+        ddl.select2("destroy");
+    }
+
+    ddl.empty();
+    ddl.append(`<option value="">Seleccionar...</option>`);
+    ddl.append(`<option value="0">Nadie (desasignar)</option>`);
+    (cobradoresCache || []).forEach(c => {
+        ddl.append(`<option value="${c.Id}">${escapeHtml(c.Nombre || "")}</option>`);
+    });
+};
+
+VC.renderCobradorPicker = function () {
+    const list = $("#acCobradorList");
+    if (!list.length) return;
+
+    const items = (cobradoresCache || []).map(c => {
+        const name = escapeHtml(c.Nombre || "");
+        const ini = escapeHtml(VC.cobradorIniciales(c.Nombre));
+        return `<button type="button" class="ac-picker-item" role="option" data-id="${c.Id}">
+            <span class="ac-picker-avatar">${ini}</span>
+            <span class="ac-picker-name">${name}</span>
+            <i class="fa fa-check ac-picker-check" aria-hidden="true"></i>
+        </button>`;
+    }).join("");
+
+    list.html(items || `<div class="ac-picker-empty">No hay cobradores</div>`);
+};
+
+VC.setCobradorAsignar = function (id) {
+    const val = (id === null || id === undefined) ? "" : String(id);
+    $("#ddlCobradorAsignar").val(val);
+    const $modal = $("#modalAsignarCobrador");
+    $modal.find(".ac-picker-item, .ac-picker-none").removeClass("is-selected");
+    if (val !== "") {
+        $modal.find('[data-id="' + val + '"]').addClass("is-selected");
+    }
+};
+
+VC.filtrarCobradorPicker = function (q) {
+    q = String(q || "").toLowerCase().trim();
+    const $items = $("#acCobradorList .ac-picker-item");
+    let visible = 0;
+    $items.each(function () {
+        const name = $(this).find(".ac-picker-name").text().toLowerCase();
+        const show = !q || name.indexOf(q) !== -1;
+        $(this).toggle(show);
+        if (show) visible++;
+    });
+
+    const noneMatch = !q || "nadie desasignar sin asignar".indexOf(q) !== -1;
+    $("#modalAsignarCobrador .ac-picker-none").toggle(noneMatch);
+
+    const $empty = $("#acCobradorList .ac-picker-empty-search");
+    if (!visible && $items.length) {
+        if (!$empty.length) {
+            $("#acCobradorList").append(`<div class="ac-picker-empty ac-picker-empty-search">Sin coincidencias</div>`);
+        }
+    } else {
+        $empty.remove();
+    }
+};
+
 VC.cargarCobradores = async function () {
     try {
         const resp = await $.getJSON("/Usuarios/ListarCobradores");
         cobradoresCache = resp?.data || [];
-
-        const ddl = $("#ddlCobradorAsignar").empty();
-        ddl.append(`<option value="">Seleccionar...</option>`);
-        ddl.append(`<option value="0">Nadie (desasignar)</option>`);
-        cobradoresCache.forEach(c => ddl.append(`<option value="${c.Id}">${c.Nombre}</option>`));
-
-        // Re-init select2 limpio
-        if (ddl.hasClass("select2-hidden-accessible")) {
-            ddl.select2("destroy");
-        }
-
-        ddl.select2({
-            width: "100%",
-            dropdownParent: $("#modalAsignarCobrador"),
-            placeholder: "Seleccionar...",
-            allowClear: true
-        });
-
+        VC.llenarSelectCobradorAsignar();
+        VC.renderCobradorPicker();
     } catch (e) {
         console.error(e);
         VC.toast("No se pudieron cargar cobradores", "danger");
@@ -2028,20 +2297,21 @@ VC.abrirAsignarCobrador = async function () {
         return;
     }
 
-    // Asegurar lista cobradores
     if (!cobradoresCache || cobradoresCache.length === 0) {
         await VC.cargarCobradores();
     } else {
-        // si ya estaban cargados, igual aseguramos select2 con parent correcto
-        if (!$("#ddlCobradorAsignar").hasClass("select2-hidden-accessible")) {
-            $("#ddlCobradorAsignar").select2({ width: "100%", dropdownParent: $("#modalAsignarCobrador") });
-        }
+        VC.llenarSelectCobradorAsignar();
+        VC.renderCobradorPicker();
     }
 
-    // Cantidad seleccionadas
-    $("#lblCantVentasSel").text(ventasSeleccionadas.size);
+    const n = ventasSeleccionadas.size;
+    $("#lblCantVentasSel").text(n);
+    $("#lblCantVentasSelTxt").text(n === 1 ? "venta seleccionada" : "ventas seleccionadas");
 
-    // Abrir modal bootstrap 5
+    $("#acCobradorSearch").val("");
+    VC.filtrarCobradorPicker("");
+    VC.setCobradorAsignar("");
+
     VC.openModal("modalAsignarCobrador");
 };
 
@@ -2057,7 +2327,19 @@ VC.confirmarAsignarCobrador = async function () {
         return;
     }
 
-    const idsVentas = Array.from(ventasSeleccionadas);
+    const idsVentas = Array.from(ventasSeleccionadas).filter(function (id) {
+        const row = (cuotasCache || []).find(function (x) { return Number(x.IdVenta) === Number(id); });
+        if (row && Number(row.Intransferible) === 1) {
+            ventasSeleccionadas.delete(Number(id));
+            return false;
+        }
+        return true;
+    });
+    if (!idsVentas.length) {
+        VC.toast("No se pueden transferir cobranzas con candado cerrado", "warn");
+        VC.refrescarSeleccionUI();
+        return;
+    }
     const accionTxt = idCobrador === 0 ? "desasignar cobrador de" : "asignar cobrador a";
     const okAsignar = await confirmarModal(`
         <div class="text-start px-1" style="font-size:1.05rem;font-weight:500">
@@ -2078,7 +2360,10 @@ VC.confirmarAsignarCobrador = async function () {
     });
 
     if (resp && resp.success) {
-        VC.toast(idCobrador === 0 ? "Cobrador desasignado" : "Cobrador asignado", "success");
+        VC.toast(
+            resp.parcial ? resp.message : (idCobrador === 0 ? "Cobrador desasignado" : "Cobrador asignado"),
+            resp.parcial ? "warn" : "success"
+        );
         ventasSeleccionadas.clear();
         VC.closeModal("modalAsignarCobrador");
         await VC.cargarTabla();
@@ -2397,10 +2682,7 @@ VC.renderCuotas = function (v, opts) {
                 <td class="text-center">
                     <div class="btn-group">
 
-                        <button class="btn btn-accion btn-cobrar me-1"
-                            onclick="VC.abrirCobro(${c.Id}, ${v.IdVenta}, ${c.MontoRestante})">
-                            <i class="fa fa-money"></i>
-                        </button>
+                        ${VC.htmlBtnCobrar(v, c.Id)}
 
                         <button class="btn btn-accion btn-ajuste me-1"
                             onclick="VC.abrirAjuste(${v.IdVenta}, ${c.Id})">
@@ -2508,6 +2790,8 @@ VC.guardarObsCobro = async function () {
         // cerrar modal
         bootstrap.Modal.getInstance(document.getElementById("modalObsCobro"))?.hide();
 
+        if (typeof refrescarAlertasNavbar === "function") refrescarAlertasNavbar("casitas");
+
         await VC.cargarTabla();
 
     } catch (e) {
@@ -2532,6 +2816,11 @@ VC.guardarObsCobro = async function () {
 =========================================================== */
 
 VC.abrirCobro = function (idCuota, idVenta) {
+    const row = VC.findCardRow(idVenta, idCuota) || VC.findCardRow(idVenta, 0);
+    if (VC.esCobroIntransferibleBloqueado(row)) {
+        VC.avisarCobroIntransferible();
+        return;
+    }
     window.abrirModalCobro(idVenta, idCuota);
 };
 
@@ -2557,6 +2846,50 @@ $(document).on("click", ".ajTipo", function () {
 
     $("#" + target).val(value);
 });
+
+VC.leerDeepLinkCasita = function () {
+    try {
+        const qs = new URLSearchParams(window.location.search || "");
+        return {
+            ventaId: Number(qs.get("ventaId") || 0),
+            idCliente: Number(qs.get("idCliente") || 0)
+        };
+    } catch (e) {
+        return { ventaId: 0, idCliente: 0 };
+    }
+};
+
+VC.aplicarDeepLinkCasita = function () {
+    const deep = VC.leerDeepLinkCasita();
+    if (deep.idCliente) {
+        VC.setSelect2Value("#f_cliente", String(deep.idCliente));
+    }
+    if (deep.ventaId) ventaClickeadaId = deep.ventaId;
+    return deep;
+};
+
+VC.focusCasitaFromQuery = function (ventaId) {
+    const id = Number(ventaId || 0);
+    if (!id) return;
+    ventaClickeadaId = id;
+    VC.pintarCardSeleccion();
+    if (tablaCobros) tablaCobros.draw(false);
+    setTimeout(function () {
+        const card = document.querySelector('.vc-cobro-card[data-idventa="' + id + '"]');
+        if (card && card.scrollIntoView) {
+            card.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+        }
+        if (!tablaCobros) return;
+        tablaCobros.rows().every(function () {
+            const d = this.data();
+            if (d && Number(d.IdVenta) === id) {
+                const node = this.node();
+                if (node && node.scrollIntoView) node.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        });
+    }, 300);
+};
 
 /* ===========================================================
    EXPORT API
@@ -2751,7 +3084,8 @@ VC.cargarCobrosPendientes = async function () {
         }
     );
 
-    const data = resp.data || [];
+    // Una fila por venta (no cada cuota del cambio de fecha)
+    const data = agruparCobrosPorVentaManteniendoColumnas(resp.data || []);
     cobrosPendientesCache = data;
 
     // ✅ FIX BUG PRECEDENCIA
@@ -2804,7 +3138,10 @@ VC.cargarCobrosPendientes = async function () {
             },
 
             { data: "IdVenta" },
-            { data: "NumeroCuota" },
+            {
+                data: null,
+                render: (d) => renderCantidadCuotas(Number(d.__CantidadCuotasPendientes || 1))
+            },
 
             {
                 data: "FechaCobro",
@@ -2866,7 +3203,14 @@ VC.cargarCobrosPendientes = async function () {
 
             { data: "TotalCuota", render: VC.fmt },
             { data: "MontoPagado", render: VC.fmt },
-            { data: "MontoRestante", render: VC.fmt },
+            {
+                data: null,
+                render: (d, type) => {
+                    const total = VC.montoRestanteVenta(d);
+                    if (type === "sort" || type === "type") return total;
+                    return VC.fmt(total);
+                }
+            },
 
             {
                 data: "Estado",
@@ -2899,11 +3243,7 @@ VC.cargarCobrosPendientes = async function () {
 
                         ${(typeof htmlAdjuntosCliente === "function") ? htmlAdjuntosCliente(d.IdCliente, d.TieneImagenes, d.ClienteNombre, "venta") : ""}
 
-                        <button type="button" class="btn btn-accion btn-cobrar"
-                            title="Cobrar"
-                            onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})">
-                            <i class="fa fa-money"></i>
-                        </button>
+                        ${VC.htmlBtnCobrar(d, d.IdCuota, { className: "btn btn-accion btn-cobrar" })}
 
                         <button type="button" class="btn btn-accion btn-ajuste"
                             title="Ajuste / recargo"
@@ -2918,8 +3258,8 @@ VC.cargarCobrosPendientes = async function () {
                         </button>
 
                         <button type="button" class="btn btn-accion btn-aprobar"
-                            title="Aceptar cobro pendiente"
-                            onclick="VC.resolverCobroPendiente(${d.IdCuota})">
+                            title="Aceptar cobro pendiente (toda la venta)"
+                            onclick="VC.resolverCobroPendiente(${d.IdCuota}, ${d.IdVenta})">
                             <i class="fa fa-check"></i>
                         </button>
 
@@ -3236,11 +3576,7 @@ VC.cargarTransferenciasPendientes = async function () {
             ${(typeof htmlAdjuntosCliente === "function") ? htmlAdjuntosCliente(d.IdCliente, d.TieneImagenes, d.ClienteNombre, "venta") : ""}
 
             <!-- 💰 COBRAR -->
-            <button class="btn btn-accion btn-cobrar me-1"
-                onclick="VC.abrirCobro(${d.IdCuota}, ${d.IdVenta})"
-                title="Cobrar">
-                <i class="fa fa-money"></i>
-            </button>
+            ${VC.htmlBtnCobrar(d, d.IdCuota)}
 
             ${botonesContacto}
             ${botonInfoVenta}
@@ -3539,11 +3875,21 @@ VC.transferenciaPendiente = async function (estado, idCuota) {
 };
 
 
-VC.resolverCobroPendiente = async function (idCuota) {
+VC.resolverCobroPendiente = async function (idCuota, idVenta) {
 
     const confirmar = (typeof confirmarModal === "function")
         ? confirmarModal
         : async (msg) => window.confirm(String(msg).replace(/<[^>]+>/g, " "));
+
+    const fila = (cobrosPendientesCache || []).find((r) =>
+        (idVenta && Number(r.IdVenta) === Number(idVenta))
+        || Number(r.IdCuota) === Number(idCuota)
+    );
+    const cuotas = Array.isArray(fila?.__TodasLasCuotas) && fila.__TodasLasCuotas.length
+        ? fila.__TodasLasCuotas.map((c) => Number(c.IdCuota || c.Id)).filter(Boolean)
+        : [Number(idCuota)].filter(Boolean);
+    const n = cuotas.length;
+    const deuda = fila ? VC.montoRestanteVenta(fila) : null;
 
     const ok = await confirmar(`
         <div class="text-start px-1">
@@ -3552,7 +3898,10 @@ VC.resolverCobroPendiente = async function (idCuota) {
                 Aceptar cobro pendiente
             </div>
             <div class="small text-white-50 mb-1">
-                Se confirmará la fecha de cobro de la cuota y saldrá de <b>Cobros pendientes</b>.
+                Se confirmará la fecha de cobro de la venta
+                ${n > 1 ? `(${n} cuotas)` : ""}
+                ${deuda != null ? `· deuda ${VC.fmt(deuda)}` : ""}
+                y saldrá de <b>Cobros pendientes</b>.
             </div>
             <div>¿Confirmás aceptar este cobro pendiente?</div>
         </div>
@@ -3561,17 +3910,19 @@ VC.resolverCobroPendiente = async function (idCuota) {
     if (!ok) return;
 
     try {
-        const resp = await $.post(
-            "/Ventas_Electrodomesticos/MarcarCobroPendienteResuelto",
-            { idCuota }
-        );
-
-        if (!resp?.success) {
-            VC.toast(resp?.message || "Error al aceptar el cobro pendiente", "danger");
-            return;
+        let lastResp = null;
+        for (const id of cuotas) {
+            lastResp = await $.post(
+                "/Ventas_Electrodomesticos/MarcarCobroPendienteResuelto",
+                { idCuota: id }
+            );
+            if (!lastResp?.success) {
+                VC.toast(lastResp?.message || "Error al aceptar el cobro pendiente", "danger");
+                return;
+            }
         }
 
-        VC.toast("Cobro pendiente aceptado", "success");
+        VC.toast(n > 1 ? `Cobro pendiente aceptado (${n} cuotas)` : "Cobro pendiente aceptado", "success");
         VC.cargarTabla();
         VC.cargarCobrosPendientes();
 
@@ -4660,9 +5011,15 @@ function agruparCobrosPorVentaManteniendoColumnas(cuotas) {
         );
 
         const cuotaMasVieja = v.__Cuotas[0];
+        const totalCuota = v.__Cuotas.reduce((s, c) => s + (Number(c.TotalCuota) || 0), 0);
+        const montoPagado = v.__Cuotas.reduce((s, c) => s + (Number(c.MontoPagado) || 0), 0);
+        const montoRestante = v.__Cuotas.reduce((s, c) => s + (Number(c.MontoRestante) || 0), 0);
 
         return {
             ...cuotaMasVieja, // 👈 mantiene TODAS las columnas
+            TotalCuota: totalCuota,
+            MontoPagado: montoPagado,
+            MontoRestante: montoRestante,
             __CantidadCuotasPendientes: v.__Cuotas.length,
             __TodasLasCuotas: v.__Cuotas
         };

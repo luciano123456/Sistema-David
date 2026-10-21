@@ -1385,12 +1385,11 @@ async function enviarWhatssapId(id, interes) {
 
 
             if (result.InformacionVenta.TipoInteres === "VISITA CON CAMBIO") {
-                mensaje = `${saludo}, ${result.Cliente.Nombre} ${result.Cliente.Apellido}. El día ${fecha} el cobrador pasó por su domicilio. Al reprogramarse el pago, se aplicó un recargo de ${formatNumber(result.InformacionVenta.Interes)} por la visita realizada. Su nueva fecha de cobro es ${fechaCobro}. El saldo pendiente de esta venta es ${formatNumber(result.InformacionVenta.Restante)}. El saldo total de todas sus ventas es ${formatNumber(result.Cliente.Saldo)}. Le recordamos que en caso de avisar previamente por WhatsApp, no se aplica el recargo. Muchas gracias.`;
+                mensaje = `${saludo}, ${result.Cliente.Nombre} ${result.Cliente.Apellido}. El día ${fecha} el cobrador pasó por su domicilio. Al reprogramarse el pago, se aplicó un recargo de ${formatNumber(result.InformacionVenta.Interes)} por la visita realizada. Su nueva fecha de cobro es ${fechaCobro}. El saldo total de todas sus ventas es ${formatNumber(result.Cliente.Saldo)}. Le recordamos que en caso de avisar previamente por WhatsApp, no se aplica el recargo. Muchas gracias.`;
             }
 
             else if (result.InformacionVenta.TipoInteres === "INTERES DE 30 DIAS") {
                 mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} se cumplieron 30 días desde la venta realizada, y aún no se cubrió el 50% de arreglo acordado. Por este motivo, se aplicó un pequeño recargo de ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
-                    `• *Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n` +
                     `• *Próxima visita de cobro:* ${fechaCobro}\n` +
                     `• *Total acumulado de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
                     `Ante cualquier consulta, no dude en comunicarse con nosotros.`;
@@ -1401,7 +1400,6 @@ async function enviarWhatssapId(id, interes) {
             else if (result.InformacionVenta.TipoInteres === "INTERES DE 60 DIAS") {
                 mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} su cuenta superó los 60 días de plazo máximo para abonar. Por este motivo, se han generado los siguientes cargos:\n\n` +
                     `*Interés aplicado:* ${formatNumber(result.InformacionVenta.Interes)}\n\n` +
-                    `*Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n\n` +
                     `*Saldo total de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
                     `⚠️ *Próxima visita de cobro:* ${fechaCobro}\n\n` +
                     `Muchas gracias por confiar en INDUMENTARIADG.`;
@@ -1412,7 +1410,6 @@ async function enviarWhatssapId(id, interes) {
                 mensaje = `${saludo}, ${result.Cliente.Nombre}. Le informamos que el día ${fecha} estuvimos esperando su promesa de pago mediante transferencia. ` +
                     `Al no haber recibido el comprobante y estando próximos al cierre de jornada, se ha agregado un interés de ${formatNumber(result.InformacionVenta.Interes)}.\n\n` +
 
-                    `🗒️ *Saldo pendiente de esta venta:* ${formatNumber(result.InformacionVenta.Restante)}\n` +
                     `📄 *Saldo total de todas sus ventas:* ${formatNumber(result.Cliente.Saldo)}\n\n` +
 
                     `📅 *El pago ha sido reprogramado para el día siguiente:* ${fechaCobro}\n\n` +
@@ -1422,11 +1419,7 @@ async function enviarWhatssapId(id, interes) {
 
 
 
-            const mensajeCodificado = encodeURIComponent(mensaje);
-            const urlwsp = `https://api.whatsapp.com/send?phone=+549${result.Cliente.Telefono}&text=${mensajeCodificado}`;
-            //const urlwsp = `https://api.whatsapp.com/send?phone=++54 9 3777 53-5622&text=${mensajeCodificado}`;
-
-            window.open(urlwsp, '_blank');
+            abrirWhatsAppAR(result.Cliente.Telefono, mensaje);
         }
     } catch (error) {
 
@@ -2346,6 +2339,7 @@ const enviarComprobante = async id => {
         if (result.Status) {
             const table = $('#grdCobranzas').DataTable();
             table.ajax.reload();
+            if (typeof refrescarAlertasNavbar === "function") refrescarAlertasNavbar("comprobantes");
         } else {
             $('.datos-error').text('Ha ocurrido un error en los datos.')
             $('.datos-error').removeClass('d-none')
@@ -2759,9 +2753,113 @@ const modalWhatssap = async id => {
     $("#idClienteWhatssap").val(id);
 }
 
+function cbCobradorIniciales(nombre) {
+    const parts = String(nombre || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+function cbSetCobradorPicker(id) {
+    const val = (id === null || id === undefined) ? "" : String(id);
+    const sel = document.getElementById("Cobrador");
+    if (sel) sel.value = val;
+    const $modal = $("#modalCobradores");
+    $modal.find(".ac-picker-item, .ac-picker-none").removeClass("is-selected");
+    if (val !== "") {
+        $modal.find('[data-id="' + val + '"]').addClass("is-selected");
+    }
+}
+
+function cbFiltrarCobradorPicker(q) {
+    q = String(q || "").toLowerCase().trim();
+    const $items = $("#acCobradorListCb .ac-picker-item");
+    let visible = 0;
+    $items.each(function () {
+        const name = $(this).find(".ac-picker-name").text().toLowerCase();
+        const show = !q || name.indexOf(q) !== -1;
+        $(this).toggle(show);
+        if (show) visible++;
+    });
+
+    const noneMatch = !q || "nadie desasignar sin asignar".indexOf(q) !== -1;
+    $("#modalCobradores .ac-picker-none").toggle(noneMatch);
+
+    const $empty = $("#acCobradorListCb .ac-picker-empty-search");
+    if (!visible && $items.length) {
+        if (!$empty.length) {
+            $("#acCobradorListCb").append('<div class="ac-picker-empty ac-picker-empty-search">Sin coincidencias</div>');
+        }
+    } else {
+        $empty.remove();
+    }
+}
+
+function cbRenderCobradorPicker() {
+    const list = document.getElementById("acCobradorListCb");
+    const sel = document.getElementById("Cobrador");
+    if (!list || !sel) return;
+
+    const html = [];
+    for (let i = 0; i < sel.options.length; i++) {
+        const opt = sel.options[i];
+        if (String(opt.value) === "0" || opt.value === "") continue;
+        const raw = String(opt.text || "");
+        const match = raw.match(/^(.*)\s+\((\d+)\)\s*$/);
+        const nombre = match ? match[1] : raw;
+        const count = match ? match[2] : "";
+        const ini = (typeof escapeHtml === "function" ? escapeHtml(cbCobradorIniciales(nombre)) : cbCobradorIniciales(nombre));
+        const nameEsc = (typeof escapeHtml === "function" ? escapeHtml(nombre) : nombre);
+        html.push(
+            '<button type="button" class="ac-picker-item" role="option" data-id="' + opt.value + '">' +
+            '<span class="ac-picker-avatar">' + ini + '</span>' +
+            '<span class="ac-picker-name">' + nameEsc + '</span>' +
+            (count ? '<span class="ac-picker-count">' + count + '</span>' : '') +
+            '<i class="fa fa-check ac-picker-check" aria-hidden="true"></i>' +
+            '</button>'
+        );
+    }
+    list.innerHTML = html.length ? html.join("") : '<div class="ac-picker-empty">No hay cobradores</div>';
+}
+
+function cbBindCobradorPicker() {
+    const $modal = $("#modalCobradores");
+    if (!$modal.length || $modal.data("acPickerBound")) return;
+    $modal.data("acPickerBound", true);
+
+    $modal.on("click.acPick", ".ac-picker-item, .ac-picker-none", function () {
+        cbSetCobradorPicker($(this).attr("data-id"));
+    });
+    $modal.on("hidden.bs.modal.acPick", function () {
+        $("#acCobradorSearchCb").val("");
+        cbFiltrarCobradorPicker("");
+    });
+    $modal.on("shown.bs.modal.acPick", function () {
+        const $s = $("#acCobradorSearchCb");
+        if ($s.length) $s.trigger("focus");
+    });
+    $("#acCobradorSearchCb").on("input.acPick", function () {
+        cbFiltrarCobradorPicker(this.value);
+    });
+}
+
 async function abrirmodalCobrador() {
     await cargarCobradores();
-    cbInitSelect2Modal("#Cobrador", "#modalCobradores", "Seleccione cobrador");
+    const $sel = $("#Cobrador");
+    if ($sel.hasClass("select2-hidden-accessible")) {
+        $sel.select2("destroy");
+    }
+    cbRenderCobradorPicker();
+    cbBindCobradorPicker();
+
+    const n = (selectedCheckboxes && selectedCheckboxes.length) ? selectedCheckboxes.length : 0;
+    $("#lblCantCobranzasSel").text(n);
+    $("#lblCantCobranzasSelTxt").text(n === 1 ? "cobranza seleccionada" : "cobranzas seleccionadas");
+
+    $("#acCobradorSearchCb").val("");
+    cbFiltrarCobradorPicker("");
+    cbSetCobradorPicker("0");
+
     $("#modalCobradores").modal("show");
 }
 
@@ -2896,6 +2994,7 @@ async function cargarCobradores() {
                 option.text = result.data[i].Nombre + " (" + result.data[i].TotalCobranzas + ")";
                 selectRol.appendChild(option);
             }
+            cbRenderCobradorPicker();
 
 
         }
@@ -3061,8 +3160,7 @@ async function enviarWhatssap() {
 
 
         if (result != null) {
-            const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${result.data.Telefono}&text=${document.getElementById("mensajewsp").value}`;
-            window.open(urlwsp, '_blank');
+            abrirWhatsAppAR(result.data.Telefono, document.getElementById("mensajewsp").value);
             $('.datos-error').removeClass('d-none');
         } else {
             //$('.datos-error').text('Ha ocurrido un error en los datos.')

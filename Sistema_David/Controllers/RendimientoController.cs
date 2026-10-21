@@ -118,6 +118,22 @@ namespace Sistema_David.Controllers
             return Json(new { cantidad = cantidad }, JsonRequestBehavior.AllowGet);
         }
 
+        public ActionResult ListaComprobantesPendientes()
+        {
+            var data = RendimientosModel.ListaComprobantesPendientes() ?? new List<VMNavbarAlerta>();
+            var json = Json(new { data = data, cantidad = data.Count }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = int.MaxValue;
+            return json;
+        }
+
+        public ActionResult ListaAusentesPendientes()
+        {
+            var data = RendimientosModel.ListaAusentesPendientes() ?? new List<VMNavbarAlerta>();
+            var json = Json(new { data = data, cantidad = data.Count }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = int.MaxValue;
+            return json;
+        }
+
 
 
         public async Task<ActionResult> ListarVentas(int idVendedor, int tipoNegocio)

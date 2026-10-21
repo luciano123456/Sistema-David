@@ -1,16 +1,13 @@
 /* ============================================================
- * Ventas_Electrodomesticos_NuevoModif.js — FULL v11.0
+ * Ventas_Electrodomesticos_NuevoModif.js — FULL v12.0
  * ============================================================
  * - Usa #idVenta oculto (NO el pathname)
- * - NUEVA venta:
- *      - podés generar plan de cuotas
- *      - NO se pueden cobrar / ajustar (muestra aviso)
- * - EDICIÓN:
- *      - NO se puede regenerar plan de cuotas
- *      - cuotas y pagos vienen del backend
- *      - cobro / ajuste / historial por cuota -> igual que Historial
- *      - historial combina Pagos + Historial (por IdCuota)
- *      - muestra: Fecha, Importe, Medio, Obs
+ * - NUEVA venta: plan de cuotas, sin cobro en el alta
+ * - EDICIÓN completa: solo administrador (IdRol === 1)
+ *      - productos, plan, montos, cabecera
+ *      - confirmación obligatoria antes de guardar
+ *      - conserva IdVenta; stock/cuotas sin duplicar
+ *      - historial de cambios en Movimientos
  * ============================================================ */
 
 ; (() => {
@@ -85,7 +82,18 @@
     const $D = s => document.querySelector(s);
 
     // ====================== CONFIRM BOOTSTRAP ASYNC ======================
-    window.showConfirm = function (mensaje) {
+    window.showConfirm = function (mensaje, options) {
+        options = options || {};
+        const textoOk = options.textoAceptar || "Confirmar";
+        const claseOk = options.claseAceptar || "btn-warning";
+
+        if (typeof confirmarModal === "function") {
+            return confirmarModal(mensaje, {
+                textoAceptar: textoOk,
+                titulo: options.titulo
+            });
+        }
+
         return new Promise(resolve => {
             let modal = document.createElement("div");
             modal.className = "modal fade";
@@ -96,7 +104,7 @@
                     <div class="modal-header">
                         <h5 class="modal-title text-white">
                             <i class="fa fa-question-circle text-accent me-2"></i>
-                            Confirmación
+                            ${options.titulo || "Confirmación"}
                         </h5>
                         <button class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
@@ -107,7 +115,7 @@
 
                     <div class="modal-footer">
                         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button id="btnOkConfirm" class="btn btn-danger">Eliminar</button>
+                        <button id="btnOkConfirm" class="btn ${claseOk}">${textoOk}</button>
                     </div>
                 </div>
             </div>
@@ -116,14 +124,16 @@
             document.body.appendChild(modal);
 
             const bsModal = new bootstrap.Modal(modal);
+            let resuelto = false;
 
             modal.querySelector("#btnOkConfirm").onclick = () => {
+                resuelto = true;
                 resolve(true);
                 bsModal.hide();
             };
 
             modal.addEventListener("hidden.bs.modal", () => {
-                resolve(false);
+                if (!resuelto) resolve(false);
                 modal.remove();
             });
 
@@ -462,12 +472,19 @@
         // Sincronizar hidden (por si el backend lo usa)
         $("#idVenta").val(idVenta);
 
-        // Cambiar texto de botón si es edición
+        // Cambiar texto de botón / título si es edición
         if (modoEdicion) {
+            $('header h1').text('Editar venta #' + idVenta);
+            $('header small').text('Edición completa — solo administración.');
             $('#btnRegistrarVenta')
                 .removeClass('btn-success')
                 .addClass('btn-warning')
                 .html('<i class="fa fa-save"></i> Guardar Cambios');
+
+            if (!puedeEditarVentaCompleta()) {
+                $('#btnRegistrarVenta').prop('disabled', true).attr('hidden', true);
+                showToast("Solo un administrador puede editar ventas.", "warn");
+            }
         }
 
         // Fechas por defecto (para NUEVA venta)
@@ -995,7 +1012,10 @@
         const p = productos[idx];
         if (!p) return;
 
-        const ok = await showConfirm(`¿Eliminar "${p.nombre}" de la venta?`);
+        const ok = await showConfirm(`¿Eliminar "${p.nombre}" de la venta?`, {
+            textoAceptar: "Eliminar",
+            claseAceptar: "btn-danger"
+        });
         if (!ok) return;
 
         productos.splice(idx, 1);
@@ -1812,7 +1832,10 @@
     async function eliminarPago(idPago) {
         if (!idPago) return;
 
-        const ok = await showConfirm("¿Eliminar este pago permanentemente?");
+        const ok = await showConfirm("¿Eliminar este pago permanentemente?", {
+            textoAceptar: "Eliminar",
+            claseAceptar: "btn-danger"
+        });
         if (!ok) return;
 
         try {
@@ -2158,28 +2181,39 @@
         }
     }
 
-    /* ====================== EDITAR VENTA EXISTENTE (DATOS) ====================== */
+    /* ====================== EDITAR VENTA EXISTENTE (SOLO ADMIN) ====================== */
 
     async function editarVenta(id) {
+
+        if (!puedeEditarVentaCompleta()) {
+            showToast("Solo un administrador puede editar ventas.", "danger");
+            return;
+        }
 
         if (!cliente)
             return showTip($('#dni')[0], "Elegí un cliente.", "danger");
 
         if (!productos.length)
-            return showTip($('#btnAbrirProducto')[0], "No se encontraron productos en la venta.", "danger");
+            return showTip($('#btnAbrirProducto')[0], "Agregá al menos un producto.", "danger");
 
-        if (!$('#turno').val() && !modoEdicion)
+        if (!cuotas.length)
+            return showToast("La venta debe tener un plan de cuotas.", "danger");
+
+        if (!$('#turno').val())
             return showToast("Seleccioná un turno.", "warn");
 
-        if (!$('#franja').val() && !modoEdicion)
+        if (!$('#franja').val())
             return showToast("Seleccioná una franja horaria.", "warn");
 
+        const errPlan = mensajeCuadrePlan();
+        if (errPlan)
+            return showToast(errPlan, "danger");
 
-        if (puedeEditarVentaCompleta()) {
-            const errPlan = mensajeCuadrePlan();
-            if (errPlan)
-                return showToast(errPlan, "danger");
-        }
+        const ok = await showConfirm(
+            `¿Confirma guardar los cambios en la venta <strong>#${id}</strong>?<br><small class="text-muted">Se actualizarán productos, plan, montos y stock. El número de venta no cambia.</small>`,
+            { textoAceptar: "Sí, guardar", titulo: "Confirmar edición", claseAceptar: "btn-warning" }
+        );
+        if (!ok) return;
 
         let total = round2(productos.reduce((a, b) => a + b.total, 0));
         let entrega = parseMoney($('#entrega').val());
@@ -2202,26 +2236,23 @@
             RecargoValor: parseMoney($('#recargo').val()) || null,
             DescuentoTipo: getTipoFromUI('#descuentoTipoWrap', '#descuentoTipo'),
             DescuentoValor: parseMoney($('#descuento').val()) || null,
-            UsuarioOperador: userSession.Id
-        };
-
-        if (puedeEditarVentaCompleta()) {
-            payload.Items = productos.map(p => ({
+            UsuarioOperador: userSession.Id,
+            Items: productos.map(p => ({
                 IdProducto: p.id,
                 Producto: p.nombre,
                 Cantidad: p.cant,
                 PrecioUnitario: p.cant ? (p.total / p.cant) : 0,
                 Subtotal: p.total
-            }));
-            payload.Cuotas = cuotas.map(c => ({
+            })),
+            Cuotas: cuotas.map(c => ({
                 Id: c.idCuota || 0,
                 NumeroCuota: c.n,
                 FechaVencimiento: moment(c.venc, "DD/MM/YYYY").format("YYYY-MM-DD"),
                 MontoOriginal: c.original,
                 MontoRecargos: c.recargo,
                 MontoDescuentos: c.desc
-            }));
-        }
+            }))
+        };
 
         try {
             const res = await $.ajax({
@@ -2254,11 +2285,27 @@
             idVenta = id;
             $("#idVenta").val(id);
 
-            const resp = await fetch(`/Ventas_Electrodomesticos/GetDetalleVenta?idVenta=${id}`);
-            const json = await resp.json();
+            const resp = await fetch(
+                `/Ventas_Electrodomesticos/GetDetalleVenta?idVenta=${encodeURIComponent(id)}`,
+                { credentials: "same-origin", headers: { "Accept": "application/json" } }
+            );
 
-            if (!json.success || !json.data) {
-                showToast("No se pudo obtener la venta.", "danger");
+            let json = null;
+            try {
+                json = await resp.json();
+            } catch (parseErr) {
+                console.error(parseErr);
+                showToast(
+                    !resp.ok
+                        ? `No se pudo obtener la venta (HTTP ${resp.status}).`
+                        : "Respuesta inválida al cargar la venta.",
+                    "danger"
+                );
+                return;
+            }
+
+            if (!resp.ok || !json || json.success === false || !json.data) {
+                showToast(json?.message || `No se pudo obtener la venta (HTTP ${resp.status}).`, "danger");
                 return;
             }
 
@@ -2345,6 +2392,9 @@
             if (!puedeEditarVentaCompleta()) {
                 setRecargoDescuentoReadonlyDesdeVenta(v);
                 $("#wrapFechaVenta").attr("hidden", true);
+                $('#dni, #turno, #franja, #observacion, #fechaVenta, #entrega').prop('disabled', true);
+                $('#btnBuscarClienteModal, #btnNuevoCliente, #btnAbrirProducto').prop('disabled', true).attr('hidden', true);
+                $('#btnRegistrarVenta').prop('disabled', true).attr('hidden', true);
             } else {
                 setRecargoDescuentoReadonlyDesdeVenta(v);
                 $('#recargo, #descuento').prop('readonly', false).removeClass('readonly');
@@ -2353,11 +2403,7 @@
                 $('#entrega, #forma, #cantCuotas, #fechaPrimerCobro, #fechaLimite, #fechaVenta').prop('disabled', false);
                 $('#btnGenerarCuotas, #btnLimpiarCuotas').prop('disabled', false);
                 $("#wrapFechaVenta").removeAttr("hidden");
-            }
-
-            $("#btnRegistrarVenta").html(`<i class="fa fa-save"></i> Guardar cambios`);
-
-            if (Number(userSession.IdRol) === 1) {
+                $("#btnRegistrarVenta").html(`<i class="fa fa-save"></i> Guardar cambios`).prop('disabled', false).removeAttr('hidden');
                 $("#btnMovimientosVenta").removeAttr("hidden");
             }
 
@@ -2853,22 +2899,7 @@ function generarPdfVenta(venta) {
     }
 
 
-    /* ================= TOTALES ================= */
-    const totalVenta = Number(venta.ImporteTotal || venta.Total || 0);
-
     const cuotasVenta = Array.isArray(venta.Cuotas) ? venta.Cuotas : [];
-
-    const totalPagado = cuotasVenta.reduce((a, c) => a + Number(c.MontoPagado || 0), 0);
-    const restante = Math.max(totalVenta - totalPagado, 0);
-
-    doc.setFontSize(12);
-    doc.text("Resumen", 10, y);
-    y += 5;
-
-    doc.setFontSize(10);
-    doc.text(`Total venta: ${money(totalVenta)}`, 10, y); y += 5;
-    doc.text(`Total pagado: ${money(totalPagado)}`, 10, y); y += 5;
-    doc.text(`Restante: ${money(restante)}`, 10, y); y += 8;
 
     /* ================= PLAN DE CUOTAS ================= */
     doc.setFontSize(12);

@@ -346,6 +346,57 @@ namespace Sistema_David.Models.Modelo
                                                  .Sum() ?? 0
                                          }).ToList();
 
+                    if (ventasElectro.Count > 0)
+                    {
+                        var idsElectro = ventasElectro.Select(x => x.Id).ToList();
+
+                        var cobradoPorVenta = db.Ventas_Electrodomesticos_Pagos
+                            .Where(p => idsElectro.Contains(p.IdVenta))
+                            .GroupBy(p => p.IdVenta)
+                            .Select(g => new
+                            {
+                                IdVenta = g.Key,
+                                Cobrado = g.Sum(x => (decimal?)x.ImporteTotal) ?? 0
+                            })
+                            .ToList()
+                            .ToDictionary(x => x.IdVenta, x => x.Cobrado);
+
+                        var saldoPorVenta = db.Ventas_Electrodomesticos_Cuotas
+                            .Where(c => idsElectro.Contains(c.IdVenta))
+                            .GroupBy(c => c.IdVenta)
+                            .Select(g => new
+                            {
+                                IdVenta = g.Key,
+                                Saldo = g.Sum(c =>
+                                    (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado)
+                            })
+                            .ToList()
+                            .ToDictionary(x => x.IdVenta, x => x.Saldo);
+
+                        foreach (var ve in ventasElectro)
+                        {
+                            decimal entregaHead = ve.Entrega ?? 0;
+                            decimal restanteHead = ve.Restante ?? 0;
+                            decimal cobrado = 0m;
+                            if (cobradoPorVenta.TryGetValue(ve.Id, out var cbr))
+                                cobrado = cbr;
+                            if (cobrado <= 0)
+                                cobrado = entregaHead;
+
+                            decimal saldo = restanteHead;
+                            if (saldoPorVenta.TryGetValue(ve.Id, out var sld))
+                                saldo = sld;
+
+                            decimal totalRef = ve.TotalVenta > 0 ? ve.TotalVenta : (entregaHead + restanteHead);
+                            if (cobrado > 0 && totalRef > 0 && saldo >= totalRef - 0.05m)
+                                saldo = Math.Max(0, totalRef - cobrado);
+                            if (saldo < 0) saldo = 0;
+
+                            ve.Entrega = cobrado;
+                            ve.Restante = saldo;
+                        }
+                    }
+
                     // =========================
                     // UNIFICACIÓN
                     // =========================

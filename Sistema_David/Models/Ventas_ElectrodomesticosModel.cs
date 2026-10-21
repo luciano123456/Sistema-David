@@ -1138,13 +1138,32 @@ namespace Sistema_David.Models
                     .Include("Ventas_Electrodomesticos_Detalle")
                     .Include("Ventas_Electrodomesticos_Cuotas.Ventas_Electrodomesticos_Cuotas_Recargos")
                     .Include("Ventas_Electrodomesticos_Pagos.Ventas_Electrodomesticos_Pagos_Detalle")
-                    .Include("Ventas_Electrodomesticos_Historial")
                     .FirstOrDefault(x => x.Id == idVenta);
 
                 if (v == null)
                     return null;
 
-                var infoCliente = ClientesModel.InformacionCliente(v.IdCliente);
+                List<Ventas_Electrodomesticos_Historial> histRows;
+                try
+                {
+                    histRows = db.Ventas_Electrodomesticos_Historial
+                        .Where(h => h.IdVenta == idVenta)
+                        .ToList();
+                }
+                catch
+                {
+                    histRows = new List<Ventas_Electrodomesticos_Historial>();
+                }
+
+                string estadoCliente = null;
+                try
+                {
+                    estadoCliente = ClientesModel.InformacionCliente(v.IdCliente)?.Estado;
+                }
+                catch
+                {
+                    // No bloquear la edición si falla el lookup de estado del cliente
+                }
 
                 var vm = new VM_Ventas_Electrodomesticos_Detalle
                 {
@@ -1154,7 +1173,7 @@ namespace Sistema_David.Models
                         : null,
                     ClienteDireccion = v.Clientes?.Direccion,
                     ClienteTelefono = v.Clientes?.Telefono,
-                    ClienteEstado = infoCliente?.Estado,
+                    ClienteEstado = estadoCliente,
                     ClienteDNI = v.Clientes?.Dni,
 
                     /* ================= HEADER VENTA ================= */
@@ -1185,12 +1204,15 @@ namespace Sistema_David.Models
                     Turno = v.Turno,
 
                     Entrega = v.Entrega ?? 0,
-                    Restante = v.Restante ?? 0
+                    Restante = v.Restante ?? 0,
+                    Intransferible = EsVentaElectroIntransferible(db, idVenta) ? 1 : 0
                 };
 
                 /* ================= ITEMS ================= */
                 // Solo nombre ya guardado en el detalle de la venta (no cargar catálogo Productos)
-                vm.Items = v.Ventas_Electrodomesticos_Detalle
+                var detalles = v.Ventas_Electrodomesticos_Detalle
+                    ?? Enumerable.Empty<Ventas_Electrodomesticos_Detalle>();
+                vm.Items = detalles
                     .Select(i => new VM_Ventas_Electrodomesticos_Item
                     {
                         IdProducto = i.IdProducto,
@@ -1203,8 +1225,12 @@ namespace Sistema_David.Models
                 /* ================= CUOTAS ================= */
                 // Incluir todas las cuotas (también CobroPendiente / TransferenciaPendiente),
                 // para que Cobros pendientes y Transferencias pendientes puedan abrir cobro/historial.
-                vm.Cuotas = v.Ventas_Electrodomesticos_Cuotas
+                var cuotasDb = (v.Ventas_Electrodomesticos_Cuotas
+                    ?? Enumerable.Empty<Ventas_Electrodomesticos_Cuotas>())
                     .OrderBy(c => c.NumeroCuota)
+                    .ToList();
+
+                vm.Cuotas = cuotasDb
                     .Select(c => new global::Sistema_David.Models.ViewModels.VM_Ventas_Electrodomesticos_Cuota
                     {
                         Id = c.Id,
@@ -1220,7 +1246,6 @@ namespace Sistema_David.Models
                         MontoDescuentos = c.MontoDescuentos,
                         MontoPagado = c.MontoPagado,
 
-
                         MontoRestante =
                             c.MontoOriginal +
                             c.MontoRecargos -
@@ -1229,8 +1254,8 @@ namespace Sistema_David.Models
 
                         Estado = c.Estado,
 
-                        // 🔥 RECARGOS INDIVIDUALES
-                        Recargos = c.Ventas_Electrodomesticos_Cuotas_Recargos
+                        Recargos = (c.Ventas_Electrodomesticos_Cuotas_Recargos
+                                ?? Enumerable.Empty<Ventas_Electrodomesticos_Cuotas_Recargos>())
                             .OrderBy(r => r.Fecha)
                             .Select(r => new VM_Ventas_Electrodomesticos_RecargoCuotaDetalle
                             {
@@ -1251,7 +1276,9 @@ namespace Sistema_David.Models
                     .Sum(c => (c.MontoOriginal + c.MontoRecargos - c.MontoDescuentos) - c.MontoPagado);
 
                 /* ================= PAGOS ================= */
-                vm.Pagos = v.Ventas_Electrodomesticos_Pagos
+                var pagosDb = v.Ventas_Electrodomesticos_Pagos
+                    ?? Enumerable.Empty<Ventas_Electrodomesticos_Pagos>();
+                vm.Pagos = pagosDb
                     .OrderByDescending(p => p.FechaPago)
                     .Select(p => new
                     {
@@ -1266,7 +1293,8 @@ namespace Sistema_David.Models
                         p.IdCuentaBancaria,
                         p.TipoInteres,
                         p.ActualizoUbicacion,
-                        Detalles = p.Ventas_Electrodomesticos_Pagos_Detalle
+                        Detalles = (p.Ventas_Electrodomesticos_Pagos_Detalle
+                                ?? Enumerable.Empty<Ventas_Electrodomesticos_Pagos_Detalle>())
                             .Select(d => new
                             {
                                 d.Id,
@@ -1282,12 +1310,16 @@ namespace Sistema_David.Models
                 var nombresUsuariosHist = db.Usuarios
                     .Select(u => new { u.Id, u.Nombre })
                     .ToList()
-                    .ToDictionary(u => u.Id, u => string.IsNullOrWhiteSpace(u.Nombre) ? "Usuario" : u.Nombre);
+                    .GroupBy(u => u.Id)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => string.IsNullOrWhiteSpace(g.First().Nombre) ? "Usuario" : g.First().Nombre);
 
-                var nroCuotaPorId = v.Ventas_Electrodomesticos_Cuotas
-                    .ToDictionary(c => c.Id, c => c.NumeroCuota);
+                var nroCuotaPorId = cuotasDb
+                    .GroupBy(c => c.Id)
+                    .ToDictionary(g => g.Key, g => g.First().NumeroCuota);
 
-                vm.Historial = v.Ventas_Electrodomesticos_Historial
+                vm.Historial = (histRows ?? new List<Ventas_Electrodomesticos_Historial>())
                     .OrderByDescending(h => h.FechaCambio)
                     .ThenByDescending(h => h.Id)
                     .Select(h => new
@@ -1317,18 +1349,44 @@ namespace Sistema_David.Models
         /* ===========================================================
          * REGISTRAR PAGO
          * =========================================================== */
-        public static int RegistrarPago(VM_Ventas_Electrodomesticos_Pago m)
+        public const string MensajeCobranzaIntransferible = "Esta cobranza es intransferible";
+
+        private static bool RolNoPuedeCobrarVentaIntransferible(int? idRol)
+        {
+            return idRol == 2 || idRol == 3;
+        }
+
+        public static string MensajeSiVendedorNoPuedeCobrar(int idVenta, int? idRol)
+        {
+            if (!RolNoPuedeCobrarVentaIntransferible(idRol)) return null;
+            using (var db = new Sistema_DavidEntities())
+            {
+                return EsVentaElectroIntransferible(db, idVenta)
+                    ? MensajeCobranzaIntransferible
+                    : null;
+            }
+        }
+
+        public static int RegistrarPago(VM_Ventas_Electrodomesticos_Pago m, int? idRol = null)
         {
             using (var db = new Sistema_DavidEntities())
             using (var tx = db.Database.BeginTransaction())
             {
                 try
                 {
+                    if (RolNoPuedeCobrarVentaIntransferible(idRol) && EsVentaElectroIntransferible(db, m.IdVenta))
+                        throw new Exception(MensajeCobranzaIntransferible);
+
                     // Regla de negocio: todo cobro se registra con fecha de hoy (con hora).
                     // La fecha solo puede cambiarse en reprogramación.
                     var fechaPagoReal = DateTime.Now;
                     var fechaCobroProgramada = m.FechaCobroCuota?.Date;
-                    if (fechaCobroProgramada.HasValue && fechaCobroProgramada.Value < fechaPagoReal.Date)
+                    bool esClienteAusente = m.ClienteAusente == 1;
+
+                    // Cliente ausente / reprogramación: se permite cualquier día de próxima visita
+                    if (!esClienteAusente
+                        && fechaCobroProgramada.HasValue
+                        && fechaCobroProgramada.Value < fechaPagoReal.Date)
                         throw new Exception("La próxima fecha de cobro no puede ser anterior a hoy.");
 
                     var venta = db.Ventas_Electrodomesticos
@@ -1374,7 +1432,7 @@ namespace Sistema_David.Models
                     decimal restanteVenta = SaldoPendienteDesdeCuotas(
                         venta.Ventas_Electrodomesticos_Cuotas);
 
-                    if (m.ImporteTotal <= 0)
+                    if (m.ImporteTotal < 0 || (!esClienteAusente && m.ImporteTotal <= 0))
                         throw new Exception("Importe inválido");
 
                     if (R2(m.ImporteTotal) > restanteVenta)
@@ -1389,21 +1447,84 @@ namespace Sistema_David.Models
                     {
                         IdVenta = venta.Id,
                         FechaPago = fechaPagoReal,
-                        MedioPago = m.MedioPago,
+                        MedioPago = string.IsNullOrWhiteSpace(m.MedioPago)
+                            ? (esClienteAusente ? "AUSENTE" : m.MedioPago)
+                            : m.MedioPago,
                         ImporteTotal = R2(m.ImporteTotal),
                         Observacion = m.Observacion,
                         UsuarioCreacion = m.UsuarioOperador,
                         FechaCreacion = DateTime.Now,
 
-                        ClienteAusente = m.ClienteAusente,
+                        ClienteAusente = esClienteAusente ? 1 : m.ClienteAusente,
                         Imagen = m.Imagen,
                         IdCuentaBancaria = m.IdCuentaBancaria,
                         TipoInteres = m.TipoInteres,
-                        ActualizoUbicacion = m.ActualizoUbicacion
+                        ActualizoUbicacion = m.ActualizoUbicacion,
+                        Whatssap = 0
                     };
 
                     db.Ventas_Electrodomesticos_Pagos.Add(pago);
                     db.SaveChanges();
+
+                    // Visita con cliente ausente (importe 0): registrar marca + reprogramar fecha de cuota
+                    if (esClienteAusente && R2(m.ImporteTotal) <= 0)
+                    {
+                        int? idCuotaAusente = m.Aplicaciones != null && m.Aplicaciones.Count > 0
+                            ? (int?)m.Aplicaciones[0].IdCuota
+                            : null;
+
+                        var cuotaAusente = idCuotaAusente.HasValue
+                            ? venta.Ventas_Electrodomesticos_Cuotas.FirstOrDefault(c => c.Id == idCuotaAusente.Value)
+                            : venta.Ventas_Electrodomesticos_Cuotas
+                                .Where(c => c.MontoRestante > 0)
+                                .OrderBy(c => c.NumeroCuota)
+                                .FirstOrDefault();
+
+                        if (cuotaAusente != null)
+                        {
+                            db.Ventas_Electrodomesticos_Pagos_Detalle.Add(
+                                new Ventas_Electrodomesticos_Pagos_Detalle
+                                {
+                                    IdPago = pago.Id,
+                                    IdCuota = cuotaAusente.Id,
+                                    ImporteAplicado = 0
+                                });
+
+                            if (fechaCobroProgramada.HasValue)
+                            {
+                                var fechaCobroAnt = cuotaAusente.FechaCobro;
+                                cuotaAusente.FechaCobro = fechaCobroProgramada.Value;
+                                cuotaAusente.CobroPendiente = 1;
+                                cuotaAusente.UsuarioModificacion = m.UsuarioOperador;
+                                cuotaAusente.FechaModificacion = DateTime.Now;
+
+                                AuditSiCambio(db, venta.Id, cuotaAusente.Id, m.UsuarioOperador,
+                                    "FechaCobro",
+                                    fechaCobroAnt?.ToString("dd/MM/yyyy HH:mm"),
+                                    cuotaAusente.FechaCobro?.ToString("dd/MM/yyyy HH:mm"),
+                                    "Cliente ausente");
+                                Audit(db, venta.Id, cuotaAusente.Id, m.UsuarioOperador,
+                                    "CobroPendiente", "0", "1", "Cliente ausente");
+                            }
+                        }
+
+                        Audit(
+                            db,
+                            venta.Id,
+                            cuotaAusente?.Id,
+                            m.UsuarioOperador,
+                            "RegistrarPago",
+                            AuditDecimal(restanteVenta),
+                            AuditDecimal(restanteVenta),
+                            "Pago #" + pago.Id
+                            + " Importe=0 | Ausente=1"
+                            + (string.IsNullOrWhiteSpace(m.Observacion) ? "" : " | Obs=" + m.Observacion)
+                        );
+
+                        db.SaveChanges();
+                        tx.Commit();
+                        return pago.Id;
+                    }
 
                     // ===============================
                     // 🔁 APLICAR EN CASCADA
@@ -2064,12 +2185,15 @@ namespace Sistema_David.Models
 
 
         /* ===========================================================
-         * EDITAR VENTA
-         * Admin (rol 1): puede cambiar cliente, productos, plan, montos.
-         * Otros roles: solo datos de cabecera.
+         * EDITAR VENTA (solo administrador IdRol == 1)
+         * Edición completa: cliente, productos, plan, montos, stock.
+         * Conserva el mismo Id de venta; no regenera comisiones ni pagos.
          * =========================================================== */
         public static string EditarVenta(VM_Ventas_Electrodomesticos_Crear m, int idRol = 0)
         {
+            if (idRol != 1)
+                return "No autorizado";
+
             using (var db = new Sistema_DavidEntities())
             using (var tx = db.Database.BeginTransaction())
             {
@@ -2090,7 +2214,12 @@ namespace Sistema_David.Models
                     if (venta.Eliminada)
                         return "No se puede editar una venta eliminada";
 
-                    var esAdmin = idRol == 1;
+                    if (m.Items == null || m.Items.Count == 0)
+                        return "Debe enviar los productos de la venta.";
+
+                    if (m.Cuotas == null || m.Cuotas.Count == 0)
+                        return "Debe enviar el plan de cuotas.";
+
                     var idVendedorDestino = m.IdVendedor > 0 ? m.IdVendedor : venta.IdVendedor;
 
                     AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
@@ -2117,18 +2246,10 @@ namespace Sistema_David.Models
                     venta.FranjaHoraria = m.FranjaHoraria;
                     venta.Turno = m.Turno;
 
-                    if (m.Entrega.HasValue)
-                    {
-                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "Entrega", venta.Entrega, R2(m.Entrega.Value));
-                        venta.Entrega = R2(m.Entrega.Value);
-                    }
-
-                    if (esAdmin)
                     {
                         var restanteOld = venta.Restante ?? 0;
                         var resumenEdicion = new List<string>();
 
-                        if (m.Items != null && m.Items.Count > 0)
                         {
                             AuditDiffItemsElectro(
                                 db, venta.Id, m.UsuarioOperador,
@@ -2171,12 +2292,7 @@ namespace Sistema_David.Models
                                 return "El total de la venta no coincide con los productos.";
                             }
                         }
-                        else
-                        {
-                            venta.IdVendedor = idVendedorDestino;
-                        }
 
-                        if (m.Cuotas != null && m.Cuotas.Count > 0)
                         {
                         var checksEdicion = m.Cuotas.Select(plan =>
                         {
@@ -2327,6 +2443,14 @@ namespace Sistema_David.Models
                         AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "ImporteTotal", venta.ImporteTotal, R2(m.ImporteTotal));
                         AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "CantidadCuotas", venta.CantidadCuotas, m.CantidadCuotas);
                         AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "FormaCuotas", venta.FormaCuotas, m.FormaCuotas);
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "RecargoTipo", venta.RecargoTipo, m.RecargoTipo);
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "RecargoValor", venta.RecargoValor, m.RecargoValor);
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "DescuentoTipo", venta.DescuentoTipo, m.DescuentoTipo);
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador, "DescuentoValor", venta.DescuentoValor, m.DescuentoValor);
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
+                            "FechaVencimiento",
+                            venta.FechaVencimiento.HasValue ? venta.FechaVencimiento.Value.ToString("dd/MM/yyyy") : null,
+                            m.FechaVencimiento.HasValue ? m.FechaVencimiento.Value.ToString("dd/MM/yyyy") : null);
 
                         venta.ImporteTotal = R2(m.ImporteTotal);
                         venta.Entrega = R2(entrega);
@@ -2360,20 +2484,10 @@ namespace Sistema_David.Models
                             ? string.Join(" · ", resumenEdicion.Take(10))
                                 + (resumenEdicion.Count > 10 ? " …" : "")
                             : ("Edición de cabecera y plan | Items="
-                                + (m.Items == null ? 0 : m.Items.Count)
+                                + m.Items.Count
                                 + " | Cuotas=" + m.Cuotas.Count);
                         Audit(db, venta.Id, null, m.UsuarioOperador, "EditarVenta", null, "OK", obsEdicion);
                         }
-                        else if (resumenEdicion.Count > 0)
-                        {
-                            Audit(db, venta.Id, null, m.UsuarioOperador, "EditarVenta", null, "OK",
-                                string.Join(" · ", resumenEdicion.Take(10)));
-                        }
-                    }
-                    else
-                    {
-                        if (m.IdVendedor > 0)
-                            venta.IdVendedor = idVendedorDestino;
                     }
 
                     venta.UsuarioModificacion = m.UsuarioOperador;
@@ -2506,6 +2620,7 @@ namespace Sistema_David.Models
                     .ToList();
 
                 MarcarImagenesCobros(rows);
+                AplicarIntransferiblesElectro(db, rows);
                 return rows;
             }
         }
@@ -2604,6 +2719,7 @@ namespace Sistema_David.Models
                     .ToList();
 
                 MarcarImagenesCobros(rows);
+                AplicarIntransferiblesElectro(db, rows);
                 return rows;
             }
         }
@@ -3078,6 +3194,7 @@ namespace Sistema_David.Models
 
                         EstadoCobro = x.Venta.EstadoCobro ?? 0,
                         ObservacionCobro = x.Venta.ObservacionCobro,
+                        Intransferible = 0,
                     })
                     .OrderBy(r => r.FechaVencimiento)
                     .ThenBy(r => r.NumeroCuota)
@@ -3110,6 +3227,7 @@ namespace Sistema_David.Models
                 }
 
                 MarcarImagenesCobros(rows);
+                AplicarIntransferiblesElectro(db, rows);
                 return rows;
             }
         }
@@ -3129,6 +3247,9 @@ namespace Sistema_David.Models
 
                     if (cuota == null)
                         return "Cuota no encontrada";
+
+                    if (RolNoPuedeCobrarVentaIntransferible(idRol) && EsVentaElectroIntransferible(db, cuota.IdVenta))
+                        return MensajeCobranzaIntransferible;
 
                     var fechaAnterior = cuota.FechaCobro;
                     var cobroPendAnt = cuota.CobroPendiente;
@@ -3294,6 +3415,7 @@ namespace Sistema_David.Models
                 {
                     var venta = db.Ventas_Electrodomesticos.FirstOrDefault(v => v.Id == idVenta);
                     if (venta == null) return "Venta no encontrada";
+                    if (EsVentaElectroIntransferible(db, idVenta)) return "No se pueden transferir cobranzas con candado cerrado.";
 
                     var cobrador = db.Usuarios.FirstOrDefault(u => u.Id == idCobrador);
                     if (cobrador == null) return "Cobrador no encontrado";
@@ -3359,6 +3481,12 @@ namespace Sistema_David.Models
 
                     if (ventas.Count == 0) return "No se encontraron ventas";
 
+                    var cerradas = IdsVentasElectroIntransferibles(db, idsVentas);
+                    var habiaCerradas = cerradas.Count > 0;
+                    ventas = ventas.Where(v => !cerradas.Contains(v.Id)).ToList();
+                    if (ventas.Count == 0)
+                        return "No se pueden transferir cobranzas con candado cerrado.";
+
                     foreach (var v in ventas)
                     {
                         var anterior = v.IdCobrador.HasValue ? v.IdCobrador.Value.ToString() : "(sin)";
@@ -3389,13 +3517,96 @@ namespace Sistema_David.Models
 
                     db.SaveChanges();
                     tx.Commit();
-                    return "OK";
+                    return habiaCerradas ? "PARCIAL" : "OK";
                 }
                 catch (Exception ex)
                 {
                     tx.Rollback();
                     return "Error al asignar cobrador: " + ex.Message;
                 }
+            }
+        }
+
+        public static string CambiarIntransferible(int idVenta, int intransferible, int usuario)
+        {
+            if (idVenta <= 0) return "Venta inválida";
+
+            using (var db = new Sistema_DavidEntities())
+            {
+                try
+                {
+                    if (!ExisteColumnaIntransferibleElectro(db))
+                        return "Falta correr el script de Intransferible";
+
+                    var flag = intransferible == 1 ? 1 : 0;
+                    var n = db.Database.ExecuteSqlCommand(
+                        "UPDATE dbo.Ventas_Electrodomesticos SET Intransferible = @p0, UsuarioModificacion = @p1, FechaModificacion = GETDATE() WHERE Id = @p2 AND Eliminada = 0",
+                        flag, usuario, idVenta);
+                    return n > 0 ? "OK" : "Venta no encontrada";
+                }
+                catch
+                {
+                    return "Falta correr el script de Intransferible";
+                }
+            }
+        }
+
+        private class IdFlagElectro
+        {
+            public int Id { get; set; }
+            public int Intransferible { get; set; }
+        }
+
+        private static bool ExisteColumnaIntransferibleElectro(Sistema_DavidEntities db)
+        {
+            var n = db.Database.SqlQuery<int>(
+                "SELECT CASE WHEN COL_LENGTH('dbo.Ventas_Electrodomesticos', 'Intransferible') IS NULL THEN 0 ELSE 1 END")
+                .FirstOrDefault();
+            return n == 1;
+        }
+
+        private static HashSet<int> IdsVentasElectroIntransferibles(Sistema_DavidEntities db, IEnumerable<int> ids)
+        {
+            var set = new HashSet<int>();
+            try
+            {
+                if (ids == null || !ExisteColumnaIntransferibleElectro(db)) return set;
+                var lista = ids.Where(i => i > 0).Distinct().ToList();
+                for (var i = 0; i < lista.Count; i += 400)
+                {
+                    var parte = lista.Skip(i).Take(400).ToList();
+                    if (parte.Count == 0) continue;
+                    var sql = "SELECT Id, ISNULL(Intransferible, 0) AS Intransferible FROM dbo.Ventas_Electrodomesticos WHERE Id IN ("
+                        + string.Join(",", parte) + ") AND ISNULL(Intransferible, 0) = 1";
+                    foreach (var row in db.Database.SqlQuery<IdFlagElectro>(sql))
+                        set.Add(row.Id);
+                }
+            }
+            catch
+            {
+                return new HashSet<int>();
+            }
+            return set;
+        }
+
+        private static bool EsVentaElectroIntransferible(Sistema_DavidEntities db, int idVenta)
+        {
+            return IdsVentasElectroIntransferibles(db, new[] { idVenta }).Contains(idVenta);
+        }
+
+        private static void AplicarIntransferiblesElectro(Sistema_DavidEntities db, List<VM_Ventas_Electrodomesticos_CuotaCobroRow> rows)
+        {
+            if (rows == null || rows.Count == 0) return;
+            try
+            {
+                var cerradas = IdsVentasElectroIntransferibles(db, rows.Select(r => r.IdVenta));
+                foreach (var r in rows)
+                    r.Intransferible = cerradas.Contains(r.IdVenta) ? 1 : 0;
+            }
+            catch
+            {
+                foreach (var r in rows)
+                    r.Intransferible = 0;
             }
         }
 
@@ -3716,6 +3927,122 @@ namespace Sistema_David.Models
                     tx.Rollback();
                     return "Error: " + ex.Message;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Casitas en rojo de cobros electro: ventas con EstadoCobro = 1
+        /// (observación de cobro marcada). No incluye clientes ausentes.
+        /// No entra Estado Pendiente ni ventas eliminadas.
+        /// </summary>
+        public static List<VMNavbarAlerta> ListaCasitasRojas()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                var ventas = (
+                    from v in db.Ventas_Electrodomesticos
+                    join c in db.Clientes on v.IdCliente equals c.Id
+                    join cob in db.Usuarios on v.IdCobrador equals cob.Id into cobJoin
+                    from cob in cobJoin.DefaultIfEmpty()
+                    where !v.Eliminada
+                          && v.Estado != "Pendiente"
+                          && (v.EstadoCobro ?? 0) == 1
+                    select new
+                    {
+                        v.Id,
+                        v.IdCliente,
+                        Cliente = ((c.Nombre ?? "") + " " + (c.Apellido ?? "")).Trim(),
+                        Cobrador = cob != null ? cob.Nombre : null,
+                        v.ObservacionCobro,
+                        v.Estado,
+                        v.FechaVenta,
+                        v.FechaModificacion,
+                        v.P_FechaCobro
+                    }
+                ).ToList();
+
+                var ids = ventas.Select(x => x.Id).ToList();
+                var cuotas = ids.Count == 0
+                    ? new List<CasitaCuotaMini>()
+                    : db.Ventas_Electrodomesticos_Cuotas
+                        .Where(c => ids.Contains(c.IdVenta) && c.Estado != "Pagada")
+                        .Select(c => new { c.IdVenta, c.Id, c.FechaCobro, c.Estado })
+                        .ToList()
+                        .Select(c => new CasitaCuotaMini
+                        {
+                            IdVenta = c.IdVenta,
+                            Id = c.Id,
+                            FechaCobro = c.FechaCobro,
+                            Estado = c.Estado
+                        })
+                        .ToList();
+
+                var cuotaPorVenta = cuotas
+                    .GroupBy(c => c.IdVenta)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.OrderBy(x => x.FechaCobro ?? DateTime.MaxValue).First());
+
+                var lista = new List<VMNavbarAlerta>(ventas.Count);
+                foreach (var x in ventas)
+                {
+                    CasitaCuotaMini cuota = null;
+                    cuotaPorVenta.TryGetValue(x.Id, out cuota);
+
+                    DateTime fecha = x.FechaVenta;
+                    if (cuota != null && cuota.FechaCobro.HasValue)
+                        fecha = cuota.FechaCobro.Value;
+                    else if (x.P_FechaCobro.HasValue)
+                        fecha = x.P_FechaCobro.Value;
+                    else if (x.FechaModificacion.HasValue)
+                        fecha = x.FechaModificacion.Value;
+
+                    lista.Add(new VMNavbarAlerta
+                    {
+                        Id = x.Id,
+                        IdVenta = x.Id,
+                        IdCliente = x.IdCliente,
+                        IdCuota = cuota != null ? cuota.Id : 0,
+                        Cliente = string.IsNullOrWhiteSpace(x.Cliente) ? "Sin cliente" : x.Cliente,
+                        Fecha = fecha,
+                        FechaTexto = fecha.ToString("dd/MM/yyyy"),
+                        FechaCobroTexto = cuota != null && cuota.FechaCobro.HasValue
+                            ? cuota.FechaCobro.Value.ToString("dd/MM/yyyy")
+                            : "",
+                        Tipo = "ELECTRO",
+                        Origen = "ELECTRO",
+                        Estado = string.IsNullOrWhiteSpace(x.Estado)
+                            ? (cuota != null ? (cuota.Estado ?? "") : "")
+                            : x.Estado,
+                        Cobrador = string.IsNullOrWhiteSpace(x.Cobrador) ? "Sin cobrador" : x.Cobrador,
+                        Observacion = (x.ObservacionCobro ?? "").Trim(),
+                        Url = "/Ventas_Electrodomesticos/Cobros/?ventaId=" + x.Id + "&idCliente=" + x.IdCliente
+                    });
+                }
+
+                return lista
+                    .OrderByDescending(x => x.Fecha)
+                    .ThenBy(x => x.Cliente)
+                    .ToList();
+            }
+        }
+
+        private class CasitaCuotaMini
+        {
+            public int IdVenta { get; set; }
+            public int Id { get; set; }
+            public DateTime? FechaCobro { get; set; }
+            public string Estado { get; set; }
+        }
+
+        public static int CantidadCasitasRojas()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                return db.Ventas_Electrodomesticos.Count(v =>
+                    !v.Eliminada
+                    && v.Estado != "Pendiente"
+                    && (v.EstadoCobro ?? 0) == 1);
             }
         }
 

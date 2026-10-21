@@ -106,9 +106,16 @@ namespace Sistema_David.Models
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
                 DateTime fechaHastaFin = fechaHasta.Date.AddDays(1);
+                DateTime hoy = DateTime.Today;
+                DateTime maniana = hoy.AddDays(1);
 
-                var informacionVenta = db.InformacionVentas
-                    .Where(iv => iv.ClienteAusente == 1 && iv.Fecha >= fechaDesde.Date && iv.Fecha < fechaHastaFin)
+                // Rango del filtro + pendientes de hoy sin WhatsApp (mismo criterio que el badge)
+                var indumentaria = db.InformacionVentas
+                    .Where(iv => iv.ClienteAusente == 1
+                                 && (
+                                     (iv.Fecha >= fechaDesde.Date && iv.Fecha < fechaHastaFin)
+                                     || ((iv.whatssap ?? 0) == 0 && iv.Fecha >= hoy && iv.Fecha < maniana)
+                                 ))
                     .Select(iv => new VMInformacionVenta
                     {
                         Id = iv.Id,
@@ -127,46 +134,252 @@ namespace Sistema_David.Models
                         Cliente = db.Clientes
                         .Where(c => c.Id == db.Ventas.FirstOrDefault(v => v.Id == iv.IdVenta).idCliente)
                         .Select(c => c.Nombre + " " + c.Apellido)
-                        .FirstOrDefault() ?? "N/A"
+                        .FirstOrDefault() ?? "N/A",
+                        ClienteAusente = 1,
+                        Origen = "INDUMENTARIA"
                     })
                     .ToList();
 
-                return informacionVenta;
+                var electro = (from p in db.Ventas_Electrodomesticos_Pagos
+                               join ve in db.Ventas_Electrodomesticos on p.IdVenta equals ve.Id
+                               join c in db.Clientes on ve.IdCliente equals c.Id
+                               where p.ClienteAusente == 1
+                                     && !ve.Eliminada
+                                     && (
+                                         (p.FechaPago >= fechaDesde.Date && p.FechaPago < fechaHastaFin)
+                                         || ((p.Whatssap ?? 0) == 0 && p.FechaPago >= hoy && p.FechaPago < maniana)
+                                     )
+                               select new VMInformacionVenta
+                               {
+                                   Id = p.Id,
+                                   IdVenta = p.IdVenta,
+                                   Fecha = p.FechaPago,
+                                   Entrega = p.ImporteTotal,
+                                   Restante = ve.Restante ?? 0,
+                                   idVendedor = ve.IdVendedor,
+                                   Interes = 0,
+                                   Descripcion = "Cobranza Electrodomesticos #" + p.IdVenta,
+                                   whatssap = p.Whatssap ?? 0,
+                                   ValorCuota = 0,
+                                   Observacion = p.Observacion != null ? p.Observacion : "",
+                                   idCobrador = p.UsuarioCreacion,
+                                   Cobrador = p.UsuarioCreacion == 0
+                                       ? "N/A"
+                                       : db.Usuarios.FirstOrDefault(u => u.Id == p.UsuarioCreacion).Nombre ?? "N/A",
+                                   Cliente = (c.Nombre + " " + c.Apellido) ?? "N/A",
+                                   ClienteAusente = 1,
+                                   Origen = "ELECTRO"
+                               })
+                    .ToList();
+
+                return indumentaria
+                    .Concat(electro)
+                    .OrderByDescending(x => x.Fecha)
+                    .ThenBy(x => x.Cliente)
+                    .ToList();
             }
         }
 
         public static int MostrarCantidadClientesAusentes()
         {
-            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
-            {
-                // Obtenemos la fecha actual (solo la parte de la fecha sin la hora)
-                DateTime fechaActual = DateTime.Today;
-
-                // Contamos el número de registros que coinciden con las condiciones
-                int cantidadClientesAusentes = db.InformacionVentas
-                    .Where(iv => iv.ClienteAusente == 1
-                                 && iv.whatssap == 0
-                                 && DbFunctions.TruncateTime(iv.Fecha) == fechaActual)
-                    .Count();
-
-                return cantidadClientesAusentes;
-            }
+            return ListaAusentesPendientes().Count;
         }
 
         public static int MostrarCantidadComprobantes()
         {
+            return ListaComprobantesPendientes().Count;
+        }
+
+        /// <summary>
+        /// Ventas con PDF rojo: Comprobante != 1 (indumentaria + electro).
+        /// No usa Whatssap ni cobros. Mismo criterio que el botón PDF de la UI.
+        /// Pendientes (electro Pendiente / indumentaria con Estado) entran aunque superen 30 días;
+        /// el resto del historial se limita a 30 días, igual que el default de admin.
+        /// </summary>
+        public static List<VMNavbarAlerta> ListaComprobantesPendientes()
+        {
             using (Sistema_DavidEntities db = new Sistema_DavidEntities())
             {
-                DateTime fechaHasta = DateTime.Today.AddDays(1).AddTicks(-1); // 18/04 23:59:59.9999999
-                DateTime fechaDesde = DateTime.Today.AddDays(-5);             // 13/04 00:00:00
+                DateTime desde = DateTime.Today.AddDays(-30);
+                DateTime hastaExcl = DateTime.Today.AddDays(1);
 
-                int cantidadClientesAusentes = db.Ventas
-                    .Where(iv => iv.Comprobante == 0
-                                 && DbFunctions.TruncateTime(iv.Fecha) >= fechaDesde
-                                 && DbFunctions.TruncateTime(iv.Fecha) <= fechaHasta)
-                    .Count();
+                var indumentaria = (from v in db.Ventas
+                                    join c in db.Clientes on v.idCliente equals c.Id
+                                    where (v.Comprobante ?? 0) != 1
+                                          && (
+                                              (v.Fecha >= desde && v.Fecha < hastaExcl)
+                                              || (v.Estado != null && v.Estado != "")
+                                          )
+                                    select new
+                                    {
+                                        v.Id,
+                                        Fecha = v.Fecha,
+                                        Cliente = ((c.Nombre ?? "") + " " + (c.Apellido ?? "")).Trim(),
+                                        Estado = v.Estado
+                                    }).ToList();
 
-                return cantidadClientesAusentes;
+                var electro = (from v in db.Ventas_Electrodomesticos
+                               join c in db.Clientes on v.IdCliente equals c.Id
+                               where !v.Eliminada
+                                     && (v.Comprobante ?? 0) != 1
+                                     && (
+                                         v.Estado == "Pendiente"
+                                         || (v.FechaVenta >= desde && v.FechaVenta < hastaExcl)
+                                     )
+                               select new
+                               {
+                                   v.Id,
+                                   Fecha = (DateTime?)v.FechaVenta,
+                                   Cliente = ((c.Nombre ?? "") + " " + (c.Apellido ?? "")).Trim(),
+                                   Estado = v.Estado
+                               }).ToList();
+
+                var lista = new List<VMNavbarAlerta>();
+
+                foreach (var x in indumentaria)
+                {
+                    lista.Add(new VMNavbarAlerta
+                    {
+                        Id = x.Id,
+                        IdVenta = x.Id,
+                        Cliente = string.IsNullOrWhiteSpace(x.Cliente) ? "Sin cliente" : x.Cliente,
+                        Fecha = x.Fecha ?? DateTime.MinValue,
+                        FechaTexto = (x.Fecha ?? DateTime.MinValue).ToString("dd/MM/yyyy"),
+                        Tipo = "INDUMENTARIA",
+                        Origen = "INDUMENTARIA",
+                        Estado = x.Estado ?? "",
+                        Url = "/Ventas/Informacion?modo=una&ventaId=" + x.Id + "&tipo=INDUMENTARIA"
+                    });
+                }
+
+                foreach (var x in electro)
+                {
+                    bool pend = string.Equals(x.Estado, "Pendiente", StringComparison.OrdinalIgnoreCase);
+                    lista.Add(new VMNavbarAlerta
+                    {
+                        Id = x.Id,
+                        IdVenta = x.Id,
+                        Cliente = string.IsNullOrWhiteSpace(x.Cliente) ? "Sin cliente" : x.Cliente,
+                        Fecha = x.Fecha ?? DateTime.MinValue,
+                        FechaTexto = (x.Fecha ?? DateTime.MinValue).ToString("dd/MM/yyyy"),
+                        Tipo = "ELECTRO",
+                        Origen = "ELECTRO",
+                        Estado = x.Estado ?? "",
+                        Url = pend
+                            ? "/Ventas_Electrodomesticos/Historial/?ventaId=" + x.Id
+                            : "/Ventas/Informacion?modo=una&ventaId=" + x.Id + "&tipo=ELECTRO"
+                    });
+                }
+
+                return lista
+                    .OrderByDescending(x => x.Fecha)
+                    .ThenBy(x => x.Cliente)
+                    .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Clientes ausentes de hoy, todavía sin WhatsApp.
+        /// Ya no alimenta el badge de casitas de la navbar (ese cuenta EstadoCobro=1 en electro).
+        /// </summary>
+        public static List<VMNavbarAlerta> ListaAusentesPendientes()
+        {
+            using (Sistema_DavidEntities db = new Sistema_DavidEntities())
+            {
+                DateTime fechaActual = DateTime.Today;
+                DateTime fechaManiana = fechaActual.AddDays(1);
+
+                var indumentaria = (from iv in db.InformacionVentas
+                                    join v in db.Ventas on iv.IdVenta equals v.Id
+                                    join c in db.Clientes on v.idCliente equals c.Id
+                                    where iv.ClienteAusente == 1
+                                          && (iv.whatssap ?? 0) == 0
+                                          && iv.Fecha >= fechaActual
+                                          && iv.Fecha < fechaManiana
+                                    select new
+                                    {
+                                        iv.Id,
+                                        iv.IdVenta,
+                                        Fecha = iv.Fecha,
+                                        Cliente = ((c.Nombre ?? "") + " " + (c.Apellido ?? "")).Trim(),
+                                        IdCobrador = iv.idCobrador
+                                    }).ToList();
+
+                var electro = (from p in db.Ventas_Electrodomesticos_Pagos
+                               join ve in db.Ventas_Electrodomesticos on p.IdVenta equals ve.Id
+                               join c in db.Clientes on ve.IdCliente equals c.Id
+                               where p.ClienteAusente == 1
+                                     && (p.Whatssap ?? 0) == 0
+                                     && !ve.Eliminada
+                                     && p.FechaPago >= fechaActual
+                                     && p.FechaPago < fechaManiana
+                               select new
+                               {
+                                   p.Id,
+                                   p.IdVenta,
+                                   Fecha = (DateTime?)p.FechaPago,
+                                   Cliente = ((c.Nombre ?? "") + " " + (c.Apellido ?? "")).Trim(),
+                                   IdCobrador = (int?)p.UsuarioCreacion
+                               }).ToList();
+
+                var idsCobrador = indumentaria.Select(x => x.IdCobrador ?? 0)
+                    .Concat(electro.Select(x => x.IdCobrador ?? 0))
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .ToList();
+
+                var nombresCobrador = idsCobrador.Count == 0
+                    ? new Dictionary<int, string>()
+                    : db.Usuarios
+                        .Where(u => idsCobrador.Contains(u.Id))
+                        .Select(u => new { u.Id, u.Nombre })
+                        .ToList()
+                        .ToDictionary(u => u.Id, u => u.Nombre ?? "");
+
+                var lista = new List<VMNavbarAlerta>();
+
+                foreach (var x in indumentaria)
+                {
+                    string cobrador = "N/A";
+                    if (x.IdCobrador.HasValue && x.IdCobrador.Value > 0)
+                        nombresCobrador.TryGetValue(x.IdCobrador.Value, out cobrador);
+                    lista.Add(new VMNavbarAlerta
+                    {
+                        Id = x.Id,
+                        IdVenta = x.IdVenta,
+                        Cliente = string.IsNullOrWhiteSpace(x.Cliente) ? "Sin cliente" : x.Cliente,
+                        Fecha = x.Fecha ?? DateTime.MinValue,
+                        FechaTexto = (x.Fecha ?? DateTime.MinValue).ToString("dd/MM/yyyy"),
+                        Tipo = "INDUMENTARIA",
+                        Origen = "INDUMENTARIA",
+                        Cobrador = string.IsNullOrWhiteSpace(cobrador) ? "N/A" : cobrador,
+                        Url = "/Rendimiento/Index?vista=ausentes&id=" + x.Id + "&origen=INDUMENTARIA"
+                    });
+                }
+
+                foreach (var x in electro)
+                {
+                    string cobrador = "N/A";
+                    if (x.IdCobrador.HasValue && x.IdCobrador.Value > 0)
+                        nombresCobrador.TryGetValue(x.IdCobrador.Value, out cobrador);
+                    lista.Add(new VMNavbarAlerta
+                    {
+                        Id = x.Id,
+                        IdVenta = x.IdVenta,
+                        Cliente = string.IsNullOrWhiteSpace(x.Cliente) ? "Sin cliente" : x.Cliente,
+                        Fecha = x.Fecha ?? DateTime.MinValue,
+                        FechaTexto = (x.Fecha ?? DateTime.MinValue).ToString("dd/MM/yyyy"),
+                        Tipo = "ELECTRO",
+                        Origen = "ELECTRO",
+                        Cobrador = string.IsNullOrWhiteSpace(cobrador) ? "N/A" : cobrador,
+                        Url = "/Rendimiento/Index?vista=ausentes&id=" + x.Id + "&origen=ELECTRO"
+                    });
+                }
+
+                return lista
+                    .OrderByDescending(x => x.Fecha)
+                    .ThenBy(x => x.Cliente)
+                    .ToList();
             }
         }
 

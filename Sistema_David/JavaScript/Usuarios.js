@@ -27,7 +27,7 @@ function renderUsuarioConCarrito(data, full) {
     let html = '<span class="usr-nombre-cell">';
     html += '<span class="usr-nombre-text">' + escapeHtmlUsuarios(data) + '</span>';
 
-    if (full.StockPendienteAceptar && full.StockPendienteAceptar > 0) {
+    if (!esRolComprobantes() && full.StockPendienteAceptar && full.StockPendienteAceptar > 0) {
         const tooltip = full.StockPendienteAceptar === 1
             ? 'Tiene stock por aceptar'
             : 'Tiene ' + full.StockPendienteAceptar + ' stocks por aceptar';
@@ -50,9 +50,8 @@ function renderUsuarioConCarrito(data, full) {
 }
 
 const eliminarUsuario = async id => {
-     if (userSession.IdRol == 2) { //ROL VENDEDOR
-         alert("No tienes permisos para realizar esta accion.")
-         return false;
+     if (userSession.IdRol == 2 || esRolComprobantes()) { // VENDEDOR / COMPROBANTES
+         return sinPermisoUsuarios();
      }
     try {
         if (await confirmarModal("¿Está seguro que desea eliminar este registro?")) {
@@ -87,11 +86,25 @@ const eliminarUsuario = async id => {
     }
 }
 
+function esRolComprobantes() {
+    return userSession && userSession.IdRol == 4;
+}
+
+function sinPermisoUsuarios() {
+    alert("No tienes permisos para realizar esta accion.");
+    return false;
+}
+
 $(document).ready(function () {
     userSession = JSON.parse(localStorage.getItem('usuario'));
     configurarDataTable();
     initUsuariosDropdownColumnas();
     $("#btnUsuarios").css("background", "#2E4053");
+
+    // Comprobantes: solo lista + canasto ver stock (sin alta/gestión)
+    if (esRolComprobantes()) {
+        $(".usuarios-header-actions").hide();
+    }
 });
 
 function initUsuariosDropdownColumnas() {
@@ -202,6 +215,13 @@ async function configurarDataTable() {
 
                     let botones = '<div class="usr-actions-cell">';
 
+                    // Comprobantes: solo canasto ver stock
+                    if (esRolComprobantes()) {
+                        botones += "<button class='btn btn-sm btnacciones usr-btn-stock' type='button' onclick='event.stopPropagation(); stockUsuario(" + data + ")' title='Ver stock'><i class='fa fa-shopping-basket fa-lg' aria-hidden='true'></i></button>";
+                        botones += '</div>';
+                        return botones;
+                    }
+
                     botones += "<button class='btn btn-sm btnacciones usr-btn-vista' type='button' onclick='event.stopPropagation(); toggleVistaStock(" + data + ", " + nuevoVista + ")' title='Mostrar/Ocultar stock'><i class='fa " + iconoVista + " fa-lg text-info' aria-hidden='true'></i></button>";
 
                     botones += "<button class='btn btn-sm btn-" + color + " btnacciones usr-btn-bloqueo' type='button' onclick='event.stopPropagation(); bloqueoSistema(" + data + ", " + estadoInverso + ")' title='" + titulo + "'><i class='fa fa-power-off fa-lg text-white' aria-hidden='true'></i></button>";
@@ -275,9 +295,8 @@ function configurarFiltrosPorColumnaUsuarios() {
 }
 
 async function AccionBtn() {
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
-        alert("No tienes permisos para realizar esta accion.")
-        return false;
+    if (userSession.IdRol == 2 || esRolComprobantes()) { // VENDEDOR / COMPROBANTES
+        return sinPermisoUsuarios();
     }
     if (document.getElementById("btnRegistrarModificar").textContent == "Registrar") {
         await registrarusuario();
@@ -295,9 +314,8 @@ const stockUsuario = async id =>
 
 
 const editarUsuario = async id => {
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
-        alert("No tienes permisos para realizar esta accion.")
-        return false;
+    if (userSession.IdRol == 2 || esRolComprobantes()) { // VENDEDOR / COMPROBANTES
+        return sinPermisoUsuarios();
     }
     try {
         var url = "/Usuarios/EditarInfo";
@@ -390,9 +408,8 @@ async function registrarusuario() {
     var IdTipoNegocio = document.getElementById("TipoNegocio").value;
 
 
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
-        alert("No tienes permisos para realizar esta accion.")
-        return false;
+    if (userSession.IdRol == 2 || esRolComprobantes()) { // VENDEDOR / COMPROBANTES
+        return sinPermisoUsuarios();
     }
 
     if (IdTipoNegocio == -1) {
@@ -440,9 +457,8 @@ async function registrarusuario() {
 }
 
 async function modificarusuario() {
-    if (userSession.IdRol == 2) { //ROL VENDEDOR
-        alert("No tienes permisos para realizar esta accion.")
-        return false;
+    if (userSession.IdRol == 2 || esRolComprobantes()) { // VENDEDOR / COMPROBANTES
+        return sinPermisoUsuarios();
     }
     try {
         var url = "/usuarios/Modificar";
@@ -489,8 +505,10 @@ async function modificarusuario() {
 
 
 function abrirmodal() {
+    if (esRolComprobantes()) {
+        return sinPermisoUsuarios();
+    }
 
-   
     $("#usuarioModal").modal("show");
     document.getElementById("IdUsuario").value = ""
     document.getElementById("Usuario").value = ""
@@ -631,6 +649,9 @@ function abrirstockGeneral() {
 }
 
 const bloqueoSistema = async (id, estado) => {
+    if (esRolComprobantes()) {
+        return sinPermisoUsuarios();
+    }
 
     try {
         var url = "/Usuarios/BloqueoSistema";
@@ -759,6 +780,10 @@ function configurarOpcionesColumnas() {
 }
 
 async function toggleVistaStock(idUsuario, nuevoValor) {
+    if (esRolComprobantes()) {
+        return sinPermisoUsuarios();
+    }
+
     const url = "/Usuarios/setVistaStock";
 
     let value = JSON.stringify({

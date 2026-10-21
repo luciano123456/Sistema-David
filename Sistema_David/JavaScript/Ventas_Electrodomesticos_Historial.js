@@ -44,6 +44,25 @@ const VE_HIST_COL_FILTER_PEND = "ve_hist_col_filtros_pend";
 const VE_HIST_FILTROS_KEY = "ve_hist_filtros_v1";
 const VE_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
 const VE_HIST_VISTA_KEY = "ve_historial_view";
+const DT_LANG_ES = {
+    decimal: ",",
+    thousands: ".",
+    processing: "Procesando...",
+    search: "Buscar:",
+    lengthMenu: "Mostrar _MENU_ registros",
+    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+    infoEmpty: "Mostrando 0 a 0 de 0 registros",
+    infoFiltered: "(filtrado de _MAX_ registros)",
+    loadingRecords: "Cargando...",
+    zeroRecords: "No se encontraron resultados",
+    emptyTable: "Ningún dato disponible en esta tabla",
+    paginate: {
+        first: "Primero",
+        previous: "Anterior",
+        next: "Siguiente",
+        last: "Último"
+    }
+};
 
 let ventasPendientesCache = [];
 let ventasEliminadasCache = [];
@@ -276,11 +295,18 @@ function vhIcoBtn(cls, act, id, title, icon, extra) {
     return `<button type="button" class="btn-accion ${cls}" data-vh-act="${act}" data-idventa="${id}" ${extra || ""} title="${title}"><i class="fa ${icon}"></i></button>`;
 }
 
+function vhEsClienteNuevoVenta(d) {
+    if (!d || !d.ClienteFecha || !d.Fecha) return false;
+    return moment(d.ClienteFecha).startOf("day")
+        .isSame(moment(d.Fecha).startOf("day"), "day");
+}
+
 function vhHtmlVentaCard(d, kind) {
     const id = d.IdVenta;
     const vencidas = Number(d.CuotasVencidas || 0);
     const estado = String(d.Estado || "");
-    const lateCls = vencidas > 0 ? "is-late" : "";
+    const esClienteNuevo = kind === "pend" && vhEsClienteNuevoVenta(d);
+    const lateCls = esClienteNuevo ? "is-cliente-nuevo" : (vencidas > 0 ? "is-late" : "");
     const fecha = d.Fecha ? moment(d.Fecha).format("DD/MM/YYYY") : "—";
     const fechaElim = d.FechaEliminacion ? moment(d.FechaEliminacion).format("DD/MM/YYYY HH:mm") : "";
     const rol = Number(userSession?.IdRol);
@@ -308,13 +334,12 @@ function vhHtmlVentaCard(d, kind) {
                 vhIcoBtn("btn-aprobar", "aceptar", id, "Aceptar venta", "fa-check") +
                 vhIcoBtn("btn-cancelar", "rechazar", id, "Rechazar venta", "fa-times") +
                 vhIcoBtn("btn-editar", "editar", id, "Editar", "fa-pencil") +
-                vhIcoBtn(d.Comprobante ? "btn-pdf-ok" : "btn-pdf-pend", "pdf", id, "Descargar PDF", "fa-file-pdf-o") +
+                vhIcoBtn(Number(d.Comprobante) === 1 ? "btn-pdf-ok" : "btn-pdf-pend", "pdf", id, Number(d.Comprobante) === 1 ? "Comprobante emitido" : "Comprobante no enviado", "fa-file-pdf-o") +
                 (tel ? vhIcoBtn("btn-wa", "wa", id, "WhatsApp", "fa-whatsapp", `data-tel="${escapeHtml(tel)}" data-nom="${escapeHtml(d.Cliente || "")}"`) : "");
         } else if (rol === 4) {
             acciones =
                 vhIcoBtn("btn-aprobar", "aceptar", id, "Aceptar venta", "fa-check") +
-                vhIcoBtn("btn-editar", "editar", id, "Editar", "fa-pencil") +
-                vhIcoBtn(d.Comprobante ? "btn-pdf-ok" : "btn-pdf-pend", "pdf", id, "Descargar PDF", "fa-file-pdf-o") +
+                vhIcoBtn(Number(d.Comprobante) === 1 ? "btn-pdf-ok" : "btn-pdf-pend", "pdf", id, Number(d.Comprobante) === 1 ? "Comprobante emitido" : "Comprobante no enviado", "fa-file-pdf-o") +
                 (tel ? vhIcoBtn("btn-wa", "wa", id, "WhatsApp", "fa-whatsapp", `data-tel="${escapeHtml(tel)}" data-nom="${escapeHtml(d.Cliente || "")}"`) : "");
         }
     } else if (kind === "elim") {
@@ -322,10 +347,8 @@ function vhHtmlVentaCard(d, kind) {
             vhIcoBtn("btn-aprobar", "restaurar", id, "Restaurar venta", "fa-undo", `data-stock="${d.StockDevueltoAlArchivar ? 1 : 0}"`) +
             vhIcoBtn("btn-eliminar", "elimdef", id, "Eliminar definitivamente", "fa-trash");
     } else {
-        if (rol === 1 || rol === 4) {
-            acciones += vhIcoBtn("btn-editar", "editar", id, "Editar venta", "fa-pencil");
-        }
         if (rol === 1) {
+            acciones += vhIcoBtn("btn-editar", "editar", id, "Editar venta", "fa-pencil");
             acciones += vhIcoBtn("btn-historial", "movimientos", id, "Movimientos de la venta", "fa-clock-o");
             acciones += vhIcoBtn("btn-eliminar", "eliminar", id, "Eliminar venta", "fa-trash");
         }
@@ -691,7 +714,7 @@ function renderTablaBase(selector, data, tipo) {
         pageLength: 50,
         responsive: false,
         scrollX: true,
-        language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+        language: DT_LANG_ES,
 
         rowCallback: function (row, d) {
 
@@ -701,18 +724,15 @@ function renderTablaBase(selector, data, tipo) {
 
             const vencidas = Number(d.CuotasVencidas || 0);
 
-            // 🔥 FECHA CLIENTE
-            let esClienteHoy = false;
-
-            if (d.ClienteFecha) {
-                const fechaCliente = moment(d.ClienteFecha).startOf("day");
-                const hoy = moment().startOf("day");
-
-                esClienteHoy = fechaCliente.isSame(hoy, "day");
+            // Cliente nuevo: creado el mismo día que la venta.
+            // En pendientes el verde se mantiene hasta que se acepte (sale de esta grilla).
+            let esClienteNuevo = false;
+            if (d.ClienteFecha && d.Fecha) {
+                esClienteNuevo = moment(d.ClienteFecha).startOf("day")
+                    .isSame(moment(d.Fecha).startOf("day"), "day");
             }
 
-            // 🔥 PRIORIDAD: cliente nuevo HOY
-            if (esClienteHoy) {
+            if (esClienteNuevo) {
                 $(row).addClass("fila-cliente-nuevo");
             }
             else if (vencidas > 0) {
@@ -784,8 +804,8 @@ function renderTablaBase(selector, data, tipo) {
                         const tel = (row.ClienteTelefono || "").replace(/\D/g, "");
 
                         const botonPdf = `
-                            <button class="btn-accion ${row.Comprobante ? 'btn-pdf-ok' : 'btn-pdf-pend'}"
-                                title="Descargar PDF"
+                            <button class="btn-accion ${Number(row.Comprobante) === 1 ? 'btn-pdf-ok' : 'btn-pdf-pend'}"
+                                title="${Number(row.Comprobante) === 1 ? "Comprobante emitido" : "Comprobante no enviado"}"
                                 onclick="exportarPdfVenta(${id})">
                                 <i class="fa fa-file-pdf-o"></i>
                             </button>
@@ -833,12 +853,6 @@ function renderTablaBase(selector, data, tipo) {
                                     <i class="fa fa-check"></i>
                                 </button>
 
-                                <button type="button" class="btn-accion btn-editar"
-                                    title="Editar"
-                                    onclick="editarVenta(${id})">
-                                    <i class="fa fa-pencil"></i>
-                                </button>
-
                                 ${botonPdf}
 
                                 <button type="button" class="btn-accion btn-wa"
@@ -853,13 +867,17 @@ function renderTablaBase(selector, data, tipo) {
                         return `<div class="acciones-pendientes">${htmlAdjuntosCliente(row.IdCliente, row.TieneImagenes, row.Cliente, "venta")}${botones}</div>`;
                     }
 
+                    // Tabla secundaria / fallback: edición solo admin
+                    const rolFila = Number(userSession?.IdRol);
                     return `
                         <div class="acciones-fila">
                             ${htmlAdjuntosCliente(row.IdCliente, row.TieneImagenes, row.Cliente, "venta")}
+                            ${rolFila === 1 ? `
                             <button class="btn-accion btn-editar"
-                                onclick="editarVenta(${row.IdVenta})">
+                                onclick="editarVenta(${row.IdVenta})"
+                                title="Editar venta">
                                 <i class="fa fa-pencil"></i>
-                            </button>
+                            </button>` : ""}
                         </div>
                     `;
                 }
@@ -963,7 +981,7 @@ function renderTabla(data) {
         pageLength: 50,
         responsive: false,   // 🔥 CLAVE
         scrollX: true,       // 🔥 permite scroll horizontal en móvil
-        language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+        language: DT_LANG_ES,
         rowCallback: function (row, d) {
 
             $(row).removeClass(
@@ -1086,15 +1104,12 @@ function renderTabla(data) {
 
         ${htmlAdjuntosCliente(row.IdCliente, row.TieneImagenes, row.Cliente, "venta")}
 
-        ${userSession.IdRol == 1 || userSession.IdRol == 4  ? `
+        ${userSession.IdRol == 1 ? `
             <button class="btn-accion btn-editar"
                     onclick="editarVenta(${id})"
                     title="Editar venta">
                 <i class="fa fa-pencil"></i>
             </button>
-        ` : ""}
-
-        ${userSession.IdRol == 1 ? `
             <button class="btn-accion btn-historial"
                     onclick="abrirHistorialVentaCompleto(${id})"
                     title="Movimientos de la venta">
@@ -1818,7 +1833,7 @@ async function cargarVentasEliminadas() {
         pageLength: 25,
         responsive: false,
         scrollX: true,
-        language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+        language: DT_LANG_ES,
         columns: [
             { data: "IdVenta" },
             { data: "Fecha", render: x => x ? moment(x).format("DD/MM/YYYY") : "-" },
@@ -2284,8 +2299,10 @@ VC.enviarWhatsApp = function () {
         return;
     }
 
-    const url = `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank");
+    if (!abrirWhatsAppAR(tel, msg)) {
+        alert("Teléfono inválido.");
+        return;
+    }
 
     const modal = bootstrap.Modal.getInstance(document.getElementById("mdWhatsApp"));
     if (modal) modal.hide();
@@ -2318,7 +2335,19 @@ VC.cargarVentasPendientes = async function () {
 
     renderTablaBase("#grdVentasPendientes", data, "pendiente");
     vhRefreshCards();
+    vhFocusVentaFromQuery();
 };
+
+function vhFocusVentaFromQuery() {
+    const id = Number(new URLSearchParams(window.location.search).get("ventaId") || 0);
+    if (!id) return;
+    setTimeout(function () {
+        const card = document.querySelector('.vh-venta-card[data-idventa="' + id + '"]');
+        if (!card) return;
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        card.classList.add("is-sel");
+    }, 250);
+}
 
 
 

@@ -242,6 +242,10 @@ namespace Sistema_David.Controllers
         {
             try
             {
+                if (model == null || string.IsNullOrWhiteSpace(model.Telefono))
+                    return Json(new { Status = 3, Id = 0 });
+                if (string.IsNullOrWhiteSpace(model.Telefono2))
+                    return Json(new { Status = 4, Id = 0 });
 
                 var result = ClientesModel.Nuevo(model);
 
@@ -405,6 +409,8 @@ namespace Sistema_David.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(telefono))
+                    return Json(new { Status = false, Mensaje = "El teléfono es obligatorio." });
 
                 var result = ClientesModel.EditarTelefono(id, telefono);
 
@@ -425,6 +431,8 @@ namespace Sistema_David.Controllers
         {
             try
             {
+                if (model == null || string.IsNullOrWhiteSpace(model.Telefono))
+                    return Json(new { Status = false, Mensaje = "El teléfono es obligatorio." });
 
                 var idUsuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
                 var result = ClientesModel.Editar(model, idUsuario);

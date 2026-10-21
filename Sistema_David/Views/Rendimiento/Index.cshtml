@@ -6,7 +6,7 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
-<link href="~/Estilos/rendimiento.css?v=4.6" rel="stylesheet" />
+<link href="~/Estilos/rendimiento.css?v=4.8" rel="stylesheet" />
 <link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.0" rel="stylesheet" />
 
 <body class="ve-dark">
@@ -279,8 +279,13 @@
 
                         <!-- Clientes ausentes -->
                         <div id="RendimientoClientesAusentes" class="card-glass p-3">
-                            <div class="fw-bold text-white mb-3">
-                                <i class="fa fa-user-times me-2"></i> Clientes Ausentes
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                <div class="fw-bold text-white">
+                                    <i class="fa fa-user-times me-2"></i> Clientes Ausentes
+                                </div>
+                                <button type="button" id="btnVerTodosAusentes" class="btn btn-sm btn-outline-light" hidden>
+                                    Ver todos
+                                </button>
                             </div>
 
                             <div class="table-responsive dt-dark-wrap vc-cobros-dt">
@@ -450,6 +455,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="~/JavaScript/Utils/Utils.js?v=3.19"></script>
-    <script src="~/JavaScript/Rendimiento.js?v=5.19"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.21"></script>
+    <script src="~/JavaScript/Rendimiento.js?v=5.27" charset="utf-8"></script>
 }

@@ -1215,6 +1215,22 @@ body.loading {
     background: rgba(2, 255, 255, 1) !important;
 }
 
+#RendimientoClientesAusentes {
+    scroll-margin-top: 88px;
+}
+
+#RendimientoClientesAusentes.ausente-deeplink-activo {
+    outline: 2px solid rgba(34, 211, 238, 0.75);
+    outline-offset: 2px;
+}
+
+#grdClientesAusentes tbody tr.seleccionada td,
+#grdClientesAusentes tbody tr.seleccionada td.seleccionada {
+    background: rgba(2, 255, 255, 0.38) !important;
+    color: #fff !important;
+    box-shadow: inset 3px 0 0 #22d3ee;
+}
+
 #grdRendimiento tbody tr {
     cursor: pointer;
 }

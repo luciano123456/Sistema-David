@@ -22,6 +22,7 @@
           <Property Name="Dni" Type="varchar" MaxLength="20" />
           <Property Name="Direccion" Type="varchar" MaxLength="255" />
           <Property Name="Telefono" Type="varchar" MaxLength="20" />
+          <Property Name="Telefono2" Type="varchar" MaxLength="20" />
           <Property Name="IdVendedor" Type="int" />
           <Property Name="IdEstado" Type="int" />
           <Property Name="IdZona" Type="int" />
@@ -1516,6 +1517,7 @@
           <Property Name="Dni" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
           <Property Name="Direccion" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
           <Property Name="Telefono" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="Telefono2" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
           <Property Name="IdVendedor" Type="Int32" />
           <Property Name="IdEstado" Type="Int32" />
           <Property Name="IdZona" Type="Int32" />
@@ -2673,6 +2675,7 @@
                 <ScalarProperty Name="IdZona" ColumnName="IdZona" />
                 <ScalarProperty Name="IdEstado" ColumnName="IdEstado" />
                 <ScalarProperty Name="IdVendedor" ColumnName="IdVendedor" />
+                <ScalarProperty Name="Telefono2" ColumnName="Telefono2" />
                 <ScalarProperty Name="Telefono" ColumnName="Telefono" />
                 <ScalarProperty Name="Direccion" ColumnName="Direccion" />
                 <ScalarProperty Name="Dni" ColumnName="Dni" />

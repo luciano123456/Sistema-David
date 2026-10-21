@@ -897,6 +897,70 @@ function decodeDirAttr(value) {
     }
 }
 
+/* =========================================================
+   Teléfono AR / WhatsApp
+   WhatsApp exige 549 + 10 dígitos nacionales.
+   Sin 54, un número que empieza con 11 (CABA) se interpreta
+   como +1 (USA): 1124773378 → +124773378 (inválido).
+   ========================================================= */
+
+function normalizarTelefonoAR(telefono) {
+    if (telefono == null || telefono === "") return "";
+
+    let d = String(telefono).replace(/\D/g, "");
+    if (!d) return "";
+
+    d = d.replace(/^0+/, "");
+    if (!d) return "";
+
+    if (d.indexOf("549") === 0 && d.length >= 13) {
+        d = d.slice(3);
+    } else if (d.indexOf("54") === 0 && d.length >= 12) {
+        d = d.slice(2);
+    }
+
+    d = d.replace(/^0+/, "");
+
+    // Prefijo móvil 9 que quedó después del código de país
+    if (d.indexOf("9") === 0 && (d.length === 11 || d.length === 13)) {
+        d = d.slice(1);
+    }
+
+    // 15 intercalado (formato viejo: característica + 15 + número)
+    if (d.length === 12) {
+        if (d.slice(2, 4) === "15") d = d.slice(0, 2) + d.slice(4);
+        else if (d.slice(3, 5) === "15") d = d.slice(0, 3) + d.slice(5);
+        else if (d.slice(4, 6) === "15") d = d.slice(0, 4) + d.slice(6);
+    }
+
+    // 15XXXXXXXX celular CABA viejo sin característica 11
+    if (d.length === 10 && d.indexOf("15") === 0) {
+        d = "11" + d.slice(2);
+    }
+
+    if (d.length > 10) d = d.slice(-10);
+    if (d.length < 8) return "";
+
+    return "549" + d;
+}
+
+function buildWhatsAppUrl(telefono, mensaje) {
+    const phone = normalizarTelefonoAR(telefono);
+    if (!phone) return "";
+    let url = "https://api.whatsapp.com/send?phone=" + phone;
+    if (mensaje != null && String(mensaje) !== "") {
+        url += "&text=" + encodeURIComponent(String(mensaje));
+    }
+    return url;
+}
+
+function abrirWhatsAppAR(telefono, mensaje) {
+    const url = buildWhatsAppUrl(telefono, mensaje);
+    if (!url) return false;
+    window.open(url, "_blank");
+    return true;
+}
+
 function formatearTelefonoVista(telefono) {
     if (!telefono) return "";
     const digits = String(telefono).replace(/\D/g, "");
@@ -908,13 +972,9 @@ function formatearTelefonoVista(telefono) {
 }
 
 function buildTelHref(telefono) {
-    if (!telefono) return "";
-    let digits = String(telefono).replace(/\D/g, "");
-    if (!digits) return "";
-    if (digits.startsWith("54")) return "tel:+" + digits;
-    if (digits.startsWith("9") && digits.length >= 10) return "tel:+54" + digits;
-    if (digits.length >= 10) return "tel:+549" + digits.slice(-10);
-    return "tel:" + digits;
+    const phone = normalizarTelefonoAR(telefono);
+    if (!phone) return "";
+    return "tel:+" + phone;
 }
 
 function buildCeldaDireccionHtml(opts) {
@@ -977,14 +1037,8 @@ function ensureDireccionModalStyles() {
 }
 
 function buildWhatsAppHref(telefono, cliente) {
-    const digits = String(telefono || "").replace(/\D/g, "");
-    if (!digits) return "";
-    let phone = digits;
-    if (!phone.startsWith("54")) {
-        phone = "549" + phone.slice(-10);
-    } else if (phone.startsWith("54") && !phone.startsWith("549")) {
-        phone = "549" + phone.slice(2);
-    }
+    const phone = normalizarTelefonoAR(telefono);
+    if (!phone) return "";
     const msg = cliente
         ? "Hola " + cliente + ", "
         : "Hola, ";

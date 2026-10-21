@@ -23,7 +23,8 @@ $(document).ready(function () {
 
 
 
-    if (userSession.IdRol == 1) {
+    // Admin y Comprobantes pueden ver stock de otro usuario (desde Usuarios)
+    if (userSession.IdRol == 1 || userSession.IdRol == 4) {
         idUserStock = localStorage.getItem("idUserStock");
     } else {
         idUserStock = userSession.Id;
@@ -43,6 +44,11 @@ $(document).ready(function () {
         $("#btnUsuarios").css("background", "#2E4053");
         document.getElementById("divStock").removeAttribute("hidden");
         document.getElementById("btnExportarPdf").removeAttribute("hidden");
+    } else if (userSession.IdRol == 4) { // Comprobantes: solo consulta
+        $("#btnUsuarios").css("background", "#2E4053");
+        document.getElementById("divStock").removeAttribute("hidden");
+        document.getElementById("btnExportarPdf").removeAttribute("hidden");
+        $(".stock-header-actions").hide();
     } else {
         $("#btnStock").css("background", "#2E4053");
     }
@@ -106,7 +112,8 @@ async function configurarDataTable() {
     });
 
     const datos = response.data;
-    mostrarCantidad = response.vistaStock;
+    // Comprobantes siempre ve cantidades al consultar stock de vendedores
+    mostrarCantidad = userSession.IdRol == 4 ? true : response.vistaStock;
 
     const dataTableOptions = {
         data: datos,
@@ -170,6 +177,9 @@ async function configurarDataTable() {
                     if (type === 'sort' || type === 'filter' || type === 'type') {
                         return '';
                     }
+                    if (userSession.IdRol == 4) {
+                        return '';
+                    }
                     let botones = "";
 
                     botones += "<button class='btn btn-sm btnacciones stock-action-btn stock-btn-editar' type='button' onclick='editarStock(" + data + ")' title='Editar'><i class='fa fa-pencil-square-o fa-lg' aria-hidden='true'></i></button>" +
@@ -184,7 +194,11 @@ async function configurarDataTable() {
         columnDefs: [
             {
                 targets: [4],
-                visible: (userSession.IdRol == 1)
+                visible: (userSession.IdRol == 1 || userSession.IdRol == 4)
+            },
+            {
+                targets: [5],
+                visible: (userSession.IdRol != 4)
             }
         ],
         initComplete: async function () {
@@ -242,6 +256,10 @@ function limpiarFiltrosColumnasStock() {
 
 
 const editarStock = async id => {
+    if (userSession.IdRol == 4) {
+        alert("No tienes permisos para realizar esta accion.");
+        return false;
+    }
 
     try {
         var url = "/Stock/EditarInfo";
@@ -364,6 +382,11 @@ async function transferenciaStock() {
 }
 
 async function abrirmodal() {
+    if (userSession.IdRol == 4) {
+        alert("No tienes permisos para realizar esta accion.");
+        return false;
+    }
+
     // Mostrar el modal para añadir
     $("#nuevoProductoModal").modal("show");
 
@@ -812,6 +835,10 @@ async function sumaStock() {
     }
 }
 const eliminarStock = async id => {
+    if (userSession.IdRol == 4) {
+        alert("No tienes permisos para realizar esta accion.");
+        return false;
+    }
 
     try {
         if (await confirmarModal("¿Está seguro que desea eliminar este registro?")) {
@@ -964,8 +991,7 @@ async function enviarWhatssap() {
 
     var telefono = document.getElementById("lbltelefono").innerText;
 
-    const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${telefono}&text=''`;
-    window.open(urlwsp, '_blank');
+    abrirWhatsAppAR(telefono, "");
 }
 
 
