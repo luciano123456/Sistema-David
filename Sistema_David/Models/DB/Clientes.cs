@@ -28,6 +28,7 @@ namespace Sistema_David.Models.DB
         public string Dni { get; set; }
         public string Direccion { get; set; }
         public string Telefono { get; set; }
+        public string Telefono2 { get; set; }
         public Nullable<int> IdVendedor { get; set; }
         public Nullable<int> IdEstado { get; set; }
         public Nullable<int> IdZona { get; set; }

@@ -5,6 +5,39 @@ function setBotonGuardarTexto(texto) {
     var btnMob = document.getElementById("btnRegistrarModificarMobile");
     if (btn) btn.innerHTML = icono + texto;
     if (btnMob) btnMob.innerHTML = icono + texto;
+    actualizarCamposObligatoriosAlta();
+}
+
+function esAltaCliente() {
+    var idLs = (localStorage.getItem("EdicionCliente") || "").toString().trim();
+    if (idLs && idLs !== "0") return false;
+    var idEl = document.getElementById("IdCliente");
+    var idVal = idEl ? String(idEl.value || idEl.textContent || "").trim() : "";
+    if (idVal && idVal !== "0") return false;
+    var btn = document.getElementById("btnRegistrarModificar");
+    var txt = btn ? (btn.textContent || "") : "";
+    if (txt.indexOf("Modificar") >= 0) return false;
+    return true;
+}
+
+function actualizarCamposObligatoriosAlta() {
+    var alta = esAltaCliente();
+    var req = document.getElementById("reqTelefono2");
+    var input = document.getElementById("Telefono2");
+    if (req) req.hidden = !alta;
+    if (input) {
+        if (alta) input.setAttribute("aria-required", "true");
+        else input.removeAttribute("aria-required");
+    }
+}
+
+function telefonoArValido(valor) {
+    var texto = (valor || "").toString().trim();
+    if (!texto) return false;
+    if (typeof normalizarTelefonoAR === "function")
+        return !!normalizarTelefonoAR(texto);
+    var d = texto.replace(/\D/g, "");
+    return d.length >= 8 && d.length <= 15;
 }
 
 function setEncabezadoCliente(titulo, subtitulo) {
@@ -62,7 +95,9 @@ $(document).ready(function () {
 
     if (typeof iniciarAdjuntosCliente === "function")
         iniciarAdjuntosCliente();
-  
+
+    iniciarValidacionVisualCliente();
+    actualizarCamposObligatoriosAlta();
 });
 
 async function cargarUsuariosyEstados() {
@@ -195,7 +230,9 @@ async function cargarDatosUsuario() {
             document.getElementById("Apellido").value = result.Usuario.Apellido;
             document.getElementById("Dni").value = result.Usuario.Dni;
             document.getElementById("Direccion").value = result.Usuario.Direccion;
-            document.getElementById("Telefono").value = result.Usuario.Telefono;
+            document.getElementById("Telefono").value = result.Usuario.Telefono || "";
+            var tel2 = document.getElementById("Telefono2");
+            if (tel2) tel2.value = result.Usuario.Telefono2 || "";
             document.getElementById("lbllongitud").textContent = result.Usuario.Longitud || "\u2014";
             document.getElementById("lbllatitud").textContent = result.Usuario.Latitud || "\u2014";
             document.getElementById("lbldireccion").textContent = result.Usuario.Direccion || "";
@@ -234,21 +271,167 @@ async function AccionBtn() {
     }
 }
 
+function ceCampoWrap(id) {
+    var input = document.getElementById(id);
+    if (!input) return null;
+    return input.closest(".ce-field");
+}
+
+function valorCampoCliente(id) {
+    var el = document.getElementById(id);
+    return el ? (el.value || "").toString().trim() : "";
+}
+
+function mostrarAlertaFormCliente(texto) {
+    var box = document.getElementById("ceFormAlert");
+    var msg = document.getElementById("ceFormAlertText");
+    if (msg) msg.textContent = texto || "Revisá los campos marcados en rojo.";
+    if (box) box.hidden = false;
+}
+
+function ocultarAlertaFormCliente() {
+    var box = document.getElementById("ceFormAlert");
+    if (box) box.hidden = true;
+}
+
+function marcarErrorCampoCliente(id, mensaje) {
+    var input = document.getElementById(id);
+    var field = ceCampoWrap(id);
+    var msg = field ? field.querySelector(".ce-field-msg") : null;
+    if (field) {
+        field.classList.add("is-error");
+        field.classList.remove("is-ok");
+    }
+    if (input) {
+        input.classList.add("is-invalid");
+        input.setAttribute("aria-invalid", "true");
+    }
+    if (msg) {
+        msg.hidden = false;
+        msg.textContent = mensaje || "Este campo es obligatorio.";
+    }
+}
+
+function limpiarErrorCampoCliente(id, marcarOk) {
+    var input = document.getElementById(id);
+    var field = ceCampoWrap(id);
+    var msg = field ? field.querySelector(".ce-field-msg") : null;
+    var teniaError = field && field.classList.contains("is-error");
+    if (field) field.classList.remove("is-error");
+    if (input) {
+        input.classList.remove("is-invalid");
+        input.removeAttribute("aria-invalid");
+    }
+    if (msg) {
+        msg.hidden = true;
+        msg.textContent = "";
+    }
+    if (field) {
+        if (marcarOk && teniaError && valorCampoCliente(id)) field.classList.add("is-ok");
+        else field.classList.remove("is-ok");
+    }
+}
+
+function limpiarErroresFormCliente() {
+    ocultarAlertaFormCliente();
+    document.querySelectorAll(".clientes-editar-root .ce-field.is-error, .clientes-editar-root .ce-field.is-ok").forEach(function (field) {
+        var input = field.querySelector("input, select, textarea");
+        if (input && input.id) limpiarErrorCampoCliente(input.id, false);
+        else {
+            field.classList.remove("is-error");
+            field.classList.remove("is-ok");
+        }
+    });
+}
+
+function irAlPrimerErrorCliente() {
+    var field = document.querySelector(".clientes-editar-root .ce-field.is-error");
+    if (!field) {
+        var alertBox = document.getElementById("ceFormAlert");
+        if (alertBox && !alertBox.hidden) {
+            alertBox.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        return;
+    }
+    var input = field.querySelector("input, select, textarea");
+    var nav = document.querySelector(".dg-navbar");
+    var navH = nav ? nav.offsetHeight : 56;
+    var top = field.getBoundingClientRect().top + window.pageYOffset - navH - 14;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    if (input && !input.disabled) {
+        setTimeout(function () {
+            try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
+        }, 280);
+    }
+}
+
+function iniciarValidacionVisualCliente() {
+    var ids = ["Nombre", "Apellido", "Dni", "Telefono", "Telefono2", "Direccion", "Usuarios", "Zonas", "Estados", "LimiteVentas"];
+    ids.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el || el.getAttribute("data-ce-val") === "1") return;
+        el.setAttribute("data-ce-val", "1");
+        var evento = el.tagName === "SELECT" ? "change" : "input";
+        el.addEventListener(evento, function () {
+            var field = ceCampoWrap(id);
+            if (!field || (!field.classList.contains("is-error") && !field.classList.contains("is-ok"))) return;
+            if (valorCampoCliente(id)) limpiarErrorCampoCliente(id, true);
+            else limpiarErrorCampoCliente(id, false);
+            if (!document.querySelector(".clientes-editar-root .ce-field.is-error"))
+                ocultarAlertaFormCliente();
+        });
+    });
+}
+
 function verificarDatosCliente() {
+    limpiarErroresFormCliente();
+    var faltantes = [];
+    var formato = [];
+    var alta = esAltaCliente();
+    var tel = valorCampoCliente("Telefono");
+    var tel2 = valorCampoCliente("Telefono2");
 
-
-    if (document.getElementById("Nombre").value === "") {
-        alert("Debes completar el Nombre.")
-        return false;
+    if (!valorCampoCliente("Nombre")) {
+        marcarErrorCampoCliente("Nombre", "Completá el nombre.");
+        faltantes.push("Nombre");
+    }
+    if (!valorCampoCliente("Apellido")) {
+        marcarErrorCampoCliente("Apellido", "Completá el apellido.");
+        faltantes.push("Apellido");
     }
 
-    if (document.getElementById("Apellido").value === "") {
-        alert("Debes completar el Apellido.")
+    if (!tel) {
+        marcarErrorCampoCliente("Telefono", "Completá el teléfono.");
+        faltantes.push("Teléfono");
+    } else if (!telefonoArValido(tel)) {
+        marcarErrorCampoCliente("Telefono", "Ingresá un teléfono válido (ej: 3794 123456).");
+        formato.push("Teléfono");
+    }
+
+    if (alta && !tel2) {
+        marcarErrorCampoCliente("Telefono2", "Completá el segundo celular.");
+        faltantes.push("Segundo celular");
+    } else if (tel2 && !telefonoArValido(tel2)) {
+        marcarErrorCampoCliente("Telefono2", "Ingresá un celular válido (ej: 3794 123456).");
+        formato.push("Segundo celular");
+    }
+
+    if (faltantes.length || formato.length) {
+        var partes = [];
+        if (faltantes.length) {
+            var lista = faltantes.length === 1
+                ? faltantes[0]
+                : faltantes.slice(0, -1).join(", ") + " y " + faltantes[faltantes.length - 1];
+            partes.push("Faltan campos obligatorios: " + lista + ".");
+        }
+        if (formato.length)
+            partes.push("Revisá el formato de: " + formato.join(" y ") + ".");
+        mostrarAlertaFormCliente(partes.join(" "));
+        irAlPrimerErrorCliente();
         return false;
     }
 
     return true;
-
 }
 async function registrarCliente() {
 
@@ -262,6 +445,7 @@ async function registrarCliente() {
                 Dni: document.getElementById("Dni").value,
                 Direccion: document.getElementById("Direccion").value,
                 Telefono: document.getElementById("Telefono").value,
+                Telefono2: valorCampoCliente("Telefono2"),
                 IdVendedor: document.getElementById("Usuarios").value,
                 IdEstado: document.getElementById("Estados").value,
                 IdZona: document.getElementById("Zonas").value,
@@ -283,11 +467,24 @@ async function registrarCliente() {
 
 
             if (result.Status == 1) {
-                alert("Ha ocurrido un error al registrar el cliente. Consulte con un Administador");
+                mostrarAlertaFormCliente("No se pudo registrar el cliente. Consultá con un administrador.");
+                irAlPrimerErrorCliente();
                 return;
             } else if (result.Status == 2) {
-                alert("Ya existe un cliente con ese DNI registrado");
-                return
+                marcarErrorCampoCliente("Dni", "Ya hay un cliente con este DNI.");
+                mostrarAlertaFormCliente("Ya existe un cliente con ese DNI.");
+                irAlPrimerErrorCliente();
+                return;
+            } else if (result.Status == 3) {
+                marcarErrorCampoCliente("Telefono", "Completá el teléfono.");
+                mostrarAlertaFormCliente("El teléfono es obligatorio.");
+                irAlPrimerErrorCliente();
+                return;
+            } else if (result.Status == 4) {
+                marcarErrorCampoCliente("Telefono2", "Completá el segundo celular.");
+                mostrarAlertaFormCliente("El segundo celular es obligatorio al registrar un cliente nuevo.");
+                irAlPrimerErrorCliente();
+                return;
             } else {
                 var idNuevo = result.Id || 0;
                 if (typeof subirAdjuntosPendientes === "function" && adjuntosPendientes.length > 0) {
@@ -323,13 +520,13 @@ async function registrarCliente() {
                 }
             }
         } catch (error) {
-            $('.datos-error').text('Ha ocurrido un error.')
-            $('.datos-error').removeClass('d-none')
+            mostrarAlertaFormCliente("Ha ocurrido un error al registrar. Intentá de nuevo.");
         }
     }
 }
 
 async function modificarCliente() {
+    if (!verificarDatosCliente()) return;
     try {
         var url = "/Clientes/EditarCliente";
 
@@ -340,6 +537,7 @@ async function modificarCliente() {
             Dni: document.getElementById("Dni").value,
             Direccion: document.getElementById("Direccion").value,
             Telefono: document.getElementById("Telefono").value,
+            Telefono2: valorCampoCliente("Telefono2"),
             IdVendedor: document.getElementById("Usuarios").value,
             IdEstado: document.getElementById("Estados").value,
             LimiteVentas: formatearSinMiles(document.getElementById("LimiteVentas").value),
@@ -360,10 +558,10 @@ async function modificarCliente() {
         let result = await MakeAjax(options);
 
         if (result.Status) {
-            alert('Cliente modificado correctamente.');
-            
+            alert("Cliente modificado correctamente.");
+
             localStorage.removeItem("EdicionCliente");
-           
+
             if (localStorage.getItem("EdicionCobranza") == 1) {
 
                 const tipo = (localStorage.getItem("tipoSistemaVentas") || "").toLowerCase();
@@ -379,10 +577,14 @@ async function modificarCliente() {
                 document.location.href = "../Index/";
             }
         } else {
+            if (result.Mensaje && (result.Mensaje || "").toLowerCase().indexOf("tel") >= 0) {
+                marcarErrorCampoCliente("Telefono", "Completá el teléfono.");
+            }
+            mostrarAlertaFormCliente(result.Mensaje || "No se pudo guardar. Revisá los datos e intentá de nuevo.");
+            irAlPrimerErrorCliente();
         }
     } catch (error) {
-        $('.datos-error').text('Ha ocurrido un error.')
-        $('.datos-error').removeClass('d-none')
+        mostrarAlertaFormCliente("Ha ocurrido un error al guardar. Intentá de nuevo.");
     }
 }
 
@@ -563,7 +765,7 @@ function inputApellido(event) {
 document.getElementById('Dni').addEventListener('keydown', inputDni);
 function inputDni(event) {
     if (event.keyCode == 13) {
-        document.getElementById('Direccion').focus();
+        document.getElementById('Telefono').focus();
     }
 }
 
@@ -577,8 +779,19 @@ function inputDireccion(event) {
 document.getElementById('Telefono').addEventListener('keydown', inputTelefono);
 function inputTelefono(event) {
     if (event.keyCode == 13) {
-        document.getElementById('Usuarios').focus();
+        var tel2 = document.getElementById('Telefono2');
+        if (tel2) tel2.focus();
+        else document.getElementById('Usuarios').focus();
     }
+}
+
+var inputTel2 = document.getElementById('Telefono2');
+if (inputTel2) {
+    inputTel2.addEventListener('keydown', function (event) {
+        if (event.keyCode == 13) {
+            document.getElementById('Usuarios').focus();
+        }
+    });
 }
 
 function AccionBtnCancelar() {

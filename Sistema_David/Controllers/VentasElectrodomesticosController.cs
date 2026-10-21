@@ -1,5 +1,6 @@
 using Sistema_David.Helpers;
 using Sistema_David.Models;
+using Sistema_David.Models.Modelo;
 using Sistema_David.Models.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -21,12 +22,21 @@ namespace Sistema_David.Controllers
             try
             {
                 var data = Ventas_ElectrodomesticosModel.ObtenerVenta(idVenta);
-                return Json(new { success = data != null, data, message = (data == null ? "Venta no encontrada" : null) },
-                    JsonRequestBehavior.AllowGet);
+                var json = Json(new
+                {
+                    success = data != null,
+                    data,
+                    message = (data == null ? "Venta no encontrada" : null)
+                }, JsonRequestBehavior.AllowGet);
+                json.MaxJsonLength = int.MaxValue;
+                return json;
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Error al obtener venta: " + ex.Message },
+                var detalle = ex.InnerException != null
+                    ? (ex.Message + " | " + ex.InnerException.Message)
+                    : ex.Message;
+                return Json(new { success = false, message = "Error al obtener venta: " + detalle },
                     JsonRequestBehavior.AllowGet);
             }
         }
@@ -56,12 +66,14 @@ namespace Sistema_David.Controllers
                         JsonRequestBehavior.AllowGet);
                 }
 
-                return Json(new
+                var json = Json(new
                 {
                     success = true,
                     data = data.Filas,
                     kpis = data.Kpis
                 }, JsonRequestBehavior.AllowGet);
+                json.MaxJsonLength = int.MaxValue;
+                return json;
             }
             catch (Exception ex)
             {
@@ -274,14 +286,21 @@ namespace Sistema_David.Controllers
                 if (model == null || model.IdVenta <= 0)
                     return Json(new { success = false, message = "Datos inválidos" });
 
-                if (model.UsuarioOperador <= 0 && SessionHelper.GetUsuarioSesion() != null)
-                    model.UsuarioOperador = SessionHelper.GetUsuarioSesion().Id;
+                var ses = SessionHelper.GetUsuarioSesion();
+                if (model.UsuarioOperador <= 0 && ses != null)
+                    model.UsuarioOperador = ses.Id;
 
-                var idPago = Ventas_ElectrodomesticosModel.RegistrarPago(model);
+                var bloqueo = Ventas_ElectrodomesticosModel.MensajeSiVendedorNoPuedeCobrar(model.IdVenta, ses?.IdRol);
+                if (!string.IsNullOrEmpty(bloqueo))
+                    return Json(new { success = false, message = bloqueo });
+
+                var idPago = Ventas_ElectrodomesticosModel.RegistrarPago(model, ses?.IdRol);
                 return Json(new { success = true, idPago });
             }
             catch (Exception ex)
             {
+                if (ex.Message == Ventas_ElectrodomesticosModel.MensajeCobranzaIntransferible)
+                    return Json(new { success = false, message = ex.Message });
                 return Json(new { success = false, message = "Error al registrar pago: " + ex.Message });
             }
         }
@@ -308,13 +327,15 @@ namespace Sistema_David.Controllers
         {
             try
             {
+                var usuarioSesion = SessionHelper.GetUsuarioSesion();
+                if (usuarioSesion == null || usuarioSesion.IdRol != 1)
+                    return Json(new { success = false, message = "No autorizado" });
+
                 if (model == null || model.IdVenta <= 0)
                     return Json(new { success = false, message = "Datos inválidos" });
 
-                model.UsuarioOperador = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
-                var idRol = SessionHelper.GetUsuarioSesion()?.IdRol ?? 0;
-
-                var resp = Ventas_ElectrodomesticosModel.EditarVenta(model, (int)idRol);
+                model.UsuarioOperador = usuarioSesion.Id;
+                var resp = Ventas_ElectrodomesticosModel.EditarVenta(model, 1);
                 return Json(new { success = resp == "OK", message = resp });
             }
             catch (Exception ex)
@@ -700,6 +721,17 @@ namespace Sistema_David.Controllers
         }
 
         [HttpPost]
+        public ActionResult CambiarIntransferible(int idVenta, int intransferible)
+        {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return Json(new { success = false, message = "Sin permiso" });
+
+            var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+            var r = Ventas_ElectrodomesticosModel.CambiarIntransferible(idVenta, intransferible, usuario);
+            return Json(new { success = r == "OK", message = r == "OK" ? "" : r });
+        }
+
+        [HttpPost]
         public ActionResult AsignarCobradorVentas(VM_AsignarCobradorVentasReq req)
         {
             try
@@ -715,6 +747,9 @@ namespace Sistema_David.Controllers
                     usuario,
                     req.Observacion
                 );
+
+                if (r == "PARCIAL")
+                    return Json(new { success = true, parcial = true, message = "Se asignaron las transferibles. Las de candado cerrado no se transfirieron." });
 
                 return Json(new { success = r == "OK", message = r });
             }
@@ -808,6 +843,20 @@ namespace Sistema_David.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        public ActionResult CantidadCasitasRojas()
+        {
+            int cantidad = Ventas_ElectrodomesticosModel.CantidadCasitasRojas();
+            return Json(new { cantidad = cantidad }, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult ListaCasitasRojas()
+        {
+            var data = Ventas_ElectrodomesticosModel.ListaCasitasRojas() ?? new List<VMNavbarAlerta>();
+            var json = Json(new { data = data, cantidad = data.Count }, JsonRequestBehavior.AllowGet);
+            json.MaxJsonLength = int.MaxValue;
+            return json;
         }
 
         /// <summary>

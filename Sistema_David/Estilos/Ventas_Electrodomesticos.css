@@ -592,6 +592,22 @@ a {
     color: #000 !important;
 }
 
+.vc-cobrar-wrap.is-locked {
+    display: inline-flex;
+    cursor: not-allowed;
+}
+
+.vc-cobrar-wrap.is-locked .btn-cobrar,
+.vc-cobrar-wrap.is-locked .vc-card-pay,
+.btn-cobrar.is-locked,
+.vc-card-pay.is-locked {
+    opacity: 0.45;
+    filter: grayscale(0.2);
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
 .btn-infoventa {
     background: #ffc107;
 }
@@ -1553,9 +1569,83 @@ p {
 
 /* contenedor centrado (tu wrap ya existe) */
 .vc-check-wrap {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
+    vertical-align: middle;
+}
+
+.vc-candado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    padding: 0;
+    margin: 0;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.04);
+    line-height: 1;
+    cursor: default;
+    flex: 0 0 22px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .12s ease;
+}
+
+.vc-candado i {
+    font-size: 11px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.vc-candado.is-abierto {
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(110, 231, 183, 0.5);
+}
+
+.vc-candado.is-cerrado {
+    color: #fda4af;
+    background: rgba(244, 63, 94, 0.18);
+    border-color: rgba(251, 113, 133, 0.55);
+}
+
+.vc-candado:not(.is-readonly) {
+    cursor: pointer;
+}
+
+.vc-candado.is-abierto:not(.is-readonly):hover {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: rgba(110, 231, 183, 0.85);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+.vc-candado.is-cerrado:not(.is-readonly):hover {
+    background: rgba(244, 63, 94, 0.32);
+    border-color: rgba(251, 113, 133, 0.9);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.14);
+}
+
+.vc-candado.is-readonly,
+.vc-candado.is-readonly:hover {
+    cursor: default;
+    transform: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.tooltip.vc-candado-tip {
+    z-index: 20000;
+}
+
+.tooltip.vc-candado-tip .tooltip-inner {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
 }
 
 /* input checkbox */
@@ -1801,82 +1891,352 @@ p {
 }
 
 /* =======================
-   MODAL Asignar Cobrador (DARK PRO)
+   MODAL Asignar Cobrador
 ======================= */
 
-#modalAsignarCobrador .modal-content {
-    background: #0f1626;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 16px;
-    box-shadow: 0 18px 50px rgba(0,0,0,0.60);
+.ac-modal-dialog {
+    max-width: 440px;
+    width: calc(100% - 1.5rem);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 576px) {
+    .ac-modal-dialog {
+        width: calc(100vw - 1.25rem);
+        max-width: calc(100vw - 1.25rem);
+        margin: 0.75rem auto;
+    }
+}
+
+#modalAsignarCobrador .ac-modal {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(165deg, #1a2744 0%, #111b32 52%, #0d1528 100%);
+    color: #eef4ff;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 18px;
+    box-shadow:
+        0 24px 48px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.ac-modal-glow {
+    position: absolute;
+    top: -48px;
+    right: -28px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.28) 0%, transparent 72%);
+    pointer-events: none;
+}
+
+.ac-modal-header {
+    padding: 1.1rem 1.25rem 0.45rem;
+    align-items: flex-start;
+}
+
+.ac-modal-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ac-modal-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #20d6a1, #0ea5e9);
+    color: #fff;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.ac-modal-kicker {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(194, 206, 255, 0.65);
+    margin-bottom: 2px;
+}
+
+.ac-modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.ac-modal-close {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(88, 166, 255, 0.28);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(220, 232, 255, 0.9);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ac-modal-close:hover {
+    background: rgba(88, 166, 255, 0.12);
+    color: #fff;
+}
+
+.ac-modal-body {
+    padding: 0.35rem 1.25rem 1rem;
+    color: #e5ecf9;
+}
+
+.ac-modal-footer {
+    padding: 0 1.25rem 1.15rem;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.ac-sel-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    background: rgba(32, 214, 161, 0.12);
+    border: 1px solid rgba(32, 214, 161, 0.35);
+    color: #9ef5d7;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.ac-sel-badge b {
+    color: #fff;
+    font-weight: 800;
+}
+
+.ac-field-label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(158, 197, 255, 0.75);
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.ac-picker {
+    background: rgba(8, 14, 32, 0.72);
+    border: 1px solid rgba(118, 158, 255, 0.22);
+    border-radius: 14px;
     overflow: hidden;
 }
 
-#modalAsignarCobrador .modal-header {
-    background: linear-gradient(135deg, rgba(88,166,255,0.20), rgba(255,255,255,0.03));
-    border-bottom: 1px solid rgba(255,255,255,0.10);
+.ac-picker-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(118, 158, 255, 0.16);
+    background: rgba(12, 23, 49, 0.55);
 }
 
-#modalAsignarCobrador .modal-title {
-    color: #fff;
-    font-weight: 800;
-    letter-spacing: .2px;
+.ac-picker-search i {
+    color: rgba(158, 197, 255, 0.7);
 }
 
-#modalAsignarCobrador .btn-close {
-    filter: invert(1);
-    opacity: .8;
+.ac-picker-search input,
+#modalAsignarCobrador .ac-picker-search input {
+    flex: 1;
+    min-width: 0;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: #f0f5ff !important;
+    outline: none;
+    min-height: 28px;
+    padding: 0 !important;
+    font-size: 0.92rem;
 }
 
-#modalAsignarCobrador .modal-body {
-    color: rgba(255,255,255,0.86);
+.ac-picker-search input::placeholder {
+    color: rgba(168, 190, 230, 0.5) !important;
 }
 
-#modalAsignarCobrador .form-label {
-    color: rgba(255,255,255,0.75);
-    font-weight: 700;
+.ac-picker-none {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px dashed rgba(118, 158, 255, 0.22);
+    color: #c9d6ef;
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+    font-family: inherit;
 }
 
-#modalAsignarCobrador .form-select {
-    background-color: #121826;
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.16);
+.ac-picker-none:hover {
+    background: rgba(251, 146, 60, 0.1);
+}
+
+.ac-picker-none.is-selected {
+    background: rgba(251, 146, 60, 0.14);
+    color: #ffd7a8;
+}
+
+.ac-picker-none-icon {
+    width: 34px;
+    height: 34px;
     border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(251, 146, 60, 0.15);
+    color: #fb923c;
+    flex-shrink: 0;
 }
 
-    #modalAsignarCobrador .form-select:focus {
-        border-color: rgba(88,166,255,0.55);
-        box-shadow: 0 0 0 .2rem rgba(88,166,255,0.18);
-    }
-
-#modalAsignarCobrador .modal-footer {
-    border-top: 1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.02);
+.ac-picker-none strong {
+    display: block;
+    font-size: 0.9rem;
+    line-height: 1.2;
 }
 
-#modalAsignarCobrador .btn-secondary {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.14);
+.ac-picker-none small {
+    display: block;
+    font-size: 0.72rem;
+    opacity: 0.7;
+    margin-top: 1px;
+}
+
+.ac-picker-list {
+    max-height: min(240px, 40vh);
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.ac-picker-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ac-picker-list::-webkit-scrollbar-thumb {
+    background: rgba(88, 166, 255, 0.35);
+    border-radius: 999px;
+}
+
+.ac-picker-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: #eef4ff;
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+    font-family: inherit;
+}
+
+.ac-picker-item:hover {
+    background: rgba(88, 166, 255, 0.12);
+}
+
+.ac-picker-item.is-selected {
+    background: rgba(14, 165, 233, 0.18);
+    border-color: rgba(14, 165, 233, 0.45);
+}
+
+.ac-picker-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(32, 214, 161, 0.25), rgba(14, 165, 233, 0.2));
+    color: #7ee7d0;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+
+.ac-picker-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.92rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ac-picker-count {
+    font-size: 0.72rem;
+    color: rgba(158, 197, 255, 0.85);
+    background: rgba(88, 166, 255, 0.12);
+    border-radius: 999px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+}
+
+.ac-picker-check {
+    opacity: 0;
+    color: #20d6a1;
+    flex-shrink: 0;
+}
+
+.ac-picker-item.is-selected .ac-picker-check {
+    opacity: 1;
+}
+
+.ac-picker-empty {
+    padding: 16px 10px;
+    text-align: center;
+    color: rgba(168, 190, 230, 0.65);
+    font-size: 0.85rem;
+}
+
+.ac-btn-cancel {
+    min-width: 110px;
+    padding: 0.45rem 1.1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #eef4ff;
+    background: rgba(88, 166, 255, 0.12);
+    border: 1px solid rgba(88, 166, 255, 0.32);
+}
+
+.ac-btn-cancel:hover {
     color: #fff;
+    background: rgba(88, 166, 255, 0.22);
+    border-color: rgba(88, 166, 255, 0.55);
 }
 
-    #modalAsignarCobrador .btn-secondary:hover {
-        background: rgba(255,255,255,0.12);
-    }
-
-#modalAsignarCobrador .btn-success {
-    background: linear-gradient(135deg, rgba(88,166,255,0.95), rgba(46,165,255,0.65));
-    border: 1px solid rgba(255,255,255,0.16);
-    color: #071422;
-    font-weight: 900;
+.ac-btn-assign {
+    min-width: 120px;
+    padding: 0.45rem 1.15rem;
+    border-radius: 10px;
+    font-weight: 700;
+    color: #fff;
+    border: none;
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    box-shadow: 0 8px 18px rgba(14, 165, 233, 0.28);
 }
 
-    #modalAsignarCobrador .btn-success:hover {
-        filter: brightness(1.05);
-    }
-
-input {
-     color: black !important; 
+.ac-btn-assign:hover {
+    filter: brightness(1.06);
+    color: #fff;
 }
 
 /* ===========================================================
@@ -3063,6 +3423,51 @@ body.vc-dir-modal-open .modal-backdrop.show {
     color: #fff;
     background: rgba(88, 166, 255, 0.28);
     border-color: rgba(88, 166, 255, 0.55);
+}
+
+/* Modal observación de cobro — mismo lenguaje que dirección / ve-modal */
+#modalObsCobro .modal-dialog.vc-obs-modal-dialog {
+    max-width: 460px;
+    width: calc(100% - 1.5rem);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#modalObsCobro .vc-obs-modal-textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.45;
+}
+
+#modalObsCobro .vc-obs-modal-btn-ok {
+    min-width: 110px;
+    padding: 0.45rem 1.1rem;
+    border-radius: 10px;
+    font-weight: 700;
+    color: #fff;
+    border: none;
+    background: linear-gradient(135deg, #4c7dff, #7a5cff);
+    box-shadow: 0 8px 18px rgba(76, 125, 255, 0.28);
+}
+
+#modalObsCobro .vc-obs-modal-btn-ok:hover {
+    color: #fff;
+    filter: brightness(1.06);
+}
+
+@media (max-width: 576px) {
+    #modalObsCobro .modal-dialog.vc-obs-modal-dialog {
+        width: calc(100vw - 1.25rem);
+        max-width: calc(100vw - 1.25rem);
+        margin: 0.75rem auto;
+    }
+
+    #modalObsCobro .vc-dir-modal-body,
+    #modalObsCobro .vc-dir-modal-header,
+    #modalObsCobro .vc-dir-modal-footer {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
 }
 
 /* responsive */
@@ -4944,6 +5349,19 @@ body.vh-mode-tabla .vh-vista-cards {
 
 .vh-venta-card.is-late {
     border-color: rgba(255, 107, 107, .4);
+}
+
+.vh-venta-card.is-cliente-nuevo {
+    background: linear-gradient(165deg, rgba(25, 135, 84, .55), rgba(25, 135, 84, .22) 46%), #0d3d28 !important;
+    border-color: rgba(25, 135, 84, .65) !important;
+    color: #fff;
+}
+
+.vh-venta-card.is-cliente-nuevo .vh-card-name,
+.vh-venta-card.is-cliente-nuevo .vh-card-sub,
+.vh-venta-card.is-cliente-nuevo .vh-card-money,
+.vh-venta-card.is-cliente-nuevo .vh-card-dir {
+    color: #fff !important;
 }
 
 .vh-card-body {

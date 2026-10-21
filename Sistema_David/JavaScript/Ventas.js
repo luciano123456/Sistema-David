@@ -612,6 +612,7 @@ const enviarComprobante = async id => {
             table.ajax.reload();
 
             listarVentasPendientes()
+            if (typeof refrescarAlertasNavbar === "function") refrescarAlertasNavbar("comprobantes");
         } else {
             $('.datos-error').text('Ha ocurrido un error en los datos.')
             $('.datos-error').removeClass('d-none')
@@ -784,8 +785,7 @@ async function enviarWhatssap() {
 
 
         if (result != null) {
-            const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${result.data.Telefono}&text=${document.getElementById("mensajewsp").value}`;
-            window.open(urlwsp, '_blank');
+            abrirWhatsAppAR(result.data.Telefono, document.getElementById("mensajewsp").value);
             $('.datos-error').removeClass('d-none');
         } else {
             $('.datos-error').text('Ha ocurrido un error en los datos.')

@@ -7,8 +7,8 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.37" rel="stylesheet" />
-<link href="~/Estilos/Ventas_Electrodomesticos_Cobros_Cards.css?v=1.4" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.43" rel="stylesheet" />
+<link href="~/Estilos/Ventas_Electrodomesticos_Cobros_Cards.css?v=1.7" rel="stylesheet" />
 <link href="~/Estilos/CuentasBancarias.css?v=1.0" rel="stylesheet" />
 
 <style>
@@ -348,7 +348,7 @@
                         <thead>
                             <tr>
                                 <th style="width:40px;"></th>  @* Columna 0: flecha acordeón *@
-                                <th style="width:38px;" class="text-center">
+                                <th style="width:86px;" class="text-center vc-col-sel">
                                     <input type="checkbox" id="vc_chk_all" />
                                 </th>
                                 <th>Nro Venta</th>
@@ -358,7 +358,7 @@
                                 <th>V</th>
                                 <th>C</th>
 
-                                <!-- 🔥 NUEVAS -->
+                                <!-- ?? NUEVAS -->
                                 <th>Zona</th>
                                 <th>Direccion</th>
                                 <th class="text-center" style="width:70px;">Turno</th>
@@ -421,13 +421,13 @@
                                 <tr>
                                     <th style="width:40px;"></th>
                                     <th>Nro Venta</th>
-                                    <th>Nro Cuota</th>
+                                    <th>Cuotas</th>
                                     <th>Fecha Cobro</th>
                                     <th>Cliente</th>
                                     <th>V</th>
                                     <th>C</th>
 
-                                    <!-- 🔥 NUEVAS -->
+                                    <!-- ?? NUEVAS -->
                                     <th>Zona</th>
                                     <th>Dirección</th>
                                     <th class="text-center" style="width:70px;">Turno</th>
@@ -435,9 +435,9 @@
 
                                     <!-- EXISTENTES -->
                                     <th>Vencimiento</th>
-                                    <th>Total cuota</th>
+                                    <th>Total</th>
                                     <th>Pagado</th>
-                                    <th>Restante</th>
+                                    <th>Deuda</th>
                                     <th>Estado</th>
                                     <th class="text-center" style="width:160px;">Acciones</th>
                                 </tr>
@@ -473,7 +473,7 @@
                                     <th>V</th>
                                     <th>C</th>
 
-                                    <!-- 🔥 NUEVAS -->
+                                    <!-- ?? NUEVAS -->
                                     <th>Zona</th>
                                     <th>Dirección</th>
                                     <th class="text-center" style="width:70px;">Turno</th>
@@ -868,27 +868,52 @@
     <!-- ============================= MODALES (PARTIAL) ============================= -->
     @Html.Partial("_CobroModal_Partial")
 
-    <div class="modal fade" id="modalAsignarCobrador" tabindex="-1">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Asignar cobrador</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal fade" id="modalAsignarCobrador" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered ac-modal-dialog">
+            <div class="modal-content ac-modal">
+                <div class="ac-modal-glow" aria-hidden="true"></div>
+                <div class="modal-header border-0 ac-modal-header">
+                    <div class="ac-modal-head">
+                        <div class="ac-modal-icon"><i class="fa fa-user"></i></div>
+                        <div>
+                            <div class="ac-modal-kicker">Cartera de cobros</div>
+                            <h5 class="ac-modal-title mb-0">Asignar cobrador</h5>
+                        </div>
+                    </div>
+                    <button type="button" class="ac-modal-close" data-bs-dismiss="modal" aria-label="Cerrar">
+                        <i class="fa fa-times"></i>
+                    </button>
                 </div>
 
-                <div class="modal-body">
-                    <div class="mb-2">
-                        <div>Ventas seleccionadas: <b id="lblCantVentasSel">0</b></div>
+                <div class="modal-body ac-modal-body">
+                    <div class="ac-sel-badge">
+                        <i class="fa fa-check-square-o"></i>
+                        <span><b id="lblCantVentasSel">0</b> <span id="lblCantVentasSelTxt">ventas seleccionadas</span></span>
                     </div>
 
-                    <label class="form-label">Cobrador</label>
-                    <select id="ddlCobradorAsignar" class="form-select"></select>
+                    <label class="ac-field-label" for="acCobradorSearch">Cobrador</label>
+                    <select id="ddlCobradorAsignar" class="d-none" aria-hidden="true" tabindex="-1"></select>
+
+                    <div class="ac-picker">
+                        <div class="ac-picker-search">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                            <input type="text" id="acCobradorSearch" placeholder="Buscar cobrador..." autocomplete="off" />
+                        </div>
+                        <button type="button" class="ac-picker-none" data-id="0">
+                            <span class="ac-picker-none-icon"><i class="fa fa-user-times"></i></span>
+                            <span>
+                                <strong>Nadie</strong>
+                                <small>Desasignar cobrador</small>
+                            </span>
+                        </button>
+                        <div class="ac-picker-list" id="acCobradorList" role="listbox"></div>
+                    </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-success" id="btnConfirmarAsignarCobrador">
-                        Asignar
+                <div class="modal-footer border-0 ac-modal-footer">
+                    <button type="button" class="btn ac-btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn ac-btn-assign" id="btnConfirmarAsignarCobrador">
+                        <i class="fa fa-check me-1"></i> Asignar
                     </button>
                 </div>
             </div>
@@ -940,23 +965,35 @@
 
 
     <div class="modal fade" id="modalObsCobro" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fa fa-home"></i> Observación de cobro</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <div class="modal-dialog modal-dialog-centered vc-obs-modal-dialog">
+            <div class="modal-content vc-dir-modal">
+                <div class="vc-dir-modal-glow" aria-hidden="true"></div>
+                <div class="modal-header border-0 vc-dir-modal-header">
+                    <div class="vc-dir-modal-head">
+                        <div class="vc-dir-modal-icon">
+                            <i class="fa fa-home"></i>
+                        </div>
+                        <div>
+                            <div class="vc-dir-modal-kicker">Cobros</div>
+                            <h5 class="vc-dir-modal-title mb-0">Observación de cobro</h5>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white vc-dir-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
 
-                <div class="modal-body">
+                <div class="modal-body vc-dir-modal-body">
                     <input type="hidden" id="obsCobro_idVenta" />
-
-                    <textarea id="obsCobro_txt" class="form-control" rows="4"
-                              placeholder="Escribí la observación..."></textarea>
+                    <label for="obsCobro_txt" class="vc-dir-modal-box-label d-block">Detalle</label>
+                    <textarea id="obsCobro_txt"
+                              class="form-control ve-input vc-obs-modal-textarea"
+                              rows="4"
+                              maxlength="255"
+                              placeholder="Escribí la observaciÓn..."></textarea>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="VC.guardarObsCobro()">Aceptar</button>
+                <div class="modal-footer border-0 vc-dir-modal-footer gap-2">
+                    <button type="button" class="btn vc-dir-modal-btn-close" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn vc-obs-modal-btn-ok" onclick="VC.guardarObsCobro()">Aceptar</button>
                 </div>
             </div>
         </div>
@@ -991,7 +1028,7 @@
                 </div>
                 <div class="modal-body">
                     <p class="small text-muted mb-2">
-                        Se actualizará la fecha de cobro de todas las cuotas marcadas (misma fecha y observación).
+                        Se actualizará la fecha de cobro de todas las cuotas marcadas (misma fecha y observaciÓn).
                     </p>
                     <ul id="vcReprogMasivoLista" class="small mb-3 ps-3 vc-reprog-masivo-lista"></ul>
                     <div class="mb-3">
@@ -1032,8 +1069,8 @@
     <!-- JS de Select2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
-    <script src="~/JavaScript/Utils/Utils.js?v=3.19"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.21"></script>
     <script src="~/JavaScript/ReprogAtrasadasModal.js?v=1.4"></script>
     <!-- TU JS -->
-    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=4.29"></script>
+    <script src="~/JavaScript/Ventas_Electrodomesticos_Cobros.js?v=4.40"></script>
 }

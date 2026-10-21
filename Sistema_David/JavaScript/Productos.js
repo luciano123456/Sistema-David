@@ -1920,17 +1920,6 @@ async function abrirWhatsappProducto(id) {
     }
 }
 
-function prodNormalizarTelefonoWspLink(tel) {
-    var numeros = String(tel || "").replace(/\D/g, "");
-    if (!numeros) return "";
-
-    numeros = numeros.replace(/^0+/, "");
-    if (numeros.startsWith("54")) return numeros;
-    if (numeros.length > 10) numeros = numeros.slice(-10);
-
-    return "549" + numeros;
-}
-
 function enviarWhatsappProducto() {
     var tel = ($("#wspTelefono").val() || "").trim();
     var mensaje = ($("#wspMensaje").val() || "").trim();
@@ -1945,14 +1934,11 @@ function enviarWhatsappProducto() {
         return;
     }
 
-    var telefono = prodNormalizarTelefonoWspLink(tel);
-    if (!telefono) {
+    if (!abrirWhatsAppAR(tel, mensaje)) {
         mostrarToast("Ingresá un celular válido.", "error");
         return;
     }
 
-    var urlwsp = "https://api.whatsapp.com/send?phone=+" + telefono + "&text=" + encodeURIComponent(mensaje);
-    window.open(urlwsp, "_blank");
     $("#modalWspProducto").modal("hide");
 }
 

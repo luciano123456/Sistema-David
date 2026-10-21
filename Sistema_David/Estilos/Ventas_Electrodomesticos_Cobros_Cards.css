@@ -320,6 +320,17 @@ body.vc-mode-tabla .vc-cards-only {
     touch-action: manipulation;
 }
 
+.vc-card-actions .vc-cobrar-wrap {
+    flex: 1 1 70px;
+    min-width: 0;
+    display: flex;
+}
+
+.vc-card-actions .vc-cobrar-wrap .vc-card-pay {
+    flex: 1;
+    width: 100%;
+}
+
 .vc-card-pay:active {
     transform: scale(.98);
 }

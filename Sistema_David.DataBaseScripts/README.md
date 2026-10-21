@@ -9,6 +9,8 @@ Ejecutar en SQL Server **en orden numérico**.
 | `002_Productos_ModuloActualizacion.sql` | Columnas extendidas de productos (marca, modelo, financiación, imágenes) |
 | `003_sp_MostrarRendimiento_InteresesElectro.sql` | Ajuste SP rendimiento: intereses electro como INTERÉS + filtro por operador |
 | `005_VentasElectro_Historial.sql` | Tabla/ampliación del histórico de movimientos de ventas electro |
+| `007_VentasElectro_Intransferible.sql` | Columna `Ventas_Electrodomesticos.Intransferible` (candado en Cuotas a cobrar; default 0) |
+| `008_Clientes_Telefono2.sql` | Columna `Clientes.Telefono2` (segundo celular; obligatorio en el alta) |
 
 ## Uso
 

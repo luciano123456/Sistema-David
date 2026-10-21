@@ -5,7 +5,7 @@
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
 <link href="~/Estilos/Clientes.css?v=1.6" rel="stylesheet" />
-<link href="~/Estilos/ClientesEditar.css?v=4.0" rel="stylesheet" />
+<link href="~/Estilos/ClientesEditar.css?v=4.2" rel="stylesheet" />
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
@@ -35,27 +35,61 @@
             <div class="ce-ficha card-glass">
                 <div class="ce-ficha-grid">
                     <div class="ce-ficha-form">
+                        <div id="ceFormAlert" class="ce-form-alert" hidden role="alert">
+                            <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                            <span id="ceFormAlertText">Revis&aacute; los campos marcados en rojo.</span>
+                        </div>
+
                         <section class="ce-block">
                             <div class="ce-section-head">
                                 <i class="fa fa-id-card-o"></i>
                                 <span>Datos personales</span>
+                                <span class="ce-section-tag">Paso 1</span>
                             </div>
-                            <div class="row g-2">
+                            <p class="ce-section-lead">Nombre, apellido y tel&eacute;fono son obligatorios. En un cliente nuevo tambi&eacute;n el segundo celular. El tel&eacute;fono principal se usa para WhatsApp.</p>
+                            <div class="row g-3">
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label" for="Nombre">Nombre</label>
-                                    <input id="Nombre" type="text" class="form-control ce-input" placeholder="Nombre" autocomplete="off" />
+                                    <div class="ce-field" data-field="Nombre">
+                                        <label class="form-label" for="Nombre">
+                                            Nombre <abbr class="ce-req" title="Obligatorio">*</abbr>
+                                        </label>
+                                        <input id="Nombre" type="text" class="form-control ce-input" placeholder="Ej: Sergio" autocomplete="given-name" autocapitalize="words" aria-required="true" aria-describedby="errNombre" />
+                                        <span id="errNombre" class="ce-field-msg" hidden></span>
+                                    </div>
                                 </div>
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label" for="Apellido">Apellido</label>
-                                    <input id="Apellido" type="text" class="form-control ce-input" placeholder="Apellido" autocomplete="off" />
+                                    <div class="ce-field" data-field="Apellido">
+                                        <label class="form-label" for="Apellido">
+                                            Apellido <abbr class="ce-req" title="Obligatorio">*</abbr>
+                                        </label>
+                                        <input id="Apellido" type="text" class="form-control ce-input" placeholder="Ej: Rivero" autocomplete="family-name" autocapitalize="words" aria-required="true" aria-describedby="errApellido" />
+                                        <span id="errApellido" class="ce-field-msg" hidden></span>
+                                    </div>
                                 </div>
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label" for="Dni">DNI</label>
-                                    <input id="Dni" type="text" class="form-control ce-input" placeholder="Documento" autocomplete="off" />
+                                    <div class="ce-field" data-field="Dni">
+                                        <label class="form-label" for="Dni">DNI</label>
+                                        <input id="Dni" type="text" class="form-control ce-input" placeholder="Ej: 30123456" inputmode="numeric" autocomplete="off" aria-describedby="errDni" />
+                                        <span id="errDni" class="ce-field-msg" hidden></span>
+                                    </div>
                                 </div>
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label" for="Telefono">Tel&eacute;fono</label>
-                                    <input id="Telefono" type="text" class="form-control ce-input" placeholder="Tel&eacute;fono" autocomplete="off" />
+                                    <div class="ce-field" data-field="Telefono">
+                                        <label class="form-label" for="Telefono">
+                                            Tel&eacute;fono / WhatsApp <abbr class="ce-req" title="Obligatorio">*</abbr>
+                                        </label>
+                                        <input id="Telefono" type="tel" class="form-control ce-input" placeholder="Ej: 3794 123456" inputmode="tel" autocomplete="tel" maxlength="20" aria-required="true" aria-describedby="errTelefono" />
+                                        <span id="errTelefono" class="ce-field-msg" hidden></span>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="ce-field" data-field="Telefono2">
+                                        <label class="form-label" for="Telefono2">
+                                            Segundo celular <abbr class="ce-req" id="reqTelefono2" title="Obligatorio al registrar" hidden>*</abbr>
+                                        </label>
+                                        <input id="Telefono2" type="tel" class="form-control ce-input" placeholder="Ej: 3795 654321" inputmode="tel" autocomplete="off" maxlength="20" aria-describedby="errTelefono2" />
+                                        <span id="errTelefono2" class="ce-field-msg" hidden></span>
+                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -64,31 +98,45 @@
                             <div class="ce-section-head">
                                 <i class="fa fa-briefcase"></i>
                                 <span>Datos comerciales</span>
+                                <span class="ce-section-tag">Paso 2</span>
                             </div>
-                            <div class="row g-2">
+                            <p class="ce-section-lead">Asign&aacute; vendedor, zona y tope de ventas. El estado define si puede operar.</p>
+                            <div class="row g-3">
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label" for="Usuarios">Vendedor</label>
-                                    <select id="Usuarios" name="select" class="form-select ce-input">
-                                        <option value="" selected>Seleccione vendedor</option>
-                                    </select>
+                                    <div class="ce-field" data-field="Usuarios">
+                                        <label class="form-label" for="Usuarios">Vendedor</label>
+                                        <select id="Usuarios" name="select" class="form-select ce-input" aria-describedby="errUsuarios">
+                                            <option value="" selected>Seleccion&aacute; vendedor</option>
+                                        </select>
+                                        <span id="errUsuarios" class="ce-field-msg" hidden></span>
+                                    </div>
                                 </div>
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label" for="Zonas">Zona</label>
-                                    <select id="Zonas" name="select" class="form-select ce-input">
-                                        <option value="" selected>Seleccione zona</option>
-                                    </select>
+                                    <div class="ce-field" data-field="Zonas">
+                                        <label class="form-label" for="Zonas">Zona</label>
+                                        <select id="Zonas" name="select" class="form-select ce-input" aria-describedby="errZonas">
+                                            <option value="" selected>Seleccion&aacute; zona</option>
+                                        </select>
+                                        <span id="errZonas" class="ce-field-msg" hidden></span>
+                                    </div>
                                 </div>
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label" for="Estados">Estado</label>
-                                    <select id="Estados" name="select" class="form-select ce-input">
-                                        <option value="" selected>Seleccione estado</option>
-                                    </select>
+                                    <div class="ce-field" data-field="Estados">
+                                        <label class="form-label" for="Estados">Estado</label>
+                                        <select id="Estados" name="select" class="form-select ce-input" aria-describedby="errEstados">
+                                            <option value="" selected>Seleccion&aacute; estado</option>
+                                        </select>
+                                        <span id="errEstados" class="ce-field-msg" hidden></span>
+                                    </div>
                                 </div>
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label" for="LimiteVentas">L&iacute;mite de ventas</label>
-                                    <div class="input-group ce-input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input id="LimiteVentas" type="text" class="form-control ce-input" placeholder="0" autocomplete="off" />
+                                    <div class="ce-field" data-field="LimiteVentas">
+                                        <label class="form-label" for="LimiteVentas">L&iacute;mite de ventas</label>
+                                        <div class="input-group ce-input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input id="LimiteVentas" type="text" class="form-control ce-input" placeholder="0" inputmode="numeric" autocomplete="off" aria-describedby="errLimiteVentas" />
+                                        </div>
+                                        <span id="errLimiteVentas" class="ce-field-msg" hidden></span>
                                     </div>
                                 </div>
                             </div>
@@ -98,24 +146,29 @@
                             <div class="ce-section-head">
                                 <i class="fa fa-map-marker"></i>
                                 <span>Ubicaci&oacute;n</span>
+                                <span class="ce-section-tag">Paso 3</span>
                                 <button type="button" id="btnHistorialDireccionEdicion" class="hd-trigger-eye hd-trigger-eye--label ms-auto" title="Ver historial de direcci&oacute;n" onclick="abrirHistorialDireccionClienteDesdeEdicion()" hidden>
                                     <i class="fa fa-eye"></i>
                                 </button>
                             </div>
-                            <div class="row g-2">
+                            <p class="ce-section-lead">Escrib&iacute; la direcci&oacute;n o us&aacute; el mapa: al mover el pin se actualizan las coordenadas.</p>
+                            <div class="row g-3">
                                 <div class="col-12">
-                                    <label class="form-label" for="Direccion">Direcci&oacute;n</label>
-                                    <input id="Direccion" type="text" class="form-control ce-input" placeholder="Calle, n&uacute;mero, localidad" autocomplete="off" />
+                                    <div class="ce-field" data-field="Direccion">
+                                        <label class="form-label" for="Direccion">Direcci&oacute;n</label>
+                                        <input id="Direccion" type="text" class="form-control ce-input" placeholder="Calle, n&uacute;mero, localidad" autocomplete="street-address" aria-describedby="errDireccion" />
+                                        <span id="errDireccion" class="ce-field-msg" hidden></span>
+                                    </div>
                                 </div>
                                 <div class="col-12">
                                     <div class="ce-coords">
                                         <div class="ce-coord-group">
                                             <span class="ce-coord-prefix">Lat</span>
-                                            <span id="lbllatitud" class="ce-coord-value">—</span>
+                                            <span id="lbllatitud" class="ce-coord-value">&mdash;</span>
                                         </div>
                                         <div class="ce-coord-group">
                                             <span class="ce-coord-prefix">Long</span>
-                                            <span id="lbllongitud" class="ce-coord-value">—</span>
+                                            <span id="lbllongitud" class="ce-coord-value">&mdash;</span>
                                         </div>
                                     </div>
                                 </div>
@@ -126,6 +179,7 @@
                             <div class="ce-section-head">
                                 <i class="fa fa-paperclip"></i>
                                 <span>Documentos e im&aacute;genes</span>
+                                <span class="ce-section-tag ce-section-tag--opt">Opcional</span>
                                 <span id="ceAdjCount" class="ce-adj-count">0</span>
                             </div>
                             <p class="ce-adj-lead">DNI, comprobantes o lo que necesites. Pod&eacute;s adjuntar todas las que quieras: quedan en la ficha de este cliente.</p>
@@ -170,7 +224,7 @@
 
             <div class="ce-actions-bar card-glass">
                 <div class="ce-actions-bar-text text-muted-cc">
-                    <i class="fa fa-info-circle me-1"></i> Los cambios de direcci&oacute;n o coordenadas quedan en el historial.
+                    <i class="fa fa-asterisk ce-req me-1" aria-hidden="true"></i> Nombre, apellido y tel&eacute;fono son obligatorios. El segundo celular, solo al registrar.
                 </div>
                 <div class="ce-actions">
                     <button type="button" class="btn btn-outline-light ce-btn-cancel" onclick="AccionBtnCancelar()">
@@ -210,9 +264,9 @@
     <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
     <script src="~/Content/Datatable/js/dataTables.responsive.min.js"></script>
     <script src="~/Scripts/xlsx.full.min.js.js"></script>
-    <script src="~/JavaScript/Utils/Utils.js?v=3.19"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.21"></script>
     <script src="~/JavaScript/ClientesHistorialDireccion.js?v=1.4" charset="utf-8"></script>
     <script src="~/JavaScript/ClientesAdjuntos.js?v=1.2" charset="utf-8"></script>
-    <script src="~/JavaScript/ClientesEditar.js?v=2.8"></script>
+    <script src="~/JavaScript/ClientesEditar.js?v=3.1"></script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAddgDLrXa7JLbrOCGrCIBqkEDEBh6YtOQ&libraries=places&callback=initMap"></script>
 }

@@ -539,6 +539,18 @@ namespace Sistema_David.Controllers
                     if (v == null)
                         return Json(new { data = (object)null }, JsonRequestBehavior.AllowGet);
 
+                    var historial = Ventas_ElectrodomesticosModel.ListarInformacionVenta(id) ?? new System.Collections.Generic.List<VMInformacionVenta>();
+                    decimal cobrado = historial.Sum(h => h.Entrega);
+                    if (cobrado <= 0)
+                        cobrado = v.Entrega ?? 0;
+                    decimal restante = historial.Count > 0 ? historial[0].Restante : (v.Restante ?? 0);
+                    if (restante < 0) restante = 0;
+
+                    var cliente = db.Clientes
+                        .Where(c => c.Id == v.IdCliente)
+                        .Select(c => ((c.Nombre ?? "") + " " + (c.Apellido ?? "")).Trim())
+                        .FirstOrDefault();
+
                     return Json(new
                     {
                         data = new
@@ -546,14 +558,16 @@ namespace Sistema_David.Controllers
                             Id = v.Id,
                             TipoVenta = "ELECTRO",
                             Fecha = v.FechaVenta,
-                            Entrega = v.Entrega,
-                            Restante = v.Restante,
+                            Entrega = cobrado,
+                            Restante = restante,
+                            ImporteTotal = v.ImporteTotal,
+                            Cliente = cliente,
                             Estado = v.Estado,
                             Eliminada = v.Eliminada,
                             MotivoEliminacion = v.MotivoEliminacion,
                             FechaEliminacion = v.FechaEliminacion,
                             Productos = Ventas_ElectrodomesticosModel.ListaProductosVenta(id),
-                            Historial = Ventas_ElectrodomesticosModel.ListarInformacionVenta(id)
+                            Historial = historial
                         }
                     }, JsonRequestBehavior.AllowGet);
                 }
@@ -564,6 +578,11 @@ namespace Sistema_David.Controllers
                     if (v == null)
                         return Json(new { data = (object)null }, JsonRequestBehavior.AllowGet);
 
+                    var clienteInd = db.Clientes
+                        .Where(c => c.Id == v.idCliente)
+                        .Select(c => ((c.Nombre ?? "") + " " + (c.Apellido ?? "")).Trim())
+                        .FirstOrDefault();
+
                     return Json(new
                     {
                         data = new
@@ -573,6 +592,7 @@ namespace Sistema_David.Controllers
                             Fecha = v.Fecha,
                             Entrega = v.Entrega,
                             Restante = v.Restante,
+                            Cliente = clienteInd,
                             Productos = VentasModel.ListaProductosVenta(id),
                             Historial = VentasModel.ListarInformacionVenta(id)
                         }

@@ -512,6 +512,7 @@
     <Compile Include="Models\Modelo\VMInformacionClienteAsignado.cs" />
     <Compile Include="Models\Modelo\VMComprobantesImagenes.cs" />
     <Compile Include="Models\Modelo\VMInformacionVenta.cs" />
+    <Compile Include="Models\Modelo\VMNavbarAlerta.cs" />
     <Compile Include="Models\Modelo\ModeloApi.cs" />
     <Compile Include="Models\Modelo\VMRendimientoCobrado.cs" />
     <Compile Include="Models\Modelo\VMRendimientoGeneral.cs" />
@@ -613,6 +614,8 @@
     <Content Include="Imagenes\excel.png" />
     <Content Include="Imagenes\Login.png" />
     <Content Include="Imagenes\LoginElectrodomesticos.png" />
+    <Content Include="Imagenes\LogoDG.svg" />
+    <Content Include="Imagenes\LogoDG.jpg" />
     <Content Include="Imagenes\menu.png" />
     <Content Include="Imagenes\productodefault.png" />
     <Content Include="Imagenes\rendimiento-diario.png" />
@@ -756,8 +759,8 @@
     <Content Include="Views\Pagos\Index.cshtml" />
     <Content Include="Views\Pagos\NuevoModif.cshtml" />
     <Content Include="Views\Productos\Index.cshtml" />
-    <Content Include="Views\Rendimiento\Index.cshtml" />
     <Content Include="Views\Rendimiento\Analisis.cshtml" />
+    <Content Include="Views\Rendimiento\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\Partials\NavBarLogin.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />

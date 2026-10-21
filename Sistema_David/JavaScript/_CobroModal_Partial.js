@@ -457,6 +457,32 @@ function resetCobroModal() {
     }
 }
 
+const MSG_COBRO_INTRANSFERIBLE = "Esta cobranza es intransferible";
+
+function esRolBloqueadoCobroIntransferible() {
+    try {
+        const u = (typeof userSession !== "undefined" && userSession)
+            ? userSession
+            : JSON.parse(localStorage.getItem("usuario") || "null");
+        const rol = Number(u && u.IdRol);
+        return rol === 2 || rol === 3;
+    } catch (e) {
+        return false;
+    }
+}
+
+function ventaIntransferibleBloqueada(venta) {
+    return esRolBloqueadoCobroIntransferible() && Number(venta && venta.Intransferible) === 1;
+}
+
+function avisarCobroIntransferible() {
+    if (typeof VC !== "undefined" && typeof VC.toast === "function") {
+        VC.toast(MSG_COBRO_INTRANSFERIBLE, "warn");
+        return;
+    }
+    showToast(MSG_COBRO_INTRANSFERIBLE, "warn");
+}
+
 /* ===================== ABRIR MODAL COBRO (GLOBAL) ===================== */
 window.abrirModalCobro = async function (idVenta, idCuota) {
     resetCobroModal();
@@ -479,7 +505,10 @@ window.abrirModalCobro = async function (idVenta, idCuota) {
 
         ventaActual = json.data;
 
-      
+        if (ventaIntransferibleBloqueada(ventaActual)) {
+            avisarCobroIntransferible();
+            return;
+        }
 
         const cuotas = Array.isArray(ventaActual.Cuotas) ? ventaActual.Cuotas : [];
         cuotaActual = cuotas.find(c => Number(c.Id) === Number(idCuota));
@@ -792,6 +821,7 @@ function etiquetaEventoHistorial(campo) {
         ImporteTotal: "Total de la venta",
         CantidadCuotas: "Cantidad de cuotas",
         FormaCuotas: "Forma de cuotas",
+        FechaVencimiento: "Fecha límite / vencimiento",
         ProductoAgregado: "Producto agregado",
         ProductoQuitado: "Producto quitado",
         ProductoCantidad: "Cantidad de producto",
@@ -1620,6 +1650,12 @@ async function confirmarCobro() {
         return;
     }
 
+    if (ventaIntransferibleBloqueada(ventaActual)) {
+        avisarCobroIntransferible();
+        setCbError(MSG_COBRO_INTRANSFERIBLE);
+        return;
+    }
+
     const importe = formatearSinMiles(qs("cb_importe").value);
     const restante = Number(qs("cb_montoRestante").value || 0);
     let fecha = qs("cb_fecha").value;
@@ -1638,6 +1674,82 @@ async function confirmarCobro() {
         return;
     }
 
+
+    const esClienteAusente = qs("cb_clienteAusente").value === "1";
+
+    /* =============================
+       🏠 CLIENTE AUSENTE (importe 0)
+    ============================= */
+    if (importe === 0 && esClienteAusente) {
+        if (!fecha) {
+            setCbError("Seleccioná una fecha válida para reprogramar la visita.");
+            return;
+        }
+
+        const payloadAusente = {
+            IdVenta: ventaActual.IdVenta,
+            FechaPago: todayISO(),
+            FechaCobroCuota: fecha,
+            MedioPago: "AUSENTE",
+            ImporteTotal: 0,
+            Observacion: (obs || "").trim() || "Cliente ausente",
+            ClienteAusente: 1,
+            ActualizoUbicacion: 0,
+            IdCuentaBancaria: null,
+            Imagen: null,
+            Aplicaciones: [
+                { IdCuota: cuotaActual.Id, ImporteAplicado: 0 }
+            ]
+        };
+
+        try {
+            const resp = await fetch("/Ventas_Electrodomesticos/RegistrarPago", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payloadAusente)
+            });
+
+            const json = await resp.json();
+            if (!json || json.success === false) {
+                const m = json?.message || "Error al registrar cliente ausente.";
+                setCbError(m);
+                notificarErrorCobrosUi(m);
+                return;
+            }
+
+            getModal("mdCobro").hide();
+            await actualizarGrillaCobros();
+            notificarExitoCobrosUi("Cliente ausente registrado.");
+
+            if (typeof refrescarAlertasNavbar === "function") {
+                refrescarAlertasNavbar("casitas");
+            }
+
+            if (userSession?.IdRol === 1 || userSession?.IdRol === 4) {
+                const enviar = await confirmarModal(`
+                    <div class="text-start px-1">
+                        <div class="mb-2 fw-bold">
+                            <i class="fa fa-whatsapp me-1" style="color:#25D366"></i>
+                            Aviso al cliente
+                        </div>
+                        <div>¿Deseás enviarle por <b>WhatsApp</b> el aviso de <b>cliente ausente</b>?</div>
+                    </div>
+                `);
+                if (enviar && json.idPago) {
+                    await preguntarWhatsappDespuesCobro(
+                        json.idPago,
+                        "Cobranza Electrodomesticos #" + ventaActual.IdVenta
+                    );
+                }
+            }
+            return;
+        } catch {
+            const m = "Error de conexión al registrar cliente ausente.";
+            setCbError(m);
+            notificarErrorCobrosUi(m);
+            return;
+        }
+    }
 
     /* =============================
        🔁 CAMBIO DE FECHA
@@ -1795,8 +1907,8 @@ async function confirmarCobro() {
         MedioPago: medio,
         ImporteTotal: importe,
         Observacion: obs,
-        ClienteAusente: qs("cb_clienteAusente").value === "1",
-        ActualizoUbicacion: qs("cb_actualizoUbicacion").value === "1",
+        ClienteAusente: qs("cb_clienteAusente").value === "1" ? 1 : 0,
+        ActualizoUbicacion: qs("cb_actualizoUbicacion").value === "1" ? 1 : 0,
         IdCuentaBancaria: esTransferencia(medio)
             ? Number(qs("cb_cuenta").value || 0) || null
             : null,
@@ -1826,6 +1938,7 @@ async function confirmarCobro() {
         ============================= */
         getModal("mdCobro").hide();
         await actualizarGrillaCobros();
+        if (typeof refrescarAlertasNavbar === "function") refrescarAlertasNavbar("casitas");
 
         /* =============================
            📲 WHATSAPP (POST-COBRO, IGUAL COBRANZAS)
@@ -2205,14 +2318,16 @@ window.exportarVentaPDF = async function (idVenta) {
         generarPdfVenta(venta);
 
         try {
-            await fetch("/Ventas_Electrodomesticos/MarcarComprobante", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ idVenta: idVenta })
+            await fetch("/Ventas_Electrodomesticos/MarcarComprobante?idVenta=" + encodeURIComponent(idVenta), {
+                method: "POST"
             });
 
             // 🔥 ACTUALIZAR ICONO EN LA GRILLA SIN RECARGAR
             marcarComprobanteEnGrilla(idVenta);
+            if (typeof refrescarAlertasNavbar === "function") refrescarAlertasNavbar("comprobantes");
+            else {
+                try { window.dispatchEvent(new CustomEvent("dg-alertas-refresh", { detail: { tipo: "comprobantes" } })); } catch (ev) { }
+            }
 
         } catch (e) {
             console.warn("No se pudo marcar comprobante", e);
@@ -2226,28 +2341,29 @@ window.exportarVentaPDF = async function (idVenta) {
 
 
 function marcarComprobanteEnGrilla(idVenta) {
+    const id = Number(idVenta);
+    const marcarCache = (arr) => {
+        if (!Array.isArray(arr)) return;
+        const venta = arr.find(v => Number(v.IdVenta) === id);
+        if (venta) venta.Comprobante = 1;
+    };
+    marcarCache(typeof ventasCache !== "undefined" ? ventasCache : null);
+    marcarCache(typeof ventasPendientesCache !== "undefined" ? ventasPendientesCache : null);
 
-    if (!gridVentas) return;
-
-    // 1️⃣ actualizar cache
-    const venta = ventasCache.find(v => Number(v.IdVenta) === Number(idVenta));
-    if (venta) {
-        venta.Comprobante = 1;
-    }
-
-    // 2️⃣ buscar fila en DataTable y redibujarla
-    gridVentas.rows().every(function () {
-        const d = this.data();
-        if (Number(d.IdVenta) === Number(idVenta)) {
-
-            // actualizar dato interno
-            d.Comprobante = 1;
-            this.data(d);
-
-            // redibujar solo esa fila
-            this.invalidate().draw(false);
-        }
-    });
+    const pintarTabla = (grid) => {
+        if (!grid || !grid.rows) return;
+        grid.rows().every(function () {
+            const d = this.data();
+            if (Number(d.IdVenta) === id) {
+                d.Comprobante = 1;
+                this.data(d);
+                this.invalidate().draw(false);
+            }
+        });
+    };
+    if (typeof gridVentas !== "undefined") pintarTabla(gridVentas);
+    if (typeof gridVentasPendientes !== "undefined") pintarTabla(gridVentasPendientes);
+    if (typeof vhRefreshCards === "function") vhRefreshCards();
 }
 
 function generarPdfVenta(venta) {
@@ -2264,8 +2380,6 @@ function generarPdfVenta(venta) {
         });
 
     const toInt = (v) => Math.round(Number(v || 0));
-
-    const round1000 = (v) => Math.round((v || 0) / 1000) * 1000;
 
     let y = 18;
 
@@ -2331,12 +2445,10 @@ function generarPdfVenta(venta) {
 
         doc.autoTable({
             startY: y,
-            head: [["Cant", "Producto", "Precio", "Subtotal"]],
+            head: [["Cant", "Producto"]],
             body: venta.Items.map(i => [
                 i.Cantidad,
-                i.Producto,
-                money(i.PrecioUnitario),
-                money(toInt(i.Subtotal || (i.Cantidad * i.PrecioUnitario)))
+                i.Producto
             ]),
             theme: "grid",
             styles: { fontSize: 9 },
@@ -2387,69 +2499,6 @@ function generarPdfVenta(venta) {
         styles: { fontSize: 9 },
         headStyles: { fillColor: [20, 20, 20], textColor: 255 }
     });
-
-    y = doc.lastAutoTable.finalY + 10;
-
-    /* ================= RESUMEN (FIX REAL FINAL) ================= */
-
-    let subtotal = 0;
-    let totalDescuentos = 0;
-    let totalPagado = 0;
-
-    /* 🔹 SUBTOTAL DESDE PRODUCTOS */
-    if (venta.Items?.length) {
-        venta.Items.forEach(i => {
-            const sub = toInt(i.Subtotal || (i.Cantidad * i.PrecioUnitario));
-            subtotal += sub;
-        });
-    }
-
-    /* 🔹 DESCUENTOS Y PAGADO DESDE CUOTAS */
-    cuotas.forEach(c => {
-        totalDescuentos += toInt(c.MontoDescuentos);
-        totalPagado += toInt(c.MontoPagado);
-    });
-
-    /* 🔹 SUMAR ENTREGA */
-    const entrega = toInt(venta.Entrega);
-    totalPagado += entrega;
-
-    /* 🔹 REDONDEO A MILES */
-    subtotal = round1000(subtotal);
-    totalDescuentos = round1000(totalDescuentos);
-
-    const totalFinal = round1000(subtotal - totalDescuentos);
-    totalPagado = round1000(totalPagado);
-
-    const restante = round1000(Math.max(totalFinal - totalPagado, 0));
-
-    const x = 120;
-
-    doc.setDrawColor(180);
-    doc.rect(x, y, 80, 40);
-
-    doc.setFontSize(10);
-    doc.setFont(undefined, "bold");
-    doc.text("Resumen", x + 4, y + 6);
-
-    doc.setFont(undefined, "normal");
-
-    doc.text("Subtotal:", x + 4, y + 12);
-    doc.text(money(subtotal), x + 75, y + 12, { align: "right" });
-
-    doc.text("Descuentos:", x + 4, y + 18);
-    doc.setTextColor(200, 0, 0);
-    doc.text("- " + money(totalDescuentos), x + 75, y + 18, { align: "right" });
-
-    doc.setTextColor(0, 0, 0);
-    doc.text("Total:", x + 4, y + 24);
-    doc.text(money(totalFinal), x + 75, y + 24, { align: "right" });
-
-    doc.text("Pagado:", x + 4, y + 30);
-    doc.text(money(totalPagado), x + 75, y + 30, { align: "right" });
-
-    doc.text("Restante:", x + 4, y + 36);
-    doc.text(money(restante), x + 75, y + 36, { align: "right" });
 
     /* ================= FOOTER ================= */
     doc.setFontSize(8);
@@ -2646,40 +2695,13 @@ function obtenerTipoMensajeElectro(descripcion = "") {
 
 
 function abrirWhatsapp(telefono, mensaje) {
-
-    const tel = normalizarTelefonoAR(telefono);
-    if (!tel) {
-        console.warn("Teléfono inválido:", telefono);
+    if (typeof abrirWhatsAppAR === "function") {
+        if (!abrirWhatsAppAR(telefono, mensaje)) {
+            console.warn("Teléfono inválido:", telefono);
+        }
         return;
     }
-
-    const msg = encodeURIComponent(mensaje);
-    const url = `https://api.whatsapp.com/send?phone=${tel}&text=${msg}`;
-    window.open(url, "_blank");
-}
-
-function normalizarTelefonoAR(tel) {
-    if (!tel) return "";
-
-    let limpio = String(tel).replace(/\D/g, "");
-
-    // quitar 0 inicial
-    if (limpio.startsWith("0")) {
-        limpio = limpio.slice(1);
-    }
-
-    // quitar 549 si ya viene
-    if (limpio.startsWith("549")) {
-        limpio = limpio.slice(3);
-    }
-
-    // quitar 54 si viene
-    if (limpio.startsWith("54")) {
-        limpio = limpio.slice(2);
-    }
-
-    // devolver con prefijo correcto
-    return "549" + limpio;
+    console.warn("Teléfono inválido:", telefono);
 }
 
 
@@ -2706,6 +2728,60 @@ function bloqueProductosWhatsappElectro(v, titulo = "Productos") {
     return `\n📦 *${titulo}:*\n${productos}\n`;
 }
 
+function montoRestanteCuotaElectro(c) {
+    if (!c) return 0;
+    if (c.MontoRestante != null && c.MontoRestante !== "") {
+        const n = Number(c.MontoRestante);
+        if (Number.isFinite(n)) return n;
+    }
+    return Number(c.MontoOriginal || 0)
+        + Number(c.MontoRecargos || 0)
+        - Number(c.MontoDescuentos || 0)
+        - Number(c.MontoPagado || 0);
+}
+
+function fechaMostrarCuotaElectro(c) {
+    const fv = c?.FechaVencimiento ? moment(c.FechaVencimiento) : null;
+    if (fv && fv.isValid()) return fv;
+    const fc = c?.FechaCobro ? moment(c.FechaCobro) : null;
+    if (fc && fc.isValid()) return fc;
+    return null;
+}
+
+/** Siguiente cuota con saldo (incluye vencidas y la misma cuota si el cobro fue parcial). */
+function obtenerProximaCuotaElectro(venta) {
+    if (!venta || !Array.isArray(venta.Cuotas) || !venta.Cuotas.length) return null;
+
+    const pendientes = venta.Cuotas.filter(c => montoRestanteCuotaElectro(c) > 0);
+    if (!pendientes.length) return null;
+
+    pendientes.sort((a, b) => {
+        const na = Number(a.NumeroCuota || 0);
+        const nb = Number(b.NumeroCuota || 0);
+        if (na !== nb) return na - nb;
+
+        const da = fechaMostrarCuotaElectro(a);
+        const db = fechaMostrarCuotaElectro(b);
+        const ta = da ? da.valueOf() : Number.MAX_SAFE_INTEGER;
+        const tb = db ? db.valueOf() : Number.MAX_SAFE_INTEGER;
+        return ta - tb;
+    });
+
+    return pendientes[0];
+}
+
+function textoProximaCuotaElectro(venta) {
+    const proxima = obtenerProximaCuotaElectro(venta);
+    if (!proxima) return "—";
+
+    const fecha = fechaMostrarCuotaElectro(proxima);
+    const fechaTxt = fecha ? fecha.format("DD/MM/YYYY") : "—";
+    const nro = proxima.NumeroCuota != null ? proxima.NumeroCuota : "?";
+    const montoTxt = String(formatNumber(montoRestanteCuotaElectro(proxima)) || "").trim();
+    const monto = montoTxt.indexOf("$") === 0 ? montoTxt : ("$" + montoTxt);
+    return `Cuota ${nro} – ${fechaTxt} – ${monto}`;
+}
+
 function armarMensajeWhatsappElectro(base, descripcion, idPago) {
 
     if (!base || !base.Venta || !base.Cliente)
@@ -2716,7 +2792,6 @@ function armarMensajeWhatsappElectro(base, descripcion, idPago) {
     const tipo = obtenerTipoMensajeElectro(descripcion);
 
     const nombreCliente = (v.ClienteNombre || "").trim();
-    const saldo = formatNumber(v.Restante || 0);
     const bloqueProductos = bloqueProductosWhatsappElectro(v, "Productos");
     const bloqueProductosAdquiridos = bloqueProductosWhatsappElectro(v, "Productos adquiridos");
 
@@ -2729,30 +2804,19 @@ function armarMensajeWhatsappElectro(base, descripcion, idPago) {
             h >= 12 && h < 20 ? "Buenas tardes" :
                 "Buenas noches";
 
-    /* ===============================
-       PRÓXIMA CUOTA REAL
-    =============================== */
-    let textoCuota = "—";
-
-    if (Array.isArray(v.Cuotas)) {
-        const hoy = moment().startOf("day");
-
-        const proxima = v.Cuotas
-            .filter(c =>
-                (c.MontoRestante || 0) > 0 &&
-                moment(c.FechaVencimiento).isSameOrAfter(hoy, "day")
-            )
-            .sort((a, b) =>
-                new Date(a.FechaVencimiento) - new Date(b.FechaVencimiento)
-            )[0];
-
-        if (proxima) {
-            textoCuota =
-                `Cuota ${proxima.NumeroCuota} – ` +
-                `${moment(proxima.FechaVencimiento).format("DD/MM/YYYY")} – ` +
-                `${formatNumber(proxima.MontoRestante)}`;
-        }
+    const idPagoBuscar = Number(idPago || base.IdPagoActual || 0);
+    const pagoAusente = Array.isArray(base.Pagos)
+        ? base.Pagos.find(p => Number(p.Id) === idPagoBuscar)
+        : null;
+    if (pagoAusente && Number(pagoAusente.ClienteAusente) === 1) {
+        const fecha = pagoAusente.FechaPago ? moment(pagoAusente.FechaPago).format("DD/MM/YYYY") : "";
+        const fechaHora = pagoAusente.FechaPago ? moment(pagoAusente.FechaPago).format("HH:mm") : "";
+        return `Hola ${nombreCliente}, ${saludo}. ` +
+            `Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro ` +
+            `y el cobrador no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?`;
     }
+
+    const textoCuota = textoProximaCuotaElectro(v);
 
     /* =====================================================
        ======================= VENTA =======================
@@ -2773,7 +2837,6 @@ Le informamos que el día ${fechaVenta} hemos registrado una nueva venta.
 ${bloqueProductosAdquiridos}
 💰 *Total:* ${total}
 💵 *Entrega:* ${entrega}
-📉 *Saldo pendiente:* ${saldo}
 
 📆 *Próxima cuota a vencer:*
 ${textoCuota}
@@ -2830,22 +2893,22 @@ Ante cualquier consulta, quedamos a disposición.`;
             textoCuotaPagada = `Cuota ${cuotasDelPago[0].NumeroCuota}`;
         }
 
-        let lineasRestanteCuota = "";
+        let lineasSaldoCuota = "";
         if (cuotasDelPago.length === 1) {
             const c0 = cuotasDelPago[0];
-            lineasRestanteCuota = c0.MontoRestante > 0.009
-                ? `💲 *Restante de la cuota:* ${formatNumber(c0.MontoRestante)}\n`
-                : `✅ *Cuota ${c0.NumeroCuota} cancelada*\n`;
+            if (Number(c0.MontoRestante || 0) <= 0.009) {
+                lineasSaldoCuota = `✅ *Cuota ${c0.NumeroCuota} cancelada*\n`;
+            }
         } else if (cuotasDelPago.length > 1) {
-            lineasRestanteCuota = cuotasDelPago.map(c =>
-                c.MontoRestante > 0.009
-                    ? `💲 *Restante cuota ${c.NumeroCuota}:* ${formatNumber(c.MontoRestante)}`
-                    : `✅ *Cuota ${c.NumeroCuota} cancelada*`
-            ).join("\n") + "\n";
+            const canceladas = cuotasDelPago
+                .filter(c => Number(c.MontoRestante || 0) <= 0.009)
+                .map(c => `✅ *Cuota ${c.NumeroCuota} cancelada*`);
+            if (canceladas.length) {
+                lineasSaldoCuota = canceladas.join("\n") + "\n";
+            }
         }
 
-        const saldoVenta = formatNumber(v.Restante || 0);
-        const cuotasRestantes = cuotas.filter(c => Number(c.MontoRestante || 0) > 0).length;
+        const cuotasRestantes = cuotas.filter(c => montoRestanteCuotaElectro(c) > 0).length;
 
         return `${saludo} ${nombreCliente} 👋
 
@@ -2854,8 +2917,7 @@ Ante cualquier consulta, quedamos a disposición.`;
 Se ha registrado correctamente el pago de la *${textoCuotaPagada}*.
 ${bloqueProductos}
 💰 *Importe abonado:* ${formatNumber(importePagado)}
-${lineasRestanteCuota}📉 *Saldo pendiente de la venta:* ${saldoVenta}
-📊 *Cuotas restantes:* ${cuotasRestantes}
+${lineasSaldoCuota}📊 *Cuotas restantes:* ${cuotasRestantes}
 
 📆 *Próxima cuota a vencer:*
 ${textoCuota}

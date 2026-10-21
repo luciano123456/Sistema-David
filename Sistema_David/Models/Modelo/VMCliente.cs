@@ -17,6 +17,7 @@ namespace Sistema_David.Models.Modelo
         public Nullable<int> IdEstado { get; set; }
         public string Estado { get; set; }
         public string Telefono { get; set; }
+        public string Telefono2 { get; set; }
         public Nullable<int> IdVendedor { get; set; }
         public Nullable<int> IdZona { get; set; }
         public Nullable<int> IdVendedorAsignado { get; set; }

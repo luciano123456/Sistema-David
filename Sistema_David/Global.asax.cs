@@ -1,6 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
@@ -17,6 +16,17 @@ namespace Sistema_David
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             GlobalFilters.Filters.Add(new AuthorizeAttribute());
+        }
+
+        /// <summary>
+        /// Force UTF-8 on every request/response so Spanish accents render correctly in the UI.
+        /// </summary>
+        protected void Application_BeginRequest()
+        {
+            Response.ContentEncoding = Encoding.UTF8;
+            Response.HeaderEncoding = Encoding.UTF8;
+            Response.Charset = "utf-8";
+            Request.ContentEncoding = Encoding.UTF8;
         }
     }
 }

@@ -1,11 +1,11 @@
 ﻿<!DOCTYPE html>
-<html lang="en-US">
+<html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>My favorite book</title>
+    <title>Sistema David</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link href="~/Estilos/NavBarLogin.css?v=2.2" rel="stylesheet" />
+    <link href="~/Estilos/NavBarLogin.css?v=3.0" rel="stylesheet" />
     <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
     <style>
@@ -32,25 +32,29 @@
             <a class="navbar-brand dg-brand">
                 <span class="dg-mark" aria-hidden="true">DG</span>
                 <span class="dg-brand-copy">
-                    <span class="dg-brand-title">Indumentaria DG</span>
-                    <span class="dg-brand-sub" id="dgMarcaModo">Indumentaria</span>
+                    <span class="dg-brand-title">DG</span>
+                    <span class="dg-brand-sub" id="dgMarcaModo">Gestión comercial</span>
                 </span>
             </a>
 
             <div class="dg-nav-tools">
                 <div class="dg-alerts">
-                    <div id="divNotificacionComprobante" class="dg-alert" hidden title="Comprobantes">
+                    <button type="button" id="divNotificacionComprobante" class="dg-alert" hidden
+                            title="Comprobantes pendientes" data-alerta="comprobantes"
+                            aria-haspopup="dialog" aria-expanded="false" aria-controls="dgAlertPanel">
                         <i class="fa fa-print" aria-hidden="true"></i>
                         <span id="notificacionComprobante" class="dg-alert-count is-zero">0</span>
-                    </div>
-                    <div id="divNotificacionHome" class="dg-alert" hidden title="Clientes ausentes">
+                    </button>
+                    <button type="button" id="divNotificacionHome" class="dg-alert" hidden
+                            title="Casitas en rojo" data-alerta="casitas"
+                            aria-haspopup="dialog" aria-expanded="false" aria-controls="dgAlertPanel">
                         <i class="fa fa-home" aria-hidden="true"></i>
                         <span id="notificationHome" class="dg-alert-count is-zero">0</span>
-                    </div>
+                    </button>
                 </div>
 
-                <button class="navbar-toggler dg-toggler" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                <button class="navbar-toggler dg-toggler" type="button" id="dgNavToggler"
+                        aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Abrir menú">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -61,7 +65,7 @@
                 <ul class="navbar-nav dg-nav-links me-auto">
 
                     <li class="nav-item" id="seccionUsuarios" hidden>
-                        <a class="nav-link" id="btnUsuarios" onclick="document.location.href='@Url.Content("~/Usuarios/Index/")'">
+                        <a class="nav-link" id="btnUsuarios" href="@Url.Content("~/Usuarios/Index/")">
                             <span class="dg-ico"><i class="fa fa-users"></i></span>
                             <span class="dg-label">Usuarios</span>
                             <span id="notificationStock" class="dg-pill" hidden></span>
@@ -69,21 +73,21 @@
                     </li>
 
                     <li class="nav-item" id="seccionSueldos" hidden>
-                        <a class="nav-link" id="btnSueldos" onclick="document.location.href='@Url.Content("~/Pagos/Index/")'">
+                        <a class="nav-link" id="btnSueldos" href="@Url.Content("~/Pagos/Index/")">
                             <span class="dg-ico"><i class="fa fa-money"></i></span>
                             <span class="dg-label">Pagos de Sueldos</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionRendimiento" hidden>
-                        <a class="nav-link" id="btnRendimiento" onclick="document.location.href='@Url.Content("~/Rendimiento/Index/")'">
+                        <a class="nav-link" id="btnRendimiento" href="@Url.Content("~/Rendimiento/Index/")">
                             <span class="dg-ico"><i class="fa fa-line-chart"></i></span>
                             <span class="dg-label">Rendimiento</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionProductos" @Html.Raw(navVeProductos ? "" : "hidden")>
-                        <a class="nav-link" id="btnProductos" onclick="document.location.href='@Url.Content("~/Productos/Index/")'">
+                        <a class="nav-link" id="btnProductos" href="@Url.Content("~/Productos/Index/")">
                             <span class="dg-ico"><i class="fa fa-cube"></i></span>
                             <span class="dg-label">Productos</span>
                             <span id="badgeProdPendientes" class="dg-pill dg-pill-warn" hidden></span>
@@ -91,36 +95,35 @@
                     </li>
 
                     <li class="nav-item" id="seccionVentas">
-                        <a class="nav-link pointer" id="btnVentasGeneral">
+                        <a class="nav-link pointer" id="btnVentasGeneral" href="@Url.Content("~/Ventas/Index/")">
                             <span class="dg-ico"><i class="fa fa-shopping-cart"></i></span>
                             <span class="dg-label">Ventas</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionCobranzas">
-                        <a class="nav-link pointer" id="btnCobranzasGeneral">
+                        <a class="nav-link pointer" id="btnCobranzasGeneral" href="@Url.Content("~/Cobranzas/Index/")">
                             <span class="dg-ico"><i class="fa fa-credit-card"></i></span>
                             <span class="dg-label">Cobranzas</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionStock" hidden>
-                        <a class="nav-link" id="btnStock"
-                           onclick="document.location.href='@Url.Content("~/Stock/Index/")'">
+                        <a class="nav-link" id="btnStock" href="@Url.Content("~/Stock/Index/")">
                             <span class="dg-ico"><i class="fa fa-archive"></i></span>
                             <span class="dg-label">Stock</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionClientes" hidden>
-                        <a class="nav-link" id="btnClientes" onclick="document.location.href='@Url.Content("~/Clientes/Index/")'">
+                        <a class="nav-link" id="btnClientes" href="@Url.Content("~/Clientes/Index/")">
                             <span class="dg-ico"><i class="fa fa-address-book"></i></span>
                             <span class="dg-label">Clientes</span>
                         </a>
                     </li>
 
                     <li class="nav-item" id="seccionClientesCero" hidden>
-                        <a class="nav-link" id="btnClientesCero" onclick="document.location.href='@Url.Content("~/ClientesCero/Index/")'">
+                        <a class="nav-link" id="btnClientesCero" href="@Url.Content("~/ClientesCero/Index/")">
                             <span class="dg-ico"><i class="fa fa-bell"></i></span>
                             <span class="dg-label">Clientes</span>
                             <i id="notificationIcon" class="fa fa-bell dg-bell" style="display:none;"></i>
@@ -148,7 +151,8 @@
                     </li>
 
                     <li class="nav-item dg-mode-item" id="divbtnCambiarTipoVentas">
-                        <a class="nav-link pointer dg-mode-btn" id="btnCambiarTipoVentas">
+                        <a class="nav-link pointer dg-mode-btn" id="btnCambiarTipoVentas"
+                           role="button" aria-expanded="false" aria-controls="dgModeInlinePanel">
                             <span class="dg-ico"><i class="fa fa-exchange"></i></span>
                             <span class="dg-mode-copy">
                                 <span class="dg-mode-kicker">Sistema</span>
@@ -156,6 +160,22 @@
                             </span>
                             <i class="fa fa-angle-down dg-mode-caret"></i>
                         </a>
+                        <div class="dg-mode-inline" id="dgModeInlinePanel" hidden>
+                            <button type="button" class="dg-mode-option" data-tipo="indumentaria">
+                                <span class="dg-mode-option-ico"><i class="fa fa-shopping-bag"></i></span>
+                                <span class="dg-mode-option-copy">
+                                    <span class="dg-mode-option-title">Indumentaria</span>
+                                    <span class="dg-mode-option-sub">Ventas rápidas</span>
+                                </span>
+                            </button>
+                            <button type="button" class="dg-mode-option" data-tipo="electro">
+                                <span class="dg-mode-option-ico"><i class="fa fa-television"></i></span>
+                                <span class="dg-mode-option-copy">
+                                    <span class="dg-mode-option-title">Electrodomésticos</span>
+                                    <span class="dg-mode-option-sub">Ventas financiadas</span>
+                                </span>
+                            </button>
+                        </div>
                     </li>
 
                 </ul>
@@ -163,13 +183,13 @@
                 <ul class="navbar-nav dg-user-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle dg-user-btn" href="#" id="userDropdown"
-                           role="button" data-bs-toggle="dropdown">
+                           role="button" aria-expanded="false" aria-haspopup="true">
                             <span class="dg-avatar" id="dgAvatarLetra" aria-hidden="true">U</span>
                             <span id="userName" class="dg-user-name"></span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end dg-menu">
+                        <ul class="dropdown-menu dropdown-menu-end dg-menu" aria-labelledby="userDropdown">
                             <li>
-                                <a class="dropdown-item" onclick="cerrarSession();">
+                                <a class="dropdown-item" href="#" onclick="cerrarSession(); return false;">
                                     <i class="fa fa-sign-out"></i> Cerrar sesión
                                 </a>
                             </li>
@@ -181,8 +201,25 @@
         </div>
     </nav>
 
+    <div id="dgAlertBackdrop" class="dg-alert-backdrop" hidden></div>
+    <div id="dgAlertPanel" class="dg-alert-panel" hidden role="dialog" aria-modal="true" aria-labelledby="dgAlertPanelTitle">
+        <div class="dg-alert-panel-head">
+            <div class="dg-alert-panel-title">
+                <span class="dg-alert-panel-ico" id="dgAlertPanelIco"><i class="fa fa-print"></i></span>
+                <div>
+                    <strong id="dgAlertPanelTitle">Pendientes</strong>
+                    <span class="dg-alert-panel-sub" id="dgAlertPanelSub"></span>
+                </div>
+            </div>
+            <button type="button" class="dg-alert-panel-close" id="dgAlertPanelClose" aria-label="Cerrar">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <div class="dg-alert-panel-body" id="dgAlertPanelBody"></div>
+    </div>
 
-    <!-- 🔥 MODAL PARA ELEGIR TIPO DE VENTA -->
+
+    <!-- MODAL PARA ELEGIR TIPO DE VENTA -->
     <div class="modal fade" id="modalTipoVentas" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content modal-tipo-ventas border-0">
@@ -232,8 +269,8 @@
             </div>
         </div>
     </div>
-    <script src="~/JavaScript/Utils/Utils.js?v=3.19"></script>
-    <script src="~/JavaScript/NavBarLogin.js?v=3.1"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.21"></script>
+    <script src="~/JavaScript/NavBarLogin.js?v=4.3"></script>
 
 </body>
 </html>

@@ -219,6 +219,7 @@ namespace Sistema_David.Models.ViewModels
         /* ================= ESTADO ================= */
         public string Estado { get; set; }
         public string Observacion { get; set; }
+        public int Intransferible { get; set; }
 
         /* ================= PAGOS ================= */
         public decimal Entrega { get; set; }
@@ -311,6 +312,7 @@ namespace Sistema_David.Models.ViewModels
 
         public int EstadoCobro { get; set; }
         public string ObservacionCobro { get; set; }
+        public int Intransferible { get; set; }
 
 
     }

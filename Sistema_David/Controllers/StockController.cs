@@ -20,9 +20,10 @@ namespace Sistema_David.Controllers
 
             var stockPendiente = StockPendienteModel.ExisteStockPendiente(SessionHelper.GetUsuarioSesion().Id, "Pendiente");
 
-            if (stockPendiente == true && SessionHelper.GetUsuarioSesion().IdRol != 1) // No afecta a administradores
+            var idRol = SessionHelper.GetUsuarioSesion().IdRol;
+            // No afecta a administradores ni comprobantes (consulta stock de vendedores)
+            if (stockPendiente == true && idRol != 1 && idRol != 4)
             {
-                // Si hay stock pendiente, redirige al índice de StockController
                 return RedirectToAction("Index", "StockPendiente");
             }
 
@@ -34,9 +35,9 @@ namespace Sistema_David.Controllers
 
             var stockPendiente = StockPendienteModel.ExisteStockPendiente(SessionHelper.GetUsuarioSesion().Id, "Pendiente");
 
-            if (stockPendiente == true && SessionHelper.GetUsuarioSesion().IdRol != 1) // No afecta a administradores
+            var idRol = SessionHelper.GetUsuarioSesion().IdRol;
+            if (stockPendiente == true && idRol != 1 && idRol != 4)
             {
-                // Si hay stock pendiente, redirige al índice de StockController
                 return RedirectToAction("Index", "StockPendiente");
             }
 

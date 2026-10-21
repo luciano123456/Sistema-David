@@ -637,9 +637,7 @@ async function enviarWhatssap() {
 
 
         if (result != null) {
-            const msg = encodeURIComponent(document.getElementById("mensajewsp").value || "");
-            const urlwsp = `https://api.whatsapp.com/send?phone=+54 9${result.data.Telefono}&text=${msg}`;
-            window.open(urlwsp, "_blank");
+            abrirWhatsAppAR(result.data.Telefono, document.getElementById("mensajewsp").value || "");
             $("#wspModalMsg").addClass("d-none").text("");
             $("#modalWhatssap").modal("hide");
         } else {
@@ -766,6 +764,12 @@ function verificarDatosCliente() {
         return false;
     }
 
+    var telEl = document.getElementById("Telefono");
+    if (telEl && (telEl.value || "").trim() === "") {
+        alert("Debes completar el Teléfono.")
+        return false;
+    }
+
     return true;
 
 }
@@ -797,7 +801,7 @@ async function registrarCliente() {
 
             let result = await MakeAjax(options);
 
-            if (result.Status) {
+            if (result.Status === 0) {
                 alert('Cliente agregado correctamente.');
                 $('.datos-error').removeClass('d-none');
 
@@ -811,9 +815,15 @@ async function registrarCliente() {
                 }
 
 
+            } else if (result.Status == 2) {
+                alert("Ya existe un cliente con ese DNI.");
+            } else if (result.Status == 3) {
+                alert("El teléfono es obligatorio.");
+            } else if (result.Status == 4) {
+                alert("El segundo celular es obligatorio al registrar un cliente nuevo.");
             } else {
-                //$('.datos-error').text('Ha ocurrido un error en los datos.')
-                //$('.datos-error').removeClass('d-none')
+                $('.datos-error').text('Ha ocurrido un error en los datos.')
+                $('.datos-error').removeClass('d-none')
             }
         } catch (error) {
             $('.datos-error').text('Ha ocurrido un error.')

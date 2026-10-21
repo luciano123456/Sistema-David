@@ -817,11 +817,17 @@ async function registrarVentaAjax() {
 
 async function AccionBtnTelefono() {
     try {
+        var tel = (document.getElementById("mTelefono").value || "").trim();
+        if (!tel) {
+            alert("El teléfono es obligatorio.");
+            return;
+        }
+
         var url = "/Clientes/EditarTelefono";
 
         let value = JSON.stringify({
             Id: document.getElementById("mIdCliente").value,
-            Telefono: document.getElementById("mTelefono").value,
+            Telefono: tel,
         });
 
         let options = {
@@ -867,6 +873,11 @@ function verificarDatosCliente() {
         return false;
     }
 
+    if ((document.getElementById("Telefono").value || "").trim() === "") {
+        alert("Debes completar el Teléfono.")
+        return false;
+    }
+
     return true;
 
 }
@@ -898,7 +909,7 @@ async function registrarCliente() {
 
             let result = await MakeAjax(options);
 
-            if (result.Status) {
+            if (result.Status === 0) {
                 alert('Cliente agregado correctamente.');
                 $('.datos-error').removeClass('d-none');
 
@@ -906,9 +917,15 @@ async function registrarCliente() {
                 $("#clienteModal").modal("hide");
                 cargarCliente()
 
+            } else if (result.Status == 2) {
+                alert("Ya existe un cliente con ese DNI.");
+            } else if (result.Status == 3) {
+                alert("El teléfono es obligatorio.");
+            } else if (result.Status == 4) {
+                alert("El segundo celular es obligatorio al registrar un cliente nuevo.");
             } else {
-                //$('.datos-error').text('Ha ocurrido un error en los datos.')
-                //$('.datos-error').removeClass('d-none')
+                $('.datos-error').text('Ha ocurrido un error en los datos.')
+                $('.datos-error').removeClass('d-none')
             }
         } catch (error) {
             $('.datos-error').text('Ha ocurrido un error.')
