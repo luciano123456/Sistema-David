@@ -112,9 +112,10 @@ namespace Sistema_David.Models
                 // Rango del filtro + pendientes de hoy sin WhatsApp (mismo criterio que el badge)
                 var indumentaria = db.InformacionVentas
                     .Where(iv => iv.ClienteAusente == 1
+                                 && (iv.whatssap ?? 0) == 0
                                  && (
                                      (iv.Fecha >= fechaDesde.Date && iv.Fecha < fechaHastaFin)
-                                     || ((iv.whatssap ?? 0) == 0 && iv.Fecha >= hoy && iv.Fecha < maniana)
+                                     || (iv.Fecha >= hoy && iv.Fecha < maniana)
                                  ))
                     .Select(iv => new VMInformacionVenta
                     {
@@ -144,10 +145,11 @@ namespace Sistema_David.Models
                                join ve in db.Ventas_Electrodomesticos on p.IdVenta equals ve.Id
                                join c in db.Clientes on ve.IdCliente equals c.Id
                                where p.ClienteAusente == 1
+                                     && (p.Whatssap ?? 0) == 0
                                      && !ve.Eliminada
                                      && (
                                          (p.FechaPago >= fechaDesde.Date && p.FechaPago < fechaHastaFin)
-                                         || ((p.Whatssap ?? 0) == 0 && p.FechaPago >= hoy && p.FechaPago < maniana)
+                                         || (p.FechaPago >= hoy && p.FechaPago < maniana)
                                      )
                                select new VMInformacionVenta
                                {

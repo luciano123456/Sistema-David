@@ -1400,9 +1400,19 @@ namespace Sistema_David.Models
                     var obsCobroAntPago = venta.ObservacionCobro;
                     var estadoCobroAntPago = venta.EstadoCobro;
 
-                    venta.ObservacionCobro = "";
-                    venta.EstadoCobro = 0;
                     venta.IdCobrador = null;
+
+                    if (esClienteAusente)
+                    {
+                        venta.EstadoCobro = 1;
+                        if (!string.IsNullOrWhiteSpace(m.Observacion))
+                            venta.ObservacionCobro = m.Observacion.Trim();
+                    }
+                    else
+                    {
+                        venta.ObservacionCobro = "";
+                        venta.EstadoCobro = 0;
+                    }
 
                     if (cobradorAntPago.HasValue && cobradorAntPago.Value != 0)
                     {
@@ -1412,18 +1422,28 @@ namespace Sistema_David.Models
                             "(sin)",
                             "Desasignado al registrar cobro");
                     }
-                    if (!string.IsNullOrWhiteSpace(obsCobroAntPago))
+                    if (esClienteAusente)
                     {
-                        Audit(db, venta.Id, null, m.UsuarioOperador,
-                            "ObservacionCobro",
-                            obsCobroAntPago,
-                            "",
-                            "Limpiada al registrar cobro");
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
+                            "EstadoCobro", estadoCobroAntPago, 1, "Cliente ausente");
+                        AuditSiCambio(db, venta.Id, null, m.UsuarioOperador,
+                            "ObservacionCobro", obsCobroAntPago, venta.ObservacionCobro, "Cliente ausente");
                     }
-                    if (estadoCobroAntPago == 1)
+                    else
                     {
-                        Audit(db, venta.Id, null, m.UsuarioOperador,
-                            "EstadoCobro", "1", "0", "Limpiado al registrar cobro");
+                        if (!string.IsNullOrWhiteSpace(obsCobroAntPago))
+                        {
+                            Audit(db, venta.Id, null, m.UsuarioOperador,
+                                "ObservacionCobro",
+                                obsCobroAntPago,
+                                "",
+                                "Limpiada al registrar cobro");
+                        }
+                        if (estadoCobroAntPago == 1)
+                        {
+                            Audit(db, venta.Id, null, m.UsuarioOperador,
+                                "EstadoCobro", "1", "0", "Limpiado al registrar cobro");
+                        }
                     }
 
                     // ===============================
@@ -2752,13 +2772,19 @@ namespace Sistema_David.Models
                         .Where(p => idsPagos.Contains(p.Id))
                         .ToList();
 
+                    var idsVentaAusente = new HashSet<int>();
                     foreach (var p in pagos)
                     {
                         var waAnt = p.Whatssap;
                         p.Whatssap = 1;
                         AuditSiCambio(db, p.IdVenta, null, usuario,
                             "WhatsAppPago", waAnt, 1, "Pago #" + p.Id);
+                        if (p.ClienteAusente == 1)
+                            idsVentaAusente.Add(p.IdVenta);
                     }
+
+                    foreach (var idVenta in idsVentaAusente)
+                        CerrarCasitaTrasWhatsapp(db, idVenta, usuario, "WhatsApp cliente ausente");
 
                     db.SaveChanges();
                     tx.Commit();
@@ -2853,6 +2879,9 @@ namespace Sistema_David.Models
                         venta.Whatssap = 1;
                         Audit(db, venta.IdVenta, null, usuario,
                             "WhatsAppPago", "0", "1", "Pago #" + id);
+
+                        if (venta.ClienteAusente == 1)
+                            CerrarCasitaTrasWhatsapp(db, venta.IdVenta, usuario, "WhatsApp cliente ausente");
                     }
                     else
                     {
@@ -3909,7 +3938,6 @@ namespace Sistema_David.Models
                     var obsAnt = venta.ObservacionCobro;
                     var estadoCobroAnt = venta.EstadoCobro;
 
-                    // setear
                     venta.EstadoCobro = 1;
                     venta.ObservacionCobro = obsNueva;
                     venta.UsuarioModificacion = usuario;
@@ -3917,6 +3945,8 @@ namespace Sistema_David.Models
 
                     AuditSiCambio(db, venta.Id, null, usuario, "EstadoCobro", estadoCobroAnt, 1, "ObsCobro");
                     AuditSiCambio(db, venta.Id, null, usuario, "ObservacionCobro", obsAnt, obsNueva);
+
+                    RegistrarPagoAusenteDesdeCasita(db, venta.Id, obsNueva, usuario);
 
                     db.SaveChanges();
                     tx.Commit();
@@ -3928,6 +3958,127 @@ namespace Sistema_David.Models
                     return "Error: " + ex.Message;
                 }
             }
+        }
+
+        /// <summary>
+        /// Crea (o actualiza el de hoy sin WhatsApp) el movimiento de cliente ausente
+        /// para que la casita figure en Rendimiento → Clientes Ausentes.
+        /// </summary>
+        private static void RegistrarPagoAusenteDesdeCasita(
+            Sistema_DavidEntities db, int idVenta, string observacion, int usuario)
+        {
+            var hoy = DateTime.Today;
+            var maniana = hoy.AddDays(1);
+            var obs = string.IsNullOrWhiteSpace(observacion) ? "Cliente ausente" : observacion.Trim();
+
+            var pagoHoy = db.Ventas_Electrodomesticos_Pagos
+                .FirstOrDefault(p => p.IdVenta == idVenta
+                    && p.ClienteAusente == 1
+                    && (p.Whatssap ?? 0) == 0
+                    && p.FechaPago >= hoy
+                    && p.FechaPago < maniana);
+
+            if (pagoHoy != null)
+            {
+                if (!string.Equals(pagoHoy.Observacion ?? "", obs, StringComparison.Ordinal))
+                {
+                    var obsAnt = pagoHoy.Observacion;
+                    pagoHoy.Observacion = obs;
+                    AuditSiCambio(db, idVenta, null, usuario,
+                        "ObservacionPago", obsAnt, obs, "Pago #" + pagoHoy.Id + " | Casita");
+                }
+                return;
+            }
+
+            var pago = new Ventas_Electrodomesticos_Pagos
+            {
+                IdVenta = idVenta,
+                FechaPago = DateTime.Now,
+                MedioPago = "AUSENTE",
+                ImporteTotal = 0,
+                Observacion = obs,
+                UsuarioCreacion = usuario,
+                FechaCreacion = DateTime.Now,
+                ClienteAusente = 1,
+                Whatssap = 0
+            };
+            db.Ventas_Electrodomesticos_Pagos.Add(pago);
+            db.SaveChanges();
+
+            var cuota = db.Ventas_Electrodomesticos_Cuotas
+                .Where(c => c.IdVenta == idVenta && c.MontoRestante > 0)
+                .OrderBy(c => c.NumeroCuota)
+                .FirstOrDefault();
+
+            if (cuota != null)
+            {
+                db.Ventas_Electrodomesticos_Pagos_Detalle.Add(new Ventas_Electrodomesticos_Pagos_Detalle
+                {
+                    IdPago = pago.Id,
+                    IdCuota = cuota.Id,
+                    ImporteAplicado = 0
+                });
+            }
+
+            Audit(db, idVenta, cuota != null ? (int?)cuota.Id : null, usuario,
+                "RegistrarPago", "0", "0",
+                "Pago #" + pago.Id + " Importe=0 | Ausente=1 | Casita"
+                + (string.IsNullOrWhiteSpace(obs) ? "" : " | Obs=" + obs));
+        }
+
+        public static string CerrarCasitaPorWhatsapp(int idVenta, int usuario)
+        {
+            using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (idVenta <= 0)
+                        return "Venta inválida";
+
+                    var pagos = db.Ventas_Electrodomesticos_Pagos
+                        .Where(p => p.IdVenta == idVenta
+                            && p.ClienteAusente == 1
+                            && (p.Whatssap ?? 0) == 0)
+                        .ToList();
+
+                    foreach (var p in pagos)
+                    {
+                        var waAnt = p.Whatssap;
+                        p.Whatssap = 1;
+                        AuditSiCambio(db, p.IdVenta, null, usuario,
+                            "WhatsAppPago", waAnt, 1, "Pago #" + p.Id + " | Casita");
+                    }
+
+                    CerrarCasitaTrasWhatsapp(db, idVenta, usuario, "WhatsApp casita");
+                    db.SaveChanges();
+                    tx.Commit();
+                    return "OK";
+                }
+                catch (Exception ex)
+                {
+                    tx.Rollback();
+                    return "Error: " + ex.Message;
+                }
+            }
+        }
+
+        private static void CerrarCasitaTrasWhatsapp(
+            Sistema_DavidEntities db, int idVenta, int usuario, string motivo)
+        {
+            var venta = db.Ventas_Electrodomesticos.FirstOrDefault(v => v.Id == idVenta);
+            if (venta == null) return;
+
+            var estadoAnt = venta.EstadoCobro;
+            var obsAnt = venta.ObservacionCobro;
+
+            venta.EstadoCobro = 0;
+            venta.ObservacionCobro = "";
+            venta.UsuarioModificacion = usuario;
+            venta.FechaModificacion = DateTime.Now;
+
+            AuditSiCambio(db, venta.Id, null, usuario, "EstadoCobro", estadoAnt, 0, motivo);
+            AuditSiCambio(db, venta.Id, null, usuario, "ObservacionCobro", obsAnt, "", motivo);
         }
 
         /// <summary>
@@ -3952,6 +4103,8 @@ namespace Sistema_David.Models
                         v.Id,
                         v.IdCliente,
                         Cliente = ((c.Nombre ?? "") + " " + (c.Apellido ?? "")).Trim(),
+                        Telefono = c.Telefono,
+                        Telefono2 = c.Telefono2,
                         Cobrador = cob != null ? cob.Nombre : null,
                         v.ObservacionCobro,
                         v.Estado,
@@ -3983,6 +4136,26 @@ namespace Sistema_David.Models
                         g => g.Key,
                         g => g.OrderBy(x => x.FechaCobro ?? DateTime.MaxValue).First());
 
+                var visitas = ids.Count == 0
+                    ? new List<CasitaVisitaMini>()
+                    : db.Ventas_Electrodomesticos_Historial
+                        .Where(h => h.IdVenta != null
+                            && ids.Contains(h.IdVenta.Value)
+                            && h.Campo == "EstadoCobro"
+                            && h.ValorNuevo == "1")
+                        .Select(h => new { IdVenta = h.IdVenta.Value, h.FechaCambio })
+                        .ToList()
+                        .Select(h => new CasitaVisitaMini
+                        {
+                            IdVenta = h.IdVenta,
+                            Fecha = h.FechaCambio
+                        })
+                        .ToList();
+
+                var visitaPorVenta = visitas
+                    .GroupBy(h => h.IdVenta)
+                    .ToDictionary(g => g.Key, g => g.Max(x => x.Fecha));
+
                 var lista = new List<VMNavbarAlerta>(ventas.Count);
                 foreach (var x in ventas)
                 {
@@ -3997,6 +4170,14 @@ namespace Sistema_David.Models
                     else if (x.FechaModificacion.HasValue)
                         fecha = x.FechaModificacion.Value;
 
+                    DateTime visita;
+                    if (!visitaPorVenta.TryGetValue(x.Id, out visita))
+                        visita = x.FechaModificacion ?? DateTime.Now;
+
+                    var telefono = !string.IsNullOrWhiteSpace(x.Telefono)
+                        ? x.Telefono.Trim()
+                        : (x.Telefono2 ?? "").Trim();
+
                     lista.Add(new VMNavbarAlerta
                     {
                         Id = x.Id,
@@ -4004,6 +4185,9 @@ namespace Sistema_David.Models
                         IdCliente = x.IdCliente,
                         IdCuota = cuota != null ? cuota.Id : 0,
                         Cliente = string.IsNullOrWhiteSpace(x.Cliente) ? "Sin cliente" : x.Cliente,
+                        Telefono = telefono,
+                        FechaVisitaTexto = visita.ToString("dd/MM/yyyy"),
+                        HoraVisitaTexto = visita.ToString("HH:mm"),
                         Fecha = fecha,
                         FechaTexto = fecha.ToString("dd/MM/yyyy"),
                         FechaCobroTexto = cuota != null && cuota.FechaCobro.HasValue
@@ -4033,6 +4217,12 @@ namespace Sistema_David.Models
             public int Id { get; set; }
             public DateTime? FechaCobro { get; set; }
             public string Estado { get; set; }
+        }
+
+        private class CasitaVisitaMini
+        {
+            public int IdVenta { get; set; }
+            public DateTime Fecha { get; set; }
         }
 
         public static int CantidadCasitasRojas()

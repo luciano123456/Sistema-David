@@ -1739,6 +1739,7 @@ async function enviarWhatssapElectro(idMovimiento, descripcion, nroCuota = null)
                 });
             }
 
+            recargarAusentesTrasWhatsapp();
             return;
         }
     }
@@ -1771,15 +1772,19 @@ async function enviarWhatssapElectro(idMovimiento, descripcion, nroCuota = null)
 
     const pagoMarcado = obtenerPagoActualElectro(base);
     if (pagoMarcado && Number(pagoMarcado.ClienteAusente) === 1) {
-        const fd = document.getElementById("FechaDesde")?.value;
-        const fh = document.getElementById("FechaHasta")?.value;
-        if (fd && fh && typeof obtenerDatosRendimiento === "function") {
-            obtenerDatosRendimiento(fd, fh);
-        } else if ($.fn.DataTable.isDataTable('#grdClientesAusentes')) {
-            $('#grdClientesAusentes').DataTable().ajax.reload(null, false);
-        }
+        recargarAusentesTrasWhatsapp();
     }
 }
+
+function recargarAusentesTrasWhatsapp() {
+    if ($.fn.DataTable.isDataTable("#grdClientesAusentes")) {
+        $("#grdClientesAusentes").DataTable().ajax.reload(null, false);
+    }
+    if (typeof refrescarAlertasNavbar === "function") {
+        refrescarAlertasNavbar("casitas");
+    }
+}
+
 function obtenerTipoMensajeElectro(descripcion = "") {
     const d = String(descripcion || "").toLowerCase();
 
@@ -2198,8 +2203,7 @@ function enviarWhatssapNormal(result) {
     }
 
     if (result.InformacionVenta.ClienteAusente == 1) {
-        const table = $('#grdClientesAusentes').DataTable();
-        table.ajax.reload(null, false);
+        recargarAusentesTrasWhatsapp();
 
         mensaje = `Hola ${result.Cliente.Nombre} ${result.Cliente.Apellido}, ${saludo}. ` +
             `Le informamos que el día ${fecha} a las ${fechaHora} hemos visitado su casa para realizar un cobro ` +

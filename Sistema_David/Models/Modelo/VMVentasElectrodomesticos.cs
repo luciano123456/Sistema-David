@@ -324,6 +324,11 @@ namespace Sistema_David.Models.ViewModels
         public string Observacion { get; set; }
     }
 
+    public class VM_IdVentaReq
+    {
+        public int IdVenta { get; set; }
+    }
+
 
     public class VM_Ventas_Electrodomesticos_Item
     {

@@ -1243,6 +1243,51 @@
     font-weight: 600;
 }
 
+.dg-alert-item.is-casita .dg-alert-item-main {
+    align-items: flex-start;
+}
+
+.dg-alert-item.is-casita .dg-alert-wa,
+.dg-alert-item.is-casita .dg-alert-item-go {
+    align-self: center;
+}
+
+.dg-alert-wa {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    background: #25d366;
+    box-shadow: 0 4px 10px rgba(18, 140, 70, .35);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.dg-alert-wa i {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.dg-alert-wa:hover,
+.dg-alert-wa:focus {
+    background: #1ebe5b;
+    outline: none;
+}
+
+.dg-alert-wa.is-off {
+    background: #3d4d63;
+    box-shadow: none;
+}
+
 .dg-alert-item.is-casita .dg-alert-item-name {
     white-space: normal;
 }
