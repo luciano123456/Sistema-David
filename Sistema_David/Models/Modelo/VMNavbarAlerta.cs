@@ -18,5 +18,8 @@ namespace Sistema_David.Models.Modelo
         public string Cobrador { get; set; }
         public string Observacion { get; set; }
         public string Url { get; set; }
+        public string Telefono { get; set; }
+        public string FechaVisitaTexto { get; set; }
+        public string HoraVisitaTexto { get; set; }
     }
 }

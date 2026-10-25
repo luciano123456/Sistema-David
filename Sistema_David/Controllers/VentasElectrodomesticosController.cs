@@ -859,6 +859,25 @@ namespace Sistema_David.Controllers
             return json;
         }
 
+        [HttpPost]
+        public ActionResult CerrarCasitaPorWhatsapp(VM_IdVentaReq req)
+        {
+            try
+            {
+                var idVenta = req != null ? req.IdVenta : 0;
+                if (idVenta <= 0)
+                    return Json(new { success = false, message = "Venta inválida" });
+
+                var usuario = SessionHelper.GetUsuarioSesion()?.Id ?? 0;
+                var msg = Ventas_ElectrodomesticosModel.CerrarCasitaPorWhatsapp(idVenta, usuario);
+                return Json(new { success = msg == "OK", message = msg });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         /// <summary>
         /// Interpreta 1/true/si = devolver; 0/false/no = no devolver.
         /// </summary>

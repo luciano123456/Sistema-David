@@ -2785,7 +2785,7 @@ VC.guardarObsCobro = async function () {
             return;
         }
 
-        showToast("Observación guardada", "success");
+        showToast("Observación guardada. El cliente pasó a ausentes.", "success");
 
         // cerrar modal
         bootstrap.Modal.getInstance(document.getElementById("modalObsCobro"))?.hide();

@@ -712,14 +712,26 @@ function pintarListaAlertaNavbar(tipo, data) {
                 cobrador,
                 estado
             ].filter(Boolean).join(" · ");
-            return '<button type="button" class="dg-alert-item is-casita" data-url="' + url + '" data-id="' + ventaId + '" data-origen="' + origen + '">' +
+            var tel = String(row.Telefono || row.telefono || "").trim();
+            var fechaVisita = String(row.FechaVisitaTexto || row.fechaVisitaTexto || "");
+            var horaVisita = String(row.HoraVisitaTexto || row.horaVisitaTexto || "");
+            var nombreRaw = String(row.Cliente || row.cliente || "").trim();
+            return '<div class="dg-alert-item is-casita" data-url="' + url + '" data-id="' + ventaId + '" data-origen="' + origen + '">' +
+                '<button type="button" class="dg-alert-item-main" data-url="' + url + '">' +
                 '<span class="dg-alert-casa" aria-hidden="true"><i class="fa fa-home"></i></span>' +
                 '<span class="dg-alert-item-copy">' +
                 '<span class="dg-alert-item-name">' + cliente + '</span>' +
                 (metaCasita ? '<span class="dg-alert-item-meta">' + metaCasita + '</span>' : "") +
                 '<span class="dg-alert-item-obs' + (obs ? "" : " is-empty") + '">' + obsHtml + '</span>' +
-                "</span>" +
-                '<i class="fa fa-chevron-right dg-alert-item-go" aria-hidden="true"></i></button>';
+                "</span></button>" +
+                '<button type="button" class="dg-alert-wa' + (tel ? "" : " is-off") + '" data-alert-wa' +
+                ' data-tel="' + escapeHtmlAlerta(tel) + '"' +
+                ' data-nom="' + escapeHtmlAlerta(nombreRaw) + '"' +
+                ' data-fecha="' + escapeHtmlAlerta(fechaVisita) + '"' +
+                ' data-hora="' + escapeHtmlAlerta(horaVisita) + '"' +
+                ' title="Avisar por WhatsApp" aria-label="Enviar WhatsApp">' +
+                '<i class="fa fa-whatsapp" aria-hidden="true"></i></button>' +
+                '<i class="fa fa-chevron-right dg-alert-item-go" aria-hidden="true"></i></div>';
         }
 
         var copy = '<span class="dg-alert-chip ' + chipCls + '">' + chipTxt + '</span>' +
@@ -736,6 +748,67 @@ function pintarListaAlertaNavbar(tipo, data) {
             '<i class="fa fa-file-pdf-o" aria-hidden="true"></i></button>' +
             '<i class="fa fa-chevron-right dg-alert-item-go" aria-hidden="true"></i></div>';
     }).join("");
+}
+
+function saludoWhatsappAhora() {
+    var h = new Date().getHours();
+    if (h < 12) return "Buenos días";
+    if (h < 20) return "Buenas tardes";
+    return "Buenas noches";
+}
+
+function enviarWhatsappCasitaNavbar(btn) {
+    var tel = btn.getAttribute("data-tel") || "";
+    var nombre = (btn.getAttribute("data-nom") || "").trim();
+    var fecha = (btn.getAttribute("data-fecha") || "").trim();
+    var hora = (btn.getAttribute("data-hora") || "").trim();
+    if (!tel) {
+        avisoAlertaNavbar("Este cliente no tiene teléfono cargado.", "danger");
+        return;
+    }
+    if (!fecha) {
+        var ahora = new Date();
+        var dd = String(ahora.getDate()).padStart(2, "0");
+        var mm = String(ahora.getMonth() + 1).padStart(2, "0");
+        fecha = dd + "/" + mm + "/" + ahora.getFullYear();
+    }
+    if (!hora) {
+        var ahoraH = new Date();
+        hora = String(ahoraH.getHours()).padStart(2, "0") + ":" + String(ahoraH.getMinutes()).padStart(2, "0");
+    }
+    var quien = nombre && nombre !== "Sin cliente" ? nombre : "";
+    var saludo = saludoWhatsappAhora();
+    var mensaje = "Hola" + (quien ? " " + quien : "") + ", " + saludo +
+        ". Le informamos que el día " + fecha + " a las " + hora +
+        " hemos visitado su casa para realizar un cobro y el cobrador no pudo encontrarlo en el domicilio. ¿Desea reprogramar la visita?";
+    if (typeof abrirWhatsAppAR === "function") {
+        if (!abrirWhatsAppAR(tel, mensaje)) {
+            avisoAlertaNavbar("El teléfono del cliente no es válido para WhatsApp.", "danger");
+            return;
+        }
+        var item = btn.closest(".dg-alert-item");
+        var idVenta = Number((item && (item.getAttribute("data-id") || item.getAttribute("data-idventa"))) || 0);
+        cerrarCasitaNavbarTrasWhatsapp(idVenta);
+        return;
+    }
+    avisoAlertaNavbar("No se pudo abrir WhatsApp.", "danger");
+}
+
+async function cerrarCasitaNavbarTrasWhatsapp(idVenta) {
+    try {
+        if (idVenta) {
+            await fetch("/Ventas_Electrodomesticos/CerrarCasitaPorWhatsapp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idVenta: idVenta })
+            });
+        }
+    } catch (e) { }
+
+    if (typeof refrescarAlertasNavbar === "function")
+        refrescarAlertasNavbar("casitas");
+    if (typeof recargarAusentesTrasWhatsapp === "function")
+        recargarAusentesTrasWhatsapp();
 }
 
 function avisoAlertaNavbar(msg, tipo) {
@@ -1197,6 +1270,13 @@ function initAlertasNavbar() {
     }
 
     panel.addEventListener("click", function (e) {
+        var waBtn = e.target.closest("[data-alert-wa]");
+        if (waBtn && panel.contains(waBtn)) {
+            e.preventDefault();
+            e.stopPropagation();
+            enviarWhatsappCasitaNavbar(waBtn);
+            return;
+        }
         var pdfBtn = e.target.closest("[data-alert-pdf]");
         if (pdfBtn && panel.contains(pdfBtn)) {
             e.preventDefault();

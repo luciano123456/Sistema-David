@@ -1221,6 +1221,13 @@ namespace Sistema_David.Models.Modelo
                         var infoventa = db.InformacionVentas.Find(id);
                         infoventa.whatssap = whatssap;
 
+                        if (whatssap == 1 && infoventa.ClienteAusente == 1 && infoventa.IdVenta > 0)
+                        {
+                            var venta = db.Ventas.Find(infoventa.IdVenta);
+                            if (venta != null && venta.EstadoCobro == "1")
+                                venta.EstadoCobro = "0";
+                        }
+
                         db.Entry(infoventa).State = System.Data.Entity.EntityState.Modified;
                         db.SaveChanges();
 
