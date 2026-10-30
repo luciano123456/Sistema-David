@@ -5,7 +5,7 @@
     <title>Sistema David</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link href="~/Estilos/NavBarLogin.css?v=3.1" rel="stylesheet" />
+    <link href="~/Estilos/NavBarLogin.css?v=3.4" rel="stylesheet" />
     <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
     <style>
@@ -39,6 +39,12 @@
 
             <div class="dg-nav-tools">
                 <div class="dg-alerts">
+                    <button type="button" id="divNotificacionPendientes" class="dg-alert" hidden
+                            title="Pendientes y problemas" data-alerta="pendientes"
+                            aria-haspopup="dialog" aria-expanded="false" aria-controls="dgAlertPanel">
+                        <i class="fa fa-bell" aria-hidden="true"></i>
+                        <span id="notificationPendientes" class="dg-alert-count is-zero" hidden></span>
+                    </button>
                     <button type="button" id="divNotificacionComprobante" class="dg-alert" hidden
                             title="Comprobantes pendientes" data-alerta="comprobantes"
                             aria-haspopup="dialog" aria-expanded="false" aria-controls="dgAlertPanel">
@@ -76,6 +82,13 @@
                         <a class="nav-link" id="btnSueldos" href="@Url.Content("~/Pagos/Index/")">
                             <span class="dg-ico"><i class="fa fa-money"></i></span>
                             <span class="dg-label">Pagos de Sueldos</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" id="seccionPendientes" hidden>
+                        <a class="nav-link" id="btnPendientes" href="@Url.Content("~/Pendientes/Index/")">
+                            <span class="dg-ico"><i class="fa fa-bell"></i></span>
+                            <span class="dg-label">Pendientes</span>
                         </a>
                     </li>
 
@@ -216,6 +229,11 @@
             </button>
         </div>
         <div class="dg-alert-panel-body" id="dgAlertPanelBody"></div>
+        <div class="dg-alert-panel-foot" id="dgAlertPanelFoot" hidden>
+            <a class="dg-alert-foot-link" id="dgAlertPanelTodos" href="@Url.Content("~/Pendientes/Index/")">
+                <i class="fa fa-list"></i> Ver todos
+            </a>
+        </div>
     </div>
 
 
@@ -269,8 +287,44 @@
             </div>
         </div>
     </div>
+    <div class="modal fade pd-alarma-modal" id="modalAlarmaPendiente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="pdAlarmaTitulo">Alarma</h5>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3" id="pdAlarmaMeta"></p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button type="button" class="btn btn-outline-light" data-pd-snooze="5">5 min</button>
+                        <button type="button" class="btn btn-outline-light" data-pd-snooze="10">10 min</button>
+                        <button type="button" class="btn btn-outline-light" data-pd-snooze="15">15 min</button>
+                        <button type="button" class="btn btn-outline-light" data-pd-snooze="30">30 min</button>
+                        <button type="button" class="btn btn-outline-light" data-pd-snooze="60">60 min</button>
+                        <button type="button" class="btn btn-outline-warning" id="pdAlarmaCustomBtn">Personalizado</button>
+                    </div>
+                    <div id="pdAlarmaCustom" hidden>
+                        <label class="form-label text-white">Volver a sonar</label>
+                        <div class="d-flex gap-2">
+                            <input type="datetime-local" id="pdAlarmaHasta" class="form-control" />
+                            <button type="button" class="btn btn-warning" id="pdAlarmaCustomOk">Ok</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-light" id="pdAlarmaVer">Ver actividad</button>
+                    <button type="button" class="btn btn-danger" id="pdAlarmaDetener">Detener</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button type="button" id="pdAudioBanner" class="pd-audio-banner" hidden>
+        <i class="fa fa-volume-up"></i>
+        Tocá acá para activar el sonido de las alarmas
+    </button>
+
     <script src="~/JavaScript/Utils/Utils.js?v=3.21"></script>
-    <script src="~/JavaScript/NavBarLogin.js?v=4.5"></script>
+    <script src="~/JavaScript/NavBarLogin.js?v=4.7"></script>
 
 </body>
 </html>

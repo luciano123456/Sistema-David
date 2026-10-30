@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sistema_David.Realtime;
+using System;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
@@ -16,6 +17,7 @@ namespace Sistema_David
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             GlobalFilters.Filters.Add(new AuthorizeAttribute());
+            PendientesAlarmaScheduler.Start();
         }
 
         /// <summary>
