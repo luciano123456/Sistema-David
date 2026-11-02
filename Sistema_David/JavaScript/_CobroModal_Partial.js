@@ -2685,7 +2685,7 @@ function obtenerTipoMensajeElectro(descripcion = "") {
     if (d.includes("reprogram")) return "reprogramar";
 
     if (d.includes("cobranza")) return "cobro";
-    if (d.includes("recargo")) return "recargo";
+    if (d.includes("recargo") || d.includes("interes") || d.includes("interés")) return "recargo";
     if (d.includes("venta")) return "venta";
 
     // ❌ antes devolvía "venta"
@@ -2929,36 +2929,35 @@ Ante cualquier consulta, quedamos a disposición.`;
     /* =====================================================
        ===================== RECARGO =======================
        ===================================================== */
-    /* =====================================================
-    ===================== RECARGO =======================
-    ===================================================== */
     if (tipo === "recargo") {
 
-        const ultimoRecargo = obtenerUltimoRecargoReal(v);
+        const recargo = obtenerRecargoNotificadoElectro(
+            v,
+            Number(idPago || base.IdPagoActual || 0)
+        );
 
-        if (!ultimoRecargo) return "";
+        if (!recargo) return "";
 
-        const importeRecargo = formatNumber(ultimoRecargo.Importe);
+        const fechaCuota = recargo.FechaVencimiento && moment(recargo.FechaVencimiento).isValid()
+            ? moment(recargo.FechaVencimiento).format("DD/MM/YYYY")
+            : "—";
 
-        const saldoFinal = v.Restante + ultimoRecargo.Importe;
-
-        const cuotaAfectada =
-            `Cuota ${ultimoRecargo.NumeroCuota} – ` +
-            `${moment(ultimoRecargo.FechaVencimiento).format("DD/MM/YYYY")}`;
+        const lineasProductos = formatearProductosWhatsappElectro(v);
+        const bloqueProductosRecargo = lineasProductos
+            ? `\n*Productos:*\n${lineasProductos}\n`
+            : "";
 
         return `${saludo} ${nombreCliente} ⚠️
 
-📌 *RECARGO APLICADO – ELECTRODOMÉSTICOS*
-Le informamos que se ha aplicado un recargo sobre su plan de pagos.
+*RECARGO APLICADO – ELECTRODOMÉSTICOS*
+Le informamos que se ha aplicado un recargo sobre su cuota.
+${bloqueProductosRecargo}
+*Recargo aplicado:* ${formatNumber(recargo.Importe)}
 
-💲 *Importe del recargo:* ${importeRecargo}
-📉 *Saldo actualizado:* ${formatNumber(saldoFinal)}
+*Cuota afectada:*
+Cuota ${recargo.NumeroCuota} – ${fechaCuota}
 
-📆 *Cuota afectada:*
-${cuotaAfectada}
-
-📆 *Próxima cuota:*
-${textoCuota}
+*Nuevo importe:* ${formatNumber(recargo.MontoRestante)}
 
 Ante cualquier duda o consulta, quedamos a disposición.`;
     }
@@ -3093,30 +3092,42 @@ function obtenerInfoUltimoCobro(v) {
 }
 
 
-function obtenerUltimoRecargoReal(v) {
+function obtenerRecargoNotificadoElectro(v, idRecargo) {
 
     if (!v || !Array.isArray(v.Cuotas)) return null;
 
     const recargos = [];
 
     v.Cuotas.forEach(c => {
-        if (Array.isArray(c.Recargos)) {
-            c.Recargos.forEach(r => {
-                recargos.push({
-                    NumeroCuota: c.NumeroCuota,
-                    FechaVencimiento: c.FechaVencimiento,
-                    Importe: Number(r.ImporteCalculado || 0),
-                    Fecha: r.Fecha
-                });
+        if (!Array.isArray(c.Recargos)) return;
+        c.Recargos.forEach(r => {
+            recargos.push({
+                Id: Number(r.Id || 0),
+                NumeroCuota: c.NumeroCuota,
+                FechaVencimiento: c.FechaVencimiento,
+                Importe: Number(r.ImporteCalculado || 0),
+                Fecha: r.Fecha,
+                MontoRestante: montoRestanteCuotaElectro(c)
             });
-        }
+        });
     });
 
     if (!recargos.length) return null;
 
-    return recargos.sort(
-        (a, b) => new Date(b.Fecha) - new Date(a.Fecha)
-    )[0];
+    const id = Number(idRecargo || 0);
+    if (id > 0) {
+        const exacto = recargos.find(r => r.Id === id);
+        if (exacto) return exacto;
+    }
+
+    return recargos.slice().sort((a, b) => {
+        const fa = moment(a.Fecha);
+        const fb = moment(b.Fecha);
+        const ta = fa.isValid() ? fa.valueOf() : 0;
+        const tb = fb.isValid() ? fb.valueOf() : 0;
+        if (ta !== tb) return tb - ta;
+        return b.Id - a.Id;
+    })[0];
 }
 
 

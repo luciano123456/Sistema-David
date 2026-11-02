@@ -1639,8 +1639,8 @@ function obtenerIdCorrectoElectro(row) {
         return row.IdCuota;
     }
 
-    // 🔥 AJUSTES (recargo/descuento) en rendimiento suelen venir con IdOriginal
-    if (desc.includes("recargo") || desc.includes("descuento") || desc.includes("ajuste")) {
+    // 🔥 AJUSTES (recargo/interés/descuento) en rendimiento suelen venir con IdOriginal
+    if (desc.includes("recargo") || desc.includes("interes") || desc.includes("interés") || desc.includes("descuento") || desc.includes("ajuste")) {
         if (idOriginal > 0) return idOriginal;
         if (idActual > 0) return idActual;
     }
@@ -1788,10 +1788,10 @@ function recargarAusentesTrasWhatsapp() {
 function obtenerTipoMensajeElectro(descripcion = "") {
     const d = String(descripcion || "").toLowerCase();
 
-    if (d.includes("venta")) return "venta";
     if (d.includes("cobranza")) return "cobro";
-    if (d.includes("recargo")) return "recargo";
+    if (d.includes("recargo") || d.includes("interes") || d.includes("interés")) return "recargo";
     if (d.includes("descuento") || d.includes("ajuste")) return "descuento";
+    if (d.includes("venta")) return "venta";
 
     return "venta";
 }
@@ -1848,7 +1848,6 @@ function armarMensajeWhatsappElectro(base, descripcion, nroCuota = null) {
 
     const total = formatNumber(v.ImporteTotal || 0);
     const entrega = formatNumber(v.Entrega || 0);
-    const saldoVenta = formatNumber(v.Restante || 0);
 
     const saludo = obtenerSaludoWhatsapp();
 
@@ -1979,37 +1978,32 @@ Ante cualquier consulta, quedamos a disposición.`;
     // RECARGO
     // ===============================
     if (tipo === "recargo") {
-        const cuotaObjetivo = obtenerCuotaObjetivoElectro(base, nroCuota, null);
+        const recargo = obtenerRecargoNotificadoElectro(
+            v,
+            Number(base.IdPagoActual || 0)
+        );
 
-        let importeRecargo = 0;
+        if (!recargo) return "";
 
-        if (cuotaObjetivo) {
-            importeRecargo = Number(cuotaObjetivo.MontoRecargos || 0);
+        const fechaCuota = recargo.FechaVencimiento && moment(recargo.FechaVencimiento).isValid()
+            ? moment(recargo.FechaVencimiento).format("DD/MM/YYYY")
+            : "—";
 
-            if (Array.isArray(cuotaObjetivo.Recargos) && cuotaObjetivo.Recargos.length) {
-                const ultimo = [...cuotaObjetivo.Recargos]
-                    .sort((a, b) => new Date(b.Fecha || 0) - new Date(a.Fecha || 0))[0];
-
-                if (ultimo) {
-                    importeRecargo = Number(ultimo.ImporteCalculado || ultimo.Valor || cuotaObjetivo.MontoRecargos || 0);
-                }
-            }
-        }
-
-        const textoCuotaRecargo = cuotaObjetivo?.NumeroCuota
-            ? `Cuota ${cuotaObjetivo.NumeroCuota}`
-            : "su plan de pagos";
+        const bloqueProductosRecargo = productos
+            ? `\n*Productos:*\n${productos}\n`
+            : "";
 
         return `${saludo} ${nombreCliente} ⚠️
 
-📌 *RECARGO APLICADO – ELECTRODOMÉSTICOS*
-Le informamos que se ha aplicado un recargo sobre *${textoCuotaRecargo}*.
+*RECARGO APLICADO – ELECTRODOMÉSTICOS*
+Le informamos que se ha aplicado un recargo sobre su cuota.
+${bloqueProductosRecargo}
+*Recargo aplicado:* ${formatNumber(recargo.Importe)}
 
-💲 *Importe del recargo:* ${formatNumber(importeRecargo)}
-📉 *Saldo actualizado:* ${saldoVenta}
+*Cuota afectada:*
+Cuota ${recargo.NumeroCuota} – ${fechaCuota}
 
-📆 *Próxima cuota:*
-${textoCuota}
+*Nuevo importe:* ${formatNumber(recargo.MontoRestante)}
 
 Ante cualquier duda o consulta, quedamos a disposición.`;
     }
@@ -3560,6 +3554,42 @@ function obtenerSaludoWhatsapp() {
     if (h >= 5 && h < 12) return "Buenos días";
     if (h >= 12 && h < 20) return "Buenas tardes";
     return "Buenas noches";
+}
+
+function obtenerRecargoNotificadoElectro(v, idRecargo) {
+    if (!v || !Array.isArray(v.Cuotas)) return null;
+
+    const recargos = [];
+    v.Cuotas.forEach(c => {
+        if (!Array.isArray(c.Recargos)) return;
+        c.Recargos.forEach(r => {
+            recargos.push({
+                Id: Number(r.Id || 0),
+                NumeroCuota: c.NumeroCuota,
+                FechaVencimiento: c.FechaVencimiento,
+                Importe: Number(r.ImporteCalculado || 0),
+                Fecha: r.Fecha,
+                MontoRestante: montoRestanteCuotaElectro(c)
+            });
+        });
+    });
+
+    if (!recargos.length) return null;
+
+    const id = Number(idRecargo || 0);
+    if (id > 0) {
+        const exacto = recargos.find(r => r.Id === id);
+        if (exacto) return exacto;
+    }
+
+    return recargos.slice().sort((a, b) => {
+        const fa = moment(a.Fecha);
+        const fb = moment(b.Fecha);
+        const ta = fa.isValid() ? fa.valueOf() : 0;
+        const tb = fb.isValid() ? fb.valueOf() : 0;
+        if (ta !== tb) return tb - ta;
+        return b.Id - a.Id;
+    })[0];
 }
 
 function montoRestanteCuotaElectro(c) {
