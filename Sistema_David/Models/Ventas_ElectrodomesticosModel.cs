@@ -1085,8 +1085,8 @@ namespace Sistema_David.Models
                         .FirstOrDefault();
                 }
 
-                // 🟡 RECARGO
-                if (desc.Contains("recargo"))
+                // 🟡 RECARGO / INTERÉS (en Rendimiento la descripción dice "Interes", no "Recargo")
+                if (desc.Contains("recargo") || desc.Contains("interes") || desc.Contains("interés"))
                 {
                     return db.Ventas_Electrodomesticos_Cuotas_Recargos
                         .Where(r => r.Id == idMovimiento)
@@ -2808,14 +2808,15 @@ namespace Sistema_David.Models
                 {
                     var desc = (descripcion ?? string.Empty).ToLowerInvariant();
 
-                    if (desc.Contains("recargo") || desc.Contains("descuento") || desc.Contains("ajuste"))
+                    var esInteres = desc.Contains("interes") || desc.Contains("interés");
+                    if (desc.Contains("recargo") || desc.Contains("descuento") || desc.Contains("ajuste") || esInteres)
                     {
                         // En electro, recargos/descuentos no tienen campo Whatssap propio.
                         // Recargos: marcamos en tabla de recargos (campo Whatssap nuevo).
                         // Descuento/ajuste: si no se puede asociar a recargo puntual, fallback a venta.
                         var marcadoRecargo = false;
 
-                        if (desc.Contains("recargo") || desc.Contains("descuento"))
+                        if (desc.Contains("recargo") || desc.Contains("descuento") || esInteres)
                         {
                             var filas = db.Database.ExecuteSqlCommand(
                                 "UPDATE Ventas_Electrodomesticos_Cuotas_Recargos SET Whatssap = 1 WHERE Id = @p0",
