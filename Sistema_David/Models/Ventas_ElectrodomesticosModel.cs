@@ -3511,11 +3511,16 @@ namespace Sistema_David.Models
 
                     if (ventas.Count == 0) return "No se encontraron ventas";
 
+                    // Candado cerrado: no transferir a otro cobrador; sí permitir enviar a administrador (desasignar).
                     var cerradas = IdsVentasElectroIntransferibles(db, idsVentas);
-                    var habiaCerradas = cerradas.Count > 0;
-                    ventas = ventas.Where(v => !cerradas.Contains(v.Id)).ToList();
-                    if (ventas.Count == 0)
-                        return "No se pueden transferir cobranzas con candado cerrado.";
+                    var habiaCerradas = false;
+                    if (!desasignar && cerradas.Count > 0)
+                    {
+                        habiaCerradas = true;
+                        ventas = ventas.Where(v => !cerradas.Contains(v.Id)).ToList();
+                        if (ventas.Count == 0)
+                            return "No se pueden transferir cobranzas con candado cerrado. Podés enviarlas a Administrador.";
+                    }
 
                     foreach (var v in ventas)
                     {
@@ -3810,6 +3815,25 @@ namespace Sistema_David.Models
                         Observacion = r.Observacion,
                         idCobrador = r.UsuarioCreacion,
                         Cobrador = NombreUsuario(r.UsuarioCreacion)
+                    });
+                }
+
+                if (venta.Eliminada)
+                {
+                    var motivo = (venta.MotivoEliminacion ?? "").Trim();
+                    int usuarioElim = venta.UsuarioEliminacion ?? 0;
+                    lista.Add(new VMInformacionVenta
+                    {
+                        Id = 0,
+                        IdVenta = venta.Id,
+                        Fecha = venta.FechaEliminacion ?? DateTime.Now,
+                        Entrega = 0,
+                        Restante = 0,
+                        Interes = 0,
+                        Descripcion = "Eliminacion",
+                        Observacion = string.IsNullOrEmpty(motivo) ? "Sin motivo registrado" : motivo,
+                        idCobrador = usuarioElim,
+                        Cobrador = NombreUsuario(usuarioElim)
                     });
                 }
 

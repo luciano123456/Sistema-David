@@ -22,6 +22,8 @@ Este archivo resume el proyecto y decisiones recientes para **continuar trabajo*
 | Rendimiento / “dashboard” listas | `Views/Rendimiento/Index.cshtml`, `JavaScript/Rendimiento.js` |
 | Análisis de Rendimiento | `Views/Rendimiento/Analisis.cshtml`, `JavaScript/RendimientoAnalisis.js`, `Models/RendimientoAnalisisModel.cs` |
 | Navbar | `Views/Shared/Partials/NavBarLogin.cshtml`, `JavaScript/NavBarLogin.js` |
+| Pendientes y problemas | `Controllers/PendientesController.cs`, `Models/PendientesModel.cs`, `Views/Pendientes/Index.cshtml`, `JavaScript/Pendientes.js` |
+| Tiempo real (SignalR) | `Hubs/NotificacionesHub.cs`, `Realtime/TiempoReal.cs`, `JavaScript/TiempoReal.js`, `JavaScript/PendientesAlarmas.js` |
 | Nuevos controladores | Añadir `<Compile Include="Controllers\...">` y vistas `<Content Include="Views\...">` en `Sistema_David/Sistema_David.csproj` |
 
 ## Reglas de negocio / código ya acordados
@@ -48,6 +50,13 @@ Este archivo resume el proyecto y decisiones recientes para **continuar trabajo*
 ### Transportes
 
 - El usuario **revirtió** el módulo Transportes (controlador, vista, navbar, Rendimiento, csproj). **No** reintroducir salvo que lo pidan de nuevo.
+
+### Pendientes y problemas
+
+- Acceso: roles **1** (admin) y **4** (administrativas). Vendedores no entran.
+- Campanita en navbar: contador = actividades **asignadas como responsable** (pendiente/en proceso). El admin ve todas en la pantalla, pero las alarmas solo suenan si está como destinatario.
+- Scripts SQL: `009` a `012` en `Sistema_David.DataBaseScripts/Scripts/` (ejecutar en SSMS en orden).
+- SignalR OWIN (`/signalr`): grupos `usuario-{id}`. No usar polling agresivo.
 
 ### Análisis de Rendimiento
 

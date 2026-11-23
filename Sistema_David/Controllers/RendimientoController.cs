@@ -114,12 +114,18 @@ namespace Sistema_David.Controllers
 
         public ActionResult MostrarCantidadComprobantes()
         {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return Json(new { cantidad = 0 }, JsonRequestBehavior.AllowGet);
+
             int cantidad = RendimientosModel.MostrarCantidadComprobantes();
             return Json(new { cantidad = cantidad }, JsonRequestBehavior.AllowGet);
         }
 
         public ActionResult ListaComprobantesPendientes()
         {
+            if (!SessionHelper.EsAdminOComprobantes())
+                return Json(new { data = new List<VMNavbarAlerta>(), cantidad = 0 }, JsonRequestBehavior.AllowGet);
+
             var data = RendimientosModel.ListaComprobantesPendientes() ?? new List<VMNavbarAlerta>();
             var json = Json(new { data = data, cantidad = data.Count }, JsonRequestBehavior.AllowGet);
             json.MaxJsonLength = int.MaxValue;

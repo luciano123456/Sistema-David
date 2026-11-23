@@ -2941,6 +2941,7 @@ Ante cualquier consulta, quedamos a disposición.`;
         const fechaCuota = recargo.FechaVencimiento && moment(recargo.FechaVencimiento).isValid()
             ? moment(recargo.FechaVencimiento).format("DD/MM/YYYY")
             : "—";
+        const lineaDiasAtraso = lineaDiasAtrasoRecargoElectro(recargo);
 
         const lineasProductos = formatearProductosWhatsappElectro(v);
         const bloqueProductosRecargo = lineasProductos
@@ -2956,7 +2957,7 @@ ${bloqueProductosRecargo}
 
 *Cuota afectada:*
 Cuota ${recargo.NumeroCuota} – ${fechaCuota}
-
+${lineaDiasAtraso}
 *Nuevo importe:* ${formatNumber(recargo.MontoRestante)}
 
 Ante cualquier duda o consulta, quedamos a disposición.`;
@@ -3091,6 +3092,23 @@ function obtenerInfoUltimoCobro(v) {
     };
 }
 
+
+function diasAtrasoAlAplicarRecargoElectro(recargo) {
+    if (!recargo || !recargo.FechaVencimiento) return null;
+    const vto = moment(recargo.FechaVencimiento);
+    if (!vto.isValid()) return null;
+    const fechaRecargo = recargo.Fecha && moment(recargo.Fecha).isValid()
+        ? moment(recargo.Fecha)
+        : moment();
+    const dias = fechaRecargo.clone().startOf("day").diff(vto.clone().startOf("day"), "days");
+    return Math.max(0, dias);
+}
+
+function lineaDiasAtrasoRecargoElectro(recargo) {
+    const dias = diasAtrasoAlAplicarRecargoElectro(recargo);
+    if (dias == null) return "";
+    return `*Días de atraso:* ${dias} día${dias === 1 ? "" : "s"}`;
+}
 
 function obtenerRecargoNotificadoElectro(v, idRecargo) {
 

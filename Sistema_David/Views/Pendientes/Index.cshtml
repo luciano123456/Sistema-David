@@ -1,0 +1,325 @@
+@{
+    ViewBag.Title = "Pendientes y problemas";
+    var esAdmin = ViewBag.EsAdmin as bool? == true;
+    var puedeGestionar = ViewBag.PuedeGestionar as bool? == true;
+    var idAbrir = ViewBag.IdAbrir as int? ?? 0;
+}
+
+<link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+<link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
+<link href="~/Estilos/Pendientes.css?v=3.7" rel="stylesheet" />
+<link href="~/Content/font-awesome.css" rel="stylesheet" />
+
+<div class="ve-dark pd-root" data-es-admin="@(esAdmin ? "1" : "0")" data-abrir="@idAbrir">
+
+    @if (ViewData["ErrorPermisos"] == null)
+    {
+        <div class="container-fluid page-99 py-3">
+
+            <section class="cc-header mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cc-badge pd-badge">
+                            <i class="fa fa-bell"></i>
+                        </div>
+                        <div>
+                            <h2 class="m-0 fw-800">Pendientes y problemas</h2>
+                            <div class="text-muted-cc">Actividades internas de DG Hogar</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="vh-vista-toggle" id="pdVistaToggle" role="group" aria-label="Cambiar vista">
+                            <button type="button" data-vista="cards" id="btnPdVistaCards" title="Vista tarjetas">
+                                <i class="fa fa-th-large"></i><span>Cards</span>
+                            </button>
+                            <button type="button" data-vista="tabla" id="btnPdVistaTabla" title="Vista tabla">
+                                <i class="fa fa-table"></i><span>Tabla</span>
+                            </button>
+                        </div>
+                        <button type="button" class="pd-btn pd-btn-primary" id="btnNuevaActividad" @(puedeGestionar ? "" : "hidden")>
+                            <i class="fa fa-plus"></i> Nueva actividad
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <div class="pd-tabs mb-3" role="tablist">
+                <button type="button" class="pd-tab is-on" data-pestana="pendientes">
+                    <i class="fa fa-clock-o me-1"></i> Pendientes
+                </button>
+                <button type="button" class="pd-tab" data-pestana="solucionados">
+                    <i class="fa fa-check-circle me-1"></i> Solucionados
+                </button>
+            </div>
+
+            <section class="card-glass p-3 mb-4 pd-filters">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-6 col-lg-2">
+                        <label class="pd-label" for="pdFiltroTipo">Tipo</label>
+                        <select id="pdFiltroTipo" class="form-select pd-input pd-s2-filter">
+                            <option value="">Todos</option>
+                            <option value="Cliente">Cliente</option>
+                            <option value="Vendedor">Vendedor</option>
+                            <option value="Interno">Interno</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-2">
+                        <label class="pd-label" for="pdFiltroResponsable">Responsable</label>
+                        <select id="pdFiltroResponsable" class="form-select pd-input pd-s2-filter">
+                            <option value="0">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-2">
+                        <label class="pd-label" for="pdFiltroPrioridad">Prioridad</label>
+                        <select id="pdFiltroPrioridad" class="form-select pd-input pd-s2-filter">
+                            <option value="">Todas</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Media">Media</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-2" id="pdFiltroEstadoWrap">
+                        <label class="pd-label" for="pdFiltroEstado">Estado</label>
+                        <select id="pdFiltroEstado" class="form-select pd-input pd-s2-filter">
+                            <option value="">Todos</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En proceso">En proceso</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-2">
+                        <label class="pd-label" for="pdFiltroBusqueda">Nombre o DNI</label>
+                        <input type="text" id="pdFiltroBusqueda" class="form-control pd-input" placeholder="Buscar…" />
+                    </div>
+                    <div class="col-12 col-lg-2 d-flex flex-wrap gap-2">
+                        <button type="button" class="pd-btn pd-btn-primary flex-fill" id="pdBtnFiltrar">
+                            <i class="fa fa-search"></i> Aplicar
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <p class="pd-edit-hint pd-hint-tabla">Un clic selecciona la fila. Doble clic en una celda la edita. Ver abre observaciones, adjuntos e historial.</p>
+            <p class="pd-edit-hint pd-hint-cards">Hacé clic en un dato para cambiarlo. Ver abre observaciones, adjuntos e historial.</p>
+
+            <div class="card-glass p-3 pd-lista">
+                <div class="table-responsive dt-dark-wrap pd-dt-wrap vc-cobros-dt">
+                    <table class="display nowrap dt-dark w-100" id="grdPendientes">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Nombre</th>
+                                <th>DNI</th>
+                                <th>Dirección</th>
+                                <th>Teléfono</th>
+                                <th>Problemática</th>
+                                <th>Responsable</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                                <th>Cargó</th>
+                                <th>Fecha carga</th>
+                                <th>Horario</th>
+                                <th>Próxima alarma</th>
+                                <th>Resolución</th>
+                                <th class="pd-col-ver">Ver</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div id="pdCards" class="pd-cards"></div>
+            </div>
+        </div>
+
+        <div id="pdInlineSheet" class="pd-sheet" hidden>
+            <div class="pd-sheet-backdrop" id="pdSheetBackdrop"></div>
+            <div class="pd-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="pdSheetTitulo">
+                <div class="pd-sheet-grab" aria-hidden="true"></div>
+                <h3 id="pdSheetTitulo" class="pd-sheet-titulo"></h3>
+                <div id="pdSheetBody" class="pd-sheet-body"></div>
+                <div class="pd-sheet-actions">
+                    <button type="button" class="pd-btn pd-btn-ghost" id="pdSheetCancelar">Cancelar</button>
+                    <button type="button" class="pd-btn pd-btn-primary" id="pdSheetGuardar">Guardar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade pd-modal-shell" id="modalPendiente" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true" data-bs-focus="false">
+            <div class="modal-dialog modal-xl modal-dialog-centered pd-modal-dialog">
+                <div class="modal-content pd-modal-content">
+                    <div class="modal-header pd-modal-head border-0">
+                        <div class="d-flex align-items-center gap-3 min-w-0">
+                            <div class="pd-modal-icon"><i class="fa fa-flag"></i></div>
+                            <div class="min-w-0">
+                                <h5 class="modal-title fw-bold text-white mb-0 text-truncate" id="pdModalTitulo">Nueva actividad</h5>
+                                <div class="pd-hint text-truncate" id="pdModalSub">Elegí el tipo y completá lo que pasó</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white pd-modal-x" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body pd-modal-body">
+                        <input type="hidden" id="pdId" />
+                        <input type="hidden" id="pdTipo" value="Cliente" />
+
+                        <section class="pd-step">
+                            <div class="pd-step-h"><span>1</span> Tipo de actividad</div>
+                            <div class="pd-tipo-grid" role="radiogroup" aria-label="Tipo de actividad">
+                                <button type="button" class="pd-tipo-card is-on" data-tipo="Cliente" aria-pressed="true">
+                                    <i class="fa fa-user"></i>
+                                    <strong>Cliente</strong>
+                                    <small>Reclamo o seguimiento de un cliente</small>
+                                </button>
+                                <button type="button" class="pd-tipo-card" data-tipo="Vendedor" aria-pressed="false">
+                                    <i class="fa fa-briefcase"></i>
+                                    <strong>Vendedor</strong>
+                                    <small>Pendiente de un vendedor</small>
+                                </button>
+                                <button type="button" class="pd-tipo-card" data-tipo="Interno" aria-pressed="false">
+                                    <i class="fa fa-building"></i>
+                                    <strong>Interno</strong>
+                                    <small>Tema interno, sin persona</small>
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="pd-step pd-box-cliente">
+                            <div class="pd-step-h"><span>2</span> Cliente</div>
+                            <label class="pd-label" for="pdIdCliente">Buscar por nombre o DNI</label>
+                            <select id="pdIdCliente" class="form-select pd-input"></select>
+                            <div class="pd-info-grid mt-3">
+                                <div>
+                                    <label class="pd-label">Nombre</label>
+                                    <input type="text" id="pdClienteNombre" class="form-control pd-input pd-readonly" readonly placeholder="Se completa solo" />
+                                </div>
+                                <div>
+                                    <label class="pd-label">DNI</label>
+                                    <input type="text" id="pdClienteDni" class="form-control pd-input pd-readonly" readonly />
+                                </div>
+                                <div>
+                                    <label class="pd-label">Dirección</label>
+                                    <input type="text" id="pdClienteDireccion" class="form-control pd-input pd-readonly" readonly />
+                                </div>
+                                <div>
+                                    <label class="pd-label">Teléfono</label>
+                                    <input type="text" id="pdClienteTelefono" class="form-control pd-input pd-readonly" readonly />
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="pd-step pd-box-vendedor" hidden>
+                            <div class="pd-step-h"><span>2</span> Vendedor</div>
+                            <label class="pd-label" for="pdIdVendedor">Elegí el vendedor</label>
+                                <select id="pdIdVendedor" class="form-select pd-input">
+                                    <option value=""></option>
+                                </select>
+                        </section>
+
+                        <section class="pd-step">
+                            <div class="pd-step-h"><span>3</span> Qué pasó</div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="pd-label" for="pdTitulo">Título</label>
+                                    <input type="text" id="pdTitulo" class="form-control pd-input" maxlength="200" placeholder="Resumen corto del problema" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="pd-label" for="pdDescripcion">Descripción</label>
+                                    <textarea id="pdDescripcion" class="form-control pd-input" rows="3" placeholder="Contá qué sucedió"></textarea>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="pd-label" for="pdPrioridad">Prioridad</label>
+                                    <select id="pdPrioridad" class="form-select pd-input">
+                                        <option value="Alta">Alta</option>
+                                        <option value="Media" selected>Media</option>
+                                        <option value="Baja">Baja</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="pd-label" for="pdEstado">Estado</label>
+                                    <select id="pdEstado" class="form-select pd-input">
+                                        <option value="Pendiente" selected>Pendiente</option>
+                                        <option value="En proceso">En proceso</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="pd-step">
+                            <div class="pd-step-h"><span>4</span> Quién lo resuelve y alarma</div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="pd-label" for="pdIdResponsable">Responsables</label>
+                                    <select id="pdIdResponsable" class="form-select pd-input" multiple></select>
+                                    <div class="pd-hint mt-1">Uno, varios o Todos. Si no cambiás la alarma, les suena a estas personas.</div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="pd-label" for="pdFechaAlarmaDia">Fecha de alarma</label>
+                                    <input type="date" id="pdFechaAlarmaDia" class="form-control pd-input" />
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="pd-label" for="pdHoraAlarma">Hora</label>
+                                    <input type="time" id="pdHoraAlarma" class="form-control pd-input" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="pd-label" for="pdDestinatarios">¿A quién le suena la alarma?</label>
+                                    <select id="pdDestinatarios" class="form-select pd-input" multiple></select>
+                                    <div class="pd-hint mt-1">Por defecto quedan los responsables. El administrador no recibe alarmas ajenas.</div>
+                                </div>
+                                <div class="col-12 pd-obs-nueva">
+                                    <label class="pd-label" for="pdObsInicial">Observación inicial (opcional)</label>
+                                    <textarea id="pdObsInicial" class="form-control pd-input" rows="2" placeholder="Algo más para quien lo tome"></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="pd-label">Adjuntos</label>
+                                    <div class="pd-drop" id="pdDrop" tabindex="0" role="button" aria-label="Adjuntar foto o PDF">
+                                        <input type="file" id="pdFiles" class="pd-drop-input" multiple accept="image/*,.pdf,application/pdf" tabindex="-1" aria-hidden="true" />
+                                        <div class="pd-drop-icon"><i class="fa fa-camera"></i></div>
+                                        <div class="pd-drop-title">Tocá para adjuntar foto o PDF</div>
+                                        <div class="pd-drop-sub">También podés arrastrar el archivo acá</div>
+                                    </div>
+                                    <div id="pdAdjuntosLista" class="pd-adj-grid"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="pd-step" id="pdSeguimientoWrap" hidden>
+                            <div class="pd-step-h"><span>5</span> Seguimiento</div>
+                            <div id="pdObsLista" class="pd-obs-lista mb-3"></div>
+                            <div class="pd-obs-add">
+                                <textarea id="pdObsNueva" class="form-control pd-input" rows="2" placeholder="Qué se hizo y qué falta resolver"></textarea>
+                                <button type="button" class="pd-btn pd-btn-primary" id="pdBtnObs"><i class="fa fa-plus"></i> Agregar</button>
+                            </div>
+                        </section>
+
+                        <section class="pd-step pd-step-cierre" id="pdCierreWrap" hidden>
+                            <div class="pd-step-h"><span>6</span> Cómo se resolvió</div>
+                            <label class="pd-label" for="pdSolucion">Obligatorio para marcar solucionada</label>
+                            <textarea id="pdSolucion" class="form-control pd-input" rows="3" placeholder="Explicá la solución"></textarea>
+                        </section>
+
+                        <div class="pd-meta mt-3" id="pdMetaWrap" hidden>
+                            <div id="pdMeta"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer pd-modal-actions border-0">
+                        <button type="button" class="pd-btn pd-btn-ghost" data-bs-dismiss="modal" id="pdBtnCerrar"><i class="fa fa-times"></i> Cerrar</button>
+                        <button type="button" class="pd-btn pd-btn-warn" id="pdBtnReabrir" hidden><i class="fa fa-undo"></i> Reabrir</button>
+                        <button type="button" class="pd-btn pd-btn-success" id="pdBtnSolucionar" hidden><i class="fa fa-check"></i> Solucionar</button>
+                        <button type="button" class="pd-btn pd-btn-primary" id="pdBtnGuardar"><i class="fa fa-save"></i> Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="container py-5 text-center text-white">
+            <h3>No tenés acceso a Pendientes y problemas</h3>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script src="~/Content/Datatable/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+    <script src="~/JavaScript/Utils/Utils.js?v=3.21"></script>
+    <script src="~/JavaScript/Pendientes.js?v=3.9"></script>
+}

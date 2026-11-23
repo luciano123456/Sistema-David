@@ -180,7 +180,8 @@ body:has(.info-ventas-root) {
 
 .sw-stats-pill .chip-all,
 .sw-stats-pill .chip-ok,
-.sw-stats-pill .chip-pend {
+.sw-stats-pill .chip-pend,
+.sw-stats-pill .chip-elim {
     display: inline-flex;
     align-items: center;
     padding: 3px 9px;
@@ -194,6 +195,7 @@ body:has(.info-ventas-root) {
 .sw-stats-pill .chip-ok { color: #86efac; border-color: rgba(134, 239, 172, .28); }
 .sw-stats-pill .chip-pend { color: #fca5a5; border-color: rgba(252, 165, 165, .28); }
 .sw-stats-pill .chip-all { color: #93c5fd; border-color: rgba(147, 197, 253, .28); }
+.sw-stats-pill .chip-elim { color: #fda4af; border-color: rgba(251, 113, 133, .35); }
 
 .iv-btn {
     appearance: none;
@@ -358,11 +360,41 @@ body:has(.info-ventas-root) {
     box-shadow: 0 18px 44px rgba(0, 0, 0, .42);
 }
 
-.venta-item-eliminada {
-    opacity: .94;
+.venta-item-eliminada,
+.venta-item-eliminada.is-saldada,
+.venta-item-eliminada.is-pendiente {
+    opacity: 1;
+    background: linear-gradient(180deg, #2a1622 0%, #160e16 100%);
+    border-color: rgba(255, 107, 138, .42);
 }
 
-.venta-item-eliminada::before { background: var(--iv-danger); }
+.venta-item-eliminada::before,
+.venta-item-eliminada.is-saldada::before,
+.venta-item-eliminada.is-pendiente::before { background: var(--iv-danger); }
+
+.venta-item-eliminada .iv-progress > span {
+    background: linear-gradient(90deg, #9f1239, #ff6b8a);
+}
+
+.iv-elim-sep {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 2px 2px;
+    padding: 8px 4px 4px;
+    color: #ffb4c4;
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.iv-elim-sep::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 107, 138, .35);
+}
 
 .venta-head {
     display: flex;
@@ -488,7 +520,14 @@ body:has(.info-ventas-root) {
 .venta-motivo-fecha {
     margin-top: .35rem;
     font-size: 12px;
-    color: rgba(255, 255, 255, .55);
+    color: rgba(255, 255, 255, .72);
+}
+
+.venta-motivo-nota {
+    margin-top: .35rem;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffb4c4;
 }
 
 /* progress */
@@ -818,6 +857,7 @@ body:has(.info-ventas-root) {
 .chip-cobro { background: rgba(34, 197, 94, .14); color: #86efac; border: 1px solid rgba(34, 197, 94, .28); }
 .chip-interes { background: rgba(239, 68, 68, .16); color: #fca5a5; border: 1px solid rgba(239, 68, 68, .35); }
 .chip-venta { background: rgba(59, 130, 246, .14); color: #93c5fd; border: 1px solid rgba(59, 130, 246, .28); }
+.chip-elim { background: rgba(244, 63, 94, .14); color: #fda4af; border: 1px solid rgba(244, 63, 94, .28); }
 .chip-obs { background: rgba(148, 163, 184, .14); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, .28); }
 
 .hist-desc,

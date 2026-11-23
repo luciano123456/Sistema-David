@@ -1,13 +1,10 @@
 ﻿let map;
 let poly;
 let path;
-let geocoder;
 let locations = [];
 let currentLocationIndex = 0;
 let markers = []; // Array para almacenar los marcadores
 let orderedMarkers = []; // Array para almacenar los marcadores ordenados
-let directionsService;
-let directionsRenderer;
 let watchId;
 
 
@@ -26,9 +23,6 @@ function initMap() {
     // Inicializa el mapa
     map = new google.maps.Map(document.getElementById('map'), mapOptions);
 
-    // Inicializa el servicio de geocodificación
-    geocoder = new google.maps.Geocoder();
-
     // Inicializa la polilínea para dibujar el recorrido
     poly = new google.maps.Polyline({
         strokeColor: '#000000',
@@ -39,57 +33,46 @@ function initMap() {
 
     path = poly.getPath();
 
-    // Configura el buscador de lugares
+    // Autocompletado: solo nombre y coordenadas. SearchBox pedía teléfono,
+    // reseñas y valoración en cada búsqueda y eso es lo que facturaba Google.
     const input = document.getElementById('pac-input');
-    const searchBox = new google.maps.places.SearchBox(input);
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+        fields: ['geometry', 'name', 'formatted_address'],
+        componentRestrictions: { country: 'ar' }
+    });
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
-    // Sesgo de los resultados de la búsqueda hacia el área del mapa actual
-    map.addListener('bounds_changed', () => {
-        searchBox.setBounds(map.getBounds());
-    });
-
-    // Listener para los cambios en el buscador de lugares
-    searchBox.addListener('places_changed', () => {
-        const places = searchBox.getPlaces();
-
-        if (places.length == 0) {
+    autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) {
             return;
         }
 
-        // Ajusta los límites del mapa a los lugares encontrados
-        const bounds = new google.maps.LatLngBounds();
-        places.forEach((place) => {
-            if (!place.geometry || !place.geometry.location) {
-                console.log("Returned place contains no geometry");
-                return;
-            }
-
-            const marker = new google.maps.Marker({
-                map: map,
-                title: place.name,
-                position: place.geometry.location,
-                draggable: false // Permite arrastrar el marcador
-            });
-
-            marker.addListener('click', () => {
-                addMarkerToOrderedList(marker);
-            });
-
-            marker.addListener('dragend', () => {
-                updateMarkerLocation(marker);
-            });
-
-            markers.push(marker); // Almacena el marcador en el array
-
-            if (place.geometry.viewport) {
-                // Solo geocodificaciones tienen vista
-                bounds.union(place.geometry.viewport);
-            } else {
-                bounds.extend(place.geometry.location);
-            }
+        const marker = new google.maps.Marker({
+            map: map,
+            title: place.name || place.formatted_address || '',
+            position: place.geometry.location,
+            draggable: false
         });
-        map.fitBounds(bounds);
+
+        marker.addListener('click', () => {
+            addMarkerToOrderedList(marker);
+        });
+
+        markers.push(marker);
+        locations.push({
+            latlng: place.geometry.location,
+            address: place.formatted_address || place.name || '',
+            status: 'pending',
+            number: null
+        });
+
+        if (place.geometry.viewport) {
+            map.fitBounds(place.geometry.viewport);
+        } else {
+            map.setCenter(place.geometry.location);
+            map.setZoom(16);
+        }
     });
 
     // Intenta obtener la ubicación actual del usuario
@@ -118,22 +101,6 @@ function initMap() {
         cargarCobros(); // Llama a cargarCobros si no se soporta geolocalización
     }
 }
-function geocodeLatLng(latlng) {
-    geocoder.geocode({ location: latlng }, (results, status) => {
-        if (status === "OK") {
-            if (results[0]) {
-                const address = results[0].formatted_address;
-                locations.push({ latlng: latlng, address: address, status: 'pending', number: null });
-                updateLocationList();
-            } else {
-                console.error("No se encontraron resultados.");
-            }
-        } else {
-            console.error("Geocoder falló debido a: " + status);
-        }
-    });
-}
-
 function updateMarkerLocation(marker) {
     const index = markers.indexOf(marker);
     const newPosition = marker.getPosition();
@@ -395,35 +362,22 @@ function siguienteUbicacion() {
     }
 }
 function calculateAndDisplayRoute(destination) {
+    var destLat = typeof destination.lat === 'function' ? destination.lat() : destination.lat;
+    var destLng = typeof destination.lng === 'function' ? destination.lng() : destination.lng;
+    var destino = destLat + ',' + destLng;
+    var abrir = function (origen) {
+        var url = origen
+            ? 'https://www.google.com/maps/dir/?api=1&origin=' + origen + '&destination=' + destino + '&travelmode=driving'
+            : 'https://www.google.com/maps/search/?api=1&query=' + destino;
+        window.open(url, '_blank');
+    };
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const origin = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-
-                directionsService.route(
-                    {
-                        origin: origin,
-                        destination: destination,
-                        travelMode: google.maps.TravelMode.DRIVING
-                    },
-                    (response, status) => {
-                        if (status === google.maps.DirectionsStatus.OK) {
-                            directionsRenderer.setDirections(response);
-                        } else {
-                            window.alert('Directions request failed due to ' + status);
-                        }
-                    }
-                );
-            },
-            () => {
-                window.alert('Geolocation failed.');
-            }
+            (position) => abrir(position.coords.latitude + ',' + position.coords.longitude),
+            () => abrir(null)
         );
     } else {
-        window.alert('Browser doesn\'t support Geolocation');
+        abrir(null);
     }
 }
 function startWatchingLocation() {
@@ -581,8 +535,13 @@ function createMarkers(clientData) {
             // Almacena el marcador en el array de marcadores
             markers.push(marker);
 
-            // Obtiene la dirección para las coordenadas del marcador y actualiza la lista si es necesario
-            geocodeLatLng(clientLatLng);
+            // La dirección ya viene en la cobranza. No pedirla de nuevo a Google.
+            locations.push({
+                latlng: clientLatLng,
+                address: client.Direccion || client.DireccionCliente || '',
+                status: 'pending',
+                number: null
+            });
         }
     });
 }

@@ -66,6 +66,15 @@ namespace Sistema_David.Controllers
                         JsonRequestBehavior.AllowGet);
                 }
 
+                if (!SessionHelper.EsAdminOComprobantes() && data.Filas != null)
+                {
+                    foreach (var fila in data.Filas)
+                    {
+                        if (fila != null)
+                            fila.Comprobante = 1;
+                    }
+                }
+
                 var json = Json(new
                 {
                     success = true,
@@ -749,7 +758,7 @@ namespace Sistema_David.Controllers
                 );
 
                 if (r == "PARCIAL")
-                    return Json(new { success = true, parcial = true, message = "Se asignaron las transferibles. Las de candado cerrado no se transfirieron." });
+                    return Json(new { success = true, parcial = true, message = "Se asignaron las transferibles. Las de candado cerrado no se transfirieron (sí se pueden enviar a Administrador)." });
 
                 return Json(new { success = r == "OK", message = r });
             }

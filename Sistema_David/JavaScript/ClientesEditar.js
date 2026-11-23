@@ -686,28 +686,23 @@ function initializeMap(location) {
     var searchWrap = document.getElementById('ceMapSearch');
 
     if (permisos && input) {
-        searchBox = new google.maps.places.SearchBox(input);
-
-        map.addListener('bounds_changed', function () {
-            searchBox.setBounds(map.getBounds());
+        var autocomplete = new google.maps.places.Autocomplete(input, {
+            fields: ['geometry', 'name', 'formatted_address'],
+            componentRestrictions: { country: 'ar' }
         });
 
-        searchBox.addListener('places_changed', function () {
-            var places = searchBox.getPlaces();
-            if (places.length == 0) return;
-
-            var bounds = new google.maps.LatLngBounds();
-            places.forEach(function (place) {
-                if (!place.geometry) return;
-                if (place.geometry.viewport) {
-                    bounds.union(place.geometry.viewport);
-                } else {
-                    bounds.extend(place.geometry.location);
-                }
-            });
-            map.fitBounds(bounds);
-            marker.setPosition(bounds.getCenter());
-            updateCoordinates(bounds.getCenter().lat(), bounds.getCenter().lng());
+        autocomplete.addListener('place_changed', function () {
+            var place = autocomplete.getPlace();
+            if (!place.geometry || !place.geometry.location) return;
+            var loc = place.geometry.location;
+            if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+            } else {
+                map.setCenter(loc);
+                map.setZoom(16);
+            }
+            marker.setPosition(loc);
+            updateCoordinates(loc.lat(), loc.lng(), place.formatted_address || place.name || '');
         });
     } else if (searchWrap) {
         searchWrap.hidden = true;
@@ -719,31 +714,16 @@ function initializeMap(location) {
 }
 
 // Función para actualizar las coordenadas mostradas en los labels
-function updateCoordinates(lat, lng) {
+function updateCoordinates(lat, lng, direccionConocida) {
     document.getElementById('lbllatitud').textContent = lat.toFixed(6);
     document.getElementById('lbllongitud').textContent = lng.toFixed(6);
     document.getElementById('lbllatitud').value = lat.toFixed(6);
     document.getElementById('lbllongitud').value = lng.toFixed(6);
 
-    // Crear una instancia del geocodificador inverso
-    const geocoder = new google.maps.Geocoder();
-
-    // Crear un objeto LatLng
-    const latLng = new google.maps.LatLng(lat, lng);
-
-    // Realizar la solicitud de geocodificación inversa
-    geocoder.geocode({ 'location': latLng }, (results, status) => {
-        if (status === 'OK') {
-            if (results[0]) {
-                let direccion = obtenerCoordenadaTexto('lbldireccion');
-                if (!direccion) document.getElementById('Direccion').value = results[0].formatted_address;
-            } else {
-                alert('No se encontraron resultados para estas coordenadas.');
-            }
-        } else {
-            console.error("Geocode error: ", status);
-        }
-    });
+    var dirInput = document.getElementById('Direccion');
+    if (direccionConocida && dirInput && !dirInput.value) {
+        dirInput.value = direccionConocida;
+    }
 }
 
 

@@ -354,6 +354,24 @@
     <Reference Include="XLParser, Version=1.5.2.0, Culture=neutral, PublicKeyToken=63397e1e46bb91b4, processorArchitecture=MSIL">
       <HintPath>..\packages\XLParser.1.5.2\lib\net461\XLParser.dll</HintPath>
     </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Owin.1.0.0\lib\net40\Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin, Version=4.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.4.2.2\lib\net45\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security, Version=4.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.4.2.2\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=4.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.4.2.2\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.4.3\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.SystemWeb.2.4.3\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
@@ -364,6 +382,11 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="App_Start\Startup.cs" />
+    <Compile Include="Hubs\DavidUserIdProvider.cs" />
+    <Compile Include="Hubs\NotificacionesHub.cs" />
+    <Compile Include="Realtime\TiempoReal.cs" />
+    <Compile Include="Realtime\PendientesAlarmaScheduler.cs" />
     <Compile Include="Base64\Base64.cs" />
     <Compile Include="Controllers\ClientesCeroController.cs" />
     <Compile Include="Controllers\CobranzasController.cs" />
@@ -374,6 +397,7 @@
     <Compile Include="Controllers\ProductosController.cs" />
     <Compile Include="Controllers\LimiteController.cs" />
     <Compile Include="Controllers\PagosController.cs" />
+    <Compile Include="Controllers\PendientesController.cs" />
     <Compile Include="Controllers\StockPendienteController.cs" />
     <Compile Include="Controllers\StockController.cs" />
     <Compile Include="Controllers\RendimientoController.cs" />
@@ -513,6 +537,8 @@
     <Compile Include="Models\Modelo\VMComprobantesImagenes.cs" />
     <Compile Include="Models\Modelo\VMInformacionVenta.cs" />
     <Compile Include="Models\Modelo\VMNavbarAlerta.cs" />
+    <Compile Include="Models\Modelo\VMPendiente.cs" />
+    <Compile Include="Models\PendientesModel.cs" />
     <Compile Include="Models\Modelo\ModeloApi.cs" />
     <Compile Include="Models\Modelo\VMRendimientoCobrado.cs" />
     <Compile Include="Models\Modelo\VMRendimientoGeneral.cs" />
@@ -606,6 +632,7 @@
     <Content Include="Estilos\Cobranzas.css" />
     <Content Include="Estilos\CuentasBancarias.css" />
     <Content Include="Estilos\NavBarLogin.css" />
+    <Content Include="Estilos\Pendientes.css" />
     <Content Include="Estilos\VentasNuevo.css" />
     <Content Include="Estilos\Ventas.css" />
     <Content Include="fonts\fontawesome-webfont.svg" />
@@ -633,6 +660,9 @@
     <Content Include="JavaScript\Ventas_Electrodomesticos_NuevoModif.js" />
     <Content Include="JavaScript\InformacionCliente.js" />
     <Content Include="JavaScript\NavBarLogin.js" />
+    <Content Include="JavaScript\Pendientes.js" />
+    <Content Include="JavaScript\PendientesAlarmas.js" />
+    <Content Include="JavaScript\TiempoReal.js" />
     <Content Include="JavaScript\PagosNuevoModif.js" />
     <Content Include="JavaScript\RecorridoCobranzas.js" />
     <Content Include="JavaScript\Recorrido.js" />
@@ -734,6 +764,8 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
+    <Content Include="Scripts\jquery.signalR-2.4.3.js" />
+    <Content Include="Scripts\jquery.signalR-2.4.3.min.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
     <Content Include="Scripts\jquery-3.4.1.min.js" />
     <Content Include="Scripts\jquery-3.4.1.slim.js" />
@@ -757,6 +789,7 @@
     <Content Include="Views\Cobranzas\Index.cshtml" />
     <Content Include="Views\Login\Index.cshtml" />
     <Content Include="Views\Pagos\Index.cshtml" />
+    <Content Include="Views\Pendientes\Index.cshtml" />
     <Content Include="Views\Pagos\NuevoModif.cshtml" />
     <Content Include="Views\Productos\Index.cshtml" />
     <Content Include="Views\Rendimiento\Analisis.cshtml" />

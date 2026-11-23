@@ -26,7 +26,8 @@
 
 <body>
 
-    <link href="~/Estilos/NavBarLogin.css?v=3.1" rel="stylesheet" />
+    <link href="~/Estilos/NavBarLogin.css?v=3.5" rel="stylesheet" />
+    <link href="~/Estilos/Pendientes.css?v=3.6" rel="stylesheet" />
     <link href="~/Estilos/ClienteImagenesModal.css?v=1.2" rel="stylesheet" />
 
     <!-- Modal -->
@@ -67,6 +68,10 @@
 
 
     @Scripts.Render("~/bundles/jquery")
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+    <script src="~/JavaScript/TiempoReal.js?v=1.1"></script>
+    <script src="~/JavaScript/PendientesAlarmas.js?v=1.7"></script>
     <script src="~/JavaScript/ClienteImagenes.js?v=1.0"></script>
     @Scripts.Render("~/Scripts/bootstrap.bundle.js")
     @Scripts.Render("~/Content/Plugin/js")

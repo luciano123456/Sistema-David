@@ -18,6 +18,11 @@ const MODULOS_VENTA = {
     }
 };
 
+function puedeVerComprobantesPendientes(usuario) {
+    var rol = Number(usuario && usuario.IdRol);
+    return rol === 1 || rol === 4;
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
 
     var userSession = JSON.parse(localStorage.getItem('usuario'));
@@ -26,15 +31,19 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     if (userSession != null) {
         $('#nombre').text(userSession.Nombre);
-        if (userSession.IdRol != 2) {
-            var divComp = document.getElementById("divNotificacionComprobante");
+        var campanaPd = document.getElementById("divNotificacionPendientes");
+        if (campanaPd) campanaPd.removeAttribute("hidden");
+        initAlertasNavbar();
+        if (Number(userSession.IdRol) !== 2) {
             var divHome = document.getElementById("divNotificacionHome");
-            if (divComp) divComp.removeAttribute("hidden");
             if (divHome) divHome.removeAttribute("hidden");
             CantidadCasitasRojas();
-            CantidadComprobantes();
             CantidadStocksPendientes();
-            initAlertasNavbar();
+        }
+        if (puedeVerComprobantesPendientes(userSession)) {
+            var divComp = document.getElementById("divNotificacionComprobante");
+            if (divComp) divComp.removeAttribute("hidden");
+            CantidadComprobantes();
         }
     }
 
@@ -310,6 +319,14 @@ function leerCantidadAlerta(result) {
 }
 
 async function CantidadComprobantes() {
+    var sesionComp = null;
+    try { sesionComp = JSON.parse(localStorage.getItem("usuario") || "null"); } catch (e) { sesionComp = null; }
+    if (!puedeVerComprobantesPendientes(sesionComp)) {
+        pintarAlerta("notificacionComprobante", 0);
+        var divComp = document.getElementById("divNotificacionComprobante");
+        if (divComp) divComp.setAttribute("hidden", "true");
+        return;
+    }
     try {
         var result = await MakeAjax({
             type: "POST",
@@ -410,11 +427,14 @@ function verificarRoles(idRol) {
         if (el) el.removeAttribute("hidden");
     }
 
+    showSeccion("seccionPendientes");
+
     if (idRol == 1) { // ADMINISTRADOR
         showSeccion("seccionUsuarios");
         showSeccion("seccionProductos");
         showSeccion("seccionClientes");
         showSeccion("seccionCobranzas");
+        showSeccion("seccionPendientes");
         showSeccion("seccionRendimiento");
         showSeccion("seccionSueldos");
 
@@ -426,6 +446,7 @@ function verificarRoles(idRol) {
     } else if (idRol == 4) { // COMPROBANTES
         showSeccion("seccionUsuarios");
         showSeccion("seccionRendimiento");
+        showSeccion("seccionPendientes");
         showSeccion("seccionClientes");
         showSeccion("seccionProductos");
         showSeccion("seccionCobranzas");
@@ -468,9 +489,14 @@ function pintarAlerta(id, cantidad) {
     if (!el) return;
     var n = Number(cantidad);
     if (!isFinite(n) || n < 0) n = 0;
-    el.textContent = String(n);
-    el.classList.toggle("is-zero", n <= 0);
-    el.classList.toggle("is-hot", n > 0);
+    var hay = n > 0;
+    el.textContent = hay ? String(n) : (id === "notificationPendientes" ? "" : String(n));
+    el.classList.toggle("is-zero", !hay);
+    el.classList.toggle("is-hot", hay);
+    if (id === "notificationPendientes") {
+        if (hay) el.removeAttribute("hidden");
+        else el.setAttribute("hidden", "true");
+    }
 }
 
 function refrescarAlertasNavbar(tipo) {
@@ -581,15 +607,46 @@ function cerrarPanelAlertasNavbar() {
         btn.setAttribute("aria-expanded", "false");
     });
     alertaNavbarAbierta = null;
+    var foot = document.getElementById("dgAlertPanelFoot");
+    if (foot) foot.setAttribute("hidden", "true");
     limpiarPosicionPanelAlertasNavbar();
 }
 
+function metaAlertaNavbar(tipo) {
+    if (tipo === "pendientes") {
+        var rolPd = Number(usuarioNavbar() && usuarioNavbar().IdRol);
+        return {
+            title: "Pendientes y problemas",
+            sub: rolPd === 1 ? "Todas las actividades abiertas" : "Solo las que te involucran",
+            ico: '<i class="fa fa-bell"></i>',
+            icoCls: "is-pendiente"
+        };
+    }
+    if (tipo === "casitas") {
+        return {
+            title: "Casitas en rojo",
+            sub: "Observación de cobro marcada",
+            ico: '<i class="fa fa-home"></i>',
+            icoCls: "is-casita"
+        };
+    }
+    return {
+        title: "Comprobantes pendientes",
+        sub: "PDF en rojo, todavía no enviados",
+        ico: '<i class="fa fa-print"></i>',
+        icoCls: ""
+    };
+}
+
 function abrirPanelAlertasNavbar(tipo) {
+    if (tipo === "comprobantes" && !puedeVerComprobantesPendientes(usuarioNavbar()))
+        return;
     var panel = document.getElementById("dgAlertPanel");
     var backdrop = document.getElementById("dgAlertBackdrop");
     var title = document.getElementById("dgAlertPanelTitle");
     var sub = document.getElementById("dgAlertPanelSub");
     var ico = document.getElementById("dgAlertPanelIco");
+    var foot = document.getElementById("dgAlertPanelFoot");
     if (!panel || !tipo) return;
 
     if (alertaNavbarAbierta === tipo) {
@@ -613,11 +670,17 @@ function abrirPanelAlertasNavbar(tipo) {
         btn.setAttribute("aria-expanded", on ? "true" : "false");
     });
 
-    if (title) title.textContent = tipo === "casitas" ? "Casitas en rojo" : "Comprobantes pendientes";
-    if (sub) sub.textContent = tipo === "casitas" ? "Observación de cobro marcada" : "PDF en rojo, todavía no enviados";
+    var meta = metaAlertaNavbar(tipo);
+    if (title) title.textContent = meta.title;
+    if (sub) sub.textContent = meta.sub;
     if (ico) {
-        ico.innerHTML = tipo === "casitas" ? '<i class="fa fa-home"></i>' : '<i class="fa fa-print"></i>';
-        ico.classList.toggle("is-casita", tipo === "casitas");
+        ico.innerHTML = meta.ico;
+        ico.classList.remove("is-casita", "is-pendiente");
+        if (meta.icoCls) ico.classList.add(meta.icoCls);
+    }
+    if (foot) {
+        if (tipo === "pendientes") foot.removeAttribute("hidden");
+        else foot.setAttribute("hidden", "true");
     }
 
     panel.removeAttribute("hidden");
@@ -628,13 +691,26 @@ function abrirPanelAlertasNavbar(tipo) {
     cargarListaAlertaNavbar(tipo, false);
 }
 
+function usuarioNavbar() {
+    try { return JSON.parse(localStorage.getItem("usuario") || "null"); }
+    catch (e) { return null; }
+}
+
 async function cargarListaAlertaNavbar(tipo, silencioso) {
+    if (tipo === "comprobantes" && !puedeVerComprobantesPendientes(usuarioNavbar()))
+        return;
     var body = document.getElementById("dgAlertPanelBody");
     if (!body) return;
     var url = tipo === "casitas"
         ? "/Ventas_Electrodomesticos/ListaCasitasRojas"
-        : "/Rendimiento/ListaComprobantesPendientes";
-    var badgeId = tipo === "casitas" ? "notificationHome" : "notificacionComprobante";
+        : tipo === "pendientes"
+            ? "/Pendientes/ListaAlertasNavbar"
+            : "/Rendimiento/ListaComprobantesPendientes";
+    var badgeId = tipo === "casitas"
+        ? "notificationHome"
+        : tipo === "pendientes"
+            ? "notificationPendientes"
+            : "notificacionComprobante";
 
     if (!silencioso) {
         body.innerHTML = '<div class="dg-alert-loading"><i class="fa fa-spinner fa-spin"></i><span>Cargando…</span></div>';
@@ -655,13 +731,19 @@ async function cargarListaAlertaNavbar(tipo, silencioso) {
         if (cantidad == null) cantidad = data.length;
         pintarAlerta(badgeId, cantidad);
         pintarListaAlertaNavbar(tipo, data);
-        if (tipo === "casitas") {
+        if (tipo === "casitas" || tipo === "pendientes") {
             var sub = document.getElementById("dgAlertPanelSub");
             if (sub) {
                 var n = Number(cantidad) || 0;
-                sub.textContent = n === 1
-                    ? "1 venta con casita en rojo"
-                    : n + " ventas con casita en rojo";
+                if (tipo === "pendientes") {
+                    sub.textContent = n === 1
+                        ? "1 actividad asignada a vos"
+                        : n + " actividades asignadas a vos";
+                } else {
+                    sub.textContent = n === 1
+                        ? "1 venta con casita en rojo"
+                        : n + " ventas con casita en rojo";
+                }
             }
         }
         posicionarPanelAlertasNavbar();
@@ -679,7 +761,9 @@ function pintarListaAlertaNavbar(tipo, data) {
     if (!items.length) {
         body.innerHTML = tipo === "casitas"
             ? '<div class="dg-alert-empty"><i class="fa fa-home"></i><span>No hay casitas en rojo.</span></div>'
-            : '<div class="dg-alert-empty"><i class="fa fa-check-circle"></i><span>No hay comprobantes pendientes de enviar.</span></div>';
+            : tipo === "pendientes"
+                ? '<div class="dg-alert-empty"><i class="fa fa-bell"></i><span>No tenés pendientes asignados.</span></div>'
+                : '<div class="dg-alert-empty"><i class="fa fa-check-circle"></i><span>No hay comprobantes pendientes de enviar.</span></div>';
         return;
     }
 
@@ -696,6 +780,36 @@ function pintarListaAlertaNavbar(tipo, data) {
         var origen = esElectro ? "ELECTRO" : "INDUMENTARIA";
         var urlRaw = row.Url || row.url || "#";
         var url = escapeHtmlAlerta(urlRaw);
+
+        if (tipo === "pendientes") {
+            var titulo = escapeHtmlAlerta(row.Titulo || row.titulo || row.Cliente || row.cliente || "Sin título");
+            var tipoPd = String(row.Tipo || row.tipo || "Interno");
+            var tipoCls = tipoPd === "Cliente" ? "is-cli" : tipoPd === "Vendedor" ? "is-ven" : "is-int";
+            var prio = String(row.Prioridad || row.prioridad || "");
+            var prioCls = prio === "Alta" ? "is-alta" : prio === "Baja" ? "is-baja" : "is-media";
+            var est = String(row.Estado || row.estado || "");
+            var estCls = est === "En proceso" ? "is-proc" : "is-pend";
+            var nom = String(row.Nombre || row.nombre || "").trim();
+            if (nom === "—" || nom.toLowerCase() === "interno") nom = "";
+            var alarma = String(row.FechaAlarmaTexto || row.fechaAlarmaTexto || row.FechaTexto || "").trim();
+            if (!alarma || alarma === "—") alarma = "";
+            var metaPd = [nom, alarma ? ("Alarma " + alarma) : ""].filter(Boolean).join(" · ");
+            var descPd = String(row.Descripcion || row.descripcion || "").replace(/\s+/g, " ").trim();
+            var urlPd = escapeHtmlAlerta(row.Url || row.url || ("/Pendientes/Index?id=" + (row.Id || row.id || "")));
+            return '<div class="dg-alert-item is-pendiente" data-url="' + urlPd + '">' +
+                '<button type="button" class="dg-alert-item-main" data-url="' + urlPd + '">' +
+                '<span class="dg-alert-item-copy">' +
+                '<span class="dg-alert-item-name">' + titulo + "</span>" +
+                '<span class="dg-alert-chips">' +
+                '<span class="dg-alert-chip ' + tipoCls + '">' + escapeHtmlAlerta(tipoPd) + "</span>" +
+                (prio ? '<span class="dg-alert-chip ' + prioCls + '">' + escapeHtmlAlerta(prio) + "</span>" : "") +
+                (est ? '<span class="dg-alert-chip ' + estCls + '">' + escapeHtmlAlerta(est) + "</span>" : "") +
+                "</span>" +
+                (metaPd ? '<span class="dg-alert-item-meta">' + escapeHtmlAlerta(metaPd) + "</span>" : "") +
+                (descPd ? '<span class="dg-alert-item-desc">' + escapeHtmlAlerta(descPd) + "</span>" : "") +
+                "</span></button>" +
+                '<i class="fa fa-chevron-right dg-alert-item-go" aria-hidden="true"></i></div>';
+        }
 
         if (tipo === "casitas") {
             var ventaId = Number(row.IdVenta || row.idVenta || id || 0);
@@ -1371,6 +1485,7 @@ function marcarSeccionActual() {
     var reglas = [
         ["/usuarios", "btnUsuarios"],
         ["/pagos", "btnSueldos"],
+        ["/pendientes", "btnPendientes"],
         ["/rendimiento", "btnRendimiento"],
         ["/productos", "btnProductos"],
         ["/stock", "btnStock"],

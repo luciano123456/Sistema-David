@@ -11,6 +11,11 @@ Ejecutar en SQL Server **en orden numérico**.
 | `005_VentasElectro_Historial.sql` | Tabla/ampliación del histórico de movimientos de ventas electro |
 | `007_VentasElectro_Intransferible.sql` | Columna `Ventas_Electrodomesticos.Intransferible` (candado en Cuotas a cobrar; default 0) |
 | `008_Clientes_Telefono2.sql` | Columna `Clientes.Telefono2` (segundo celular; obligatorio en el alta) |
+| `009_Pendientes_Actividades.sql` | Tabla principal del módulo Pendientes y problemas |
+| `010_Pendientes_Destinatarios.sql` | Destinatarios de alarma por actividad (uno o varios usuarios) |
+| `011_Pendientes_Observaciones.sql` | Seguimiento / observaciones de cada actividad |
+| `012_Pendientes_Adjuntos.sql` | Índice de adjuntos (archivos en App_Data/PendientesAdjuntos) |
+| `013_Pendientes_Responsables.sql` | Varios responsables por actividad (más la persona principal) |
 
 ## Uso
 

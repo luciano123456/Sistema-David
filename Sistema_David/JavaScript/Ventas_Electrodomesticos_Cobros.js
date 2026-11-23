@@ -619,7 +619,7 @@ VC.aplicarIntransferibleLocal = function (idVenta, valor) {
         tablaCobros.rows().every(function () { apply(this.data()); });
         tablaCobros.rows().invalidate().draw(false);
     }
-    if (valor === 1) ventasSeleccionadas.delete(id);
+    // Candado cerrado: sigue seleccionable para enviar a Administrador (desasignar).
     VC.refrescarSeleccionUI();
     if (typeof VC.refreshCardsViews === "function") VC.refreshCardsViews();
     VC.bindCandadoTooltips();
@@ -795,9 +795,8 @@ VC.htmlCobroCard = function (d, kind) {
     const badge = dias > 0
         ? `<span class="vc-card-badge badge ${dias >= 15 ? "bg-danger" : dias >= 10 ? "bg-orange" : "bg-warning text-dark"}">Vencida · ${dias}d</span>`
         : `<span class="vc-card-badge badge bg-success">Al día</span>`;
-    const cerradoCard = Number(d.Intransferible) === 1;
     const chk = (kind === "main" && VC.esAdminSel())
-        ? `<input type="checkbox" class="vc-card-check" data-idventa="${d.IdVenta}" ${cerradoCard ? "disabled" : ""} ${!cerradoCard && ventasSeleccionadas.has(Number(d.IdVenta)) ? "checked" : ""}>`
+        ? `<input type="checkbox" class="vc-card-check" data-idventa="${d.IdVenta}" ${ventasSeleccionadas.has(Number(d.IdVenta)) ? "checked" : ""} title="Seleccionar (candado cerrado: solo Administrador)">`
         : "";
     const candadoCard = kind === "main" ? VC.htmlCandadoVenta(d) : "";
     const mapsBtn = (d.ClienteLatitud && d.ClienteLongitud)
@@ -1275,10 +1274,6 @@ VC.initEventos = function () {
             const d = this.data();
             const idV = Number(d?.IdVenta || 0);
             if (!idV) return;
-            if (Number(d?.Intransferible) === 1) {
-                ventasSeleccionadas.delete(idV);
-                return;
-            }
 
             if (sel) ventasSeleccionadas.add(idV);
             else ventasSeleccionadas.delete(idV);
@@ -1295,30 +1290,24 @@ VC.initEventos = function () {
 
 VC.refrescarSeleccionUI = function () {
 
-    // 1) marcar filas y checks
+    // 1) marcar filas y checks (candado cerrado también seleccionable → Administrador)
     if (tablaCobros) {
         $("#vc_tabla tbody tr").each(function () {
             const r = tablaCobros.row(this);
             const d = r.data();
             const idV = Number(d?.IdVenta || 0);
-            const locked = Number(d?.Intransferible) === 1;
-            if (locked) ventasSeleccionadas.delete(idV);
-
-            const checked = !locked && ventasSeleccionadas.has(idV);
+            const checked = ventasSeleccionadas.has(idV);
 
             $(this).toggleClass("venta-multi-sel", checked);
 
             // check DOM (fila)
-            $(this).find("input.vc-row-check").prop("checked", checked).prop("disabled", locked);
+            $(this).find("input.vc-row-check").prop("checked", checked).prop("disabled", false);
         });
 
         document.querySelectorAll(".vc-card-check").forEach((chk) => {
             const idV = Number(chk.getAttribute("data-idventa") || 0);
-            const row = (cuotasCache || []).find(function (x) { return Number(x.IdVenta) === idV; });
-            const locked = Number(row?.Intransferible) === 1;
-            if (locked) ventasSeleccionadas.delete(idV);
-            chk.disabled = locked;
-            chk.checked = !locked && ventasSeleccionadas.has(idV);
+            chk.disabled = false;
+            chk.checked = ventasSeleccionadas.has(idV);
         });
 
         // 2) setear vc_chk_all según estado (solo visibles/filtradas)
@@ -1328,7 +1317,7 @@ VC.refrescarSeleccionUI = function () {
         tablaCobros.rows({ search: "applied" }).every(function () {
             const d = this.data();
             const idV = Number(d?.IdVenta || 0);
-            if (!idV || Number(d?.Intransferible) === 1) return;
+            if (!idV) return;
 
             totalVisibles++;
             if (ventasSeleccionadas.has(idV)) totalSel++;
@@ -1807,7 +1796,6 @@ VC.cargarTabla = async function () {
                 $(row).addClass("row-selected");
             }
 
-            if (Number(d?.Intransferible) === 1) ventasSeleccionadas.delete(Number(d?.IdVenta || 0));
             const sel = ventasSeleccionadas.has(Number(d?.IdVenta || 0));
             $(row).toggleClass("venta-multi-sel", sel);
         },
@@ -1847,10 +1835,9 @@ VC.cargarTabla = async function () {
                 render: function (_, __, row) {
                     const esAdmin = (userSession?.IdRol === 1 || userSession?.IdRol === 4);
                     const idVenta = Number(row?.IdVenta || 0);
-                    const cerrado = Number(row?.Intransferible) === 1;
-                    const checked = !cerrado && ventasSeleccionadas.has(idVenta) ? "checked" : "";
+                    const checked = ventasSeleccionadas.has(idVenta) ? "checked" : "";
                     const chk = esAdmin
-                        ? `<input type="checkbox" class="vc-check vc-row-check" data-idventa="${idVenta}" ${checked} ${cerrado ? "disabled" : ""} title="Seleccionar venta ${idVenta}">`
+                        ? `<input type="checkbox" class="vc-check vc-row-check" data-idventa="${idVenta}" ${checked} title="Seleccionar venta ${idVenta} (candado cerrado: solo Administrador)">`
                         : "";
 
                     return `<div class="vc-check-wrap">${chk}${VC.htmlCandadoVenta(row)}</div>`;
@@ -2221,7 +2208,7 @@ VC.llenarSelectCobradorAsignar = function () {
 
     ddl.empty();
     ddl.append(`<option value="">Seleccionar...</option>`);
-    ddl.append(`<option value="0">Nadie (desasignar)</option>`);
+    ddl.append(`<option value="0">Administrador (desasignar)</option>`);
     (cobradoresCache || []).forEach(c => {
         ddl.append(`<option value="${c.Id}">${escapeHtml(c.Nombre || "")}</option>`);
     });
@@ -2265,7 +2252,7 @@ VC.filtrarCobradorPicker = function (q) {
         if (show) visible++;
     });
 
-    const noneMatch = !q || "nadie desasignar sin asignar".indexOf(q) !== -1;
+    const noneMatch = !q || "nadie desasignar sin asignar administrador admin".indexOf(q) !== -1;
     $("#modalAsignarCobrador .ac-picker-none").toggle(noneMatch);
 
     const $empty = $("#acCobradorList .ac-picker-empty-search");
@@ -2318,7 +2305,7 @@ VC.abrirAsignarCobrador = async function () {
 VC.confirmarAsignarCobrador = async function () {
     const raw = $("#ddlCobradorAsignar").val();
     if (raw === null || raw === undefined || raw === "") {
-        VC.toast("Elegí un cobrador o Nadie", "warn");
+        VC.toast("Elegí un cobrador o Administrador", "warn");
         return;
     }
     const idCobrador = parseInt(raw, 10);
@@ -2327,20 +2314,18 @@ VC.confirmarAsignarCobrador = async function () {
         return;
     }
 
+    const desasignar = idCobrador === 0;
+    // Candado cerrado: solo se puede enviar a Administrador (desasignar), no a otro cobrador.
     const idsVentas = Array.from(ventasSeleccionadas).filter(function (id) {
+        if (desasignar) return true;
         const row = (cuotasCache || []).find(function (x) { return Number(x.IdVenta) === Number(id); });
-        if (row && Number(row.Intransferible) === 1) {
-            ventasSeleccionadas.delete(Number(id));
-            return false;
-        }
-        return true;
+        return !(row && Number(row.Intransferible) === 1);
     });
     if (!idsVentas.length) {
-        VC.toast("No se pueden transferir cobranzas con candado cerrado", "warn");
-        VC.refrescarSeleccionUI();
+        VC.toast("Con candado cerrado solo se puede enviar a Administrador", "warn");
         return;
     }
-    const accionTxt = idCobrador === 0 ? "desasignar cobrador de" : "asignar cobrador a";
+    const accionTxt = desasignar ? "enviar a Administrador" : "asignar cobrador a";
     const okAsignar = await confirmarModal(`
         <div class="text-start px-1" style="font-size:1.05rem;font-weight:500">
             <div class="mb-2 fw-bold">
@@ -2361,7 +2346,7 @@ VC.confirmarAsignarCobrador = async function () {
 
     if (resp && resp.success) {
         VC.toast(
-            resp.parcial ? resp.message : (idCobrador === 0 ? "Cobrador desasignado" : "Cobrador asignado"),
+            resp.parcial ? resp.message : (desasignar ? "Enviado a Administrador" : "Cobrador asignado"),
             resp.parcial ? "warn" : "success"
         );
         ventasSeleccionadas.clear();
