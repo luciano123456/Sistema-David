@@ -15,6 +15,7 @@ Ejecutar en SQL Server **en orden numérico**.
 | `010_Pendientes_Destinatarios.sql` | Destinatarios de alarma por actividad (uno o varios usuarios) |
 | `011_Pendientes_Observaciones.sql` | Seguimiento / observaciones de cada actividad |
 | `012_Pendientes_Adjuntos.sql` | Índice de adjuntos (archivos en App_Data/PendientesAdjuntos) |
+| `013_Pendientes_Responsables.sql` | Varios responsables por actividad (más la persona principal) |
 
 ## Uso
 

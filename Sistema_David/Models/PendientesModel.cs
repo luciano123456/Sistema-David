@@ -53,6 +53,13 @@ namespace Sistema_David.Models
             public bool Silenciada { get; set; }
         }
 
+        private class RespNomRow
+        {
+            public int IdActividad { get; set; }
+            public int IdUsuario { get; set; }
+            public string Nombre { get; set; }
+        }
+
         private class ObsRow
         {
             public int Id { get; set; }
@@ -190,14 +197,37 @@ BEGIN
         CONSTRAINT FK_Pendientes_Adjuntos_Actividad FOREIGN KEY (IdActividad) REFERENCES dbo.Pendientes_Actividades (Id) ON DELETE CASCADE
     );
     CREATE NONCLUSTERED INDEX IX_Pendientes_Adjuntos_Actividad ON dbo.Pendientes_Adjuntos (IdActividad, Fecha DESC);
+END
+
+IF OBJECT_ID(N'dbo.Pendientes_Responsables', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Pendientes_Responsables
+    (
+        Id          INT IDENTITY(1,1) NOT NULL,
+        IdActividad INT NOT NULL,
+        IdUsuario   INT NOT NULL,
+        CONSTRAINT PK_Pendientes_Responsables PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_Pendientes_Responsables_Actividad FOREIGN KEY (IdActividad) REFERENCES dbo.Pendientes_Actividades (Id) ON DELETE CASCADE,
+        CONSTRAINT UQ_Pendientes_Responsables UNIQUE (IdActividad, IdUsuario)
+    );
+    CREATE NONCLUSTERED INDEX IX_Pendientes_Responsables_Usuario ON dbo.Pendientes_Responsables (IdUsuario, IdActividad);
 END");
+
+                    db.Database.ExecuteSqlCommand(@"
+INSERT INTO dbo.Pendientes_Responsables (IdActividad, IdUsuario)
+SELECT a.Id, a.IdResponsable
+FROM dbo.Pendientes_Actividades a
+WHERE a.IdResponsable > 0
+  AND NOT EXISTS (
+      SELECT 1 FROM dbo.Pendientes_Responsables pr WHERE pr.IdActividad = a.Id
+  );");
                 }
 
                 _schemaOk = true;
             }
         }
 
-        public static List<VMPendienteLista> Listar(VMPendienteFiltro filtro)
+        public static List<VMPendienteLista> Listar(VMPendienteFiltro filtro, int idAlcance = 0)
         {
             AsegurarEsquema();
             filtro = filtro ?? new VMPendienteFiltro();
@@ -233,7 +263,13 @@ WHERE (@p0 = N'solucionados' AND a.Estado = N'Solucionado')
                 }
                 if (idResp > 0)
                 {
-                    sql += " AND a.IdResponsable = @p" + args.Count;
+                    sql += @" AND (
+                        a.IdResponsable = @p" + args.Count + @"
+                        OR EXISTS (
+                            SELECT 1 FROM dbo.Pendientes_Responsables pr
+                            WHERE pr.IdActividad = a.Id AND pr.IdUsuario = @p" + args.Count + @"
+                        )
+                    )";
                     args.Add(idResp);
                 }
                 if (!string.IsNullOrEmpty(prioridad))
@@ -257,11 +293,22 @@ WHERE (@p0 = N'solucionados' AND a.Estado = N'Solucionado')
                     )";
                     args.Add(like);
                 }
+                if (idAlcance > 0)
+                {
+                    sql += SqlInvolucrado("@p" + args.Count);
+                    args.Add(idAlcance);
+                }
 
                 sql += " ORDER BY CASE a.Prioridad WHEN N'Alta' THEN 0 WHEN N'Media' THEN 1 ELSE 2 END, a.Fecha DESC, a.Id DESC";
 
                 var rows = db.Database.SqlQuery<ActividadRow>(sql, args.ToArray()).ToList();
-                return rows.Select(MapaLista).ToList();
+                var nombres = CargarResponsables(db, rows.Select(x => x.Id).ToList());
+                return rows.Select(row =>
+                {
+                    var item = MapaLista(row);
+                    AplicarNombresResponsables(item, row, nombres);
+                    return item;
+                }).ToList();
             }
         }
 
@@ -278,6 +325,7 @@ WHERE (@p0 = N'solucionados' AND a.Estado = N'Solucionado')
                     return null;
 
                 var det = MapaDetalle(row);
+                AplicarNombresResponsables(det, row, CargarResponsables(db, new List<int> { id }));
                 var dest = db.Database.SqlQuery<DestRow>(@"
                     SELECT d.Id, d.IdUsuario, " + SqlNombre("u") + @" AS Nombre, d.FechaAlarma, d.Silenciada
                     FROM dbo.Pendientes_Destinatarios d
@@ -315,7 +363,7 @@ WHERE (@p0 = N'solucionados' AND a.Estado = N'Solucionado')
             }
         }
 
-        public static int Guardar(VMPendienteGuardar model, int idUsuario)
+        public static VMPendienteGuardado Guardar(VMPendienteGuardar model, int idUsuario)
         {
             AsegurarEsquema();
             if (model == null || idUsuario <= 0)
@@ -331,17 +379,19 @@ WHERE (@p0 = N'solucionados' AND a.Estado = N'Solucionado')
             if (estado == "Solucionado")
                 throw new InvalidOperationException("Para marcarla como solucionada usá el cierre con la descripción de la solución.");
 
-            if (model.IdResponsable <= 0)
-                throw new InvalidOperationException("Elegí un responsable.");
+            var responsables = NormalizarIds(model.Responsables);
+            if (responsables.Count == 0 && model.IdResponsable > 0)
+                responsables.Add(model.IdResponsable);
+            if (responsables.Count == 0)
+                throw new InvalidOperationException("Elegí al menos un responsable.");
+            model.IdResponsable = responsables[0];
+            model.Responsables = responsables;
 
             CompletarReferencias(model, tipo);
 
-            var destinatarios = (model.Destinatarios ?? new List<int>())
-                .Where(x => x > 0)
-                .Distinct()
-                .ToList();
+            var destinatarios = NormalizarIds(model.Destinatarios);
             if (destinatarios.Count == 0)
-                destinatarios.Add(model.IdResponsable);
+                destinatarios.AddRange(responsables);
 
             var fecha = (model.Fecha ?? DateTime.Today).Date;
             var fechaAlarma = model.FechaAlarma;
@@ -349,9 +399,24 @@ WHERE (@p0 = N'solucionados' AND a.Estado = N'Solucionado')
 
             int id;
             List<int> afectadosAntes = new List<int>();
+            var tituloGuardar = Cortar(titulo, 200);
+            var descripcionCmp = descripcion ?? "";
 
             using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
             {
+                if (model.Id <= 0)
+                {
+                    var existente = BuscarAbiertaIgual(
+                        db, tipo, tituloGuardar, descripcionCmp,
+                        model.IdCliente ?? 0, model.IdVendedor ?? 0);
+                    if (existente > 0)
+                    {
+                        tx.Commit();
+                        return new VMPendienteGuardado { Id = existente, YaExistia = true };
+                    }
+                }
+
                 if (model.Id > 0)
                 {
                     var actual = db.Database.SqlQuery<ActividadRow>(SqlDetalle(), model.Id).FirstOrDefault();
@@ -359,6 +424,21 @@ WHERE (@p0 = N'solucionados' AND a.Estado = N'Solucionado')
                         throw new InvalidOperationException("No se encontró la actividad.");
                     if (string.Equals(actual.Estado, "Solucionado", StringComparison.OrdinalIgnoreCase))
                         throw new InvalidOperationException("La actividad ya está solucionada. El administrador puede reabrirla.");
+
+                    var mismaClave =
+                        string.Equals(actual.Tipo, tipo, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals((actual.Titulo ?? "").Trim(), tituloGuardar, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals((actual.Descripcion ?? "").Trim(), descripcionCmp, StringComparison.OrdinalIgnoreCase)
+                        && (actual.IdCliente ?? 0) == (model.IdCliente ?? 0)
+                        && (actual.IdVendedor ?? 0) == (model.IdVendedor ?? 0);
+                    if (!mismaClave)
+                    {
+                        var choca = BuscarAbiertaIgual(
+                            db, tipo, tituloGuardar, descripcionCmp,
+                            model.IdCliente ?? 0, model.IdVendedor ?? 0);
+                        if (choca > 0 && choca != model.Id)
+                            throw new InvalidOperationException("Ya hay una actividad abierta con el mismo título, la misma persona y la misma descripción.");
+                    }
 
                     afectadosAntes = UsuariosDeActividad(db, model.Id);
                     db.Database.ExecuteSqlCommand(@"
@@ -388,7 +468,7 @@ INSERT INTO dbo.Pendientes_Actividades
 OUTPUT INSERTED.Id
 VALUES
     (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, GETDATE(), @p15)",
-                        fecha, tipo, Cortar(titulo, 200), (object)descripcion ?? DBNull.Value,
+                        fecha, tipo, tituloGuardar, (object)descripcion ?? DBNull.Value,
                         (object)model.IdCliente ?? DBNull.Value, (object)Cortar(model.ClienteNombreSnapshot(), 200) ?? DBNull.Value,
                         (object)Cortar(model.ClienteDniSnapshot(), 30) ?? DBNull.Value,
                         (object)Cortar(model.ClienteDireccionSnapshot(), 300) ?? DBNull.Value,
@@ -396,8 +476,11 @@ VALUES
                         (object)model.IdVendedor ?? DBNull.Value, (object)Cortar(model.VendedorNombreSnapshot(), 200) ?? DBNull.Value,
                         model.IdResponsable, prioridad, estado, idUsuario,
                         (object)fechaAlarma ?? DBNull.Value).FirstOrDefault();
+                    if (id <= 0)
+                        throw new InvalidOperationException("No se pudo crear la actividad.");
                 }
 
+                SincronizarResponsables(db, id, responsables);
                 SincronizarDestinatarios(db, id, destinatarios, fechaAlarma);
 
                 var obs = (model.ObservacionInicial ?? "").Trim();
@@ -407,11 +490,28 @@ VALUES
 INSERT INTO dbo.Pendientes_Observaciones (IdActividad, Texto, IdUsuario, Fecha)
 VALUES (@p0, @p1, @p2, GETDATE())", id, obs, idUsuario);
                 }
+
+                tx.Commit();
             }
 
             NotificarUsuarios(id, afectadosAntes);
             PendientesAlarmaScheduler.Reprogramar();
-            return id;
+            return new VMPendienteGuardado { Id = id, YaExistia = false };
+        }
+
+        private static int BuscarAbiertaIgual(Sistema_DavidEntities db, string tipo, string titulo, string descripcion, int idCliente, int idVendedor)
+        {
+            return db.Database.SqlQuery<int>(@"
+SELECT TOP 1 a.Id
+FROM dbo.Pendientes_Actividades a WITH (UPDLOCK, HOLDLOCK)
+WHERE a.Estado <> N'Solucionado'
+  AND a.Tipo = @p0
+  AND UPPER(LTRIM(RTRIM(a.Titulo))) = UPPER(@p1)
+  AND UPPER(LTRIM(RTRIM(ISNULL(a.Descripcion, N'')))) = UPPER(@p2)
+  AND ISNULL(a.IdCliente, 0) = @p3
+  AND ISNULL(a.IdVendedor, 0) = @p4
+ORDER BY a.Id",
+                tipo, titulo ?? "", descripcion ?? "", idCliente, idVendedor).FirstOrDefault();
         }
 
         public static bool AgregarObservacion(int id, string texto, int idUsuario)
@@ -421,19 +521,38 @@ VALUES (@p0, @p1, @p2, GETDATE())", id, obs, idUsuario);
             if (id <= 0 || idUsuario <= 0 || texto.Length == 0)
                 return false;
 
+            var insertada = false;
             using (var db = new Sistema_DavidEntities())
+            using (var tx = db.Database.BeginTransaction())
             {
                 var estado = db.Database.SqlQuery<string>(
                     "SELECT Estado FROM dbo.Pendientes_Actividades WHERE Id = @p0", id).FirstOrDefault();
                 if (string.IsNullOrEmpty(estado) || string.Equals(estado, "Solucionado", StringComparison.OrdinalIgnoreCase))
+                {
+                    tx.Commit();
                     return false;
+                }
 
-                db.Database.ExecuteSqlCommand(@"
+                var reciente = db.Database.SqlQuery<int>(@"
+SELECT TOP 1 Id
+FROM dbo.Pendientes_Observaciones WITH (UPDLOCK, HOLDLOCK)
+WHERE IdActividad = @p0
+  AND IdUsuario = @p1
+  AND Texto = @p2
+  AND Fecha >= DATEADD(second, -15, GETDATE())", id, idUsuario, texto).FirstOrDefault();
+                if (reciente <= 0)
+                {
+                    db.Database.ExecuteSqlCommand(@"
 INSERT INTO dbo.Pendientes_Observaciones (IdActividad, Texto, IdUsuario, Fecha)
 VALUES (@p0, @p1, @p2, GETDATE())", id, texto, idUsuario);
+                    insertada = true;
+                }
+
+                tx.Commit();
             }
 
-            NotificarUsuarios(id, null);
+            if (insertada)
+                NotificarUsuarios(id, null);
             return true;
         }
 
@@ -513,7 +632,58 @@ VALUES (@p0, N'Actividad reabierta por el administrador.', @p1, GETDATE())", id,
             return true;
         }
 
+        private static string SqlInvolucrado(string param)
+        {
+            return @" AND (
+                a.IdResponsable = " + param + @"
+                OR a.IdUsuarioCarga = " + param + @"
+                OR a.IdVendedor = " + param + @"
+                OR EXISTS (
+                    SELECT 1 FROM dbo.Pendientes_Responsables pr
+                    WHERE pr.IdActividad = a.Id AND pr.IdUsuario = " + param + @"
+                )
+                OR EXISTS (
+                    SELECT 1 FROM dbo.Pendientes_Destinatarios d
+                    WHERE d.IdActividad = a.Id AND d.IdUsuario = " + param + @"
+                )
+            )";
+        }
+
+        public static bool EstaInvolucrado(int idActividad, int idUsuario)
+        {
+            AsegurarEsquema();
+            if (idActividad <= 0 || idUsuario <= 0)
+                return false;
+
+            using (var db = new Sistema_DavidEntities())
+            {
+                return db.Database.SqlQuery<int>(@"
+SELECT COUNT(1)
+FROM dbo.Pendientes_Actividades a
+WHERE a.Id = @p0" + SqlInvolucrado("@p1"), idActividad, idUsuario).FirstOrDefault() > 0;
+            }
+        }
+
+        public static bool PuedeVerAdjunto(int idAdjunto, int idUsuario)
+        {
+            AsegurarEsquema();
+            if (idAdjunto <= 0 || idUsuario <= 0)
+                return false;
+
+            using (var db = new Sistema_DavidEntities())
+            {
+                var idActividad = db.Database.SqlQuery<int>(@"
+SELECT IdActividad FROM dbo.Pendientes_Adjuntos WHERE Id = @p0", idAdjunto).FirstOrDefault();
+                return idActividad > 0 && EstaInvolucrado(idActividad, idUsuario);
+            }
+        }
+
         public static int ContarAsignadas(int idUsuario)
+        {
+            return ContarInvolucradas(idUsuario);
+        }
+
+        public static int ContarInvolucradas(int idUsuario)
         {
             AsegurarEsquema();
             if (idUsuario <= 0)
@@ -522,17 +692,34 @@ VALUES (@p0, N'Actividad reabierta por el administrador.', @p1, GETDATE())", id,
             using (var db = new Sistema_DavidEntities())
             {
                 return db.Database.SqlQuery<int>(@"
-SELECT COUNT(1)
-FROM dbo.Pendientes_Actividades
-WHERE IdResponsable = @p0 AND Estado <> N'Solucionado'", idUsuario).FirstOrDefault();
+SELECT COUNT(DISTINCT a.Id)
+FROM dbo.Pendientes_Actividades a
+WHERE a.Estado <> N'Solucionado'" + SqlInvolucrado("@p0"), idUsuario).FirstOrDefault();
             }
         }
 
-        public static VMPendienteRealtime SnapshotRealtime(int idUsuario)
+        public static int ContarAbiertas()
+        {
+            AsegurarEsquema();
+            using (var db = new Sistema_DavidEntities())
+            {
+                return db.Database.SqlQuery<int>(@"
+SELECT COUNT(1)
+FROM dbo.Pendientes_Actividades a
+WHERE a.Estado <> N'Solucionado'").FirstOrDefault();
+            }
+        }
+
+        public static int ContarVisibles(int idUsuario, bool esAdmin)
+        {
+            return esAdmin ? ContarAbiertas() : ContarInvolucradas(idUsuario);
+        }
+
+        public static VMPendienteRealtime SnapshotRealtime(int idUsuario, bool esAdmin = false)
         {
             return new VMPendienteRealtime
             {
-                Contador = ContarAsignadas(idUsuario),
+                Contador = ContarVisibles(idUsuario, esAdmin),
                 Due = AlarmasDeUsuario(idUsuario, true),
                 Proximas = AlarmasDeUsuario(idUsuario, false)
             };
@@ -650,21 +837,21 @@ ORDER BY u.Nombre, u.Apellido").ToList();
             }
         }
 
-        public static List<VMNavbarAlerta> ListaAlertasNavbar(int idUsuario)
+        public static List<VMNavbarAlerta> ListaAlertasNavbar(int idUsuario, bool esAdmin = false)
         {
             if (idUsuario <= 0)
                 return new List<VMNavbarAlerta>();
 
             return Listar(new VMPendienteFiltro
             {
-                Pestana = "pendientes",
-                IdResponsable = idUsuario
-            }).Select(x => new VMNavbarAlerta
+                Pestana = "pendientes"
+            }, esAdmin ? 0 : idUsuario).Select(x => new VMNavbarAlerta
             {
                 Id = x.Id,
                 Titulo = x.Titulo,
                 Cliente = x.Titulo,
                 Nombre = x.Nombre,
+                Descripcion = x.Descripcion,
                 Tipo = x.Tipo,
                 Estado = x.Estado,
                 Prioridad = x.Prioridad,
@@ -952,6 +1139,87 @@ FROM dbo.Clientes WHERE Id = @p0", model.IdCliente.Value).FirstOrDefault();
             }
         }
 
+        private static List<int> NormalizarIds(List<int> ids)
+        {
+            return (ids ?? new List<int>()).Where(x => x > 0).Distinct().ToList();
+        }
+
+        private static Dictionary<int, List<RespNomRow>> CargarResponsables(Sistema_DavidEntities db, List<int> idsActividad)
+        {
+            var mapa = new Dictionary<int, List<RespNomRow>>();
+            var ids = (idsActividad ?? new List<int>()).Where(x => x > 0).Distinct().ToList();
+            if (ids.Count == 0)
+                return mapa;
+
+            var args = new List<object>();
+            var marcas = new List<string>();
+            foreach (var id in ids)
+            {
+                marcas.Add("@p" + args.Count);
+                args.Add(id);
+            }
+
+            var rows = db.Database.SqlQuery<RespNomRow>(@"
+SELECT pr.IdActividad, pr.IdUsuario, " + SqlNombre("u") + @" AS Nombre
+FROM dbo.Pendientes_Responsables pr
+INNER JOIN dbo.Usuarios u ON u.Id = pr.IdUsuario
+WHERE pr.IdActividad IN (" + string.Join(", ", marcas) + @")
+ORDER BY u.Nombre, u.Apellido", args.ToArray()).ToList();
+
+            foreach (var row in rows)
+            {
+                List<RespNomRow> lista;
+                if (!mapa.TryGetValue(row.IdActividad, out lista))
+                {
+                    lista = new List<RespNomRow>();
+                    mapa[row.IdActividad] = lista;
+                }
+                if (lista.Any(x => x.IdUsuario == row.IdUsuario))
+                    continue;
+                lista.Add(row);
+            }
+
+            return mapa;
+        }
+
+        private static void AplicarNombresResponsables(VMPendienteLista item, ActividadRow row, Dictionary<int, List<RespNomRow>> mapa)
+        {
+            List<RespNomRow> lista;
+            if (mapa != null && mapa.TryGetValue(row.Id, out lista) && lista.Count > 0)
+            {
+                item.Responsables = lista.Select(x => x.IdUsuario).ToList();
+                item.Responsable = string.Join(", ", lista.Select(x => x.Nombre).Where(x => !string.IsNullOrWhiteSpace(x)));
+                item.IdResponsable = item.Responsables[0];
+                return;
+            }
+
+            item.Responsables = row.IdResponsable > 0
+                ? new List<int> { row.IdResponsable }
+                : new List<int>();
+        }
+
+        private static void SincronizarResponsables(Sistema_DavidEntities db, int idActividad, List<int> ids)
+        {
+            var actuales = db.Database.SqlQuery<int>(
+                "SELECT IdUsuario FROM dbo.Pendientes_Responsables WHERE IdActividad = @p0", idActividad).ToList();
+
+            foreach (var viejo in actuales.Where(x => !ids.Contains(x)))
+            {
+                db.Database.ExecuteSqlCommand(
+                    "DELETE FROM dbo.Pendientes_Responsables WHERE IdActividad = @p0 AND IdUsuario = @p1",
+                    idActividad, viejo);
+            }
+
+            foreach (var idUsuario in ids)
+            {
+                if (actuales.Contains(idUsuario))
+                    continue;
+                db.Database.ExecuteSqlCommand(@"
+INSERT INTO dbo.Pendientes_Responsables (IdActividad, IdUsuario)
+VALUES (@p0, @p1)", idActividad, idUsuario);
+            }
+        }
+
         private static void SincronizarDestinatarios(Sistema_DavidEntities db, int idActividad, List<int> ids, DateTime? fechaAlarma)
         {
             var actuales = db.Database.SqlQuery<DestRow>(@"
@@ -992,10 +1260,16 @@ WHERE Id = @p0", existe.Id, (object)fechaAlarma ?? DBNull.Value);
                 if (extra != null)
                     ids = ids.Concat(extra).Where(x => x > 0).Distinct().ToList();
 
-                foreach (var id in ids)
-                    TiempoReal.PendienteContador(id, ContarAsignadas(id));
+                var admins = IdsAdmins();
+                var destinatarios = ids.Concat(admins).Where(x => x > 0).Distinct().ToList();
+                var abiertas = ContarAbiertas();
+                foreach (var id in destinatarios)
+                {
+                    var cantidad = admins.Contains(id) ? abiertas : ContarInvolucradas(id);
+                    TiempoReal.PendienteContador(id, cantidad);
+                }
 
-                TiempoReal.PendienteCambio(ids, new { id = idActividad, solucionado });
+                TiempoReal.PendienteCambio(destinatarios, new { id = idActividad, solucionado });
 
                 if (!solucionado)
                 {
@@ -1029,6 +1303,15 @@ FROM dbo.Pendientes_Destinatarios WHERE IdActividad = @p0", idActividad).ToList(
             catch { }
         }
 
+        private static List<int> IdsAdmins()
+        {
+            using (var db = new Sistema_DavidEntities())
+            {
+                return db.Database.SqlQuery<int>(@"
+SELECT Id FROM dbo.Usuarios WHERE IdEstado = 1 AND IdRol = 1").ToList();
+            }
+        }
+
         private static List<int> UsuariosDeActividad(Sistema_DavidEntities db, int id)
         {
             return db.Database.SqlQuery<int>(@"
@@ -1039,6 +1322,10 @@ FROM (
     SELECT IdUsuarioCarga FROM dbo.Pendientes_Actividades WHERE Id = @p0
     UNION
     SELECT IdUsuario FROM dbo.Pendientes_Destinatarios WHERE IdActividad = @p0
+    UNION
+    SELECT IdUsuario FROM dbo.Pendientes_Responsables WHERE IdActividad = @p0
+    UNION
+    SELECT IdVendedor FROM dbo.Pendientes_Actividades WHERE Id = @p0 AND IdVendedor > 0
 ) x
 WHERE x.IdUsuario IS NOT NULL AND x.IdUsuario > 0", id).ToList();
         }
@@ -1056,6 +1343,7 @@ WHERE x.IdUsuario IS NOT NULL AND x.IdUsuario > 0", id).ToList();
                 Direccion = VacioGuion(row.ClienteDireccion),
                 Telefono = VacioGuion(row.ClienteTelefono),
                 Titulo = row.Titulo,
+                Descripcion = row.Descripcion,
                 IdResponsable = row.IdResponsable,
                 Responsable = row.Responsable,
                 Prioridad = row.Prioridad,
@@ -1064,6 +1352,8 @@ WHERE x.IdUsuario IS NOT NULL AND x.IdUsuario > 0", id).ToList();
                 UsuarioCarga = row.UsuarioCarga,
                 FechaCarga = row.FechaCarga,
                 FechaCargaTexto = row.FechaCarga.ToString("dd/MM/yyyy HH:mm"),
+                FechaCargaDiaTexto = row.FechaCarga.ToString("dd/MM/yyyy"),
+                HorarioCargaTexto = row.FechaCarga.ToString("HH:mm"),
                 FechaAlarma = row.FechaAlarma,
                 FechaAlarmaTexto = row.FechaAlarma.HasValue ? row.FechaAlarma.Value.ToString("dd/MM/yyyy HH:mm") : "—",
                 FechaResolucion = row.FechaResolucion,
@@ -1093,6 +1383,8 @@ WHERE x.IdUsuario IS NOT NULL AND x.IdUsuario > 0", id).ToList();
                 UsuarioCarga = lista.UsuarioCarga,
                 FechaCarga = lista.FechaCarga,
                 FechaCargaTexto = lista.FechaCargaTexto,
+                FechaCargaDiaTexto = lista.FechaCargaDiaTexto,
+                HorarioCargaTexto = lista.HorarioCargaTexto,
                 FechaAlarma = lista.FechaAlarma,
                 FechaAlarmaTexto = lista.FechaAlarmaTexto,
                 FechaResolucion = lista.FechaResolucion,

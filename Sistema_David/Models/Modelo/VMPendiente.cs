@@ -24,7 +24,9 @@ namespace Sistema_David.Models.Modelo
         public string Direccion { get; set; }
         public string Telefono { get; set; }
         public string Titulo { get; set; }
+        public string Descripcion { get; set; }
         public int IdResponsable { get; set; }
+        public List<int> Responsables { get; set; }
         public string Responsable { get; set; }
         public string Prioridad { get; set; }
         public string Estado { get; set; }
@@ -32,6 +34,8 @@ namespace Sistema_David.Models.Modelo
         public string UsuarioCarga { get; set; }
         public DateTime FechaCarga { get; set; }
         public string FechaCargaTexto { get; set; }
+        public string FechaCargaDiaTexto { get; set; }
+        public string HorarioCargaTexto { get; set; }
         public DateTime? FechaAlarma { get; set; }
         public string FechaAlarmaTexto { get; set; }
         public DateTime? FechaResolucion { get; set; }
@@ -64,10 +68,17 @@ namespace Sistema_David.Models.Modelo
         public string Descripcion { get; set; }
         public string ObservacionInicial { get; set; }
         public int IdResponsable { get; set; }
+        public List<int> Responsables { get; set; }
         public string Prioridad { get; set; }
         public string Estado { get; set; }
         public DateTime? FechaAlarma { get; set; }
         public List<int> Destinatarios { get; set; }
+    }
+
+    public class VMPendienteGuardado
+    {
+        public int Id { get; set; }
+        public bool YaExistia { get; set; }
     }
 
     public class VMPendienteObs

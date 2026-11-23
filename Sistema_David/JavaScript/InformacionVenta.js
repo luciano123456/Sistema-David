@@ -65,6 +65,10 @@ function isElectroVenta(v) {
     const tipo = normalizeTipoVenta(v?.TipoVenta || v?.tipoVenta || v?.Tipo || "");
     return tipo === "ELECTRO";
 }
+function esVentaEliminada(v) {
+    const n = v && v.Eliminada != null ? v : normalizeVentaItem(v);
+    return !!(n && n.Eliminada && isElectroVenta(n));
+}
 function getTipoVentaLabel(v) {
     return isElectroVenta(v) ? "Electrodomésticos" : "Indumentaria";
 }
@@ -161,7 +165,8 @@ function aplicarTotalesEnDom(ventaUniqueId, tot) {
     if (restBox) restBox.classList.toggle("is-ok", tot.restante <= 0);
 
     const item = q$(`#ventaItem_${ventaUniqueId}`);
-    if (item) {
+    const eliminada = !!(item && item.classList.contains("venta-item-eliminada"));
+    if (item && !eliminada) {
         item.classList.toggle("is-saldada", tot.restante <= 0);
         item.classList.toggle("is-pendiente", tot.restante > 0);
     }
@@ -172,7 +177,7 @@ function aplicarTotalesEnDom(ventaUniqueId, tot) {
     if (barLbl) barLbl.textContent = tot.pct + "% cobrado";
 
     const status = q$(`#statusVenta_${ventaUniqueId}`);
-    if (status) {
+    if (status && !eliminada) {
         status.className = tot.restante <= 0 ? "iv-status iv-status-ok" : "iv-status iv-status-pend";
         status.innerHTML = tot.restante <= 0
             ? `<i class="bi bi-check-circle"></i> Saldada`
@@ -223,9 +228,15 @@ function updateSummary(list) {
         return;
     }
 
+    const activas = rows.filter(v => !esVentaEliminada(v));
+    if (!activas.length) {
+        kpis.hidden = true;
+        return;
+    }
+
     let cobrado = 0;
     let restante = 0;
-    rows.forEach(v => {
+    activas.forEach(v => {
         const tot = calcVentaTotales(v);
         cobrado += tot.entrega;
         restante += tot.restante;
@@ -235,7 +246,7 @@ function updateSummary(list) {
     const cobradoEl = q$("#kpiCobrado");
     const restanteEl = q$("#kpiRestante");
     const totalEl = q$("#kpiTotal");
-    if (countEl) countEl.textContent = String(rows.length);
+    if (countEl) countEl.textContent = String(activas.length);
     if (cobradoEl) cobradoEl.textContent = money(cobrado);
     if (restanteEl) restanteEl.textContent = money(restante);
     if (totalEl) totalEl.textContent = money(cobrado + restante);
@@ -578,6 +589,10 @@ async function renderTodas(clienteId, ventaSeleccionada = null) {
     }
 
     ventas.sort((a, b) => {
+        const ea = esVentaEliminada(a) ? 1 : 0;
+        const eb = esVentaEliminada(b) ? 1 : 0;
+        if (ea !== eb) return ea - eb;
+
         const fa = a.Fecha ? new Date(a.Fecha) : new Date(0);
         const fb = b.Fecha ? new Date(b.Fecha) : new Date(0);
         if (fb - fa !== 0) return fb - fa;
@@ -609,20 +624,23 @@ async function applyFilterAndRender(ventaSeleccionada = null) {
 
     const incluirSaldadas = q$("#swSaldadas")?.checked ?? false;
 
-    const totales = APP.ventasCache.length;
-    const noSaldadas = APP.ventasCache.filter(v => calcVentaTotales(v).restante > 0).length;
-    const saldadas = totales - noSaldadas;
+    const activas = APP.ventasCache.filter(v => !esVentaEliminada(v));
+    const eliminadas = APP.ventasCache.length - activas.length;
+    const noSaldadas = activas.filter(v => calcVentaTotales(v).restante > 0).length;
+    const saldadas = activas.length - noSaldadas;
 
     APP.ventasFiltradas = APP.ventasCache.filter(v => {
+        if (esVentaEliminada(v)) return true;
         const rest = calcVentaTotales(v).restante;
         return incluirSaldadas ? true : rest > 0;
     });
 
+    const chipElim = eliminadas ? `<span class="chip-elim">Eliminadas ${eliminadas}</span>` : "";
     const st = q$("#swStats");
     if (st) {
         st.innerHTML = incluirSaldadas
-            ? `<span class="chip-all">Todas ${totales}</span><span class="chip-ok">Saldadas ${saldadas}</span><span class="chip-pend">Pendientes ${noSaldadas}</span>`
-            : `<span class="chip-pend">Pendientes ${noSaldadas}</span><span class="chip-ok">Saldadas ${saldadas}</span>`;
+            ? `<span class="chip-all">Todas ${activas.length}</span><span class="chip-ok">Saldadas ${saldadas}</span><span class="chip-pend">Pendientes ${noSaldadas}</span>${chipElim}`
+            : `<span class="chip-pend">Pendientes ${noSaldadas}</span><span class="chip-ok">Saldadas ${saldadas}</span>${chipElim}`;
     }
 
     updateSummary(APP.ventasFiltradas.length ? APP.ventasFiltradas : APP.ventasCache);
@@ -635,7 +653,13 @@ async function applyFilterAndRender(ventaSeleccionada = null) {
 
     $("#emptyState").hide();
 
+    let separadorEliminadas = false;
+    const hayActivasVisibles = APP.ventasFiltradas.some(v => !esVentaEliminada(v));
     APP.ventasFiltradas.forEach(v => {
+        if (!separadorEliminadas && hayActivasVisibles && esVentaEliminada(v)) {
+            separadorEliminadas = true;
+            box.insertAdjacentHTML("beforeend", `<div class="iv-elim-sep"><i class="bi bi-trash"></i> Ventas eliminadas</div>`);
+        }
         const uniqueId = getVentaUniqueId(v);
         box.insertAdjacentHTML("beforeend", buildVentaItem(v));
         attachVentaHeaderEvents(uniqueId);
@@ -699,9 +723,10 @@ function buildVentaItem(v) {
 
     const bloqueMotivo = esEliminada
         ? `<div class="venta-motivo-eliminacion">
-                <span class="venta-motivo-label">Motivo de eliminación</span>
+                <span class="venta-motivo-label">Venta eliminada</span>
                 <div class="venta-motivo-text">${escapeHtml(motivoElim || "Sin motivo registrado")}</div>
-                ${fechaElim ? `<div class="venta-motivo-fecha">Eliminada el ${fechaElim}</div>` : ""}
+                ${fechaElim ? `<div class="venta-motivo-fecha"><i class="bi bi-calendar-x"></i> Eliminada el ${fechaElim}</div>` : ""}
+                <div class="venta-motivo-nota">No suma al saldo del cliente.</div>
            </div>`
         : "";
 
@@ -714,10 +739,10 @@ function buildVentaItem(v) {
         </div>`
         : `
         <div class="venta-head-actions">
-            <button class="btn-icon iv-act" type="button" data-action="interes" title="Agregar interés" data-venta="${uniqueId}">
+            ${esEliminada ? "" : `<button class="btn-icon iv-act" type="button" data-action="interes" title="Agregar interés" data-venta="${uniqueId}">
                 <i class="bi bi-percent"></i>
                 <span class="iv-act-label">Interés</span>
-            </button>
+            </button>`}
             <button class="btn-icon iv-act" type="button" data-action="pdf" title="Comprobante" data-venta="${uniqueId}">
                 <i class="bi bi-filetype-pdf"></i>
                 <span class="iv-act-label">PDF</span>
@@ -985,11 +1010,20 @@ function cargarImgProducto(imgElId, idProducto) {
 
 /* ===== Historial ===== */
 function tipoInfo(h) {
+    const d = (h.Descripcion || "").toLowerCase();
+    if (d.startsWith("eliminaci")) return "elim";
     if ((h.Interes || 0) > 0) return "interes";
     if ((h.Entrega || 0) > 0) return "cobro";
-    const d = (h.Descripcion || h.Observacion || "").toLowerCase();
-    if (d.includes("venta")) return "venta";
+    const texto = (h.Descripcion || h.Observacion || "").toLowerCase();
+    if (texto.includes("venta")) return "venta";
     return "obs";
+}
+function textoHistorial(h) {
+    const d = (h.Descripcion || "").trim();
+    const o = (h.Observacion || "").trim();
+    if (/^eliminaci/i.test(d))
+        return o ? ("Eliminación: " + o) : "Eliminación";
+    return d || o || ((h.Interes || 0) > 0 ? "Interés" : "—");
 }
 function formatoFechaHistorial(fecha) {
     if (!fecha) return "-";
@@ -1019,6 +1053,7 @@ function histRowTipoClass(h) {
 
 function histTipoLabel(h) {
     const t = tipoInfo(h);
+    if (t === "elim") return "Eliminación";
     if (t === "interes") return "Interés";
     if (t === "cobro") return "Cobro";
     if (t === "venta") return "Venta";
@@ -1038,7 +1073,8 @@ function chipFecha(fecha, h) {
     const cls = t === "interes" ? "chip-interes"
         : t === "cobro" ? "chip-cobro"
             : t === "venta" ? "chip-venta"
-                : "chip-obs";
+                : t === "elim" ? "chip-elim"
+                    : "chip-obs";
 
     return `<span class="chip-date ${cls}">${fecha}</span>`;
 }
@@ -1080,14 +1116,16 @@ function renderHistorial(ventaUniqueId, list) {
 
     list.forEach(h => {
         const fecha = formatoFechaHistorial(h.Fecha);
-        const desc = h.Descripcion || h.Observacion || (h.Interes > 0 ? "Interés" : "—");
+        const desc = textoHistorial(h);
         const cobr = h.Cobrador || "N/A";
         const idInf = h.Id || 0;
 
-        const esVenta = (desc || "").toLowerCase().includes("venta");
+        const esVenta = (h.Descripcion || "").toLowerCase().includes("venta");
+        const esElimMov = tipoInfo(h) === "elim";
         const esElectro = isElectroVenta(ventaObj);
+        const ventaEliminada = !!(ventaObj && ventaObj.Eliminada);
 
-        const btnDel = ((userSession?.IdRol === 1) && !esVenta && !esElectro)
+        const btnDel = ((userSession?.IdRol === 1) && !esVenta && !esElectro && !esElimMov && !ventaEliminada)
             ? `<button class="btn-icon btn-del-info" type="button" data-info-id="${idInf}" data-venta-id="${ventaUniqueId}" title="Eliminar">
                    <i class="bi bi-trash"></i>
                </button>`

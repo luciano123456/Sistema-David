@@ -40,16 +40,16 @@ namespace Sistema_David.Hubs
         public object SincronizarPendientes()
         {
             var usuario = UsuarioActual();
-            if (usuario == null || !PuedePendientes(usuario))
+            if (usuario == null || usuario.Id <= 0)
                 return null;
 
-            return PendientesModel.SnapshotRealtime(usuario.Id);
+            return PendientesModel.SnapshotRealtime(usuario.Id, usuario.IdRol == 1);
         }
 
         public object DetenerAlarma(int idDestinatario)
         {
             var usuario = UsuarioActual();
-            if (usuario == null || !PuedePendientes(usuario))
+            if (usuario == null || usuario.Id <= 0)
                 return new { ok = false };
 
             var ok = PendientesModel.DetenerAlarma(idDestinatario, usuario.Id);
@@ -65,7 +65,7 @@ namespace Sistema_David.Hubs
         public object PosponerAlarma(int idDestinatario, int minutos)
         {
             var usuario = UsuarioActual();
-            if (usuario == null || !PuedePendientes(usuario))
+            if (usuario == null || usuario.Id <= 0)
                 return null;
 
             var alarma = PendientesModel.Posponer(idDestinatario, usuario.Id, minutos);
@@ -82,7 +82,7 @@ namespace Sistema_David.Hubs
         public object PosponerAlarmaHasta(int idDestinatario, DateTime hasta)
         {
             var usuario = UsuarioActual();
-            if (usuario == null || !PuedePendientes(usuario))
+            if (usuario == null || usuario.Id <= 0)
                 return null;
 
             var alarma = PendientesModel.PosponerHasta(idDestinatario, usuario.Id, hasta);
@@ -110,18 +110,12 @@ namespace Sistema_David.Hubs
             if (usuario.IdRol == 1)
                 await Groups.Add(Context.ConnectionId, GrupoAdmins);
 
-            if (PuedePendientes(usuario))
-                await Groups.Add(Context.ConnectionId, GrupoModulo("pendientes"));
+            await Groups.Add(Context.ConnectionId, GrupoModulo("pendientes"));
         }
 
         private static Usuarios UsuarioActual()
         {
             return SessionHelper.GetUsuarioSesion();
-        }
-
-        private static bool PuedePendientes(Usuarios usuario)
-        {
-            return usuario != null && (usuario.IdRol == 1 || usuario.IdRol == 4);
         }
     }
 }

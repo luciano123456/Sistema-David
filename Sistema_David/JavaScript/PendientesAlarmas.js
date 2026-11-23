@@ -14,7 +14,7 @@
 
     function puedeModulo() {
         var u = usuarioSesion();
-        return !!(u && (Number(u.IdRol) === 1 || Number(u.IdRol) === 4));
+        return !!(u && Number(u.Id) > 0);
     }
 
     function pintarContador(n) {
@@ -162,11 +162,21 @@
         var modalEl = document.getElementById("modalAlarmaPendiente");
         if (!modalEl || typeof bootstrap === "undefined") return;
         document.getElementById("pdAlarmaTitulo").textContent = alarma.Titulo || alarma.titulo || "Alarma";
-        document.getElementById("pdAlarmaMeta").textContent = [
+        var meta = document.getElementById("pdAlarmaMeta");
+        meta.textContent = "";
+        [
             alarma.Tipo || alarma.tipo || "",
             alarma.Nombre || alarma.nombre || "",
             alarma.Prioridad || alarma.prioridad || ""
-        ].filter(Boolean).join(" · ");
+        ].filter(Boolean).forEach(function (texto) {
+            var chip = document.createElement("span");
+            chip.className = "pd-alarma-chip";
+            if (/alta/i.test(texto)) chip.classList.add("is-alta");
+            else if (/media/i.test(texto)) chip.classList.add("is-media");
+            else if (/baja/i.test(texto)) chip.classList.add("is-baja");
+            chip.textContent = texto;
+            meta.appendChild(chip);
+        });
         document.getElementById("pdAlarmaCustom").setAttribute("hidden", "true");
         modalEl.classList.add("is-ring");
         var modal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: "static", keyboard: false });
@@ -174,13 +184,56 @@
         startBeep();
     }
 
-    function limpiarBackdropsSiLibre() {
-        var abiertos = document.querySelectorAll(".modal.show");
-        if (abiertos.length) return;
-        document.querySelectorAll(".modal-backdrop").forEach(function (b) { b.remove(); });
-        document.body.classList.remove("modal-open");
-        document.body.style.removeProperty("overflow");
-        document.body.style.removeProperty("padding-right");
+    function modalesDebajo() {
+        var alarma = document.getElementById("modalAlarmaPendiente");
+        return Array.prototype.filter.call(document.querySelectorAll(".modal.show"), function (m) {
+            return m !== alarma;
+        });
+    }
+
+    function quitarBackdropAlarma() {
+        document.querySelectorAll(".modal-backdrop.pd-alarma-backdrop").forEach(function (b) {
+            b.classList.remove("show");
+            b.remove();
+        });
+    }
+
+    function restaurarTrasAlarma() {
+        quitarBackdropAlarma();
+        var abiertos = modalesDebajo();
+        if (!abiertos.length) {
+            document.querySelectorAll(".modal-backdrop").forEach(function (b) { b.remove(); });
+            document.body.classList.remove("modal-open");
+            document.body.style.removeProperty("overflow");
+            document.body.style.removeProperty("padding-right");
+            return;
+        }
+
+        var backs = Array.prototype.slice.call(document.querySelectorAll(".modal-backdrop"));
+        while (backs.length > abiertos.length) {
+            var sobra = backs.shift();
+            if (sobra && sobra.parentNode) sobra.parentNode.removeChild(sobra);
+        }
+        if (!document.querySelector(".modal-backdrop")) {
+            var nuevo = document.createElement("div");
+            nuevo.className = "modal-backdrop fade show";
+            document.body.appendChild(nuevo);
+        }
+        document.querySelectorAll(".modal-backdrop").forEach(function (b) {
+            b.classList.remove("pd-alarma-backdrop");
+            b.classList.add("show");
+        });
+
+        document.body.classList.add("modal-open");
+        document.body.style.overflow = "hidden";
+
+        var top = abiertos[abiertos.length - 1];
+        if (top && window.bootstrap && bootstrap.Modal) {
+            var inst = bootstrap.Modal.getInstance(top);
+            if (inst && inst._focustrap) {
+                try { inst._focustrap.activate(); } catch (e) { }
+            }
+        }
     }
 
     function cerrarModal(liberarLock) {
@@ -190,12 +243,14 @@
             modalEl.classList.remove("is-ring");
             var modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
-            else limpiarBackdropsSiLibre();
+            else restaurarTrasAlarma();
+        } else {
+            restaurarTrasAlarma();
         }
         if (liberarLock && alarmaActual)
             liberar(idAlarma(alarmaActual));
         alarmaActual = null;
-        setTimeout(limpiarBackdropsSiLibre, 380);
+        setTimeout(restaurarTrasAlarma, 450);
     }
 
     function aplicarSnapshot(snap) {
@@ -265,8 +320,15 @@
         var okCustom = document.getElementById("pdAlarmaCustomOk");
         var modalAlarma = document.getElementById("modalAlarmaPendiente");
         if (modalAlarma) {
+            if (modalAlarma.parentElement !== document.body)
+                document.body.appendChild(modalAlarma);
+            modalAlarma.addEventListener("shown.bs.modal", function () {
+                var backs = document.querySelectorAll(".modal-backdrop");
+                if (!backs.length) return;
+                backs[backs.length - 1].classList.add("pd-alarma-backdrop");
+            });
             modalAlarma.addEventListener("hidden.bs.modal", function () {
-                setTimeout(limpiarBackdropsSiLibre, 0);
+                restaurarTrasAlarma();
             });
         }
         if (detenerBtn) detenerBtn.addEventListener("click", detener);

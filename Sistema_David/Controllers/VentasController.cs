@@ -95,7 +95,7 @@ namespace Sistema_David.Controllers
                 result = VentasModel.ListaVentas(idVendedor, FechaDesde, FechaHasta, Finalizadas, TipoNegocio);
             }
 
-
+            OcultarEstadoComprobante(result);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
@@ -105,6 +105,7 @@ namespace Sistema_David.Controllers
 
 
             result = VentasModel.ListaVentasTodas();
+            OcultarEstadoComprobante(result);
 
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
@@ -135,6 +136,7 @@ namespace Sistema_David.Controllers
 
 
             result = VentasModel.ListaVentasPendientes();
+            OcultarEstadoComprobante(result);
 
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
@@ -695,6 +697,18 @@ namespace Sistema_David.Controllers
                 return Json(false);
             }
 
+        }
+
+        private static void OcultarEstadoComprobante(IEnumerable<VMVenta> ventas)
+        {
+            if (SessionHelper.EsAdminOComprobantes() || ventas == null)
+                return;
+
+            foreach (var venta in ventas)
+            {
+                if (venta != null)
+                    venta.Comprobante = 1;
+            }
         }
     }
 

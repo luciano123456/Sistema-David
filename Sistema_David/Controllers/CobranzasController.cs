@@ -58,6 +58,7 @@ namespace Sistema_David.Controllers
         {
             List<VMVenta> result;
                 result = CobranzasModel.ListaCobranzasPendientes();
+            OcultarEstadoComprobante(result);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
         }
 
@@ -78,8 +79,20 @@ namespace Sistema_David.Controllers
                 result = CobranzasModel.ListaCobranzas(idVendedor, idCobrador, FechaCobroDesde, FechaCobroHasta, DNI, idZona, Turno, TipoNegocio, CobrosPendientes);
             }
 
-
+            OcultarEstadoComprobante(result);
             return Json(new { data = result }, JsonRequestBehavior.AllowGet);
+        }
+
+        private static void OcultarEstadoComprobante(IEnumerable<VMVenta> ventas)
+        {
+            if (SessionHelper.EsAdminOComprobantes() || ventas == null)
+                return;
+
+            foreach (var venta in ventas)
+            {
+                if (venta != null)
+                    venta.Comprobante = 1;
+            }
         }
 
       

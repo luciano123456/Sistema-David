@@ -1,4 +1,4 @@
-﻿<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.32" rel="stylesheet" />
+﻿<link href="~/Estilos/Ventas_Electrodomesticos.css?v=2.44" rel="stylesheet" />
 
 <div id="partialCobros">
 
@@ -326,23 +326,31 @@
 
 </div>
 
-<div class="modal fade" id="modalInfoSelector" tabindex="-1" aria-hidden="true">
+<div class="modal fade info-pick-modal" id="modalInfoSelector" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modal-glass">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fa fa-info-circle me-2"></i>Información de la venta</h5>
-                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content info-pick-content">
+            <div class="info-pick-header">
+                <div class="info-pick-badge" aria-hidden="true"><i class="fa fa-info-circle"></i></div>
+                <div class="info-pick-heading">
+                    <p class="info-pick-kicker">Consulta</p>
+                    <h5 class="info-pick-title">Información de la venta</h5>
+                </div>
+                <button type="button" class="info-pick-close" data-bs-dismiss="modal" aria-label="Cerrar"><i class="fa fa-times"></i></button>
             </div>
-            <div class="modal-body">
-                <p class="mb-0">¿Querés ver <b>solo esta venta</b> o <b>todas las ventas</b> del cliente?</p>
-            </div>
-            <div class="modal-footer">
-                <button id="btnSoloEsta" class="btn btn-primary">
-                    <i class="fa fa-eye me-1"></i>Solo esta
-                </button>
-                <button id="btnTodasCliente" class="btn btn-info">
-                    <i class="fa fa-list me-1"></i>Todas del cliente
-                </button>
+            <div class="info-pick-body">
+                <p class="info-pick-lead">Elegí el alcance de la consulta.</p>
+                <div class="info-pick-grid">
+                    <button type="button" id="btnSoloEsta" class="info-pick-card info-pick-one">
+                        <span class="info-pick-ico"><i class="fa fa-eye"></i></span>
+                        <span class="info-pick-card-title">Solo esta</span>
+                        <span class="info-pick-card-text">Productos, cobros e historial de esta venta.</span>
+                    </button>
+                    <button type="button" id="btnTodasCliente" class="info-pick-card info-pick-all">
+                        <span class="info-pick-ico"><i class="fa fa-list"></i></span>
+                        <span class="info-pick-card-title">Todas del cliente</span>
+                        <span class="info-pick-card-text">El historial completo, incluidas las ventas eliminadas.</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -356,4 +364,4 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <script src="~/JavaScript/ReprogAtrasadasModal.js?v=1.4"></script>
-    <script src="~/JavaScript/_CobroModal_Partial.js?v=3.40" charset="utf-8"></script>
+    <script src="~/JavaScript/_CobroModal_Partial.js?v=3.41" charset="utf-8"></script>

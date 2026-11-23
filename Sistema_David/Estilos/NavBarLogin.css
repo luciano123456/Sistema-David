@@ -1026,6 +1026,20 @@
     align-items: flex-start;
 }
 
+.dg-alert-item.is-pendiente .dg-alert-item-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    margin-top: 4px;
+    color: #c5d2ee;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
 .dg-alert-panel-close {
     width: 36px;
     height: 36px;

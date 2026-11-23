@@ -18,6 +18,11 @@ const MODULOS_VENTA = {
     }
 };
 
+function puedeVerComprobantesPendientes(usuario) {
+    var rol = Number(usuario && usuario.IdRol);
+    return rol === 1 || rol === 4;
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
 
     var userSession = JSON.parse(localStorage.getItem('usuario'));
@@ -26,15 +31,19 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     if (userSession != null) {
         $('#nombre').text(userSession.Nombre);
-        if (userSession.IdRol != 2) {
-            var divComp = document.getElementById("divNotificacionComprobante");
+        var campanaPd = document.getElementById("divNotificacionPendientes");
+        if (campanaPd) campanaPd.removeAttribute("hidden");
+        initAlertasNavbar();
+        if (Number(userSession.IdRol) !== 2) {
             var divHome = document.getElementById("divNotificacionHome");
-            if (divComp) divComp.removeAttribute("hidden");
             if (divHome) divHome.removeAttribute("hidden");
             CantidadCasitasRojas();
-            CantidadComprobantes();
             CantidadStocksPendientes();
-            initAlertasNavbar();
+        }
+        if (puedeVerComprobantesPendientes(userSession)) {
+            var divComp = document.getElementById("divNotificacionComprobante");
+            if (divComp) divComp.removeAttribute("hidden");
+            CantidadComprobantes();
         }
     }
 
@@ -310,6 +319,14 @@ function leerCantidadAlerta(result) {
 }
 
 async function CantidadComprobantes() {
+    var sesionComp = null;
+    try { sesionComp = JSON.parse(localStorage.getItem("usuario") || "null"); } catch (e) { sesionComp = null; }
+    if (!puedeVerComprobantesPendientes(sesionComp)) {
+        pintarAlerta("notificacionComprobante", 0);
+        var divComp = document.getElementById("divNotificacionComprobante");
+        if (divComp) divComp.setAttribute("hidden", "true");
+        return;
+    }
     try {
         var result = await MakeAjax({
             type: "POST",
@@ -409,6 +426,8 @@ function verificarRoles(idRol) {
         var el = document.getElementById(id);
         if (el) el.removeAttribute("hidden");
     }
+
+    showSeccion("seccionPendientes");
 
     if (idRol == 1) { // ADMINISTRADOR
         showSeccion("seccionUsuarios");
@@ -595,9 +614,10 @@ function cerrarPanelAlertasNavbar() {
 
 function metaAlertaNavbar(tipo) {
     if (tipo === "pendientes") {
+        var rolPd = Number(usuarioNavbar() && usuarioNavbar().IdRol);
         return {
             title: "Pendientes y problemas",
-            sub: "Actividades asignadas a vos",
+            sub: rolPd === 1 ? "Todas las actividades abiertas" : "Solo las que te involucran",
             ico: '<i class="fa fa-bell"></i>',
             icoCls: "is-pendiente"
         };
@@ -619,6 +639,8 @@ function metaAlertaNavbar(tipo) {
 }
 
 function abrirPanelAlertasNavbar(tipo) {
+    if (tipo === "comprobantes" && !puedeVerComprobantesPendientes(usuarioNavbar()))
+        return;
     var panel = document.getElementById("dgAlertPanel");
     var backdrop = document.getElementById("dgAlertBackdrop");
     var title = document.getElementById("dgAlertPanelTitle");
@@ -669,7 +691,14 @@ function abrirPanelAlertasNavbar(tipo) {
     cargarListaAlertaNavbar(tipo, false);
 }
 
+function usuarioNavbar() {
+    try { return JSON.parse(localStorage.getItem("usuario") || "null"); }
+    catch (e) { return null; }
+}
+
 async function cargarListaAlertaNavbar(tipo, silencioso) {
+    if (tipo === "comprobantes" && !puedeVerComprobantesPendientes(usuarioNavbar()))
+        return;
     var body = document.getElementById("dgAlertPanelBody");
     if (!body) return;
     var url = tipo === "casitas"
@@ -765,6 +794,7 @@ function pintarListaAlertaNavbar(tipo, data) {
             var alarma = String(row.FechaAlarmaTexto || row.fechaAlarmaTexto || row.FechaTexto || "").trim();
             if (!alarma || alarma === "—") alarma = "";
             var metaPd = [nom, alarma ? ("Alarma " + alarma) : ""].filter(Boolean).join(" · ");
+            var descPd = String(row.Descripcion || row.descripcion || "").replace(/\s+/g, " ").trim();
             var urlPd = escapeHtmlAlerta(row.Url || row.url || ("/Pendientes/Index?id=" + (row.Id || row.id || "")));
             return '<div class="dg-alert-item is-pendiente" data-url="' + urlPd + '">' +
                 '<button type="button" class="dg-alert-item-main" data-url="' + urlPd + '">' +
@@ -776,6 +806,7 @@ function pintarListaAlertaNavbar(tipo, data) {
                 (est ? '<span class="dg-alert-chip ' + estCls + '">' + escapeHtmlAlerta(est) + "</span>" : "") +
                 "</span>" +
                 (metaPd ? '<span class="dg-alert-item-meta">' + escapeHtmlAlerta(metaPd) + "</span>" : "") +
+                (descPd ? '<span class="dg-alert-item-desc">' + escapeHtmlAlerta(descPd) + "</span>" : "") +
                 "</span></button>" +
                 '<i class="fa fa-chevron-right dg-alert-item-go" aria-hidden="true"></i></div>';
         }

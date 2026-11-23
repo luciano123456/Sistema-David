@@ -71,57 +71,48 @@ let watchId;
             geocodeLatLng(point);
         });
 
-        // Configura el buscador de lugares
         const input = document.getElementById('pac-input');
-        const searchBox = new google.maps.places.SearchBox(input);
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+            fields: ['geometry', 'name', 'formatted_address'],
+            componentRestrictions: { country: 'ar' }
+        });
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
-        // Sesgo de los resultados de la búsqueda hacia el área del mapa actual
-        map.addListener('bounds_changed', () => {
-            searchBox.setBounds(map.getBounds());
-        });
-
-        // Listener para los cambios en el buscador de lugares
-        searchBox.addListener('places_changed', () => {
-            const places = searchBox.getPlaces();
-
-            if (places.length == 0) {
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry || !place.geometry.location) {
                 return;
             }
 
-            // Ajusta los límites del mapa a los lugares encontrados
-            const bounds = new google.maps.LatLngBounds();
-            places.forEach((place) => {
-                if (!place.geometry || !place.geometry.location) {
-                    console.log("Returned place contains no geometry");
-                    return;
-                }
-
-                const marker = new google.maps.Marker({
-                    map: map,
-                    title: place.name,
-                    position: place.geometry.location,
-                    draggable: true // Permite arrastrar el marcador
-                });
-
-                marker.addListener('dblclick', () => {
-                    addMarkerToOrderedList(marker);
-                });
-
-                marker.addListener('dragend', () => {
-                    updateMarkerLocation(marker);
-                });
-
-                markers.push(marker); // Almacena el marcador en el array
-
-                if (place.geometry.viewport) {
-                    // Solo geocodificaciones tienen vista
-                    bounds.union(place.geometry.viewport);
-                } else {
-                    bounds.extend(place.geometry.location);
-                }
+            const marker = new google.maps.Marker({
+                map: map,
+                title: place.name || place.formatted_address || '',
+                position: place.geometry.location,
+                draggable: true
             });
-            map.fitBounds(bounds);
+
+            marker.addListener('dblclick', () => {
+                addMarkerToOrderedList(marker);
+            });
+
+            marker.addListener('dragend', () => {
+                updateMarkerLocation(marker);
+            });
+
+            markers.push(marker);
+            locations.push({
+                latlng: place.geometry.location,
+                address: place.formatted_address || place.name || '',
+                status: 'pending',
+                number: null
+            });
+
+            if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+            } else {
+                map.setCenter(place.geometry.location);
+                map.setZoom(16);
+            }
         });
 
         // Intenta obtener la ubicación actual del usuario

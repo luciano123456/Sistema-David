@@ -4,6 +4,11 @@ let gridVentasPendientes = null
 let userSession;
 let facturaCliente;
 
+function puedeVerComprobantePendienteVenta() {
+    var rol = Number(userSession && userSession.IdRol);
+    return rol === 1 || rol === 4;
+}
+
 
 
 $(document).ready(async function () {
@@ -224,9 +229,12 @@ const configurarDataTable = async (idVendedor, fechaDesde, fechaHasta, Finalizad
                     var deleteButton = userSession.IdRol === 1 ? "<button class='btn btn-sm btneditar btnacciones' type='button' onclick='eliminarVenta(" + data + ")' title='Eliminar'><i class='fa fa-trash-o fa-lg text-white'></i></button>" : "";
                     var visualizarVenta = "<button class='btn btn-sm btneditar btnacciones' type = 'button' onclick = 'editarVenta(" + data + ")' title = 'Visualizar Venta' > <i class='fa fa-eye fa-lg text-warning' aria-hidden='true'></i></button>";
                     var comprobanteIconColor = row.Comprobante === 1 ? "green" : "red";
+                    var btnComprobante = puedeVerComprobantePendienteVenta()
+                        ? "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='imprimirComprobante(" + data + ")' title='Imprimir Comprobante' ><i class='fa fa-print fa-lg' style='color: " + comprobanteIconColor + ";' aria-hidden='true'></i></button>"
+                        : "";
                     return visualizarVenta +
                         "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg text-white' aria-hidden='true'></i></button>" +
-                        "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='imprimirComprobante(" + data + ")' title='Imprimir Comprobante' ><i class='fa fa-print fa-lg' style='color: " + comprobanteIconColor + ";' aria-hidden='true'></i></button>" +
+                        btnComprobante +
                         deleteButton;
                 },
                 width: "200px",
@@ -397,12 +405,15 @@ async function configurarDataTablePendientes(data) {
                     "render": function (data, type, row) {
                         var visualizarVenta = "<button class='btn btn-sm btneditar btnacciones' type = 'button' onclick = 'editarVenta(" + data + ")' title = 'Visualizar Venta' > <i class='fa fa-eye fa-lg text-warning' aria-hidden='true'></i></button>";
                         var comprobanteIconColor = row.Comprobante === 1 ? "green" : "red";
+                        var btnComprobantePend = puedeVerComprobantePendienteVenta()
+                            ? "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='imprimirComprobante(" + data + ")' title='Imprimir Comprobante' ><i class='fa fa-print fa-lg' style='color: " + comprobanteIconColor + ";' aria-hidden='true'></i></button>"
+                            : "";
                         var rechazarVenta = userSession.IdRol == 1 ? "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='eliminarVenta(" + data + ")' title='Rechazar Venta'><i class='fa fa-ban fa-lg text-danger' aria-hidden='true'></i></button>" : "";
                         return "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='aceptarVenta(" + data + ")' title='Aceptar Venta'><i class='fa fa-check fa-lg text-green' aria-hidden='true'></i></button>" +
                             rechazarVenta +
                             visualizarVenta +
                             "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='modalWhatssap(" + data + ")' title='Enviar Whatssap'><i class='fa fa-whatsapp fa-lg text-white' aria-hidden='true'></i></button>" +
-                            "<button class='btn btn-sm ms-1 btnacciones' type='button' onclick='imprimirComprobante(" + data + ")' title='Imprimir Comprobante' ><i class='fa fa-print fa-lg' style='color: " + comprobanteIconColor + ";' aria-hidden='true'></i></button>";
+                            btnComprobantePend;
                     },
                     width: "200px",
                     "orderable": true,

@@ -6,7 +6,7 @@
 <link href="~/Content/Datatable/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="~/Estilos/redisenopantallas.css?v=4.0" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-<link href="~/Estilos/Cobranzas.css?v=2.11" rel="stylesheet" />
+<link href="~/Estilos/Cobranzas.css?v=2.12" rel="stylesheet" />
 <link href="~/Estilos/CuentasBancarias.css?v=1.0" rel="stylesheet" />
 <link href="~/Content/font-awesome.css" rel="stylesheet" />
 
@@ -903,26 +903,31 @@ else
     </div>
 </div>
 
-<div class="modal fade cb-modal-shell" id="modalInfoSelector" tabindex="-1" aria-hidden="true">
+<div class="modal fade info-pick-modal" id="modalInfoSelector" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content cb-modal-content">
-            <div class="modal-header cb-modal-header border-0">
-                <div class="cb-modal-head">
-                    <div class="cb-modal-icon"><i class="fa fa-info-circle"></i></div>
-                    <h5 class="modal-title fw-bold mb-0 text-white">Información de la venta</h5>
+        <div class="modal-content info-pick-content">
+            <div class="info-pick-header">
+                <div class="info-pick-badge" aria-hidden="true"><i class="fa fa-info-circle"></i></div>
+                <div class="info-pick-heading">
+                    <p class="info-pick-kicker">Consulta</p>
+                    <h5 class="info-pick-title">Información de la venta</h5>
                 </div>
-                <button class="cb-modal-close" data-bs-dismiss="modal" aria-label="Close"><i class="fa fa-times"></i></button>
+                <button type="button" class="info-pick-close" data-bs-dismiss="modal" aria-label="Cerrar"><i class="fa fa-times"></i></button>
             </div>
-            <div class="modal-body cb-modal-body">
-                <p class="mb-0 cb-modal-text">¿Querés ver <b>solo esta venta</b> o <b>todas las ventas</b> del cliente?</p>
-            </div>
-            <div class="modal-footer cb-modal-footer border-0">
-                <button id="btnSoloEsta" class="btn btn-primary cb-btn-cobrar">
-                    <i class="fa fa-eye me-1"></i>Solo esta
-                </button>
-                <button id="btnTodasCliente" class="btn btn-outline-light">
-                    <i class="fa fa-list me-1"></i>Todas del cliente
-                </button>
+            <div class="info-pick-body">
+                <p class="info-pick-lead">Elegí el alcance de la consulta.</p>
+                <div class="info-pick-grid">
+                    <button type="button" id="btnSoloEsta" class="info-pick-card info-pick-one">
+                        <span class="info-pick-ico"><i class="fa fa-eye"></i></span>
+                        <span class="info-pick-card-title">Solo esta</span>
+                        <span class="info-pick-card-text">Productos, cobros e historial de esta venta.</span>
+                    </button>
+                    <button type="button" id="btnTodasCliente" class="info-pick-card info-pick-all">
+                        <span class="info-pick-ico"><i class="fa fa-list"></i></span>
+                        <span class="info-pick-card-title">Todas del cliente</span>
+                        <span class="info-pick-card-text">El historial completo, incluidas las ventas eliminadas.</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

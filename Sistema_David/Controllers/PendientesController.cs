@@ -14,7 +14,7 @@ namespace Sistema_David.Controllers
     {
         public ActionResult Index(int? id)
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
             {
                 ViewData["ErrorPermisos"] = "No puedes acceder a esta pantalla";
                 return View();
@@ -22,6 +22,7 @@ namespace Sistema_David.Controllers
 
             var sesion = SessionHelper.GetUsuarioSesion();
             ViewBag.EsAdmin = sesion != null && sesion.IdRol == 1;
+            ViewBag.PuedeGestionar = PuedeAcceder();
             ViewBag.IdUsuario = sesion != null ? sesion.Id : 0;
             ViewBag.IdAbrir = id ?? 0;
             return View();
@@ -30,12 +31,12 @@ namespace Sistema_David.Controllers
         [HttpPost]
         public ActionResult Listar(VMPendienteFiltro filtro)
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { data = new List<VMPendienteLista>() }, JsonRequestBehavior.AllowGet);
 
             try
             {
-                var data = PendientesModel.Listar(filtro);
+                var data = PendientesModel.Listar(filtro, EsAdmin() ? 0 : IdUsuario());
                 var json = Json(new { data = data }, JsonRequestBehavior.AllowGet);
                 json.MaxJsonLength = int.MaxValue;
                 return json;
@@ -49,10 +50,12 @@ namespace Sistema_David.Controllers
         [HttpGet]
         public ActionResult Detalle(int id)
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { ok = false }, JsonRequestBehavior.AllowGet);
 
             var data = PendientesModel.Detalle(id);
+            if (data != null && !EsAdmin() && !PendientesModel.EstaInvolucrado(id, IdUsuario()))
+                data = null;
             return Json(new { ok = data != null, data = data }, JsonRequestBehavior.AllowGet);
         }
 
@@ -64,8 +67,11 @@ namespace Sistema_David.Controllers
 
             try
             {
-                var id = PendientesModel.Guardar(model, IdUsuario());
-                return Json(new { ok = true, id = id, mensaje = "Actividad guardada." });
+                var guardado = PendientesModel.Guardar(model, IdUsuario());
+                var mensaje = guardado.YaExistia
+                    ? "Ya había una actividad abierta con el mismo título, la misma persona y la misma descripción. No se creó otra."
+                    : "Actividad guardada.";
+                return Json(new { ok = true, id = guardado.Id, yaExistia = guardado.YaExistia, mensaje = mensaje });
             }
             catch (Exception ex)
             {
@@ -123,7 +129,7 @@ namespace Sistema_David.Controllers
         [HttpGet]
         public ActionResult UsuariosModulo()
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { data = new List<VMPendienteUsuario>() }, JsonRequestBehavior.AllowGet);
 
             return Json(new { data = PendientesModel.UsuariosModulo() }, JsonRequestBehavior.AllowGet);
@@ -132,7 +138,7 @@ namespace Sistema_David.Controllers
         [HttpGet]
         public ActionResult Vendedores()
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { data = new List<VMPendienteUsuario>() }, JsonRequestBehavior.AllowGet);
 
             return Json(new { data = PendientesModel.Vendedores() }, JsonRequestBehavior.AllowGet);
@@ -141,7 +147,7 @@ namespace Sistema_David.Controllers
         [HttpGet]
         public ActionResult BuscarClientes(string q)
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { data = new List<VMPendienteCliente>() }, JsonRequestBehavior.AllowGet);
 
             return Json(new { data = PendientesModel.BuscarClientes(q) }, JsonRequestBehavior.AllowGet);
@@ -150,19 +156,19 @@ namespace Sistema_David.Controllers
         [HttpGet]
         public ActionResult Contador()
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { cantidad = 0 }, JsonRequestBehavior.AllowGet);
 
-            return Json(new { cantidad = PendientesModel.ContarAsignadas(IdUsuario()) }, JsonRequestBehavior.AllowGet);
+            return Json(new { cantidad = PendientesModel.ContarVisibles(IdUsuario(), EsAdmin()) }, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
         public ActionResult ListaAlertasNavbar()
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { cantidad = 0, data = new List<VMNavbarAlerta>() }, JsonRequestBehavior.AllowGet);
 
-            var data = PendientesModel.ListaAlertasNavbar(IdUsuario()) ?? new List<VMNavbarAlerta>();
+            var data = PendientesModel.ListaAlertasNavbar(IdUsuario(), EsAdmin()) ?? new List<VMNavbarAlerta>();
             var json = Json(new { cantidad = data.Count, data = data }, JsonRequestBehavior.AllowGet);
             json.MaxJsonLength = int.MaxValue;
             return json;
@@ -190,7 +196,9 @@ namespace Sistema_David.Controllers
         [HttpGet]
         public ActionResult VerAdjunto(int id)
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
+                return HttpNotFound();
+            if (!EsAdmin() && !PendientesModel.PuedeVerAdjunto(id, IdUsuario()))
                 return HttpNotFound();
 
             string ruta, contentType, nombre;
@@ -206,7 +214,7 @@ namespace Sistema_David.Controllers
         [HttpPost]
         public ActionResult DetenerAlarma(int idDestinatario)
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { ok = false });
 
             var ok = PendientesModel.DetenerAlarma(idDestinatario, IdUsuario());
@@ -221,7 +229,7 @@ namespace Sistema_David.Controllers
         [HttpPost]
         public ActionResult PosponerAlarma(int idDestinatario, int minutos)
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { ok = false });
 
             try
@@ -244,7 +252,7 @@ namespace Sistema_David.Controllers
         [HttpPost]
         public ActionResult PosponerAlarmaHasta(int idDestinatario, DateTime hasta)
         {
-            if (!PuedeAcceder())
+            if (!HaySesion())
                 return Json(new { ok = false });
 
             try
@@ -262,6 +270,11 @@ namespace Sistema_David.Controllers
             {
                 return Json(new { ok = false, mensaje = ex.Message });
             }
+        }
+
+        private static bool HaySesion()
+        {
+            return SessionHelper.GetUsuarioSesion() != null;
         }
 
         private static bool PuedeAcceder()

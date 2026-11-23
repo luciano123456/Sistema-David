@@ -41,6 +41,16 @@ const columnConfig = [
 
 const VE_HIST_COL_FILTER_MAIN = "ve_hist_col_filtros_main";
 const VE_HIST_COL_FILTER_PEND = "ve_hist_col_filtros_pend";
+const VE_HIST_COL_FILTER_ELIM = "ve_hist_col_filtros_elim";
+const columnConfigElim = [
+    { index: 1, filterType: "text" },
+    { index: 2, filterType: "text" },
+    { index: 3, filterType: "text" },
+    { index: 4, filterType: "text" },
+    { index: 5, filterType: "text" },
+    { index: 6, filterType: "text" },
+    { index: 7, filterType: "text" }
+];
 const VE_HIST_FILTROS_KEY = "ve_hist_filtros_v1";
 const VE_COL_FILTER_UI = { skin: "cobros", placeholder: "Filtrar…", inputType: "search" };
 const VE_HIST_VISTA_KEY = "ve_historial_view";
@@ -190,7 +200,7 @@ function vhGuardarVista(v) {
 }
 
 function vhCerrarAcordeonesTabla() {
-    [gridVentas, gridVentasPendientes].forEach((dt) => {
+    [gridVentas, gridVentasPendientes, gridVentasEliminadas].forEach((dt) => {
         if (!dt) return;
         try {
             dt.rows().every(function () {
@@ -312,7 +322,7 @@ function vhHtmlVentaCard(d, kind) {
     const rol = Number(userSession?.IdRol);
     const tel = String(d.ClienteTelefono || "").replace(/\D/g, "");
     const puedeContactar = rol === 1 || rol === 4;
-    const q = `${d.Cliente || ""} ${d.Vendedor || ""} ${d.ClienteDni || ""} ${id} ${estado}`.toLowerCase();
+    const q = `${d.Cliente || ""} ${d.Vendedor || ""} ${d.ClienteDni || ""} ${id} ${estado} ${d.MotivoEliminacion || ""}`.toLowerCase();
 
     let badgeEstado = "";
     if (kind === "elim") {
@@ -344,6 +354,7 @@ function vhHtmlVentaCard(d, kind) {
         }
     } else if (kind === "elim") {
         acciones =
+            vhIcoBtn("btn-historial", "detalle", id, "Ver venta", "fa-chevron-down") +
             vhIcoBtn("btn-aprobar", "restaurar", id, "Restaurar venta", "fa-undo", `data-stock="${d.StockDevueltoAlArchivar ? 1 : 0}"`) +
             vhIcoBtn("btn-eliminar", "elimdef", id, "Eliminar definitivamente", "fa-trash");
     } else {
@@ -463,7 +474,7 @@ async function vhOnCardAction(btn) {
         const abierto = card.classList.contains("is-open");
         vhCerrarDetallesCards();
         if (abierto) return;
-        const row = (ventasCache || []).concat(ventasPendientesCache || []).find(x => Number(x.IdVenta) === id);
+        const row = (ventasCache || []).concat(ventasPendientesCache || [], ventasEliminadasCache || []).find(x => Number(x.IdVenta) === id);
         if (!row) return;
         vhCerrarAcordeonesTabla();
         card.classList.add("is-open");
@@ -1245,8 +1256,18 @@ function reabrirRowSeleccionado() {
 
 function formarAcordeon(v) {
 
+    const motivo = (v.MotivoEliminacion || "").trim();
+    const fechaElim = v.FechaEliminacion ? moment(v.FechaEliminacion).format("DD/MM/YYYY HH:mm") : "";
+    const bloqueElim = motivo
+        ? `<div class="mb-3">
+                <div class="text-danger fw-bold"><i class="fa fa-trash me-1"></i> Venta eliminada${fechaElim ? ` · ${fechaElim}` : ""}</div>
+                <div>${escapeHtml(motivo)}</div>
+           </div>`
+        : "";
+
     return `
         <div class="accordion-sub">
+            ${bloqueElim}
 
             <h5 class="text-accent fw-bold mb-2">
                 <i class="fa fa-shopping-bag me-2"></i> Productos
@@ -1511,9 +1532,11 @@ function renderCuotas(v) {
         /* =========================
            ACCIONES (solo si NO es vendedor)
         ========================= */
+        const ventaEliminada = (ventasEliminadasCache || []).some(x => Number(x.IdVenta) === Number(v.IdVenta));
         const accionesHtml = esVendedor ? "" : `
             <td class="text-center">
                 <div class="btn-group">
+                    ${ventaEliminada ? "" : `
                     <button class="btn btn-accion btn-cobrar me-1"
                             onclick="Historial.abrirCobro(${v.IdVenta}, ${c.Id})"
                             title="Cobrar">
@@ -1525,6 +1548,7 @@ function renderCuotas(v) {
                             title="Ajustar">
                         <i class="fa fa-bolt"></i>
                     </button>
+                    `}
 
                     <button class="btn btn-accion btn-historial"
                             onclick="Historial.abrirHistorial(${v.IdVenta}, ${c.Id})"
@@ -1813,8 +1837,7 @@ async function cargarVentasEliminadas() {
     if (data.length === 0) {
         $("#cardVentasEliminadas").attr("hidden", true);
         if (gridVentasEliminadas) {
-            gridVentasEliminadas.destroy();
-            gridVentasEliminadas = null;
+            gridVentasEliminadas.clear().draw();
         }
         vhRefreshCards();
         return;
@@ -1823,18 +1846,33 @@ async function cargarVentasEliminadas() {
     $("#cardVentasEliminadas").removeAttr("hidden");
 
     if (gridVentasEliminadas) {
-        gridVentasEliminadas.destroy();
-        gridVentasEliminadas = null;
+        gridVentasEliminadas.clear().rows.add(data).draw(false);
+        setTimeout(() => {
+            try { gridVentasEliminadas.columns.adjust(); } catch (_) { }
+        }, 50);
+        vhRefreshCards();
+        return;
     }
 
+    inicializarEncabezadoColumnas("#grdVentasEliminadas");
+
     gridVentasEliminadas = $("#grdVentasEliminadas").DataTable({
-        destroy: true,
         data,
         pageLength: 25,
         responsive: false,
         scrollX: true,
         language: DT_LANG_ES,
         columns: [
+            {
+                data: null,
+                className: "details-control text-center",
+                orderable: false,
+                width: "40px",
+                render: () => `
+                    <button type="button" class="btn btn-link p-0 text-accent btn-row-detail" title="Ver venta">
+                        <i class="fa fa-chevron-down"></i>
+                    </button>`
+            },
             { data: "IdVenta" },
             { data: "Fecha", render: x => x ? moment(x).format("DD/MM/YYYY") : "-" },
             {
@@ -1870,8 +1908,50 @@ async function cargarVentasEliminadas() {
                         </div>`;
                 }
             }
-        ]
+        ],
+        initComplete: function () {
+            const api = this.api();
+            inicializarFiltrosColumnas(api, columnConfigElim, VE_HIST_COL_FILTER_ELIM, true, VE_COL_FILTER_UI);
+            $(api.table().container()).find("thead tr.filters").each(function () {
+                const $th = $(this).children("th");
+                $th.eq(0).html("");
+                $th.eq(8).html("");
+            });
+        }
     });
+
+    $("#grdVentasEliminadas tbody")
+        .off("click.vhelim", "button.btn-row-detail")
+        .on("click.vhelim", "button.btn-row-detail", function (e) {
+            e.stopPropagation();
+            if (!gridVentasEliminadas) return;
+
+            const tr = $(this).closest("tr");
+            const row = gridVentasEliminadas.row(tr);
+            const d = row.data();
+            if (!d) return;
+
+            const icon = tr.find("button.btn-row-detail i");
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass("venta-seleccionada");
+                icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                if (rowAbierto === d.IdVenta) rowAbierto = null;
+                return;
+            }
+
+            vhCerrarAcordeonesTabla();
+            vhCerrarDetallesCards();
+            row.child(formarAcordeon(d)).show();
+            icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
+            tr.addClass("venta-seleccionada");
+            rowAbierto = d.IdVenta;
+            cargarDetalleVenta(d.IdVenta);
+        });
+
+    setTimeout(() => {
+        try { gridVentasEliminadas.columns.adjust(); } catch (_) { }
+    }, 50);
     vhRefreshCards();
 }
 

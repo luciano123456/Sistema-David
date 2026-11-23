@@ -1,5 +1,7 @@
-﻿@{
+﻿@using System.Configuration
+@{
     ViewBag.Title = "Cliente";
+    var googleMapsKey = ConfigurationManager.AppSettings["GoogleMapsApiKey"] ?? "";
 }
 
 <link href="~/Content/Datatable/css/jquery.dataTables.min.css" rel="stylesheet" />
@@ -267,6 +269,9 @@
     <script src="~/JavaScript/Utils/Utils.js?v=3.21"></script>
     <script src="~/JavaScript/ClientesHistorialDireccion.js?v=1.4" charset="utf-8"></script>
     <script src="~/JavaScript/ClientesAdjuntos.js?v=1.2" charset="utf-8"></script>
-    <script src="~/JavaScript/ClientesEditar.js?v=3.1"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAddgDLrXa7JLbrOCGrCIBqkEDEBh6YtOQ&libraries=places&callback=initMap"></script>
+    <script src="~/JavaScript/ClientesEditar.js?v=3.3"></script>
+    @if (!string.IsNullOrWhiteSpace(googleMapsKey))
+    {
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=@googleMapsKey&libraries=places&callback=initMap"></script>
+    }
 }
