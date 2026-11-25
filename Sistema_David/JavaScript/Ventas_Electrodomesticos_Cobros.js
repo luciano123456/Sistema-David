@@ -619,7 +619,7 @@ VC.aplicarIntransferibleLocal = function (idVenta, valor) {
         tablaCobros.rows().every(function () { apply(this.data()); });
         tablaCobros.rows().invalidate().draw(false);
     }
-    // Candado cerrado: sigue seleccionable para enviar a Administrador (desasignar).
+    // Candado cerrado: sigue seleccionable para asignar a Admin / Comprobantes.
     VC.refrescarSeleccionUI();
     if (typeof VC.refreshCardsViews === "function") VC.refreshCardsViews();
     VC.bindCandadoTooltips();
@@ -796,7 +796,7 @@ VC.htmlCobroCard = function (d, kind) {
         ? `<span class="vc-card-badge badge ${dias >= 15 ? "bg-danger" : dias >= 10 ? "bg-orange" : "bg-warning text-dark"}">Vencida · ${dias}d</span>`
         : `<span class="vc-card-badge badge bg-success">Al día</span>`;
     const chk = (kind === "main" && VC.esAdminSel())
-        ? `<input type="checkbox" class="vc-card-check" data-idventa="${d.IdVenta}" ${ventasSeleccionadas.has(Number(d.IdVenta)) ? "checked" : ""} title="Seleccionar (candado cerrado: solo Administrador)">`
+        ? `<input type="checkbox" class="vc-card-check" data-idventa="${d.IdVenta}" ${ventasSeleccionadas.has(Number(d.IdVenta)) ? "checked" : ""} title="Seleccionar (candado cerrado: Admin o Comprobantes)">`
         : "";
     const candadoCard = kind === "main" ? VC.htmlCandadoVenta(d) : "";
     const mapsBtn = (d.ClienteLatitud && d.ClienteLongitud)
@@ -1047,7 +1047,7 @@ VC.onCardAction = function (btn) {
 
 $(document).ready(async function () {
 
-    if (userSession.IdRol == 1 || userSession.IdRol == 4) {
+    if (VC.esAdminOComprobantes()) {
         document.getElementById("divCobrosPendientes").removeAttribute("hidden");
         document.getElementById("formFiltros").removeAttribute("hidden");
         document.getElementById("btnToggleFiltros").removeAttribute("hidden");
@@ -1055,6 +1055,8 @@ $(document).ready(async function () {
         document.getElementById("divFiltroTurno").removeAttribute("hidden");
         document.getElementById("divFiltroZona").removeAttribute("hidden");
         document.getElementById("divFiltroFranja").removeAttribute("hidden");
+        const divFiltroCliente = document.getElementById("divFiltroCliente");
+        if (divFiltroCliente) divFiltroCliente.removeAttribute("hidden");
     }
 
     try { moment.locale("es"); } catch { }
@@ -1290,7 +1292,7 @@ VC.initEventos = function () {
 
 VC.refrescarSeleccionUI = function () {
 
-    // 1) marcar filas y checks (candado cerrado también seleccionable → Administrador)
+    // 1) marcar filas y checks (candado cerrado también seleccionable → Admin / Comprobantes)
     if (tablaCobros) {
         $("#vc_tabla tbody tr").each(function () {
             const r = tablaCobros.row(this);
@@ -1679,7 +1681,8 @@ VC.cargarTabla = async function () {
     cuotasReprogSel.clear();
     VC.actualizarReprogFabUI();
 
-    const rawCliente = $("#f_cliente").val();
+    const puedeFiltroCliente = VC.esAdminOComprobantes();
+    const rawCliente = puedeFiltroCliente ? $("#f_cliente").val() : null;
     const hasClienteFiltro =
         rawCliente != null &&
         rawCliente !== "" &&
@@ -1698,7 +1701,7 @@ VC.cargarTabla = async function () {
     const params = {
         fechaDesde: fechas.desde,
         fechaHasta: fechas.hasta,
-        idCliente: $("#f_cliente").val() || null,
+        idCliente: hasClienteFiltro ? rawCliente : null,
         // Con cliente, no mandar el resto: la búsqueda general antepone.
         idVendedor: hasClienteFiltro ? null : ($("#f_vendedor").val() || null),
         idCobrador: hasClienteFiltro ? null : ($("#f_cobrador").val() || null),
@@ -1837,7 +1840,7 @@ VC.cargarTabla = async function () {
                     const idVenta = Number(row?.IdVenta || 0);
                     const checked = ventasSeleccionadas.has(idVenta) ? "checked" : "";
                     const chk = esAdmin
-                        ? `<input type="checkbox" class="vc-check vc-row-check" data-idventa="${idVenta}" ${checked} title="Seleccionar venta ${idVenta} (candado cerrado: solo Administrador)">`
+                        ? `<input type="checkbox" class="vc-check vc-row-check" data-idventa="${idVenta}" ${checked} title="Seleccionar venta ${idVenta} (candado cerrado: Admin o Comprobantes)">`
                         : "";
 
                     return `<div class="vc-check-wrap">${chk}${VC.htmlCandadoVenta(row)}</div>`;
@@ -2198,6 +2201,32 @@ VC.cobradorIniciales = function (nombre) {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 };
 
+VC.seleccionTieneCandadoCerrado = function () {
+    if (!ventasSeleccionadas || ventasSeleccionadas.size === 0) return false;
+    return Array.from(ventasSeleccionadas).some(function (id) {
+        const row = (cuotasCache || []).find(function (x) { return Number(x.IdVenta) === Number(id); });
+        return row && Number(row.Intransferible) === 1;
+    });
+};
+
+VC.esDestinoAdminOComprobantes = function (idCobrador) {
+    const id = Number(idCobrador);
+    if (id === 0) return true; // desasignar → Administrador
+    const u = (cobradoresCache || []).find(function (c) { return Number(c.Id) === id; });
+    const rol = Number(u?.IdRol);
+    return rol === 1 || rol === 4;
+};
+
+VC.cobradoresParaAsignar = function () {
+    const lista = cobradoresCache || [];
+    if (!VC.seleccionTieneCandadoCerrado()) return lista;
+    // Candado cerrado: solo Administrador (1) y Comprobantes (4).
+    return lista.filter(function (c) {
+        const rol = Number(c.IdRol);
+        return rol === 1 || rol === 4;
+    });
+};
+
 VC.llenarSelectCobradorAsignar = function () {
     const ddl = $("#ddlCobradorAsignar");
     if (!ddl.length) return;
@@ -2209,7 +2238,7 @@ VC.llenarSelectCobradorAsignar = function () {
     ddl.empty();
     ddl.append(`<option value="">Seleccionar...</option>`);
     ddl.append(`<option value="0">Administrador (desasignar)</option>`);
-    (cobradoresCache || []).forEach(c => {
+    VC.cobradoresParaAsignar().forEach(c => {
         ddl.append(`<option value="${c.Id}">${escapeHtml(c.Nombre || "")}</option>`);
     });
 };
@@ -2218,7 +2247,7 @@ VC.renderCobradorPicker = function () {
     const list = $("#acCobradorList");
     if (!list.length) return;
 
-    const items = (cobradoresCache || []).map(c => {
+    const items = VC.cobradoresParaAsignar().map(c => {
         const name = escapeHtml(c.Nombre || "");
         const ini = escapeHtml(VC.cobradorIniciales(c.Nombre));
         return `<button type="button" class="ac-picker-item" role="option" data-id="${c.Id}">
@@ -2228,7 +2257,10 @@ VC.renderCobradorPicker = function () {
         </button>`;
     }).join("");
 
-    list.html(items || `<div class="ac-picker-empty">No hay cobradores</div>`);
+    const vacioTxt = VC.seleccionTieneCandadoCerrado()
+        ? "No hay administradores ni comprobantes"
+        : "No hay cobradores";
+    list.html(items || `<div class="ac-picker-empty">${vacioTxt}</div>`);
 };
 
 VC.setCobradorAsignar = function (id) {
@@ -2267,7 +2299,7 @@ VC.filtrarCobradorPicker = function (q) {
 
 VC.cargarCobradores = async function () {
     try {
-        const resp = await $.getJSON("/Usuarios/ListarCobradores");
+        const resp = await $.getJSON("/Usuarios/ListarCobradoresElectro");
         cobradoresCache = resp?.data || [];
         VC.llenarSelectCobradorAsignar();
         VC.renderCobradorPicker();
@@ -2284,12 +2316,8 @@ VC.abrirAsignarCobrador = async function () {
         return;
     }
 
-    if (!cobradoresCache || cobradoresCache.length === 0) {
-        await VC.cargarCobradores();
-    } else {
-        VC.llenarSelectCobradorAsignar();
-        VC.renderCobradorPicker();
-    }
+    // Recargar siempre: con candado la lista se filtra a admin/comprobantes.
+    await VC.cargarCobradores();
 
     const n = ventasSeleccionadas.size;
     $("#lblCantVentasSel").text(n);
@@ -2315,14 +2343,15 @@ VC.confirmarAsignarCobrador = async function () {
     }
 
     const desasignar = idCobrador === 0;
-    // Candado cerrado: solo se puede enviar a Administrador (desasignar), no a otro cobrador.
+    const destinoOkCandado = VC.esDestinoAdminOComprobantes(idCobrador);
+    // Candado cerrado: solo Admin / Comprobantes (o desasignar).
     const idsVentas = Array.from(ventasSeleccionadas).filter(function (id) {
-        if (desasignar) return true;
+        if (destinoOkCandado) return true;
         const row = (cuotasCache || []).find(function (x) { return Number(x.IdVenta) === Number(id); });
         return !(row && Number(row.Intransferible) === 1);
     });
     if (!idsVentas.length) {
-        VC.toast("Con candado cerrado solo se puede enviar a Administrador", "warn");
+        VC.toast("Con candado cerrado solo se puede asignar a Administrador o Comprobantes", "warn");
         return;
     }
     const accionTxt = desasignar ? "enviar a Administrador" : "asignar cobrador a";
@@ -2846,7 +2875,7 @@ VC.leerDeepLinkCasita = function () {
 
 VC.aplicarDeepLinkCasita = function () {
     const deep = VC.leerDeepLinkCasita();
-    if (deep.idCliente) {
+    if (deep.idCliente && VC.esAdminOComprobantes()) {
         VC.setSelect2Value("#f_cliente", String(deep.idCliente));
     }
     if (deep.ventaId) ventaClickeadaId = deep.ventaId;

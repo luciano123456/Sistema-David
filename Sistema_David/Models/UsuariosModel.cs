@@ -260,9 +260,9 @@ namespace Sistema_David.Models
         {
             using (var db = new Sistema_DavidEntities())
             {
-                // Roles: 3=cobrador, 1=admin (igual que tu ListaCobradores)
+                // Roles: 1=admin, 3=cobrador, 4=comprobantes (candado: solo 1 y 4)
                 var listUser = db.Usuarios
-                    .Where(u => (u.IdRol == 3 || u.IdRol == 1) && u.IdEstado == 1) // activos
+                    .Where(u => (u.IdRol == 3 || u.IdRol == 1 || u.IdRol == 4) && u.IdEstado == 1) // activos
                     .Join(db.Roles, u => u.IdRol, r => r.Id, (u, r) => new { Usuario = u, Rol = r })
                     .Join(db.EstadosUsuarios, ur => ur.Usuario.IdEstado, eu => eu.Id, (ur, eu) => new { ur.Usuario, ur.Rol.Nombre, Estado = eu.Nombre })
                     .GroupJoin(

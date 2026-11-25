@@ -3511,15 +3511,17 @@ namespace Sistema_David.Models
 
                     if (ventas.Count == 0) return "No se encontraron ventas";
 
-                    // Candado cerrado: no transferir a otro cobrador; sí permitir enviar a administrador (desasignar).
+                    // Candado cerrado: solo Admin (1), Comprobantes (4) o desasignar; no a cobrador (3).
                     var cerradas = IdsVentasElectroIntransferibles(db, idsVentas);
                     var habiaCerradas = false;
-                    if (!desasignar && cerradas.Count > 0)
+                    var destinoAdminOComprobantes = desasignar
+                        || (cobrador != null && (cobrador.IdRol == 1 || cobrador.IdRol == 4));
+                    if (!destinoAdminOComprobantes && cerradas.Count > 0)
                     {
                         habiaCerradas = true;
                         ventas = ventas.Where(v => !cerradas.Contains(v.Id)).ToList();
                         if (ventas.Count == 0)
-                            return "No se pueden transferir cobranzas con candado cerrado. Podés enviarlas a Administrador.";
+                            return "No se pueden transferir cobranzas con candado cerrado. Podés asignarlas a Administrador o Comprobantes.";
                     }
 
                     foreach (var v in ventas)

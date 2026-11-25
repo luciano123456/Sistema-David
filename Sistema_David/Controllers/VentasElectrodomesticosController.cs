@@ -129,7 +129,13 @@ namespace Sistema_David.Controllers
 
                 var usuarioSesion = SessionHelper.GetUsuarioSesion();
 
-                var filtraPorCliente = filtro.IdCliente.HasValue && filtro.IdCliente.Value > 0;
+                // Filtro por cliente solo para admin / comprobantes (misma regla que la UI).
+                var filtraPorCliente = SessionHelper.EsAdminOComprobantes()
+                    && filtro.IdCliente.HasValue
+                    && filtro.IdCliente.Value > 0;
+
+                if (!filtraPorCliente)
+                    filtro.IdCliente = null;
 
                 if (filtraPorCliente)
                 {
@@ -758,7 +764,7 @@ namespace Sistema_David.Controllers
                 );
 
                 if (r == "PARCIAL")
-                    return Json(new { success = true, parcial = true, message = "Se asignaron las transferibles. Las de candado cerrado no se transfirieron (sí se pueden enviar a Administrador)." });
+                    return Json(new { success = true, parcial = true, message = "Se asignaron las transferibles. Las de candado cerrado no se transfirieron (sí se pueden asignar a Administrador o Comprobantes)." });
 
                 return Json(new { success = r == "OK", message = r });
             }
